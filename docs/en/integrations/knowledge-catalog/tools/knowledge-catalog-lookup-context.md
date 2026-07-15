@@ -4,17 +4,15 @@ type: docs
 weight: 1
 description: > 
   A "dataplex-lookup-context" tool provides rich metadata of one or more data assets along with their relationships.
+aliases:
+  - /integrations/dataplex/tools/dataplex-lookup-context/
 ---
 
 ## About
 
 A `dataplex-lookup-context` tool provides rich metadata of one or more data assets along with their relationships.
 
-`dataplex-lookup-context` takes a required `name` parameter which contains the
-project and location to which the request should be attributed in the following
-form: projects/{project}/locations/{location} and also a required `resources`
-parameter which is a list of resource names for which metadata is needed in the 
-following form: projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}
+`dataplex-lookup-context` takes a required `resources` parameter which is a list of up to 10 resource names for which metadata is needed in the following form: `projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}`. All resources must belong to the same Google Cloud location.
 
 ## Compatible Sources
 
@@ -48,6 +46,14 @@ rather than an access denied error.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex/docs
+
+## Parameters
+
+The `dataplex-lookup-context` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| resources | list of strings | true | A list of up to 10 resource names for which metadata is needed (format: `projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}`). |
 
 ## Example
 

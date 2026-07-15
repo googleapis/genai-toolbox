@@ -53,11 +53,13 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 			`, resourceType),
 			want: server.ToolConfigs{
 				"example_tool": newConfig(createbatch.Config{
-					Name:         "example_tool",
-					Type:         resourceType,
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   resourceType,
+					Source: "my-instance",
 				}),
 			},
 		},
@@ -78,10 +80,13 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 			`, resourceType),
 			want: server.ToolConfigs{
 				"example_tool": newConfig(createbatch.Config{
-					Name:        "example_tool",
-					Type:        resourceType,
-					Source:      "my-instance",
-					Description: "some description",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   resourceType,
+					Source: "my-instance",
 					RuntimeConfig: &dataproc.RuntimeConfig{
 						Properties: map[string]string{"spark.driver.memory": "1g"},
 					},
@@ -90,7 +95,6 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 							Network: &dataproc.ExecutionConfig_NetworkUri{NetworkUri: "my-network"},
 						},
 					},
-					AuthRequired: []string{},
 				}),
 			},
 		},
@@ -123,7 +127,7 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if tc.wantErr != "" {
 				if err == nil {
 					t.Fatal("expected error, got nil")

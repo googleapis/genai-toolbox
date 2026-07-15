@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 func TestParseFromYamlNeo4j(t *testing.T) {
@@ -46,11 +47,13 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "neo4j-execute-cypher",
-					Source:       "my-neo4j-instance",
-					Description:  "some tool description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "neo4j-execute-cypher",
+					Source: "my-neo4j-instance",
 				},
 			},
 		},
@@ -69,12 +72,14 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "neo4j-execute-cypher",
-					Source:       "my-neo4j-instance",
-					ReadOnly:     true,
-					Description:  "some tool description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:     "neo4j-execute-cypher",
+					Source:   "my-neo4j-instance",
+					ReadOnly: true,
 				},
 			},
 		},
@@ -82,7 +87,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

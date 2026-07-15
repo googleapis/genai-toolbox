@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	getdicomstore "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetdicomstore"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlHealthcareGetDICOMStore(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": getdicomstore.Config{
-					Name:         "example_tool",
-					Type:         "cloud-healthcare-get-dicom-store",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-healthcare-get-dicom-store",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -56,7 +59,7 @@ func TestParseFromYamlHealthcareGetDICOMStore(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

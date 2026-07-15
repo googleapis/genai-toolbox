@@ -21,6 +21,7 @@ import (
 
 	dataprocpb "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -42,15 +43,11 @@ type compatibleSource interface {
 // will still need its own config type, embedding this Config, so it can provide a type-specific
 // Initialize implementation.
 type Config struct {
-	Name              string                        `yaml:"name" validate:"required"`
+	tools.ConfigBase  `yaml:",inline"`
 	Type              string                        `yaml:"type" validate:"required"`
 	Source            string                        `yaml:"source" validate:"required"`
-	Description       string                        `yaml:"description"`
 	RuntimeConfig     *dataprocpb.RuntimeConfig     `yaml:"runtimeConfig"`
 	EnvironmentConfig *dataprocpb.EnvironmentConfig `yaml:"environmentConfig"`
-	AuthRequired      []string                      `yaml:"authRequired"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config, error) {
@@ -71,11 +68,13 @@ func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config,
 	}
 
 	cfg := Config{
-		Name:         name,
-		Type:         ymlCfg.Type,
-		Source:       ymlCfg.Source,
-		Description:  ymlCfg.Description,
-		AuthRequired: ymlCfg.AuthRequired,
+		ConfigBase: tools.ConfigBase{
+			Name:         name,
+			Description:  ymlCfg.Description,
+			AuthRequired: ymlCfg.AuthRequired,
+		},
+		Type:   ymlCfg.Type,
+		Source: ymlCfg.Source,
 	}
 
 	if ymlCfg.RuntimeConfig != nil {

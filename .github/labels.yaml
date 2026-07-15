@@ -16,6 +16,11 @@
   color: ededed
   description: ""
 
+- name: wontfix
+  color: ededed
+  description: Issues that we are not planning to fix but would like to keep
+    track of.
+
 - name: 'type: bug'
   color: db4437
   description: Error or flaw in code with unintended results or allowing sub-optimal
@@ -83,6 +88,13 @@
 - name: 'status: feedback wanted'
   color: 8befd7
   description: 'Status: waiting for feedback from community or issue author.'
+
+- name: 'good first issue'
+  color: 7057ff
+  description: 'Good for newcomers'
+- name: 'ready for work'
+  color: 0e8a16
+  description: 'Ready to be picked up'
 
 - name: 'status: waiting for response'
   color: 8befd7

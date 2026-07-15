@@ -19,7 +19,7 @@ host: ${ALLOYDB_OMNI_HOST:localhost}
 port: ${ALLOYDB_OMNI_PORT:5432}
 database: ${ALLOYDB_OMNI_DATABASE}
 user: ${ALLOYDB_OMNI_USER}
-password: ${ALLOYDB_OMNI_PASSWORD:}
+password: ${ALLOYDB_OMNI_PASSWORD}
 queryParams: ${ALLOYDB_OMNI_QUERY_PARAMS:}
 ---
 kind: tool
@@ -188,7 +188,7 @@ kind: tool
 name: get_query_plan
 type: postgres-sql
 source: alloydb-omni-source
-description: Generate a PostgreSQL EXPLAIN plan in JSON format for a single SQL statement—without executing it. This returns the optimizer's estimated plan, costs, and rows (no ANALYZE, no extra options). Use in production safely for plan inspection, regression checks, and query tuning workflows.
+description: Generate a PostgreSQL EXPLAIN plan in JSON format for a single SQL statement—without executing it. This returns the optimizer's estimated plan, costs, and rows (no ANALYZE, no extra options).
 statement: |
   EXPLAIN (FORMAT JSON) {{.query}};
 templateParameters:

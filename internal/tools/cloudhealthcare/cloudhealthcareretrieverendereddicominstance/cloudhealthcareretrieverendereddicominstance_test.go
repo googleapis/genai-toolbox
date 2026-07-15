@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	retrieverendereddicominstance "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcareretrieverendereddicominstance"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlHealthcareRetrieveRenderedDICOMInstance(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": retrieverendereddicominstance.Config{
-					Name:         "example_tool",
-					Type:         "cloud-healthcare-retrieve-rendered-dicom-instance",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-healthcare-retrieve-rendered-dicom-instance",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -56,7 +59,7 @@ func TestParseFromYamlHealthcareRetrieveRenderedDICOMInstance(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

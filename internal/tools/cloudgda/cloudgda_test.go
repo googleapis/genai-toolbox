@@ -23,7 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -67,12 +67,14 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: map[string]tools.ToolConfig{
 				"my-gda-query-tool": cloudgdatool.Config{
-					Name:         "my-gda-query-tool",
-					Type:         "cloud-gemini-data-analytics-query",
-					Source:       "gda-api-source",
-					Description:  "Test Description",
-					Location:     "us-central1",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "my-gda-query-tool",
+						Description:  "Test Description",
+						AuthRequired: []string{},
+					},
+					Type:     "cloud-gemini-data-analytics-query",
+					Source:   "gda-api-source",
+					Location: "us-central1",
 					Context: &cloudgdatool.QueryDataContext{
 						QueryDataContext: &geminidataanalyticspb.QueryDataContext{
 							DatasourceReferences: &geminidataanalyticspb.DatasourceReferences{
@@ -106,7 +108,7 @@ func TestParseFromYaml(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -162,13 +164,6 @@ func (f *fakeSource) RunQuery(ctx context.Context, token string, req *geminidata
 func TestInitialize(t *testing.T) {
 	t.Parallel()
 
-	// Minimal fake source
-	fake := &fakeSource{projectID: "test-project"}
-
-	srcs := map[string]sources.Source{
-		"gda-api-source": fake,
-	}
-
 	tcs := []struct {
 		desc string
 		cfg  cloudgdatool.Config
@@ -176,11 +171,13 @@ func TestInitialize(t *testing.T) {
 		{
 			desc: "successful initialization",
 			cfg: cloudgdatool.Config{
-				Name:        "my-gda-query-tool",
-				Type:        "cloud-gemini-data-analytics-query",
-				Source:      "gda-api-source",
-				Description: "Test Description",
-				Location:    "us-central1",
+				ConfigBase: tools.ConfigBase{
+					Name:        "my-gda-query-tool",
+					Description: "Test Description",
+				},
+				Type:     "cloud-gemini-data-analytics-query",
+				Source:   "gda-api-source",
+				Location: "us-central1",
 			},
 		},
 	}
@@ -190,7 +187,7 @@ func TestInitialize(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			tool, err := tc.cfg.Initialize(srcs)
+			tool, err := tc.cfg.Initialize(context.Background())
 			if err != nil {
 				t.Fatalf("did not expect an error but got: %v", err)
 			}
@@ -227,11 +224,13 @@ func TestInvoke(t *testing.T) {
 
 	// Initialize the tool config with context
 	toolCfg := cloudgdatool.Config{
-		Name:        "query-data-tool",
-		Type:        "cloud-gemini-data-analytics-query",
-		Source:      "mock-gda-source",
-		Description: "Query Gemini Data Analytics",
-		Location:    location,
+		ConfigBase: tools.ConfigBase{
+			Name:        "query-data-tool",
+			Description: "Query Gemini Data Analytics",
+		},
+		Type:     "cloud-gemini-data-analytics-query",
+		Source:   "mock-gda-source",
+		Location: location,
 		Context: &cloudgdatool.QueryDataContext{
 			QueryDataContext: &geminidataanalyticspb.QueryDataContext{
 				DatasourceReferences: &geminidataanalyticspb.DatasourceReferences{
@@ -259,7 +258,7 @@ func TestInvoke(t *testing.T) {
 		},
 	}
 
-	tool, err := toolCfg.Initialize(srcs)
+	tool, err := toolCfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -269,12 +268,12 @@ func TestInvoke(t *testing.T) {
 		{Name: "query", Value: query},
 	}
 
-	resourceMgr := resources.NewResourceManager(srcs, nil, nil, nil, nil, nil, nil)
+	primMgr := primitives.NewPrimitiveManager(srcs, nil, nil, nil, nil, nil, nil)
 
 	ctx := testutils.ContextWithUserAgent(context.Background(), "test-user-agent")
 
 	// Invoke the tool
-	result, err := tool.Invoke(ctx, resourceMgr, params, "")
+	result, err := tool.Invoke(ctx, primMgr, params, "")
 	if err != nil {
 		t.Fatalf("tool invocation failed: %v", err)
 	}

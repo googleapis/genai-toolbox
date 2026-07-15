@@ -3,22 +3,15 @@ title: "dataplex-search-aspect-types"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-aspect-types" tool allows to to find aspect types relevant to the query.
+  A "dataplex-search-aspect-types" tool allows to find aspect types relevant to the query.
+aliases:
+  - /integrations/dataplex/tools/dataplex-search-aspect-types/
 ---
 
 ## About
 
 A `dataplex-search-aspect-types` tool allows to fetch the metadata template of
 aspect types based on search query.
-
-`dataplex-search-aspect-types` accepts following parameters optionally:
-
-- `query` - Narrows down the search of aspect types to value of this parameter.
-  If not provided, it fetches all aspect types available to the user.
-- `pageSize` - Number of returned aspect types in the search page. Defaults to `5`.
-- `orderBy` - Specifies the ordering of results. Supported values are: relevance
-  (default), last_modified_timestamp, last_modified_timestamp asc.
-
 
 ## Compatible Sources
 
@@ -45,6 +38,16 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-search-aspect-types` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| query | string | false | Optional. Narrows down the search of aspect types to value of this parameter. If not provided, it fetches all available aspect types. |
+| pageSize | integer | false | Number of returned aspect types in the search page. Defaults to 5. |
+| orderBy | string | false | Specifies ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
 
 ## Example
 

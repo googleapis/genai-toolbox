@@ -15,6 +15,7 @@
 package lookerupdateagent_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -50,18 +51,20 @@ func TestParseFromYaml(t *testing.T) {
                                 `,
 			want: server.ToolConfigs{
 				"test_tool": lkr.Config{
-					Name:         "test_tool",
-					Type:         "looker-update-agent",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "test_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "looker-update-agent",
+					Source: "my-instance",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -97,7 +100,7 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
@@ -125,7 +128,7 @@ func (m MockSource) LookerApiSettings() *rtl.ApiSettings {
 	return &rtl.ApiSettings{}
 }
 
-func (m MockSource) GetLookerSDK(string) (*v4.LookerSDK, error) {
+func (m MockSource) GetLookerSDK(ctx context.Context, s string) (*v4.LookerSDK, error) {
 	return &v4.LookerSDK{}, nil
 }
 
@@ -145,18 +148,20 @@ func TestInvokeValidation(t *testing.T) {
 	}
 
 	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-update-agent",
-		Source:      "my-instance",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test_tool",
+			Description: "test description",
+		},
+		Type:   "looker-update-agent",
+		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	resourceMgr := MockSourceProvider{source: MockSource{}}
+	primitiveMgr := MockSourceProvider{source: MockSource{}}
 
 	tcs := []struct {
 		desc    string
@@ -182,7 +187,7 @@ func TestInvokeValidation(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, err := tool.Invoke(ctx, resourceMgr, tc.params, "")
+			_, err := tool.Invoke(ctx, primitiveMgr, tc.params, "")
 			if err == nil {
 				t.Fatalf("expect error, got nil")
 			}
@@ -196,18 +201,23 @@ func TestInvokeValidation(t *testing.T) {
 
 func TestManifest(t *testing.T) {
 	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-update-agent",
-		Source:      "my-instance",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test_tool",
+			Description: "test description",
+		},
+		Type:   "looker-update-agent",
+		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	manifest := tool.Manifest()
+	manifest, err := tool.Manifest(nil)
+	if err != nil {
+		t.Fatalf("Manifest() returned unexpected error: %v", err)
+	}
 	if manifest.Description != cfg.Description {
 		t.Errorf("manifest description mismatch: got %q, want %q", manifest.Description, cfg.Description)
 	}
@@ -230,16 +240,18 @@ func TestManifest(t *testing.T) {
 func TestAnnotations(t *testing.T) {
 	readOnlyTrue := true
 	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-update-agent",
-		Source:      "my-instance",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test_tool",
+			Description: "test description",
+		},
+		Type:   "looker-update-agent",
+		Source: "my-instance",
 		Annotations: &tools.ToolAnnotations{
 			ReadOnlyHint: &readOnlyTrue,
 		},
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

@@ -20,8 +20,6 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudstorage/cloudstoragecommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -49,7 +47,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -61,14 +59,13 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Bucket           *string                `yaml:"bucket,omitempty"`
+	Prefix           *string                `yaml:"prefix,omitempty"`
+	Delimiter        *string                `yaml:"delimiter,omitempty"`
 }
 
 // validate interface
@@ -78,64 +75,62 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to list objects from.")
-	prefixParam := parameters.NewStringParameterWithDefault(prefixKey, "", "Filter results to objects whose names begin with this prefix.")
-	delimiterParam := parameters.NewStringParameterWithDefault(delimiterKey, "", "Delimiter used to group object names (typically '/'). When set, common prefixes are returned as 'prefixes'.")
-	maxResultsParam := parameters.NewIntParameterWithDefault(maxResultsKey, 0, "Maximum number of objects to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.")
-	pageTokenParam := parameters.NewStringParameterWithDefault(pageTokenKey, "", "A previously-returned page token for retrieving the next page of results.")
-	params := parameters.Parameters{bucketParam, prefixParam, delimiterParam, maxResultsParam, pageTokenParam}
-
-	t := Tool{
-		Config:     cfg,
-		Parameters: params,
-		manifest:   tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
-	return t, nil
+	if cfg.Bucket != nil && *cfg.Bucket == "" {
+		return nil, fmt.Errorf("bucket cannot be empty for tool %q", cfg.Name)
+	}
+
+	maxResultsParam := parameters.NewIntParameter(maxResultsKey, "Maximum number of objects to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.", parameters.WithIntDefault(0))
+	pageTokenParam := parameters.NewStringParameter(pageTokenKey, "A previously-returned page token for retrieving the next page of results.", parameters.WithStringDefault(""))
+	allParameters := parameters.Parameters{}
+	if cfg.Bucket == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to list objects from."))
+	}
+	if cfg.Prefix == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(prefixKey, "Filter results to objects whose names begin with this prefix.", parameters.WithStringDefault("")))
+	}
+	if cfg.Delimiter == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(delimiterKey, "Delimiter used to group object names (typically '/'). When set, common prefixes are returned as 'prefixes'.", parameters.WithStringDefault("")))
+	}
+	allParameters = append(allParameters, maxResultsParam, pageTokenParam)
+
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-	manifest   tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
-	bucket, ok := mapParams[bucketKey].(string)
-	if !ok || bucket == "" {
+	bucket := cloudstoragecommon.ResolveString(t.Cfg.Bucket, mapParams, bucketKey)
+	if bucket == "" {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", bucketKey), nil)
 	}
-	prefix, _ := mapParams[prefixKey].(string)
-	delimiter, _ := mapParams[delimiterKey].(string)
+	prefix := cloudstoragecommon.ResolveString(t.Cfg.Prefix, mapParams, prefixKey)
+	delimiter := cloudstoragecommon.ResolveString(t.Cfg.Delimiter, mapParams, delimiterKey)
 	pageToken, _ := mapParams[pageTokenKey].(string)
 	maxResults, _ := mapParams[maxResultsKey].(int)
 	if maxResults < 0 {
@@ -150,32 +145,4 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, cloudstoragecommon.ProcessGCSError(err)
 	}
 	return resp, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

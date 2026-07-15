@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlpg/cloudsqlpgcreateinstances"
 )
 
@@ -44,18 +45,20 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"create-instance-tool": cloudsqlpgcreateinstances.Config{
-					Name:         "create-instance-tool",
-					Type:         "cloud-sql-postgres-create-instance",
-					Description:  "a test description",
-					Source:       "a-source",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "create-instance-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-sql-postgres-create-instance",
+					Source: "a-source",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

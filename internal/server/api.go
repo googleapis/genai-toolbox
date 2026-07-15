@@ -23,6 +23,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -65,14 +66,22 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		span.End()
 	}()
 
-	toolset, ok := s.ResourceMgr.GetToolset(toolsetName)
+	toolset, ok := s.PrimitiveMgr.GetToolset(toolsetName)
 	if !ok {
 		err = fmt.Errorf("toolset %q does not exist", toolsetName)
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
-	render.JSON(w, r, toolset.Manifest)
+
+	manifest, err := toolset.BuildManifest(s.PrimitiveMgr.GetSourcesMap())
+	if err != nil {
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+		return
+	}
+
+	render.JSON(w, r, manifest)
 }
 
 // toolGetHandler handles requests for a single Tool.
@@ -91,18 +100,25 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		span.End()
 	}()
 
-	tool, ok := s.ResourceMgr.GetTool(toolName)
+	tool, ok := s.PrimitiveMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
+	toolManifest, err := tool.Manifest(s.PrimitiveMgr.GetSourcesMap())
+	if err != nil {
+		err = fmt.Errorf("error generating manifest for tool %q: %w", toolName, err)
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+		return
+	}
 	// TODO: this can be optimized later with some caching
 	m := tools.ToolsetManifest{
 		ServerVersion: s.version,
 		ToolsManifest: map[string]tools.Manifest{
-			toolName: tool.Manifest(),
+			toolName: toolManifest,
 		},
 	}
 
@@ -126,7 +142,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		span.End()
 	}()
 
-	tool, ok := s.ResourceMgr.GetTool(toolName)
+	tool, ok := s.PrimitiveMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		s.logger.DebugContext(ctx, err.Error())
@@ -139,7 +155,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	// Check if this specific tool requires the standard authorization header
-	clientAuth, err := tool.RequiresClientAuthorization(s.ResourceMgr)
+	clientAuth, err := tool.RequiresClientAuthorization(s.PrimitiveMgr)
 	if err != nil {
 		errMsg := fmt.Errorf("error during invocation: %w", err)
 		s.logger.DebugContext(ctx, errMsg.Error())
@@ -158,12 +174,21 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Tool authentication
 	// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
 	claimsFromAuth := make(map[string]map[string]any)
-	for _, aS := range s.ResourceMgr.GetAuthServiceMap() {
-		claims, err := aS.GetClaimsFromHeader(ctx, r.Header)
-		if err != nil {
-			s.logger.DebugContext(ctx, err.Error())
-			continue
+	for _, aS := range s.PrimitiveMgr.GetAuthServiceMap() {
+		var claims map[string]any
+		var err error
+
+		cfg := aS.ToConfig()
+		if genCfg, ok := cfg.(generic.Config); ok && genCfg.McpEnabled {
+			claims = util.AuthTokenClaimsFromContext(ctx)
+		} else {
+			claims, err = aS.GetClaimsFromHeader(ctx, r.Header)
+			if err != nil {
+				s.logger.DebugContext(ctx, err.Error())
+				continue
+			}
 		}
+
 		if claims == nil {
 			// authService not present in header
 			continue
@@ -189,8 +214,18 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	s.logger.DebugContext(ctx, "tool invocation authorized")
 
+	limit := s.httpMaxRequestBytes
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
+
 	var data map[string]any
 	if err = util.DecodeJSON(r.Body, &data); err != nil {
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			err = fmt.Errorf("request body exceeds %d bytes", limit)
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusRequestEntityTooLarge))
+			return
+		}
 		render.Status(r, http.StatusBadRequest)
 		err = fmt.Errorf("request body was invalid JSON: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
@@ -198,7 +233,14 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
+	toolParams, err := tool.GetParameters(s.PrimitiveMgr.GetSourcesMap())
+	if err != nil {
+		err = fmt.Errorf("error getting parameters for tool: %w", err)
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+		return
+	}
+	params, err := parameters.ParseParams(toolParams, data, claimsFromAuth)
 	if err != nil {
 		var clientServerErr *util.ClientServerError
 
@@ -226,7 +268,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	params, err = tool.EmbedParams(ctx, params, s.ResourceMgr.GetEmbeddingModelMap())
+	params, err = tool.EmbedParams(ctx, params, s.PrimitiveMgr.GetEmbeddingModelMap())
 	if err != nil {
 		err = fmt.Errorf("error embedding parameters: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
@@ -234,7 +276,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := tool.Invoke(ctx, s.ResourceMgr, params, accessToken)
+	res, err := tool.Invoke(ctx, s.PrimitiveMgr, params, accessToken)
 
 	// Determine what error to return to the users.
 	if err != nil {

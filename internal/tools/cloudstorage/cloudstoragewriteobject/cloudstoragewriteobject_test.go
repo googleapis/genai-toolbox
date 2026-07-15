@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageWriteObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"write_tool": cloudstoragewriteobject.Config{
-					Name:         "write_tool",
-					Type:         "cloud-storage-write-object",
-					Source:       "my-gcs",
-					Description:  "Write content to Cloud Storage",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "write_tool",
+						Description:  "Write content to Cloud Storage",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-write-object",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -71,18 +73,43 @@ func TestParseFromYamlCloudStorageWriteObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_write": cloudstoragewriteobject.Config{
-					Name:         "secure_write",
-					Type:         "cloud-storage-write-object",
-					Source:       "prod-gcs",
-					Description:  "Write with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_write",
+						Description:  "Write with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-write-object",
+					Source: "prod-gcs",
+				},
+			},
+		},
+		{
+			desc: "with configurable bucket",
+			in: `
+			kind: tool
+			name: configured_write
+			type: cloud-storage-write-object
+			source: prod-gcs
+			description: Write configured object
+			bucket: baked-bucket
+			`,
+			want: server.ToolConfigs{
+				"configured_write": cloudstoragewriteobject.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_write",
+						Description:  "Write configured object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-write-object",
+					Source: "prod-gcs",
+					Bucket: strPtr("baked-bucket"),
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -93,6 +120,10 @@ func TestParseFromYamlCloudStorageWriteObject(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
 type mockSource struct {
 	sources.Source
 	called         bool
@@ -100,6 +131,83 @@ type mockSource struct {
 	gotObject      string
 	gotContent     string
 	gotContentType string
+}
+
+func TestConfiguredBucketHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragewriteobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "write_tool",
+			Description: "Write",
+		},
+		Type:   "cloud-storage-write-object",
+		Source: "my-gcs",
+		Bucket: strPtr("baked-bucket"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"object", "content", "content_type"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "object", Value: "o"},
+		{Name: "content", Value: "body"},
+		{Name: "content_type", Value: "text/plain"},
+	}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotBucket != "baked-bucket" || src.gotObject != "o" || src.gotContent != "body" || src.gotContentType != "text/plain" {
+		t.Fatalf("forwarded params = %q/%q/%q/%q, want baked-bucket/o/body/text/plain", src.gotBucket, src.gotObject, src.gotContent, src.gotContentType)
+	}
+}
+
+func TestUnsetBucketRemainsVisible(t *testing.T) {
+	cfg := cloudstoragewriteobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "write_tool",
+			Description: "Write",
+		},
+		Type:   "cloud-storage-write-object",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket", "object", "content", "content_type"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredBucketRejected(t *testing.T) {
+	cfg := cloudstoragewriteobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "write_tool",
+			Description: "Write",
+		},
+		Type:   "cloud-storage-write-object",
+		Source: "my-gcs",
+		Bucket: strPtr(""),
+	}
+	if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), "bucket") {
+		t.Fatalf("Initialize() error = %v, want bucket error", err)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }
 
 func (m *mockSource) WriteObject(ctx context.Context, bucket, object, content, contentType string) (map[string]any, error) {
@@ -122,12 +230,14 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragewriteobject.Config{
-		Name:        "write_tool",
-		Type:        "cloud-storage-write-object",
-		Source:      "my-gcs",
-		Description: "Write",
+		ConfigBase: tools.ConfigBase{
+			Name:        "write_tool",
+			Description: "Write",
+		},
+		Type:   "cloud-storage-write-object",
+		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -152,7 +262,7 @@ func TestInvokeValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 			ct, _ := tc.contentType.(string)
 			params := parameters.ParamValues{
 				{Name: "bucket", Value: tc.bucket},
@@ -160,7 +270,7 @@ func TestInvokeValidation(t *testing.T) {
 				{Name: "content", Value: tc.content},
 				{Name: "content_type", Value: ct},
 			}
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")
