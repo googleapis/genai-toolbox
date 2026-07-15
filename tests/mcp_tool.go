@@ -455,6 +455,18 @@ func GetBaseMCPExpectedTools() []MCPToolManifest {
 			InputSchema: map[string]any{"type": "object", "properties": map[string]any{}, "required": []any{}},
 		},
 		{
+			Name:        "my-secure-tool",
+			Description: "Tool to test secure parameters.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"id":   map[string]any{"type": "integer", "description": "user ID"},
+					"name": map[string]any{"type": "string", "description": "user name"},
+				},
+				"required": []any{"id", "name"},
+			},
+		},
+		{
 			Name:        "my-fail-tool",
 			Description: "Tool to test statement with incorrect syntax.",
 			InputSchema: map[string]any{"type": "object", "properties": map[string]any{}, "required": []any{}},
