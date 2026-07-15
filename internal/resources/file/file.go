@@ -254,7 +254,23 @@ func (r *FileResource) ToConfig() resources.ResourceConfig {
 		cfgCopy.Annotations = &resources.ResourceAnnotations{}
 	}
 
-	if info, err := os.Stat(r.config.absPath); err == nil {
+	resolvedPath := r.config.absPath
+	if resolved, err := filepath.EvalSymlinks(r.config.absPath); err == nil {
+		resolvedPath = resolved
+	}
+
+	if r.config.isRelative && r.config.resolvedBaseDir != "" {
+		resolvedBaseDir := r.config.resolvedBaseDir
+		if resolved, err := filepath.EvalSymlinks(resolvedBaseDir); err == nil {
+			resolvedBaseDir = resolved
+		}
+		rel, err := filepath.Rel(resolvedBaseDir, resolvedPath)
+		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return &cfgCopy
+		}
+	}
+
+	if info, err := os.Stat(resolvedPath); err == nil {
 		size := info.Size()
 		if size > *cfgCopy.MaxSize {
 			size = *cfgCopy.MaxSize
