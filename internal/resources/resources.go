@@ -95,6 +95,17 @@ func (r *AudienceRole) UnmarshalYAML(b []byte) error {
 	}
 }
 
+// SetDefaults applies system defaults (like priority=1.0) for unspecified optional fields.
+func (c *BaseConfig) SetDefaults() {
+	if c.Annotations == nil {
+		c.Annotations = &ResourceAnnotations{}
+	}
+	if c.Annotations.Priority == nil {
+		p := 1.0
+		c.Annotations.Priority = &p
+	}
+}
+
 // Validate performs base configuration validation, such as checking for duplicate audiences.
 func (c BaseConfig) Validate() error {
 	if c.Annotations != nil && len(c.Annotations.Audience) > 0 {
@@ -153,6 +164,10 @@ func DecodeConfig(ctx context.Context, resourceType, name string, decoder *yaml.
 	}
 	if config == nil {
 		return nil, fmt.Errorf("factory returned nil config for resource %q as type %q", name, resourceType)
+	}
+
+	if defaulter, ok := config.(interface{ SetDefaults() }); ok {
+		defaulter.SetDefaults()
 	}
 
 	if validatable, ok := config.(interface{ Validate() error }); ok {
