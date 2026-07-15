@@ -82,7 +82,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		return nil, err
 	}
 	return actual, nil
-	
+
 }
 
 func (c Config) SourceConfigType() string {

@@ -164,10 +164,7 @@ func ParseMetadata(data []byte) (*ODataMetadata, error) {
 
 		// Populate EntitySets & FunctionImports
 		for _, es := range sch.EntityContainer.EntitySets {
-			meta.EntitySets[es.Name] = EntitySet{
-				Name:       es.Name,
-				EntityType: es.EntityType,
-			}
+			meta.EntitySets[es.Name] = EntitySet(es)
 		}
 
 		for _, fi := range sch.EntityContainer.FunctionImports {
@@ -178,11 +175,7 @@ func ParseMetadata(data []byte) (*ODataMetadata, error) {
 				Parameters: make([]FunctionParameter, 0, len(fi.Parameters)),
 			}
 			for _, p := range fi.Parameters {
-				f.Parameters = append(f.Parameters, FunctionParameter{
-					Name: p.Name,
-					Type: p.Type,
-					Mode: p.Mode,
-				})
+				f.Parameters = append(f.Parameters, FunctionParameter(p))
 			}
 			meta.FunctionImps[fi.Name] = f
 		}

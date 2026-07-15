@@ -36,19 +36,19 @@ func TestMockODataNativeEndpoints(t *testing.T) {
 		// Metadata endpoint
 		if r.URL.Path == "/sap/opu/odata/sap/API_SALES_ORDER_SRV/$metadata" {
 			w.Header().Set("Content-Type", "application/xml")
-			w.Write([]byte(`<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx"><edmx:DataServices m:DataServiceVersion="2.0" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"><Schema Namespace="API_SALES_ORDER_SRV" xmlns="http://schemas.microsoft.com/ado/2008/09/edm"><EntityContainer Name="API_SALES_ORDER_SRV_Entities" m:IsDefaultEntityContainer="true"><EntitySet Name="A_SalesOrder" EntityType="API_SALES_ORDER_SRV.A_SalesOrderType"/></EntityContainer><EntityType Name="A_SalesOrderType"><Key><PropertyRef Name="SalesOrder"/></Key><Property Name="SalesOrder" Type="Edm.String" Nullable="false" MaxLength="10"/><Property Name="SalesOrderType" Type="Edm.String" Nullable="false" MaxLength="4"/><Property Name="SoldToParty" Type="Edm.String" Nullable="false" MaxLength="10"/></EntityType></Schema></edmx:DataServices></edmx:Edmx>`))
+			_, _ = w.Write([]byte(`<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx"><edmx:DataServices m:DataServiceVersion="2.0" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"><Schema Namespace="API_SALES_ORDER_SRV" xmlns="http://schemas.microsoft.com/ado/2008/09/edm"><EntityContainer Name="API_SALES_ORDER_SRV_Entities" m:IsDefaultEntityContainer="true"><EntitySet Name="A_SalesOrder" EntityType="API_SALES_ORDER_SRV.A_SalesOrderType"/></EntityContainer><EntityType Name="A_SalesOrderType"><Key><PropertyRef Name="SalesOrder"/></Key><Property Name="SalesOrder" Type="Edm.String" Nullable="false" MaxLength="10"/><Property Name="SalesOrderType" Type="Edm.String" Nullable="false" MaxLength="4"/><Property Name="SoldToParty" Type="Edm.String" Nullable="false" MaxLength="10"/></EntityType></Schema></edmx:DataServices></edmx:Edmx>`))
 			return
 		}
 		// Entity set read endpoint
 		if r.URL.Path == "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder" {
 			if r.Header.Get("X-SAP-Auth") == "" {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`{"error":"unauthorized: missing X-SAP-Auth"}`))
+				_, _ = w.Write([]byte(`{"error":"unauthorized: missing X-SAP-Auth"}`))
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"d":{"results":[{"SalesOrder":"1","SalesOrderType":"OR","SoldToParty":"100001"}]}}`))
+			_, _ = w.Write([]byte(`{"d":{"results":[{"SalesOrder":"1","SalesOrderType":"OR","SoldToParty":"100001"}]}}`))
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)
