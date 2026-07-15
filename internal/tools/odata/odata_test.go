@@ -61,6 +61,10 @@ func (m *mockSAPSource) Compatibility() odata.CompatibilityConfig {
 	return odata.CompatibilityConfig{}
 }
 
+func (m *mockSAPSource) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}
+
 func TestToolInitializationREAD(t *testing.T) {
 	// 1. Setup Mock Metadata
 	metadata := &odata.ODataMetadata{
@@ -183,6 +187,10 @@ func (m *mockSAPSourceWithResponse) UseClientAuthorization() bool   { return fal
 func (m *mockSAPSourceWithResponse) Metadata() *odata.ODataMetadata { return m.metadata }
 func (m *mockSAPSourceWithResponse) Compatibility() odata.CompatibilityConfig {
 	return odata.CompatibilityConfig{}
+}
+
+func (m *mockSAPSourceWithResponse) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }
 
 type mockSourceProvider struct {
