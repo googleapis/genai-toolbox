@@ -288,7 +288,6 @@ func TestFileResource_TOCTOU(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create a unique file for each test case
 			filePath := filepath.Join(tmpDir, strings.ReplaceAll(tt.name, " ", "_")+".txt")
 			if err := os.WriteFile(filePath, []byte("safe content"), 0644); err != nil {
 				t.Fatal(err)
@@ -307,7 +306,6 @@ func TestFileResource_TOCTOU(t *testing.T) {
 				t.Fatalf("Initialize failed: %v", err)
 			}
 
-			// Execute malicious swap
 			tt.swapAction(filePath)
 
 			_, err = res.Read(ctx, nil)
@@ -339,12 +337,10 @@ func TestFileResource_Metadata(t *testing.T) {
 
 	fileCfg := res.ToConfig().(*Config)
 
-	// Verify MIME type inference
 	if !strings.HasPrefix(fileCfg.MimeType, "text/markdown") && !strings.HasPrefix(fileCfg.MimeType, "text/plain") && fileCfg.MimeType != "" {
 		t.Errorf("expected reasonable MimeType, got: %v", fileCfg.MimeType)
 	}
 
-	// Verify LastModified
 	if fileCfg.Annotations == nil || fileCfg.Annotations.LastModified == "" {
 		t.Errorf("expected LastModified annotation to be set")
 	} else {
@@ -352,5 +348,173 @@ func TestFileResource_Metadata(t *testing.T) {
 		if err != nil {
 			t.Errorf("expected valid RFC3339 LastModified, got %q", fileCfg.Annotations.LastModified)
 		}
+	}
+}
+
+func TestFileResource_NonExistentFileAtBoot(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "delayed.txt")
+
+	yamlStr := fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath))
+	ctx := context.Background()
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeConfig(ctx, "file", "delayed", decoder)
+	if err != nil {
+		t.Fatalf("DecodeConfig failed: %v", err)
+	}
+
+	res, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed unexpectedly for non-existent file: %v", err)
+	}
+
+	_, err = res.Read(ctx, nil)
+	if err == nil {
+		t.Fatalf("Expected Read to fail for non-existent file")
+	}
+
+	if err := os.WriteFile(filePath, []byte("it exists now"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := res.Read(ctx, nil)
+	if err != nil {
+		t.Fatalf("Read failed after file creation: %v", err)
+	}
+	if data.(string) != "it exists now" {
+		t.Errorf("Expected 'it exists now', got %q", data)
+	}
+}
+
+func TestFileResource_DynamicMetadata(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "dynamic.txt")
+
+	if err := os.WriteFile(filePath, []byte("1234567890"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlStr := fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath))
+	ctx := context.Background()
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, _ := resources.DecodeConfig(ctx, "file", "dynamic", decoder)
+	res, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed: %v", err)
+	}
+
+	fileCfg := res.ToConfig().(*Config)
+	if *fileCfg.Size != 10 {
+		t.Errorf("Expected initial size to be 10, got %d", *fileCfg.Size)
+	}
+	initialTimestamp := fileCfg.Annotations.LastModified
+
+	time.Sleep(10 * time.Millisecond)
+
+	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.Write([]byte("12345")); err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+
+	updatedCfg := res.ToConfig().(*Config)
+	if *updatedCfg.Size != 15 {
+		t.Errorf("Expected dynamically updated size to be 15, got %d", *updatedCfg.Size)
+	}
+	if updatedCfg.Annotations.LastModified == initialTimestamp {
+		_, err := time.Parse(time.RFC3339, updatedCfg.Annotations.LastModified)
+		if err != nil {
+			t.Errorf("Invalid RFC3339 LastModified: %q", updatedCfg.Annotations.LastModified)
+		}
+	}
+}
+
+func TestFileResource_SymlinkBaseEscape(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	baseDir := filepath.Join(tmpDir, "base")
+	if err := os.Mkdir(baseDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	outsideDir := filepath.Join(tmpDir, "outside")
+	if err := os.Mkdir(outsideDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	secretFile := filepath.Join(outsideDir, "secret.txt")
+	if err := os.WriteFile(secretFile, []byte("super secret"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	symlinkPath := filepath.Join(baseDir, "link.txt")
+	if err := os.Symlink(secretFile, symlinkPath); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlStr := "type: file\npath: link.txt"
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, resources.BaseDirKey, baseDir)
+
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeConfig(ctx, "file", "escape", decoder)
+	if err != nil {
+		t.Fatalf("DecodeConfig failed: %v", err)
+	}
+
+	_, err = cfg.Initialize(ctx)
+	if err == nil {
+		t.Fatalf("Expected Initialize to fail for symlink base escape")
+	}
+	if !strings.Contains(err.Error(), "escapes base directory") {
+		t.Errorf("Expected error to contain 'escapes base directory', got: %v", err)
+	}
+}
+
+func TestFileResource_DelayedSymlinkEscape(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	baseDir := filepath.Join(tmpDir, "base")
+	if err := os.Mkdir(baseDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	outsideDir := filepath.Join(tmpDir, "outside")
+	if err := os.Mkdir(outsideDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	secretFile := filepath.Join(outsideDir, "secret.txt")
+	if err := os.WriteFile(secretFile, []byte("super secret"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlStr := "type: file\npath: delayed_link.txt"
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, resources.BaseDirKey, baseDir)
+
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeConfig(ctx, "file", "delayed_escape", decoder)
+	if err != nil {
+		t.Fatalf("DecodeConfig failed: %v", err)
+	}
+
+	res, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed unexpectedly: %v", err)
+	}
+
+	symlinkPath := filepath.Join(baseDir, "delayed_link.txt")
+	if err := os.Symlink(secretFile, symlinkPath); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = res.Read(ctx, nil)
+	if err == nil {
+		t.Fatalf("Expected Read to fail for delayed symlink base escape")
+	}
+	if !strings.Contains(err.Error(), "escapes base directory") {
+		t.Errorf("Expected error to contain 'escapes base directory', got: %v", err)
 	}
 }
