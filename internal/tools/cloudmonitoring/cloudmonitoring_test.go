@@ -15,6 +15,7 @@
 package cloudmonitoring_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -30,8 +31,8 @@ func TestInitialize(t *testing.T) {
 	t.Parallel()
 
 	wantParams := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
-		parameters.NewStringParameterWithRequired("query", "The promql query to execute.", true),
+		parameters.NewStringParameter("projectId", "The Id of the Google Cloud project.", parameters.WithStringRequired(true)),
+		parameters.NewStringParameter("query", "The promql query to execute.", parameters.WithStringRequired(true)),
 	}
 
 	testCases := []struct {
@@ -78,7 +79,7 @@ func TestInitialize(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tool, err := tc.cfg.Initialize()
+			tool, err := tc.cfg.Initialize(context.Background())
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -163,7 +164,7 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -208,7 +209,7 @@ func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

@@ -146,7 +146,7 @@ func TestParseArguments(t *testing.T) {
 	t.Parallel()
 	testArguments := prompts.Arguments{
 		{Parameter: parameters.NewStringParameter("name", "A required name.")},
-		{Parameter: parameters.NewIntParameterWithRequired("count", "An optional count.", false)},
+		{Parameter: parameters.NewIntParameter("count", "An optional count.", parameters.WithIntRequired(false))},
 	}
 
 	testCases := []struct {

@@ -31,6 +31,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"golang.org/x/oauth2"
+	"google.golang.org/api/option"
 )
 
 const resourceType string = "conversational-analytics-ask-data-agent"
@@ -77,7 +78,6 @@ type DataAgentContext struct {
 }
 
 type CAPayload struct {
-	Project          string           `json:"project"`
 	Messages         []Message        `json:"messages"`
 	DataAgentContext DataAgentContext `json:"dataAgentContext"`
 	ClientIdEnum     string           `json:"clientIdEnum"`
@@ -98,7 +98,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -156,13 +156,13 @@ func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
 	return t.BaseTool.Manifest(srcs)
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
-	var tokenStr string
+	var tokenSource oauth2.TokenSource
 
 	// Get credentials for the API call
 	if source.UseClientAuthorization() {
@@ -170,13 +170,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if accessToken == "" {
 			return nil, util.NewClientServerError("tool is configured for client OAuth but no token was provided in the request header", http.StatusUnauthorized, nil)
 		}
-		tokenStr, err = accessToken.ParseBearerToken()
+		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
 		}
+		tokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: tokenStr})
 	} else {
 		// Get a token source for the Gemini Data Analytics API.
-		tokenSource, err := source.GoogleCloudTokenSourceWithScope(ctx, "")
+		tokenSource, err = source.GoogleCloudTokenSourceWithScope(ctx, "")
 		if err != nil {
 			return nil, util.NewClientServerError("failed to get token source", http.StatusInternalServerError, err)
 		}
@@ -185,11 +186,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if tokenSource == nil {
 			return nil, util.NewClientServerError("cloud-platform token source is missing", http.StatusInternalServerError, nil)
 		}
-		token, err := tokenSource.Token()
-		if err != nil {
-			return nil, util.NewClientServerError("failed to get token from cloud-platform token source", http.StatusInternalServerError, err)
-		}
-		tokenStr = token.AccessToken
 	}
 
 	// Extract parameters from the map
@@ -199,10 +195,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	// Construct URL, headers, and payload
 	projectID := source.GetProjectID()
-	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat", projectID, t.Cfg.Location)
+	caURL := fmt.Sprintf("%s/v1/projects/%s/locations/%s:chat", util.GetGDAEndpoint(), projectID, t.Cfg.Location)
 
 	headers := map[string]string{
-		"Authorization":     fmt.Sprintf("Bearer %s", tokenStr),
 		"Content-Type":      "application/json",
 		"X-Goog-API-Client": util.GDAClientID,
 	}
@@ -210,7 +205,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	dataAgentName := fmt.Sprintf("projects/%s/locations/%s/dataAgents/%s", projectID, t.Cfg.Location, dataAgentId)
 
 	payload := CAPayload{
-		Project:  fmt.Sprintf("projects/%s", projectID),
 		Messages: []Message{{UserMessage: UserMessage{Text: userQuery}}},
 		DataAgentContext: DataAgentContext{
 			DataAgent: dataAgentName,
@@ -218,8 +212,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		ClientIdEnum: util.GDAClientID,
 	}
 
+	client, err := util.NewGDAClient(ctx, option.WithTokenSource(tokenSource))
+	if err != nil {
+		return nil, util.NewClientServerError("failed to create GDA client", http.StatusInternalServerError, err)
+	}
+	client.Timeout = 330 * time.Second
+
 	// Call the streaming API
-	response, err := getStream(caURL, payload, headers, t.Cfg.MaxResults)
+	response, err := getStream(client, caURL, payload, headers, t.Cfg.MaxResults)
 	if err != nil {
 		return nil, util.NewAgentError("failed to get response from conversational analytics API", err)
 	}
@@ -227,15 +227,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return response, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) RequiresClientAuthorization(primitiveMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}
 	return source.UseClientAuthorization(), nil
 }
 
-func getStream(url string, payload CAPayload, headers map[string]string, maxRows int) (string, error) {
+func getStream(client *http.Client, url string, payload CAPayload, headers map[string]string, maxRows int) (string, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal payload: %w", err)
@@ -249,7 +249,6 @@ func getStream(url string, payload CAPayload, headers map[string]string, maxRows
 		req.Header.Set(k, v)
 	}
 
-	client := &http.Client{Timeout: 330 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to send request: %w", err)

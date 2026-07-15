@@ -373,5 +373,70 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 1. Use this tool to retrieve rich metadata regarding one or more data assets along with their relationships.
 2. You must provide the `resources` list with full resource names.
 ### Response
-1. Present the requested metadata and relationship information. 
+1. Present the requested metadata and relationship information.
+
+## Tool: list_data_products
+### Request
+1. Use this tool to retrieve all Data Products globally across all locations.
+2. You can optionally filter by `display_name` (e.g., "`display_name:\"my-product\"`") or other fields using the Dataplex filter syntax.
+### Response
+1. Unless asked for a specific data product, respond with all entries returned.
+
+## Tool: get_data_product
+### Request
+1. Use this tool to retrieve detailed metadata for a specific Data Product.
+2. You must provide `locationId` and `dataProductId`.
+### Response
+1. Present the retrieved metadata for the Data Product, including its display name, description, owner emails, asset count, labels, and access groups.
+
+## Tool: list_data_assets
+### Request
+1. Use this tool to retrieve all Data Assets under a specific Data Product.
+2. You must provide `locationId` and `dataProductId`.
+3. You can optionally filter the listed assets using `filter` or limit the response using `pageSize`.
+### Response
+1. Present the retrieved list of Data Assets, including their IDs, resources, and labels.
+
+## Tool: get_data_asset
+### Request
+1. Use this tool to retrieve detailed metadata for a specific Data Asset.
+2. You must provide `locationId`, `dataProductId`, and `dataAssetId`.
+### Response
+1. Present the retrieved metadata for the Data Asset, including its ID, resource, labels, and access group configurations.
+
+## Tool: create_data_product
+### Request
+1. Use this tool to create a new Data Product.
+2. You must provide `locationId`, `displayName`, and `ownerEmails`.
+3. You can optionally provide `dataProductId` (if not specified, the backend will auto-generate one), `description` and `accessGroups`.
+### Response
+1. Present the location ID and operation ID returned immediately by the tool call.
+2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+
+## Tool: update_data_product
+### Request
+1. Use this tool to update an existing Data Product.
+2. You must provide `locationId` and `dataProductId`.
+3. You can optionally provide `displayName`, `description`, `ownerEmails`, `accessGroups`, and `updateMask`.
+### Response
+1. Present the location ID and operation ID returned immediately by the tool call.
+2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+
+## Tool: create_data_asset
+### Request
+1. Use this tool to create a new Data Asset under a Data Product.
+2. You must provide `locationId`, `dataProductId`, `dataAssetId`, and `resourceUri`.
+3. You can optionally provide `labels` and `accessGroupConfigs`.
+### Response
+1. Present the location ID and operation ID returned immediately by the tool call.
+2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+
+## Tool: update_data_asset
+### Request
+1. Use this tool to update an existing Data Asset under a Data Product.
+2. You must provide `locationId`, `dataProductId`, and `dataAssetId`.
+3. You can optionally provide `labels`, `accessGroupConfigs`, and `updateMask`.
+### Response
+1. Present the location ID and operation ID returned immediately by the tool call.
+2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
 ```

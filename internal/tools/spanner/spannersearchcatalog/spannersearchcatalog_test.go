@@ -64,7 +64,7 @@ func TestParseFromYamlSpannerSearch(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -114,7 +114,7 @@ func TestConfig_Initialize(t *testing.T) {
 		Source: "test-source",
 	}
 
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}
@@ -146,7 +146,7 @@ func TestTool_Invoke(t *testing.T) {
 		Type:   "spanner-search-catalog",
 		Source: "test-source",
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}

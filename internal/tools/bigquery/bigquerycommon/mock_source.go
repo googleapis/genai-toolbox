@@ -16,6 +16,7 @@ package bigquerycommon
 
 import (
 	"context"
+	"fmt"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -29,6 +30,7 @@ type MockSource struct {
 	sources.Source
 	CalledSQL       string
 	Client          *bigqueryapi.Client
+	Service         *bigqueryrestapi.Service
 	AllowedDatasets []string
 	RunSQLResult    any
 	RunSQLError     error
@@ -40,6 +42,10 @@ func (m *MockSource) BigQueryClient() *bigqueryapi.Client {
 
 func (m *MockSource) UseClientAuthorization() bool {
 	return false
+}
+
+func (m *MockSource) BigQueryWriteMode() string {
+	return "allowed"
 }
 
 func (m *MockSource) GetAuthTokenHeaderName() string {
@@ -54,8 +60,9 @@ func (m *MockSource) IsDatasetAllowed(projectID, datasetID string) bool {
 	if len(m.AllowedDatasets) == 0 {
 		return true
 	}
+	target := fmt.Sprintf("%s.%s", projectID, datasetID)
 	for _, allowed := range m.AllowedDatasets {
-		if allowed == datasetID {
+		if allowed == target || allowed == datasetID {
 			return true
 		}
 	}
@@ -73,7 +80,7 @@ func (m *MockSource) BigQuerySession() bigqueryds.BigQuerySessionProvider {
 }
 
 func (m *MockSource) RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-	return m.Client, nil, nil
+	return m.Client, m.Service, nil
 }
 
 func (m *MockSource) RunSQL(ctx context.Context, client *bigqueryapi.Client, sql string, queryType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty, labels map[string]string) (any, error) {

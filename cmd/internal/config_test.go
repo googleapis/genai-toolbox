@@ -52,7 +52,7 @@ func TestParseEnv(t *testing.T) {
 			in:        "${FOO}",
 			want:      "",
 			err:       true,
-			errString: `environment variable not found: "FOO"`,
+			errString: `environment variable not found: "FOO" (line 1, column 1)`,
 		},
 		{
 			desc:    "without default without env, lenient",
@@ -955,8 +955,8 @@ func TestParseConfigWithAuth(t *testing.T) {
 						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+							parameters.NewIntParameter("id", "user id", parameters.WithIntAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}})),
+							parameters.NewStringParameter("email", "user email", parameters.WithStringAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}})),
 						},
 					},
 				},
@@ -1063,8 +1063,8 @@ func TestParseConfigWithAuth(t *testing.T) {
 						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+							parameters.NewIntParameter("id", "user id", parameters.WithIntAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}})),
+							parameters.NewStringParameter("email", "user email", parameters.WithStringAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}})),
 						},
 					},
 				},
@@ -1234,9 +1234,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Method: "GET",
 						Path:   "search?name=alice&pet=cat",
 						QueryParams: []parameters.Parameter{
-							parameters.NewStringParameterWithAuth("country", "some description",
+							parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-									{Name: "other-auth-service", Field: "user_id"}}),
+									{Name: "other-auth-service", Field: "user_id"}})),
 						},
 						RequestBody: `{
   "age": {{.age}},
@@ -1382,9 +1382,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Method: "GET",
 						Path:   "search?name=alice&pet=cat",
 						QueryParams: []parameters.Parameter{
-							parameters.NewStringParameterWithAuth("country", "some description",
+							parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-									{Name: "other-auth-service", Field: "user_id"}}),
+									{Name: "other-auth-service", Field: "user_id"}})),
 						},
 						RequestBody: `{
   "age": {{.age}},
@@ -1822,7 +1822,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"monitor": tools.ToolsetConfig{
 					Name:      "monitor",
-					ToolNames: []string{"get_query_plan", "list_active_queries", "get_query_metrics", "get_system_metrics", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes"},
+					ToolNames: []string{"get_query_plan", "list_active_queries", "list_all_locks", "get_query_metrics", "get_system_metrics", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes", "show_query_stats"},
 				},
 				"lifecycle": tools.ToolsetConfig{
 					Name:      "lifecycle",
@@ -1859,6 +1859,14 @@ func TestPrebuiltTools(t *testing.T) {
 				"discovery": tools.ToolsetConfig{
 					Name:      "discovery",
 					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "search_dq_scans"},
+				},
+				"data-products": tools.ToolsetConfig{
+					Name:      "data-products",
+					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "list_data_products", "get_data_product", "list_data_assets", "get_data_asset", "create_data_product", "update_data_product", "create_data_asset", "update_data_asset"},
+				},
+				"enrich": tools.ToolsetConfig{
+					Name:      "enrich",
+					ToolNames: []string{"search_entries", "lookup_entry", "lookup_context", "generate_data_insights", "get_data_insights", "generate_data_profile", "get_data_profile", "discover_metadata", "get_discovery_results", "check_data_quality", "get_data_quality_results", "get_operation", "get_run_status"},
 				},
 			},
 		},
@@ -1906,7 +1914,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"monitor": tools.ToolsetConfig{
 					Name:      "monitor",
-					ToolNames: []string{"get_query_plan", "list_active_queries", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes"},
+					ToolNames: []string{"get_query_plan", "list_active_queries", "list_all_locks", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes", "show_query_stats"},
 				},
 			},
 		},

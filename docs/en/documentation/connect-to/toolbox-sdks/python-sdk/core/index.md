@@ -99,13 +99,17 @@ You can explicitly select a protocol using the `protocol` option during client i
 
 ### Supported Protocols
 
-We currently support different versions of the MCP protocol.
+We currently support different versions of the MCP protocol. For a complete and up-to-date list, see the [`Protocol` enum definition on GitHub](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/src/toolbox_core/protocol.py).
 
 | Constant | Description |
 | :--- | :--- |
-| `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-06-18`). |
+| `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-11-25`). |
+| `Protocol.MCP_LATEST` | Alias for the latest stable MCP version (currently `2025-11-25`). |
+| `Protocol.MCP_DRAFT` | Alias for the upcoming draft MCP version (currently `DRAFT-2026-v1`). |
+| `Protocol.MCP_v2026_DRAFT` | MCP Protocol draft version DRAFT-2026-v1. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
+| `Protocol.MCP_v20250326` | MCP Protocol version 2025-03-26. |
 | `Protocol.MCP_v20241105` | MCP Protocol version 2024-11-05. |
 
 ### Example
@@ -119,7 +123,7 @@ async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP) as tool
     pass
 ```
 
-If you want to pin the MCP Version 2025-03-26:
+If you want to set the preferred starting protocol to 2025-03-26 (allowing fallback negotiation if the server doesn't support it):
 
 ```py
 from toolbox_core import ToolboxClient
@@ -129,6 +133,24 @@ async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP_v2025032
     # Use client
     pass
 ```
+
+To restrict negotiation to a specific subset of versions, you can pass a list of supported protocols to the `protocol` parameter:
+
+```py
+from toolbox_core import ToolboxClient
+from toolbox_core.protocol import Protocol
+
+async with ToolboxClient(
+    "http://127.0.0.1:5000", 
+    protocol=[Protocol.MCP_LATEST, Protocol.MCP_v20250618]
+) as toolbox:
+    # Use client
+    pass
+```
+
+{{< notice tip >}}
+If you want to strictly pin the version and disable protocol fallback, you must pass an array containing just one value: `protocol=[Protocol.MCP_DRAFT]`
+{{< /notice >}}
 
 ## Loading Tools
 
@@ -593,4 +615,47 @@ async with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as too
 
 {{< notice note >}}
 If `telemetry_enabled=True` but no provider is configured, OpenTelemetry's no-op implementation is used — no data is exported and there is zero overhead. The optional `[telemetry]` extra must be installed for `telemetry_enabled=True` to have any effect; if it is not installed the flag is silently ignored.
+{{< /notice >}}
+
+### Per-call Telemetry Attributes
+
+In addition to the automatic instrumentation enabled by `telemetry_enabled=True`, you can attach **per-tool** telemetry attributes (such as the LLM model name, user ID, or agent ID) to outgoing invocations. These attributes are:
+
+* Sent to the Toolbox server in the MCP request `params._meta` under the `dev.mcp-toolbox/telemetry` key, where they are available to server-side instrumentation (e.g., SQL Commenter on database tools).
+* Recorded as attributes on the client-side OpenTelemetry span for the invocation when telemetry is enabled.
+
+Use the `TelemetryAttributes` model and the `add_telemetry_attributes()` method on a loaded tool:
+
+```py
+from toolbox_core import ToolboxClient, TelemetryAttributes
+
+async with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    tool = await toolbox.load_tool("my-tool")
+
+    attrs = TelemetryAttributes(
+        llm_model="gemini-2.5-pro",
+        user_id="user-123",
+        agent_id="agent-abc",
+    )
+    instrumented_tool = tool.add_telemetry_attributes(attrs)
+
+    result = await instrumented_tool(param="value")
+```
+
+The same method is available on `ToolboxSyncTool` for synchronous usage.
+
+#### Fields and Wire Mapping
+
+`TelemetryAttributes` exposes three optional fields, which serialize to OpenTelemetry-style keys on the wire:
+
+| Python field | Span/Meta key |
+| :--- | :--- |
+| `llm_model` | `client.model` |
+| `user_id` | `client.user.id` |
+| `agent_id` | `client.agent.id` |
+
+{{< notice tip >}}
+* `add_telemetry_attributes()` returns a **new tool instance**; the original tool is left untouched (the same immutable pattern as `bind_param` and `add_auth_token_getter`).
+* Calling `add_telemetry_attributes()` a second time **replaces** the previous attributes rather than merging with them. Pass a single `TelemetryAttributes` bundle with all fields you want sent.
+* Unset fields and empty strings are dropped before the payload is sent, so they will not appear as empty values on the server.
 {{< /notice >}}

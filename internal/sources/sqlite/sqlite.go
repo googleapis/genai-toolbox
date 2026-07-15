@@ -22,6 +22,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 	_ "modernc.org/sqlite" // Pure Go SQLite driver
@@ -47,9 +48,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name     string `yaml:"name" validate:"required"`
-	Type     string `yaml:"type" validate:"required"`
-	Database string `yaml:"database" validate:"required"` // Path to SQLite database file
+	Name         string `yaml:"name" validate:"required"`
+	Type         string `yaml:"type" validate:"required"`
+	Database     string `yaml:"database" validate:"required"` // Path to SQLite database file
+	SQLCommenter *bool  `yaml:"sqlCommenter"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -95,6 +97,7 @@ func (s *Source) SQLiteDB() *sql.DB {
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
 	// Execute the SQL query with parameters
+	statement = sqlcommenter.PrependComment(ctx, statement, SourceType, s.SQLCommenter)
 	rows, err := s.SQLiteDB().QueryContext(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
