@@ -48,7 +48,9 @@ type Config struct {
 	Path                 string `yaml:"path"`
 	MaxSize              *int64 `yaml:"max_size,omitempty"`
 
-	absPath string
+	absPath         string
+	resolvedBaseDir string
+	isRelative      bool
 }
 
 // ResourceConfigType returns the resource type identifier.
@@ -78,28 +80,72 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		limit := int64(defaultMaxFileSize)
 		c.MaxSize = &limit
 	} else if *c.MaxSize <= 0 {
-		return nil, fmt.Errorf("file resource %q max_size must be greater than 0MB", c.Name)
+		return nil, fmt.Errorf("file resource %q max_size must be greater than 0", c.Name)
 	}
 
+	var baseDir string
 	if filepath.IsAbs(c.Path) {
 		c.absPath = filepath.Clean(c.Path)
+		c.isRelative = false
 	} else {
 		if !filepath.IsLocal(c.Path) {
 			return nil, fmt.Errorf("relative path %q is unsafe", c.Path)
 		}
-		baseDir := resources.GetBaseDirFromContext(ctx)
+		baseDir = resources.GetBaseDirFromContext(ctx)
 		c.absPath = filepath.Clean(filepath.Join(baseDir, c.Path))
+		c.isRelative = true
 	}
 
 	if abs, err := filepath.Abs(c.absPath); err == nil {
 		c.absPath = abs
 	}
 
+	if c.Annotations == nil {
+		c.Annotations = &resources.ResourceAnnotations{}
+	}
+
+	if c.MimeType == "" {
+		ext := strings.ToLower(filepath.Ext(c.absPath))
+		c.MimeType = mime.TypeByExtension(ext)
+		if c.MimeType == "" {
+			c.MimeType = "text/plain"
+		}
+	}
+
+	if c.isRelative && baseDir != "" {
+		absBase, err := filepath.Abs(baseDir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get absolute path for base directory: %w", err)
+		}
+		resolvedBase, err := filepath.EvalSymlinks(absBase)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return nil, fmt.Errorf("failed to evaluate symlinks for base directory: %w", err)
+			}
+			c.resolvedBaseDir = absBase
+		} else {
+			c.resolvedBaseDir = resolvedBase
+		}
+	}
+
 	resolvedPath, err := filepath.EvalSymlinks(c.absPath)
 	if err != nil {
+		if os.IsNotExist(err) {
+			if err := validateExtension(c.absPath); err != nil {
+				return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
+			}
+			return &FileResource{config: c}, nil
+		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q: %w", c.Name, err)
 	}
 	c.absPath = resolvedPath
+
+	if c.isRelative && c.resolvedBaseDir != "" {
+		rel, err := filepath.Rel(c.resolvedBaseDir, c.absPath)
+		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return nil, fmt.Errorf("security violation: resolved path %q escapes base directory %q", c.absPath, c.resolvedBaseDir)
+		}
+	}
 
 	if err := validateExtension(c.absPath); err != nil {
 		return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
@@ -111,27 +157,6 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 	}
 	if !info.Mode().IsRegular() {
 		return nil, fmt.Errorf("path %q for resource %q is not a regular file (devices, pipes, sockets are blocked)", c.absPath, c.Name)
-	}
-
-	size := info.Size()
-	if size > *c.MaxSize {
-		size = *c.MaxSize
-	}
-	c.Size = &size
-
-	if c.Annotations == nil {
-		c.Annotations = &resources.ResourceAnnotations{}
-	}
-	if c.Annotations.LastModified == "" {
-		c.Annotations.LastModified = info.ModTime().Format(time.RFC3339)
-	}
-
-	if c.MimeType == "" {
-		ext := strings.ToLower(filepath.Ext(c.absPath))
-		c.MimeType = mime.TypeByExtension(ext)
-		if c.MimeType == "" {
-			c.MimeType = "text/plain"
-		}
 	}
 
 	return &FileResource{
@@ -151,8 +176,24 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.config.Name, err)
 	}
 
+	if r.config.isRelative && r.config.resolvedBaseDir != "" {
+		rel, err := filepath.Rel(r.config.resolvedBaseDir, resolvedPath)
+		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return nil, fmt.Errorf("security violation: resolved path %q escapes base directory %q at runtime", resolvedPath, r.config.resolvedBaseDir)
+		}
+	}
+
 	if err := validateExtension(resolvedPath); err != nil {
 		return nil, fmt.Errorf("security violation: file extension changed post-boot for resource %q: %w", r.config.Name, err)
+	}
+
+	statInfo, err := os.Lstat(resolvedPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lstat file %q: %w", resolvedPath, err)
+	}
+
+	if statInfo.Mode()&os.ModeSymlink != 0 {
+		return nil, fmt.Errorf("security violation: TOCTOU symlink swap detected on %q", resolvedPath)
 	}
 
 	f, err := os.Open(resolvedPath)
@@ -165,6 +206,11 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to stat opened file %q: %w", resolvedPath, err)
 	}
+
+	if !os.SameFile(statInfo, openInfo) {
+		return nil, fmt.Errorf("security violation: TOCTOU file swap detected on %q between stat and open", resolvedPath)
+	}
+
 	if !openInfo.Mode().IsRegular() {
 		return nil, fmt.Errorf("security violation: file %q was swapped with a non-regular file during read", resolvedPath)
 	}
@@ -186,5 +232,23 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 
 // ToConfig returns the runtime config struct back to the caller.
 func (r *FileResource) ToConfig() resources.ResourceConfig {
-	return r.config
+	cfgCopy := *r.config
+
+	if r.config.Annotations != nil {
+		ann := *r.config.Annotations
+		cfgCopy.Annotations = &ann
+	} else {
+		cfgCopy.Annotations = &resources.ResourceAnnotations{}
+	}
+
+	if info, err := os.Stat(r.config.absPath); err == nil {
+		size := info.Size()
+		if size > *cfgCopy.MaxSize {
+			size = *cfgCopy.MaxSize
+		}
+		cfgCopy.Size = &size
+		cfgCopy.Annotations.LastModified = info.ModTime().Format(time.RFC3339)
+	}
+
+	return &cfgCopy
 }
