@@ -20,6 +20,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -190,4 +191,30 @@ func NewMockPrompt(name, desc string, args prompts.Arguments) MockPrompt {
 		Args:        args,
 		manifest:    manifest,
 	}
+}
+
+// MockResourceConfig is a mock implementation of resources.ResourceConfig
+type MockResourceConfig struct {
+	resources.BaseConfig `yaml:",inline"`
+}
+
+func (m MockResourceConfig) ResourceConfigType() string {
+	return "mock"
+}
+
+func (m MockResourceConfig) Initialize(ctx context.Context) (resources.Resource, error) {
+	return MockResource{config: m}, nil
+}
+
+// MockResource is a mock implementation of resources.Resource
+type MockResource struct {
+	config MockResourceConfig
+}
+
+func (m MockResource) Read(ctx context.Context, params map[string]any) (any, error) {
+	return "mock resource data", nil
+}
+
+func (m MockResource) ToConfig() resources.ResourceConfig {
+	return m.config
 }

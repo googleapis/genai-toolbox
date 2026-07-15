@@ -1452,18 +1452,6 @@ func TestMCPAuthEnableAPIClash(t *testing.T) {
 	}
 }
 
-type mockResourceConfig struct {
-	resources.BaseConfig `yaml:",inline"`
-}
-
-func (m mockResourceConfig) ResourceConfigType() string {
-	return "mock"
-}
-
-func (m mockResourceConfig) Initialize(ctx context.Context) (resources.Resource, error) {
-	return nil, nil
-}
-
 func TestResourceConfigValidation(t *testing.T) {
 	ctx := context.Background()
 
@@ -1630,7 +1618,7 @@ path: /test2
 
 	// Register a mock factory for this test package to use
 	mockFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
-		var cfg mockResourceConfig
+		var cfg testutils.MockResourceConfig
 		cfg.Name = name
 		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
 			return nil, err
@@ -1655,7 +1643,7 @@ func TestResourceAnnotationsParsing(t *testing.T) {
 	ctx := context.Background()
 
 	mockFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
-		var cfg mockResourceConfig
+		var cfg testutils.MockResourceConfig
 		cfg.Name = name
 		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
 			return nil, err
@@ -1687,7 +1675,7 @@ annotations:
 		t.Fatalf("missing parsed config")
 	}
 
-	mockCfg := cfg.(mockResourceConfig)
+	mockCfg := cfg.(testutils.MockResourceConfig)
 	if mockCfg.Annotations == nil {
 		t.Fatalf("annotations map is nil")
 	}
