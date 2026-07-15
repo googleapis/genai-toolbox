@@ -279,7 +279,7 @@ func (r *FileResource) ToConfig() resources.ResourceConfig {
 		}
 	}
 
-	if info, err := os.Stat(resolvedPath); err == nil {
+	if info, err := os.Stat(resolvedPath); err == nil && info.Mode().IsRegular() {
 		size := info.Size()
 		if size > *cfgCopy.MaxSize {
 			size = *cfgCopy.MaxSize
