@@ -555,7 +555,7 @@ func TestFileResource_DelayedSymlinkEscape(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	yamlStr := fmt.Sprintf("type: file\npath: delayed.txt")
+	yamlStr := "type: file\npath: delayed.txt"
 	ctx := context.WithValue(context.Background(), resources.BaseDirKey, baseDir)
 	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
 	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
