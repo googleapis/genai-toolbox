@@ -1,7 +1,7 @@
 ---
 title: "dataplex-update-data-product-aspects"
 type: docs
-weight: 3
+weight: 1
 description: >
   A "dataplex-update-data-product-aspects" tool updates aspects for an existing Data Product Entry in Knowledge Catalog.
 ---

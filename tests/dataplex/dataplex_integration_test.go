@@ -1100,26 +1100,12 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("Response body: %s", string(bodyBytes))
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -1266,27 +1252,13 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("Response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("Error parsing response body: %v", err)
 			}
 
@@ -1395,24 +1367,12 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -1517,23 +1477,7 @@ func runDataplexLookupContextToolInvokeTest(t *testing.T, tableName string, data
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-Type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			bodyBytes, _ := io.ReadAll(resp.Body)
-
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
 				t.Fatalf("Response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
@@ -1651,24 +1595,12 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -1762,27 +1694,15 @@ func runDataplexListDataProductsToolInvokeTest(t *testing.T, dataProductId1 stri
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -1885,27 +1805,15 @@ func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string)
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -2001,27 +1909,15 @@ func runDataplexListDataAssetsToolInvokeTest(t *testing.T, dataProductId string,
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -2135,27 +2031,16 @@ func runDataplexGetDataAssetToolInvokeTest(t *testing.T, dataProductId string, d
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
+
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -2329,28 +2214,15 @@ func runDataplexCreateAndUpdateDataProductToolsInvokeTest(t *testing.T, client *
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
-
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -2541,28 +2413,16 @@ func runDataplexCreateAndUpdateDataAssetToolsInvokeTest(
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
 
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -2925,28 +2785,16 @@ func runDataplexUpdateDataProductAspectsToolInvokeTest(t *testing.T, dataProduct
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
 
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)

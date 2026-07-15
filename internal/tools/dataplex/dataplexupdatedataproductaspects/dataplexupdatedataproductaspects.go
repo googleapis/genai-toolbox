@@ -16,6 +16,7 @@ package dataplexupdatedataproductaspects
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -147,52 +148,54 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("aspects parameter is required and must be an array", nil)
 	}
 
+	rawAspectsBytes, err := json.Marshal(rawAspects)
+	if err != nil {
+		return nil, util.NewAgentError("failed to marshal aspects parameter", err)
+	}
+
+	var parsedAspects []Aspect
+	if err := json.Unmarshal(rawAspectsBytes, &parsedAspects); err != nil {
+		return nil, util.NewAgentError("failed to unmarshal aspects parameter into required format", err)
+	}
+
 	projectID := source.ProjectID()
 
-	// Convert input array of maps to aspects map
+	// Convert input array of aspects to aspects map
 	aspectsMap := make(map[string]*dataplexpb.Aspect)
 
-	for i, rawAspect := range rawAspects {
-		aspectMap, ok := rawAspect.(map[string]any)
-		if !ok {
-			return nil, util.NewAgentError(fmt.Sprintf("aspect at index %d is not a map", i), nil)
-		}
-
-		aspectTypeID, _ := aspectMap["aspectTypeId"].(string)
-		if aspectTypeID == "" {
+	for i, aspect := range parsedAspects {
+		if aspect.AspectTypeId == "" {
 			return nil, util.NewAgentError(fmt.Sprintf("aspectTypeId is required for aspect at index %d", i), nil)
 		}
 
-		data, _ := aspectMap["data"].(map[string]any)
-		if data == nil {
+		if aspect.Data == nil {
 			return nil, util.NewAgentError(fmt.Sprintf("data is required for aspect at index %d", i), nil)
 		}
 
-		aspectProjID, _ := aspectMap["projectId"].(string)
-		aspectLocID, _ := aspectMap["locationId"].(string)
-
+		aspectProjID := aspect.ProjectID
 		if aspectProjID == "" {
-			if aspectTypeID == "overview" || aspectTypeID == "refresh-cadence" {
+			if aspect.AspectTypeId == "overview" || aspect.AspectTypeId == "refresh-cadence" {
 				aspectProjID = "dataplex-types"
 			} else {
 				aspectProjID = projectID
 			}
 		}
 
+		aspectLocID := aspect.LocationID
 		if aspectLocID == "" {
-			if aspectTypeID == "overview" || aspectTypeID == "refresh-cadence" {
+			if aspect.AspectTypeId == "overview" || aspect.AspectTypeId == "refresh-cadence" {
 				aspectLocID = "global"
 			} else {
 				aspectLocID = locationID
 			}
 		}
 
-		aspectType := fmt.Sprintf("projects/%s/locations/%s/aspectTypes/%s", aspectProjID, aspectLocID, aspectTypeID)
-		aspectKey := fmt.Sprintf("%s.%s.%s", aspectProjID, aspectLocID, aspectTypeID)
+		aspectType := fmt.Sprintf("projects/%s/locations/%s/aspectTypes/%s", aspectProjID, aspectLocID, aspect.AspectTypeId)
+		aspectKey := fmt.Sprintf("%s.%s.%s", aspectProjID, aspectLocID, aspect.AspectTypeId)
 
-		structData, err := structpb.NewStruct(data)
+		structData, err := structpb.NewStruct(aspect.Data)
 		if err != nil {
-			return nil, util.NewAgentError(fmt.Sprintf("failed to serialize data for aspect %q: %s", aspectTypeID, err), err)
+			return nil, util.NewAgentError(fmt.Sprintf("failed to serialize data for aspect %q: %s", aspect.AspectTypeId, err), err)
 		}
 
 		aspectsMap[aspectKey] = &dataplexpb.Aspect{
