@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
@@ -58,12 +59,13 @@ func (c *Config) ResourceConfigType() string {
 	return "file"
 }
 
+var allowedExts = map[string]bool{
+	".txt": true, ".md": true, ".csv": true, ".json": true,
+	".yaml": true, ".yml": true, ".xml": true, ".sql": true,
+}
+
 func validateExtension(path string) error {
 	ext := strings.ToLower(filepath.Ext(path))
-	allowedExts := map[string]bool{
-		".txt": true, ".md": true, ".csv": true, ".json": true,
-		".yaml": true, ".yml": true, ".xml": true, ".sql": true,
-	}
 	if !allowedExts[ext] {
 		return fmt.Errorf("file extension %q is not allowed", ext)
 	}
@@ -83,7 +85,6 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		return nil, fmt.Errorf("file resource %q max_size must be greater than 0", c.Name)
 	}
 
-	var baseDir string
 	if filepath.IsAbs(c.Path) {
 		c.absPath = filepath.Clean(c.Path)
 		c.isRelative = false
@@ -91,9 +92,13 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		if !filepath.IsLocal(c.Path) {
 			return nil, fmt.Errorf("relative path %q is unsafe", c.Path)
 		}
-		baseDir = resources.GetBaseDirFromContext(ctx)
-		c.absPath = filepath.Clean(filepath.Join(baseDir, c.Path))
 		c.isRelative = true
+		baseDir := resources.GetBaseDirFromContext(ctx)
+		if baseDir == "" {
+			baseDir = "."
+		}
+		c.resolvedBaseDir = baseDir
+		c.absPath = filepath.Clean(filepath.Join(baseDir, c.Path))
 	}
 
 	if abs, err := filepath.Abs(c.absPath); err == nil {
@@ -112,8 +117,8 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		}
 	}
 
-	if c.isRelative && baseDir != "" {
-		absBase, err := filepath.Abs(baseDir)
+	if c.isRelative && c.resolvedBaseDir != "" {
+		absBase, err := filepath.Abs(c.resolvedBaseDir)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get absolute path for base directory: %w", err)
 		}
@@ -177,9 +182,13 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	}
 
 	if r.config.isRelative && r.config.resolvedBaseDir != "" {
-		rel, err := filepath.Rel(r.config.resolvedBaseDir, resolvedPath)
+		resolvedBaseDir := r.config.resolvedBaseDir
+		if resolved, err := filepath.EvalSymlinks(resolvedBaseDir); err == nil {
+			resolvedBaseDir = resolved
+		}
+		rel, err := filepath.Rel(resolvedBaseDir, resolvedPath)
 		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-			return nil, fmt.Errorf("security violation: resolved path %q escapes base directory %q at runtime", resolvedPath, r.config.resolvedBaseDir)
+			return nil, fmt.Errorf("security violation: resolved path %q escapes base directory %q at runtime", resolvedPath, resolvedBaseDir)
 		}
 	}
 
@@ -223,8 +232,12 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	}
 
 	if int64(len(content)) > limit {
+		truncated := content[:limit]
+		for !utf8.Valid(truncated) && len(truncated) > 0 {
+			truncated = truncated[:len(truncated)-1]
+		}
 		warning := fmt.Sprintf("\n\n...[TRUNCATED BY SERVER: Payload exceeded %d byte safety limit]...", limit)
-		return string(content[:limit]) + warning, nil
+		return string(truncated) + warning, nil
 	}
 
 	return string(content), nil
