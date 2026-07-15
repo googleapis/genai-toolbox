@@ -578,11 +578,14 @@ func RunMCPSecureToolInvokeTest(t *testing.T) {
 
 	mcpVersion := "DRAFT-2026-v1"
 
-	// Initialize session with the specified protocol version
-	sessionId := RunInitialize(t, mcpVersion)
+	// In DRAFT-2026-v1 (vdraft), the initialize method is removed in favor of optional server/discover.
+	// Therefore, we only run RunInitialize for older protocol versions.
 	header := map[string]string{}
-	if sessionId != "" {
-		header["Mcp-Session-Id"] = sessionId
+	if mcpVersion != "DRAFT-2026-v1" {
+		sessionId := RunInitialize(t, mcpVersion)
+		if sessionId != "" {
+			header["Mcp-Session-Id"] = sessionId
+		}
 	}
 
 	// Local helper to send the tools/call request
