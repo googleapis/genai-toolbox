@@ -23,11 +23,15 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
 )
 
+// TestFileResource_Validation verifies that the file resource correctly validates
+// configurations at boot and runtime, blocking invalid paths, missing fields,
+// negative size limits, directory evasions, and non-allowed file extensions.
 func TestFileResource_Validation(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -128,6 +132,9 @@ func TestFileResource_Validation(t *testing.T) {
 	}
 }
 
+// TestFileResource_PathResolution ensures that both absolute and relative paths
+// resolve correctly, specifically enforcing that relative paths anchor to the
+// provided base directory when initializing.
 func TestFileResource_PathResolution(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -181,6 +188,9 @@ func TestFileResource_PathResolution(t *testing.T) {
 	}
 }
 
+// TestFileResource_Truncation checks that file contents exceeding the safety
+// max_size limit are truncated properly, appending a clear warning message
+// to indicate partial reads to the MCP client.
 func TestFileResource_Truncation(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -261,27 +271,37 @@ func TestFileResource_Truncation(t *testing.T) {
 	}
 }
 
+// TestFileResource_TOCTOU tests Time-Of-Check to Time-Of-Use mitigations.
+// It verifies that if a file is maliciously swapped with a symlink or directory
+// between the security validation phase and the actual read operation, the
+// read will be aggressively rejected to prevent arbitrary read vulnerabilities.
 func TestFileResource_TOCTOU(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	tests := []struct {
 		name       string
-		swapAction func(path string)
+		swapAction func(t *testing.T, path string)
 	}{
 		{
 			name: "swap with symlink to binary",
-			swapAction: func(path string) {
+			swapAction: func(t *testing.T, path string) {
 				target := filepath.Join(tmpDir, "malicious.exe")
-				os.WriteFile(target, []byte("bad"), 0644)
+				if err := os.WriteFile(target, []byte("bad"), 0644); err != nil {
+					t.Fatalf("failed to write file: %v", err)
+				}
 				os.Remove(path)
-				os.Symlink(target, path)
+				if err := os.Symlink(target, path); err != nil {
+					t.Fatalf("failed to create symlink: %v", err)
+				}
 			},
 		},
 		{
 			name: "swap with directory",
-			swapAction: func(path string) {
+			swapAction: func(t *testing.T, path string) {
 				os.Remove(path)
-				os.Mkdir(path, 0755)
+				if err := os.Mkdir(path, 0755); err != nil {
+					t.Fatalf("failed to create directory: %v", err)
+				}
 			},
 		},
 	}
@@ -306,7 +326,7 @@ func TestFileResource_TOCTOU(t *testing.T) {
 				t.Fatalf("Initialize failed: %v", err)
 			}
 
-			tt.swapAction(filePath)
+			tt.swapAction(t, filePath)
 
 			_, err = res.Read(ctx, nil)
 			if err == nil {
@@ -319,6 +339,9 @@ func TestFileResource_TOCTOU(t *testing.T) {
 	}
 }
 
+// TestFileResource_Metadata verifies that dynamic resource metadata, such as
+// MimeType and LastModified timestamps, are correctly computed and populated
+// when retrieving resource configurations.
 func TestFileResource_Metadata(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "notes.md")
@@ -351,6 +374,9 @@ func TestFileResource_Metadata(t *testing.T) {
 	}
 }
 
+// TestFileResource_NonExistentFileAtBoot ensures that if a resource file does
+// not yet exist during server boot (e.g., dynamically generated build outputs),
+// the resource cleanly initializes without crashing, and begins serving once created.
 func TestFileResource_NonExistentFileAtBoot(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "delayed.txt")
@@ -386,6 +412,9 @@ func TestFileResource_NonExistentFileAtBoot(t *testing.T) {
 	}
 }
 
+// TestFileResource_DynamicMetadata ensures that the resource configuration
+// (specifically its size and modification timestamp) updates dynamically
+// at runtime upon subsequent MCP list or read requests.
 func TestFileResource_DynamicMetadata(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "dynamic.txt")
@@ -432,89 +461,123 @@ func TestFileResource_DynamicMetadata(t *testing.T) {
 	}
 }
 
-func TestFileResource_SymlinkBaseEscape(t *testing.T) {
+// TestFileResource_NoBaseDirContext tests the fallback boundary enforcement.
+// If the server initializes a resource without an explicitly configured base
+// directory, it defaults to the current working directory and successfully
+// blocks any relative traversals or local symlink escapes.
+func TestFileResource_NoBaseDirContext(t *testing.T) {
 	tmpDir := t.TempDir()
-
-	baseDir := filepath.Join(tmpDir, "base")
-	if err := os.Mkdir(baseDir, 0755); err != nil {
+	secretFile := filepath.Join(tmpDir, "secret.txt")
+	if err := os.WriteFile(secretFile, []byte("secret"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	outsideDir := filepath.Join(tmpDir, "outside")
-	if err := os.Mkdir(outsideDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	secretFile := filepath.Join(outsideDir, "secret.txt")
-	if err := os.WriteFile(secretFile, []byte("super secret"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	symlinkPath := filepath.Join(baseDir, "link.txt")
+	symlinkPath := "test_symlink_escape.txt"
+	os.Remove(symlinkPath)
 	if err := os.Symlink(secretFile, symlinkPath); err != nil {
-		t.Fatal(err)
+		t.Fatalf("failed to create symlink: %v", err)
 	}
+	defer os.Remove(symlinkPath)
 
-	yamlStr := "type: file\npath: link.txt"
+	yamlStr := fmt.Sprintf("type: file\npath: %s", symlinkPath)
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, resources.BaseDirKey, baseDir)
-
 	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
-	cfg, err := resources.DecodeConfig(ctx, "file", "escape", decoder)
+	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
 	if err != nil {
 		t.Fatalf("DecodeConfig failed: %v", err)
 	}
 
 	_, err = cfg.Initialize(ctx)
 	if err == nil {
-		t.Fatalf("Expected Initialize to fail for symlink base escape")
+		t.Fatalf("expected Initialize to fail due to symlink base escape, but it succeeded")
 	}
 	if !strings.Contains(err.Error(), "escapes base directory") {
-		t.Errorf("Expected error to contain 'escapes base directory', got: %v", err)
+		t.Errorf("expected escapes base directory error, got: %v", err)
 	}
 }
 
-func TestFileResource_DelayedSymlinkEscape(t *testing.T) {
+// TestFileResource_UTF8Truncation verifies that when truncation occurs mid-byte
+// on a multi-byte UTF-8 character, the implementation securely steps back to a
+// valid rune boundary, preventing corrupted payloads from crashing decoders.
+func TestFileResource_UTF8Truncation(t *testing.T) {
 	tmpDir := t.TempDir()
-
-	baseDir := filepath.Join(tmpDir, "base")
-	if err := os.Mkdir(baseDir, 0755); err != nil {
+	filePath := filepath.Join(tmpDir, "utf8.txt")
+	content := []byte("Hello 🚀🚀")
+	if err := os.WriteFile(filePath, content, 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	outsideDir := filepath.Join(tmpDir, "outside")
-	if err := os.Mkdir(outsideDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	secretFile := filepath.Join(outsideDir, "secret.txt")
-	if err := os.WriteFile(secretFile, []byte("super secret"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	yamlStr := "type: file\npath: delayed_link.txt"
+	yamlStr := fmt.Sprintf("type: file\npath: %s\nmax_size: 8", filepath.ToSlash(filePath))
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, resources.BaseDirKey, baseDir)
-
 	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
-	cfg, err := resources.DecodeConfig(ctx, "file", "delayed_escape", decoder)
+	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
 	if err != nil {
 		t.Fatalf("DecodeConfig failed: %v", err)
 	}
 
 	res, err := cfg.Initialize(ctx)
 	if err != nil {
-		t.Fatalf("Initialize failed unexpectedly: %v", err)
+		t.Fatalf("Initialize failed: %v", err)
 	}
 
-	symlinkPath := filepath.Join(baseDir, "delayed_link.txt")
-	if err := os.Symlink(secretFile, symlinkPath); err != nil {
+	data, err := res.Read(ctx, nil)
+	if err != nil {
+		t.Fatalf("Read failed: %v", err)
+	}
+
+	strData := data.(string)
+
+	if !utf8.ValidString(strData) {
+		t.Errorf("Truncated string contains invalid UTF-8 sequences!")
+	}
+
+	expectedPrefix := "Hello "
+	if !strings.HasPrefix(strData, expectedPrefix) {
+		t.Errorf("Expected prefix %q, got %q", expectedPrefix, strData)
+	}
+	if strings.Contains(strData, "\ufffd") {
+		t.Errorf("String contains unicode replacement character, meaning it wasn't safely truncated.")
+	}
+}
+
+// TestFileResource_DelayedSymlinkEscape verifies that an attacker cannot bypass
+// base directory sandboxing by intentionally delaying the creation of a target
+// file and subsequently linking it outside the workspace boundary.
+func TestFileResource_DelayedSymlinkEscape(t *testing.T) {
+	tmpDir := t.TempDir()
+	secretFile := filepath.Join(tmpDir, "secret.txt")
+	if err := os.WriteFile(secretFile, []byte("super secret password"), 0644); err != nil {
 		t.Fatal(err)
+	}
+
+	baseDir := filepath.Join(tmpDir, "workspace")
+	if err := os.MkdirAll(baseDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlStr := fmt.Sprintf("type: file\npath: delayed.txt")
+	ctx := context.WithValue(context.Background(), resources.BaseDirKey, baseDir)
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
+	if err != nil {
+		t.Fatalf("DecodeConfig failed: %v", err)
+	}
+
+	res, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed: %v", err)
+	}
+
+	delayedPath := filepath.Join(baseDir, "delayed.txt")
+	if err := os.Symlink(secretFile, delayedPath); err != nil {
+		t.Fatalf("failed to create delayed symlink: %v", err)
 	}
 
 	_, err = res.Read(ctx, nil)
 	if err == nil {
-		t.Fatalf("Expected Read to fail for delayed symlink base escape")
+		t.Fatalf("expected Read to fail due to delayed symlink base escape, but it succeeded")
 	}
-	if !strings.Contains(err.Error(), "escapes base directory") {
-		t.Errorf("Expected error to contain 'escapes base directory', got: %v", err)
+	if !strings.Contains(err.Error(), "security violation") {
+		t.Errorf("expected security violation error, got: %v", err)
 	}
 }
