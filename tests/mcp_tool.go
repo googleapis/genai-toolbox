@@ -656,6 +656,11 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 		return resp.StatusCode, &mcpResp, nil
 	}
 
+	wantMatch := `[{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}]`
+	if configs.mySecureToolWant != "" {
+		wantMatch = configs.mySecureToolWant
+	}
+
 	tcs := []struct {
 		name            string
 		arguments       map[string]any
@@ -695,7 +700,7 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 			secureArguments: map[string]any{"name": "Alice"},
 			supportsSecure:  true,
 			wantError:       false,
-			wantBodyMatch:   `[{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}]`,
+			wantBodyMatch:   wantMatch,
 		},
 	}
 
@@ -718,11 +723,8 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 				got := getMCPResultText(t, mcpResp)
 				gotBytes, _ := json.Marshal(got)
 				gotStr := string(gotBytes)
-				matched := strings.Contains(gotStr, tc.wantBodyMatch) ||
-					strings.Contains(gotStr, `[{"id":"1","name":"Alice"},{"id":"3","name":"Sid"}]`) ||
-					(configs.myToolId3NameAliceWant != "" && strings.Contains(gotStr, configs.myToolId3NameAliceWant))
-				if !matched {
-					t.Fatalf(`expected %q to contain %q or equivalent`, gotStr, tc.wantBodyMatch)
+				if !strings.Contains(gotStr, tc.wantBodyMatch) {
+					t.Fatalf(`expected %q to contain %q`, gotStr, tc.wantBodyMatch)
 				}
 			}
 		})
