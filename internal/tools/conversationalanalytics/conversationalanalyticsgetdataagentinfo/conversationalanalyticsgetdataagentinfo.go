@@ -163,7 +163,7 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 
 	// Construct URL
 	projectID := source.GetProjectID()
-	caURL := fmt.Sprintf("%s/v1beta/projects/%s/locations/%s/dataAgents/%s", util.GetGDAEndpoint(), projectID, t.Cfg.Location, url.PathEscape(dataAgentId))
+	caURL := fmt.Sprintf("%s/v1/projects/%s/locations/%s/dataAgents/%s", util.GetGDAEndpoint(), projectID, t.Cfg.Location, url.PathEscape(dataAgentId))
 
 	req, err := http.NewRequest("GET", caURL, nil)
 	if err != nil {

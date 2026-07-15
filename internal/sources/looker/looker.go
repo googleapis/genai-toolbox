@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	geminidataanalytics "cloud.google.com/go/geminidataanalytics/apiv1beta"
+	geminidataanalytics "cloud.google.com/go/geminidataanalytics/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/util"
