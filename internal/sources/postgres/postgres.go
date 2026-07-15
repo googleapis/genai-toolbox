@@ -62,9 +62,9 @@ type Config struct {
 	QueryExecMode string            `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
 	SQLCommenter  *bool             `yaml:"sqlCommenter"`
 	// ConnectTimeout optionally bounds how long a single connection attempt may
-	// take, parsed as a Go duration (e.g. "5s"). When unset, no timeout is
-	// applied and connection behavior is unchanged.
-	ConnectTimeout string `yaml:"connectTimeout"`
+	// take, in seconds. When unset, no timeout is applied and connection behavior
+	// is unchanged.
+	ConnectTimeout *int `yaml:"connectTimeout" validate:"omitempty,gte=1"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -136,25 +136,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	return out, nil
 }
 
-// applyConnectTimeout sets an optional per-attempt connect timeout on the pool
-// config. An empty value leaves the config unchanged, so pgx applies no timeout
-// and existing behavior is preserved.
-func applyConnectTimeout(config *pgxpool.Config, connectTimeout string) error {
-	if connectTimeout == "" {
-		return nil
-	}
-	duration, err := time.ParseDuration(connectTimeout)
-	if err != nil {
-		return fmt.Errorf("unable to parse connectTimeout %q as time.Duration: %w", connectTimeout, err)
-	}
-	if duration <= 0 {
-		return fmt.Errorf("connectTimeout %q must be a positive duration", connectTimeout)
-	}
-	config.ConnConfig.ConnectTimeout = duration
-	return nil
-}
-
-func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string, queryExecMode, connectTimeout string) (*pgxpool.Pool, error) {
+func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string, queryExecMode string, connectTimeout *int) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -181,8 +163,8 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 	}
 	config.ConnConfig.DefaultQueryExecMode = execMode
 
-	if err := applyConnectTimeout(config, connectTimeout); err != nil {
-		return nil, err
+	if connectTimeout != nil {
+		config.ConnConfig.ConnectTimeout = time.Duration(*connectTimeout) * time.Second
 	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
