@@ -227,7 +227,7 @@ func TestHealthz(t *testing.T) {
 		AllowedHosts: []string{"*"},
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -313,7 +313,7 @@ func TestHealthzBypassesHostCheck(t *testing.T) {
 		AllowedHosts: []string{"toolbox.example.com"},
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
