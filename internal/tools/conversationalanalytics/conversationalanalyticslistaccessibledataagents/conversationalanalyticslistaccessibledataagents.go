@@ -157,7 +157,7 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 
 	// Construct URL
 	projectID := source.GetProjectID()
-	caURL := fmt.Sprintf("%s/v1beta/projects/%s/locations/%s/dataAgents:listAccessible", util.GetGDAEndpoint(), projectID, t.Cfg.Location)
+	caURL := fmt.Sprintf("%s/v1/projects/%s/locations/%s/dataAgents:listAccessible", util.GetGDAEndpoint(), projectID, t.Cfg.Location)
 
 	req, err := http.NewRequest("GET", caURL, nil)
 	if err != nil {

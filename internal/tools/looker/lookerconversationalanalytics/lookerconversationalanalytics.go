@@ -59,6 +59,7 @@ type compatibleSource interface {
 	GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
 	GoogleCloudProject() string
 	GoogleCloudLocation() string
+	GoogleCloudQuotaProject() string
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
 	LookerApiSettings() *rtl.ApiSettings
@@ -78,7 +79,6 @@ type LookerExploreReference struct {
 }
 type LookerExploreReferences struct {
 	ExploreReferences []LookerExploreReference `json:"exploreReferences"`
-	Credentials       Credentials              `json:"credentials,omitzero"`
 }
 type SecretBased struct {
 	ClientId     string `json:"clientId"`
@@ -116,11 +116,11 @@ type ConversationOptions struct {
 type InlineContext struct {
 	SystemInstruction    string               `json:"systemInstruction"`
 	DatasourceReferences DatasourceReferences `json:"datasourceReferences"`
-	Options              ConversationOptions  `json:"options"`
 }
 type CAPayload struct {
 	Messages      []Message     `json:"messages"`
 	InlineContext InlineContext `json:"inlineContext"`
+	Credentials   *Credentials  `json:"credentials,omitempty"`
 	ClientIdEnum  string        `json:"clientIdEnum"`
 }
 
@@ -249,19 +249,19 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 
 	lers := LookerExploreReferences{
 		ExploreReferences: ler,
-		Credentials: Credentials{
-			OAuth: oauth_creds,
-		},
 	}
 
 	// Construct URL, headers, and payload
 	projectID := source.GoogleCloudProject()
 	location := source.GoogleCloudLocation()
-	caURL := fmt.Sprintf("%s/v1beta/projects/%s/locations/%s:chat", util.GetGDAEndpoint(), url.PathEscape(projectID), url.PathEscape(location))
+	caURL := fmt.Sprintf("%s/v1/projects/%s/locations/%s:chat", util.GetGDAEndpoint(), url.PathEscape(projectID), url.PathEscape(location))
 
 	headers := map[string]string{
 		"Content-Type":      "application/json",
 		"X-Goog-API-Client": util.GDAClientID,
+	}
+	if quotaProject := source.GoogleCloudQuotaProject(); quotaProject != "" {
+		headers["X-Goog-User-Project"] = quotaProject
 	}
 
 	payload := CAPayload{
@@ -271,7 +271,9 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 			DatasourceReferences: DatasourceReferences{
 				Looker: lers,
 			},
-			Options: ConversationOptions{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
+		},
+		Credentials: &Credentials{
+			OAuth: oauth_creds,
 		},
 		ClientIdEnum: util.GDAClientID,
 	}
