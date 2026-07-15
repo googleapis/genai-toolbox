@@ -40,7 +40,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -60,7 +60,7 @@ type Server struct {
 	logger              log.Logger
 	instrumentation     *telemetry.Instrumentation
 	sseManager          *sseManager
-	ResourceMgr         *resources.ResourceManager
+	PrimitiveMgr        *primitives.PrimitiveManager
 	mcpPrmFile          string
 	httpMaxRequestBytes int64
 	enableDraftSpecs    bool
@@ -311,14 +311,10 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 		allPromptNames = append(allPromptNames, name)
 	}
 
-	// Convert each legacy toolset into a tools-only group config, then layer the
-	// explicitly declared `kind: group` configs on top, and finally seed the
-	// default nameless group with all tools and all prompts.
-	groupConfigs := make(map[string]group.GroupConfig, len(cfg.ToolsetConfigs)+len(cfg.GroupConfigs)+1)
-	for name, tc := range cfg.ToolsetConfigs {
-		groupConfigs[name] = group.GroupConfig{Name: name, ToolNames: tc.ToolNames}
-	}
-	// Explicit groups take precedence over a legacy toolset of the same name.
+	// Legacy `kind: toolset` configs are already folded into cfg.GroupConfigs at
+	// unmarshal. Copy them over, then seed the default nameless group with all tools
+	// and all prompts.
+	groupConfigs := make(map[string]group.GroupConfig, len(cfg.GroupConfigs)+1)
 	var defaultDescription string
 	for name, gc := range cfg.GroupConfigs {
 		if name == "" {
@@ -326,9 +322,6 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 			// description carries over as the default server instruction.
 			defaultDescription = gc.Description
 			continue
-		}
-		if _, shadowed := cfg.ToolsetConfigs[name]; shadowed {
-			l.WarnContext(ctx, fmt.Sprintf("group %q shadows a toolset of the same name; using the group definition", name))
 		}
 		groupConfigs[name] = gc
 	}
@@ -443,7 +436,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap)
+	primitiveManager := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap)
 
 	limit := cfg.HttpMaxRequestBytes
 	if limit <= 0 {
@@ -458,7 +451,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		logger:              l,
 		instrumentation:     instrumentation,
 		sseManager:          sseManager,
-		ResourceMgr:         resourceManager,
+		PrimitiveMgr:        primitiveManager,
 		toolboxUrl:          cfg.ToolboxUrl,
 		mcpPrmFile:          cfg.McpPrmFile,
 		httpMaxRequestBytes: limit,
@@ -471,7 +464,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// cors
 	if slices.Contains(cfg.AllowedOrigins, "*") {
-		s.logger.WarnContext(ctx, "wildcard (*) allows any website to access the resources. This creates a security risk regardless of whether you are in a production or local development environment. Recommended to use --allowed-origins with specific local addresses.")
+		s.logger.WarnContext(ctx, "wildcard (*) allows any website to access the primitives. This creates a security risk regardless of whether you are in a production or local development environment. Recommended to use --allowed-origins with specific local addresses.")
 	}
 	corsOpts := cors.Options{
 		AllowedOrigins:   cfg.AllowedOrigins,
@@ -498,7 +491,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// Host OAuth Protected Resource Metadata endpoint
 	mcpAuthEnabled := false
-	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+	for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
 		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 			mcpAuthEnabled = true
 			break
@@ -576,7 +569,7 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Find McpEnabled auth service
 			var mcpSvc auth.MCPAuthService
-			for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+			for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
 				if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 					mcpSvc = mSvc
 					break

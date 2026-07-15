@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources_test
+package primitives_test
 
 import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
@@ -46,7 +47,7 @@ func TestUpdateServer(t *testing.T) {
 		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}}),
 	}
-	resMgr := resources.NewResourceManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
+	resMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 
 	gotSource, _ := resMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
@@ -63,25 +64,48 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
+	wantGroup := newGroups["example-toolset"]
+	gotGroup, ok := resMgr.GetGroup("example-toolset")
+	if !ok {
+		t.Fatal("expected group \"example-toolset\" to exist")
+	}
+	if diff := cmp.Diff(wantGroup, gotGroup, cmp.AllowUnexported(group.Group{})); diff != "" {
+		t.Errorf("error updating server, group (-want +got):\n%s", diff)
+	}
+
+	var nilTool tools.Tool
+	wantToolset := tools.Toolset{
+		ToolsetConfig: tools.ToolsetConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}},
+		Tools:         []*tools.Tool{&nilTool},
+	}
 	gotToolset, ok := resMgr.GetToolset("example-toolset")
 	if !ok {
 		t.Fatal("expected toolset \"example-toolset\" to exist")
 	}
-	if gotToolset.Name != "example-toolset" || !gotToolset.ContainsTool("example-tool") {
-		t.Errorf("error updating server, toolset = %+v, want name %q containing tool %q", gotToolset, "example-toolset", "example-tool")
+	if diff := cmp.Diff(wantToolset, gotToolset, cmpopts.IgnoreUnexported(tools.Toolset{})); diff != "" {
+		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 
-	gotPrompt, ok := resMgr.GetPrompt("example-prompt")
-	if !ok || gotPrompt == nil {
-		t.Errorf("error updating server, prompt %q not found", "example-prompt")
+	gotPrompt, _ := resMgr.GetPrompt("example-prompt")
+	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
+		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
 	}
 
+	examplePrompt := newPrompts["example-prompt"]
+	wantPromptset := prompts.Promptset{
+		PromptsetConfig: prompts.PromptsetConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}},
+		Prompts:         []*prompts.Prompt{&examplePrompt},
+		Manifest: prompts.PromptsetManifest{
+			PromptsManifest: map[string]prompts.Manifest{"example-prompt": examplePrompt.Manifest()},
+		},
+		PromptNameSet: map[string]struct{}{"example-prompt": {}},
+	}
 	gotPromptset, ok := resMgr.GetPromptset("example-promptset")
 	if !ok {
 		t.Fatal("expected promptset \"example-promptset\" to exist")
 	}
-	if gotPromptset.Name != "example-promptset" || !gotPromptset.ContainsPrompt("example-prompt") {
-		t.Errorf("error updating server, promptset = %+v, want name %q containing prompt %q", gotPromptset, "example-promptset", "example-prompt")
+	if diff := cmp.Diff(wantPromptset, gotPromptset, cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
+		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 
 	updateSource := map[string]sources.Source{
@@ -93,7 +117,7 @@ func TestUpdateServer(t *testing.T) {
 		},
 	}
 
-	resMgr.SetResources(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
+	resMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	gotSource, _ = resMgr.GetSource("example-source2")
 	if diff := cmp.Diff(gotSource, updateSource["example-source2"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
