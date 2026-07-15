@@ -1511,6 +1511,40 @@ tools:
 	}
 }
 
+func TestGroupConfigValues(t *testing.T) {
+	ctx := context.Background()
+	yaml := `
+kind: group
+name: my_group
+description: a group
+tools:
+  - tool_a
+  - tool_b
+prompts:
+  - prompt_a
+`
+	_, _, _, _, _, groups, err := server.UnmarshalResourceConfig(ctx, []byte(yaml))
+	if err != nil {
+		t.Fatalf("UnmarshalResourceConfig() returned unexpected error: %v", err)
+	}
+	gc, ok := groups["my_group"]
+	if !ok {
+		t.Fatalf("expected group %q to be parsed, got: %v", "my_group", groups)
+	}
+	if gc.Name != "my_group" {
+		t.Errorf("group name: got %q, want %q", gc.Name, "my_group")
+	}
+	if gc.Description != "a group" {
+		t.Errorf("group description: got %q, want %q", gc.Description, "a group")
+	}
+	if diff := cmp.Diff([]string{"tool_a", "tool_b"}, gc.ToolNames); diff != "" {
+		t.Errorf("group tools mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]string{"prompt_a"}, gc.PromptNames); diff != "" {
+		t.Errorf("group prompts mismatch (-want +got):\n%s", diff)
+	}
+}
+
 type offlineSourceConfig struct {
 	initialized *bool
 }

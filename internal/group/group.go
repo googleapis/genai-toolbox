@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
@@ -95,4 +96,24 @@ func (g Group) ContainsTool(name string) bool {
 func (g Group) ContainsPrompt(name string) bool {
 	_, ok := g.promptNameSet[name]
 	return ok
+}
+
+// ToolsetManifest builds a tools.ToolsetManifest for the group's tools, resolving
+// each declared tool name against toolsMap and generating its manifest from srcs.
+// The group holds tool names rather than tool pointers, so callers pass the
+// resolved tools and sources maps.
+func (g Group) ToolsetManifest(serverVersion string, toolsMap map[string]tools.Tool, srcs map[string]sources.Source) (tools.ToolsetManifest, error) {
+	toolsManifest := make(map[string]tools.Manifest, len(g.ToolNames))
+	for _, name := range g.ToolNames {
+		tool, ok := toolsMap[name]
+		if !ok {
+			return tools.ToolsetManifest{}, fmt.Errorf("tool does not exist: %s", name)
+		}
+		m, err := tool.Manifest(srcs)
+		if err != nil {
+			return tools.ToolsetManifest{}, fmt.Errorf("error generating manifest for tool %q: %w", name, err)
+		}
+		toolsManifest[name] = m
+	}
+	return tools.ToolsetManifest{ServerVersion: serverVersion, ToolsManifest: toolsManifest}, nil
 }
