@@ -2438,3 +2438,83 @@ tools:
 		})
 	}
 }
+
+func TestParseConfigGroupNameValidation(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		description string
+		in          string
+		wantErr     bool
+		errContains string
+	}{
+		{
+			description: "group with integer name is rejected",
+			in: `
+kind: group
+name: 123
+`,
+			wantErr:     true,
+			errContains: "missing 'name' field or it is not a string",
+		},
+		{
+			description: "group with boolean name is rejected",
+			in: `
+kind: group
+name: true
+`,
+			wantErr:     true,
+			errContains: "missing 'name' field or it is not a string",
+		},
+		{
+			description: "group with absent name is accepted as default group",
+			in: `
+kind: group
+description: the default group
+`,
+			wantErr: false,
+		},
+		{
+			description: "group with null name is accepted as default group",
+			in: `
+kind: group
+name: ~
+description: the default group
+`,
+			wantErr: false,
+		},
+		{
+			description: "non-group resource with integer name is rejected",
+			in: `
+kind: tool
+name: 42
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT 1
+`,
+			wantErr:     true,
+			errContains: "missing 'name' field or it is not a string",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			parser := ConfigParser{}
+			_, err := parser.ParseConfig(ctx, testutils.FormatYaml(tc.in))
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				if tc.errContains != "" && !strings.Contains(err.Error(), tc.errContains) {
+					t.Errorf("error %q does not contain %q", err.Error(), tc.errContains)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
