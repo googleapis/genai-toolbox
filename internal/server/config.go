@@ -206,7 +206,7 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			// A `kind: group` may omit `name` to target the default nameless group;
 			// every other resource requires a name.
 			if kind == "group" {
-				if _, present := resource["name"]; !present {
+				if rawName, present := resource["name"]; !present || rawName == nil {
 					name, ok = "", true
 				}
 			}
