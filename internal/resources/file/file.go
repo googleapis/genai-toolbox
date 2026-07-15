@@ -101,9 +101,11 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		c.absPath = filepath.Clean(filepath.Join(baseDir, c.Path))
 	}
 
-	if abs, err := filepath.Abs(c.absPath); err == nil {
-		c.absPath = abs
+	abs, err := filepath.Abs(c.absPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get absolute path for %q: %w", c.absPath, err)
 	}
+	c.absPath = abs
 
 	if c.Annotations == nil {
 		c.Annotations = &resources.ResourceAnnotations{}
@@ -233,8 +235,13 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 
 	if int64(len(content)) > limit {
 		truncated := content[:limit]
-		for !utf8.Valid(truncated) && len(truncated) > 0 {
-			truncated = truncated[:len(truncated)-1]
+		for len(truncated) > 0 {
+			r, size := utf8.DecodeLastRune(truncated)
+			if r == utf8.RuneError && size == 1 {
+				truncated = truncated[:len(truncated)-1]
+			} else {
+				break
+			}
 		}
 		warning := fmt.Sprintf("\n\n...[TRUNCATED BY SERVER: Payload exceeded %d byte safety limit]...", limit)
 		return string(truncated) + warning, nil
