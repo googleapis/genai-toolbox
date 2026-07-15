@@ -2477,14 +2477,13 @@ description: the default group
 			wantErr: false,
 		},
 		{
-			description: "group with null name is rejected",
+			description: "group with null name is accepted as default group",
 			in: `
 kind: group
 name: ~
 description: the default group
 `,
-			wantErr:     true,
-			errContains: "missing 'name' field or it is not a string",
+			wantErr: false,
 		},
 		{
 			description: "non-group resource with integer name is rejected",
