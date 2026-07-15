@@ -139,7 +139,7 @@ type Tool interface {
 	GetScopesRequired() []string
 }
 
-// SourceProvider defines the minimal view of the server.ResourceManager
+// SourceProvider defines the minimal view of the primitives.PrimitiveManager
 // that the Tool package needs.
 // This is implemented to prevent import cycles.
 type SourceProvider interface {
@@ -167,9 +167,9 @@ func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) b
 	return false
 }
 
-func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName, toolType string) (T, error) {
+func GetCompatibleSource[T any](primitiveMgr SourceProvider, sourceName, toolName, toolType string) (T, error) {
 	var zero T
-	s, ok := resourceMgr.GetSource(sourceName)
+	s, ok := primitiveMgr.GetSource(sourceName)
 	if !ok {
 		return zero, fmt.Errorf("unable to retrieve source %q for tool %q", sourceName, toolName)
 	}

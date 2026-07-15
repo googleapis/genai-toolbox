@@ -854,7 +854,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	default:
 		// The URL segment names a group; its derived toolset and promptset views
 		// share that name, so prompts scope to the connected group.
-		g, ok := s.ResourceMgr.GetGroup(groupName)
+		g, ok := s.PrimitiveMgr.GetGroup(groupName)
 		if !ok {
 			err := fmt.Errorf("toolset does not exist")
 			rpcErr := jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil)
@@ -863,7 +863,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			span.SetAttributes(attribute.String("error.type", metricErrorType))
 			return "", rpcErr, err
 		}
-		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, g, s.ResourceMgr, body, header)
+		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, g, s.PrimitiveMgr, body, header)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			// Set error.type based on JSON-RPC error code
@@ -888,7 +888,7 @@ type prmResponse struct {
 func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var server string
 	scopes := []string{}
-	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+	for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
 		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 			server = mSvc.GetAuthorizationServer()
 			scopes = mSvc.GetScopesRequired()

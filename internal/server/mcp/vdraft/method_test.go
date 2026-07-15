@@ -25,7 +25,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
@@ -37,7 +37,7 @@ var (
 )
 
 // mustGroup fetches the default group from the resource manager.
-func mustGroup(t *testing.T, rm *resources.ResourceManager) group.Group {
+func mustGroup(t *testing.T, rm *primitives.PrimitiveManager) group.Group {
 	t.Helper()
 	g, ok := rm.GetGroup("")
 	if !ok {
@@ -413,7 +413,7 @@ func TestToolsListHandler(t *testing.T) {
 	// Initialize tools using provided testutils mock instances
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	tests := []struct {
 		name        string
@@ -428,7 +428,7 @@ func TestToolsListHandler(t *testing.T) {
 			name:        "invalid json body",
 			rawBody:     []byte(`{invalid json}`),
 			header:      nil,
-			g:           mustGroup(t, resourceMgr),
+			g:           mustGroup(t, primitiveMgr),
 			wantErr:     true,
 			errContains: "invalid mcp tools list request",
 		},
@@ -454,7 +454,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:      http.Header{"Mcp-Method": []string{"WRONG_METHOD"}},
-			g:           mustGroup(t, resourceMgr),
+			g:           mustGroup(t, primitiveMgr),
 			wantErr:     true,
 			errContains: "does not match body value",
 		},
@@ -480,7 +480,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:  nil,
-			g:       mustGroup(t, resourceMgr),
+			g:       mustGroup(t, primitiveMgr),
 			wantErr: false,
 		},
 		{
@@ -505,7 +505,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:  http.Header{"Mcp-Method": []string{TOOLS_LIST}},
-			g:       mustGroup(t, resourceMgr),
+			g:       mustGroup(t, primitiveMgr),
 			wantErr: false,
 		},
 	}
@@ -520,7 +520,7 @@ func TestToolsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsListHandler(context.Background(), dummyID, resourceMgr, tt.g, body, tt.header)
+			got, err := toolsListHandler(context.Background(), dummyID, primitiveMgr, tt.g, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -556,7 +556,7 @@ func TestToolsCallHandler(t *testing.T) {
 		testutils.MockTool5,
 	}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	tests := []struct {
 		name        string
@@ -686,7 +686,7 @@ func TestToolsCallHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsCallHandler(tt.context, dummyID, mustGroup(t, resourceMgr), resourceMgr, body, tt.header)
+			got, err := toolsCallHandler(tt.context, dummyID, mustGroup(t, primitiveMgr), primitiveMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -718,7 +718,7 @@ func TestPromptsListHandler(t *testing.T) {
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, nil, mockPrompts)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 	tests := []struct {
 		name        string
 		body        ListPromptsRequest
@@ -770,7 +770,7 @@ func TestPromptsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsListHandler(ctx, dummyID, resourceMgr, mustGroup(t, resourceMgr), body, tt.header)
+			got, err := promptsListHandler(ctx, dummyID, primitiveMgr, mustGroup(t, primitiveMgr), body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -802,7 +802,7 @@ func TestPromptsGetHandler(t *testing.T) {
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, nil, mockPrompts)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 	tests := []struct {
 		name        string
 		body        GetPromptRequest
@@ -903,7 +903,7 @@ func TestPromptsGetHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsGetHandler(ctx, dummyID, mustGroup(t, resourceMgr), resourceMgr, body, tt.header)
+			got, err := promptsGetHandler(ctx, dummyID, mustGroup(t, primitiveMgr), primitiveMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -934,7 +934,7 @@ func TestGroupsListHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	validMeta := &RequestMetaObject{
 		ProtocolVersion: PROTOCOL_VERSION,
@@ -986,7 +986,7 @@ func TestGroupsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling: %v", err)
 				}
 			}
-			got, err := groupsListHandler(ctx, dummyID, resourceMgr, body, tt.header)
+			got, err := groupsListHandler(ctx, dummyID, primitiveMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -1034,7 +1034,7 @@ func TestGroupsGetHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	validMeta := &RequestMetaObject{
 		ProtocolVersion: PROTOCOL_VERSION,
@@ -1098,7 +1098,7 @@ func TestGroupsGetHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling: %v", err)
 				}
 			}
-			got, err := groupsGetHandler(ctx, dummyID, resourceMgr, body, tt.header)
+			got, err := groupsGetHandler(ctx, dummyID, primitiveMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {

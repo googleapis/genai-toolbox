@@ -27,7 +27,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 
@@ -60,14 +60,14 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, promp
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(nil, nil, nil, tools, prompts, groups)
+	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, tools, prompts, groups)
 
 	server := Server{
 		version:         testutils.MockVersionString,
 		logger:          testLogger,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-		ResourceMgr:     resourceManager,
+		PrimitiveMgr:     primitiveManager,
 	}
 	for _, opt := range opts {
 		opt(&server)
