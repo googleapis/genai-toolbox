@@ -80,7 +80,6 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 		return
 	}
-	manifest.ServerVersion = s.version
 
 	render.JSON(w, r, manifest)
 }
