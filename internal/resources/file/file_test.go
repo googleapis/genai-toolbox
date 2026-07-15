@@ -600,3 +600,43 @@ func TestFileResource_DelayedSymlinkEscape(t *testing.T) {
 		t.Errorf("expected security violation error, got: %v", err)
 	}
 }
+
+// TestFileResource_ToConfigNonRegularFile verifies that ToConfig does not
+// leak metadata (size and modification time) if the underlying target file
+// is swapped with a non-regular file (like a directory) post-initialization.
+func TestFileResource_ToConfigNonRegularFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(filePath, []byte("some content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlStr := fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath))
+	ctx := context.Background()
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
+	if err != nil {
+		t.Fatalf("DecodeConfig failed: %v", err)
+	}
+
+	res, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed: %v", err)
+	}
+
+	// Swap the valid file with a directory
+	if err := os.Remove(filePath); err != nil {
+		t.Fatalf("failed to remove file: %v", err)
+	}
+	if err := os.Mkdir(filePath, 0755); err != nil {
+		t.Fatalf("failed to create directory in place of file: %v", err)
+	}
+
+	config := res.ToConfig().(*Config)
+	if config.Size != nil {
+		t.Errorf("Expected Size to be nil for non-regular file, got %v", *config.Size)
+	}
+	if config.Annotations != nil && config.Annotations.LastModified != "" {
+		t.Errorf("Expected LastModified to be empty for non-regular file, got %q", config.Annotations.LastModified)
+	}
+}
