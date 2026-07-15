@@ -1,0 +1,42 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# NOTE: The _CLUSTER_NAME substitution variable defined here must match the
+# DATAPROC_LIST_JOBS_CLUSTER parameter defined in .ci/integration.cloudbuild.yaml
+# (default: dataproc-testing-cluster).
+
+steps:
+  - id: "recreate-dataproc-cluster"
+    name: "gcr.io/cloud-builders/gcloud:latest"
+    env:
+      - "PROJECT_ID=$PROJECT_ID"
+      - "CLUSTER_NAME=$_CLUSTER_NAME"
+      - "REGION=$_REGION"
+      - "IMAGE_VERSION=$_IMAGE_VERSION"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    script: |
+      #!/usr/bin/env bash
+      bash .ci/dataproc/recreate_dataproc_cluster.sh "$${PROJECT_ID}" "$${REGION}" "$${IMAGE_VERSION}" "$${CLUSTER_NAME}" "$${SERVICE_ACCOUNT_EMAIL}"
+
+options:
+  automapSubstitutions: true
+  dynamicSubstitutions: true
+  logging: CLOUD_LOGGING_ONLY
+  pool:
+    name: projects/$PROJECT_ID/locations/us-central1/workerPools/integration-testing
+
+substitutions:
+  _CLUSTER_NAME: "dataproc-testing-cluster"
+  _REGION: "us-central1"
+  _IMAGE_VERSION: "2.3-debian12"
