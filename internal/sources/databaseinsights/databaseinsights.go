@@ -184,4 +184,3 @@ func extractProjectFromPath(path string) string {
 	}
 	return ""
 }
-
