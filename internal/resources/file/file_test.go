@@ -101,6 +101,11 @@ func TestFileResource_Validation(t *testing.T) {
 			wantErrMsg: "must be greater than 0",
 		},
 		{
+			name:       "max_size too large",
+			yamlStr:    fmt.Sprintf("type: file\npath: %s\nmax_size: 2000000000", filepath.ToSlash(validPath)),
+			wantErrMsg: "cannot exceed 1GB",
+		},
+		{
 			name:       "max_size type string",
 			yamlStr:    fmt.Sprintf("type: file\npath: %s\nmax_size: 50MB", filepath.ToSlash(validPath)),
 			wantErrMsg: "cannot unmarshal",

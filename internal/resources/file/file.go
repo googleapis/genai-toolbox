@@ -83,6 +83,8 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		c.MaxSize = &limit
 	} else if *c.MaxSize <= 0 {
 		return nil, fmt.Errorf("file resource %q max_size must be greater than 0", c.Name)
+	} else if *c.MaxSize > 1024*1024*1024 {
+		return nil, fmt.Errorf("file resource %q max_size cannot exceed 1GB", c.Name)
 	}
 
 	if filepath.IsAbs(c.Path) {
