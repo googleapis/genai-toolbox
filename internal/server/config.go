@@ -99,6 +99,8 @@ type ServerConfig struct {
 	PollInterval int
 	// HttpMaxRequestBytes caps MCP HTTP request bodies. Zero uses the default.
 	HttpMaxRequestBytes int64
+	// EnableDraftSpecs allow users to opt-in and test upcoming draft MCP specs.
+	EnableDraftSpecs bool
 }
 
 type logFormat string
@@ -161,7 +163,7 @@ type ToolsetConfigs map[string]tools.ToolsetConfig
 type PromptConfigs map[string]prompts.PromptConfig
 type PromptsetConfigs map[string]prompts.PromptsetConfig
 
-func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, error) {
+func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, error) {
 	// prepare configs map
 	var sourceConfigs SourceConfigs
 	var authServiceConfigs AuthServiceConfigs

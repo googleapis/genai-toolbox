@@ -83,10 +83,35 @@ func TestParseFromYamlCloudStorageCopyObject(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with configurable buckets",
+			in: `
+			kind: tool
+			name: configured_copy
+			type: cloud-storage-copy-object
+			source: prod-gcs
+			description: Copy configured object
+			source_bucket: source-bucket
+			destination_bucket: destination-bucket
+			`,
+			want: server.ToolConfigs{
+				"configured_copy": cloudstoragecopyobject.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_copy",
+						Description:  "Copy configured object",
+						AuthRequired: []string{},
+					},
+					Type:              "cloud-storage-copy-object",
+					Source:            "prod-gcs",
+					SourceBucket:      strPtr("source-bucket"),
+					DestinationBucket: strPtr("destination-bucket"),
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -97,6 +122,10 @@ func TestParseFromYamlCloudStorageCopyObject(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
 type mockSource struct {
 	sources.Source
 	called               bool
@@ -104,6 +133,97 @@ type mockSource struct {
 	gotSourceObject      string
 	gotDestinationBucket string
 	gotDestinationObject string
+}
+
+func TestConfiguredBucketsHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragecopyobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "copy_tool",
+			Description: "Copy",
+		},
+		Type:              "cloud-storage-copy-object",
+		Source:            "my-gcs",
+		SourceBucket:      strPtr("source-bucket"),
+		DestinationBucket: strPtr("destination-bucket"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"source_object", "destination_object"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "source_object", Value: "src"},
+		{Name: "destination_object", Value: "dst"},
+	}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotSourceBucket != "source-bucket" || src.gotSourceObject != "src" || src.gotDestinationBucket != "destination-bucket" || src.gotDestinationObject != "dst" {
+		t.Fatalf("forwarded params = %q/%q/%q/%q, want source-bucket/src/destination-bucket/dst", src.gotSourceBucket, src.gotSourceObject, src.gotDestinationBucket, src.gotDestinationObject)
+	}
+}
+
+func TestUnsetBucketsRemainVisible(t *testing.T) {
+	cfg := cloudstoragecopyobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "copy_tool",
+			Description: "Copy",
+		},
+		Type:   "cloud-storage-copy-object",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"source_bucket", "source_object", "destination_bucket", "destination_object"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredBucketsRejected(t *testing.T) {
+	tcs := []struct {
+		desc              string
+		sourceBucket      *string
+		destinationBucket *string
+		wantSubstr        string
+	}{
+		{desc: "empty source bucket", sourceBucket: strPtr(""), wantSubstr: "source_bucket"},
+		{desc: "empty destination bucket", destinationBucket: strPtr(""), wantSubstr: "destination_bucket"},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			cfg := cloudstoragecopyobject.Config{
+				ConfigBase: tools.ConfigBase{
+					Name:        "copy_tool",
+					Description: "Copy",
+				},
+				Type:              "cloud-storage-copy-object",
+				Source:            "my-gcs",
+				SourceBucket:      tc.sourceBucket,
+				DestinationBucket: tc.destinationBucket,
+			}
+			if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), tc.wantSubstr) {
+				t.Fatalf("Initialize() error = %v, want %q", err, tc.wantSubstr)
+			}
+		})
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }
 
 func (m *mockSource) CopyObject(ctx context.Context, sourceBucket, sourceObject, destinationBucket, destinationObject string) (map[string]any, error) {
@@ -157,14 +277,14 @@ func TestInvokeValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 			params := parameters.ParamValues{
 				{Name: "source_bucket", Value: tc.sourceBucket},
 				{Name: "source_object", Value: tc.sourceObject},
 				{Name: "destination_bucket", Value: tc.destinationBucket},
 				{Name: "destination_object", Value: tc.destinationObject},
 			}
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")

@@ -31,11 +31,14 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"golang.org/x/oauth2"
+	"google.golang.org/api/option"
 )
 
 const resourceType string = "bigquery-conversational-analytics"
 
-const gdaURLFormat = "https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat"
+func getGDAURLFormat() string {
+	return util.GetGDAEndpoint() + "/v1beta/projects/%s/locations/%s:chat"
+}
 
 const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 1. **CONTENT:** Your answer should present the supporting data and then provide a conclusion based on that data.
@@ -149,13 +152,13 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
-	var tokenStr string
+	var tokenSource oauth2.TokenSource
 
 	// Get credentials for the API call
 	if source.UseClientAuthorization() {
@@ -163,13 +166,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if accessToken == "" {
 			return nil, util.NewClientServerError("tool is configured for client OAuth but no token was provided in the request header", http.StatusUnauthorized, nil)
 		}
-		tokenStr, err = accessToken.ParseBearerToken()
+		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
 		}
+		tokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: tokenStr})
 	} else {
 		// Get a token source for the Gemini Data Analytics API.
-		tokenSource, err := source.BigQueryTokenSourceWithScope(ctx, nil)
+		tokenSource, err = source.BigQueryTokenSourceWithScope(ctx, nil)
 		if err != nil {
 			return nil, util.NewClientServerError("failed to get token source", http.StatusInternalServerError, err)
 		}
@@ -178,11 +182,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if tokenSource == nil {
 			return nil, util.NewClientServerError("cloud-platform token source is missing", http.StatusInternalServerError, nil)
 		}
-		token, err := tokenSource.Token()
-		if err != nil {
-			return nil, util.NewClientServerError("failed to get token from cloud-platform token source", http.StatusInternalServerError, err)
-		}
-		tokenStr = token.AccessToken
 	}
 
 	// Extract parameters from the map
@@ -213,12 +212,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if location == "" {
 		location = "us"
 	}
-	caURL := fmt.Sprintf(gdaURLFormat, projectID, location)
+	caURL := fmt.Sprintf(getGDAURLFormat(), projectID, location)
 
 	headers := map[string]string{
-		source.GetAuthTokenHeaderName(): fmt.Sprintf("Bearer %s", tokenStr),
-		"Content-Type":                  "application/json",
-		"X-Goog-API-Client":             util.GDAClientID,
+		"Content-Type":      "application/json",
+		"X-Goog-API-Client": util.GDAClientID,
 	}
 
 	payload := CAPayload{
@@ -233,8 +231,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		ClientIdEnum: util.GDAClientID,
 	}
 
+	client, err := util.NewGDAClient(ctx, option.WithTokenSource(tokenSource))
+	if err != nil {
+		return nil, util.NewClientServerError("failed to create GDA client", http.StatusInternalServerError, err)
+	}
+	client.Timeout = 330 * time.Second
+
 	// Call the streaming API
-	response, err := getStream(caURL, payload, headers, source.GetMaxQueryResultRows())
+	response, err := getStream(client, caURL, payload, headers, source.GetMaxQueryResultRows())
 	if err != nil {
 		// getStream wraps network errors or non-200 responses
 		return nil, util.NewClientServerError("failed to get response from conversational analytics API", http.StatusInternalServerError, err)
@@ -243,15 +247,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return response, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) RequiresClientAuthorization(primitiveMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}
 	return source.UseClientAuthorization(), nil
 }
 
-func getStream(url string, payload CAPayload, headers map[string]string, maxRows int) (string, error) {
+func getStream(client *http.Client, url string, payload CAPayload, headers map[string]string, maxRows int) (string, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal payload: %w", err)
@@ -265,7 +269,6 @@ func getStream(url string, payload CAPayload, headers map[string]string, maxRows
 		req.Header.Set(k, v)
 	}
 
-	client := &http.Client{Timeout: 330 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to send request: %w", err)
@@ -412,8 +415,8 @@ func formatDataRetrieved(result map[string]any, maxRows int) map[string]any {
 	}
 }
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) GetAuthTokenHeaderName(primitiveMgr tools.SourceProvider) (string, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return "", err
 	}
