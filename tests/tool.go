@@ -1281,7 +1281,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	}
 
 	t.Run("secure parameters", func(t *testing.T) {
-		RunMCPSecureToolInvokeTest(t)
+		RunMCPSecureToolInvokeTest(t, options...)
 	})
 }
 

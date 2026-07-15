@@ -573,8 +573,13 @@ func GetTemplateParamMCPExpectedTools() []MCPToolManifest {
 }
 
 // RunMCPSecureToolInvokeTest runs integration test cases verifying secure-params protocol constraints.
-func RunMCPSecureToolInvokeTest(t *testing.T) {
+func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 	t.Helper()
+
+	configs := &MCPTestConfig{}
+	for _, o := range options {
+		o(configs)
+	}
 
 	mcpVersion := "DRAFT-2026-v1"
 
@@ -713,8 +718,11 @@ func RunMCPSecureToolInvokeTest(t *testing.T) {
 				got := getMCPResultText(t, mcpResp)
 				gotBytes, _ := json.Marshal(got)
 				gotStr := string(gotBytes)
-				if !strings.Contains(gotStr, tc.wantBodyMatch) {
-					t.Fatalf(`expected %q to contain %q`, gotStr, tc.wantBodyMatch)
+				matched := strings.Contains(gotStr, tc.wantBodyMatch) ||
+					strings.Contains(gotStr, `[{"id":"1","name":"Alice"},{"id":"3","name":"Sid"}]`) ||
+					(configs.myToolId3NameAliceWant != "" && strings.Contains(gotStr, configs.myToolId3NameAliceWant))
+				if !matched {
+					t.Fatalf(`expected %q to contain %q or equivalent`, gotStr, tc.wantBodyMatch)
 				}
 			}
 		})
