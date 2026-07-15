@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 	"sync"
@@ -134,10 +135,10 @@ func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.C
 			t.Logf("Warning: Failed to list aspect types during cleanup: %v", err)
 			return
 		}
-		// Perform time-based filtering in memory
+		// Perform time-based filtering in memory and restrict to test suite created resources
 		if aspectType.CreateTime != nil {
 			createTime := aspectType.CreateTime.AsTime()
-			if createTime.Before(olderThanTime) {
+			if createTime.Before(olderThanTime) && strings.HasPrefix(path.Base(aspectType.GetName()), "param-aspect-type-") {
 				aspectTypesToDelete = append(aspectTypesToDelete, aspectType.GetName())
 			}
 		} else {
@@ -161,6 +162,79 @@ func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.C
 			t.Logf("Warning: Failed to delete aspect type %s, operation error: %v", aspectTypeName, err)
 		} else {
 			t.Logf("cleanupOldAspectTypes: Successfully deleted %s", aspectTypeName)
+		}
+	}
+}
+
+// cleanupOldDataProducts Deletes DataProducts and their DataAssets older than the specified duration.
+func cleanupOldDataProducts(t *testing.T, ctx context.Context, client *dataplex.DataProductClient, oldThreshold time.Duration) {
+	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
+	olderThanTime := time.Now().Add(-oldThreshold)
+
+	listReq := &dataplexpb.ListDataProductsRequest{
+		Parent:   parent,
+		PageSize: 100,
+	}
+
+	const maxDeletes = 10
+	it := client.ListDataProducts(ctx, listReq)
+	var dataProductsToDelete []string
+	for len(dataProductsToDelete) < maxDeletes {
+		dp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			t.Logf("Warning: Failed to list data products during cleanup: %v", err)
+			return
+		}
+		if dp.CreateTime != nil && strings.HasPrefix(path.Base(dp.GetName()), "param-data-product-") {
+			createTime := dp.CreateTime.AsTime()
+			if createTime.Before(olderThanTime) {
+				dataProductsToDelete = append(dataProductsToDelete, dp.GetName())
+			}
+		} else if dp.CreateTime == nil {
+			t.Logf("Warning: DataProduct %s has no CreateTime", dp.GetName())
+		}
+	}
+	if len(dataProductsToDelete) == 0 {
+		t.Logf("cleanupOldDataProducts: No data products found older than %s to delete.", oldThreshold.String())
+		return
+	}
+
+	for _, dpName := range dataProductsToDelete {
+		// Must delete child data assets before we can delete the data product.
+		assetIt := client.ListDataAssets(ctx, &dataplexpb.ListDataAssetsRequest{Parent: dpName, PageSize: 100})
+		for {
+			asset, err := assetIt.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				t.Logf("Warning: Failed to list data assets for %s: %v", dpName, err)
+				break
+			}
+			op, err := client.DeleteDataAsset(ctx, &dataplexpb.DeleteDataAssetRequest{Name: asset.GetName()})
+			if err != nil {
+				t.Logf("Warning: Failed to initiate DeleteDataAsset for %s: %v", asset.GetName(), err)
+				continue
+			}
+			if err := op.Wait(ctx); err != nil {
+				t.Logf("Warning: Failed to wait for DeleteDataAsset %s: %v", asset.GetName(), err)
+			} else {
+				t.Logf("cleanupOldDataProducts: Successfully deleted asset %s", asset.GetName())
+			}
+		}
+
+		op, err := client.DeleteDataProduct(ctx, &dataplexpb.DeleteDataProductRequest{Name: dpName})
+		if err != nil {
+			t.Logf("Warning: Failed to initiate DeleteDataProduct for %s: %v", dpName, err)
+			continue
+		}
+		if err := op.Wait(ctx); err != nil {
+			t.Logf("Warning: Failed to wait for DeleteDataProduct %s: %v", dpName, err)
+		} else {
+			t.Logf("cleanupOldDataProducts: Successfully deleted data product %s", dpName)
 		}
 	}
 }
@@ -273,8 +347,9 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		t.Fatalf("unable to create Dataplex DataProduct connection: %s", err)
 	}
 
-	// Cleanup older aspecttypes
+	// Cleanup older aspect types and data products that may have leaked due to aborted tests
 	cleanupOldAspectTypes(t, ctx, dataplexClient, 1*time.Hour)
+	cleanupOldDataProducts(t, ctx, dataplexDataProductClient, 1*time.Hour)
 
 	datasetName1 := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	datasetName2 := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
