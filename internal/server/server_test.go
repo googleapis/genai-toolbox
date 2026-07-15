@@ -38,6 +38,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -257,45 +258,68 @@ func TestUpdateServer(t *testing.T) {
 		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}}),
 	}
-	s.ResourceMgr.SetResources(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
+	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
 
-	gotSource, _ := s.ResourceMgr.GetSource("example-source")
+	gotSource, _ := s.PrimitiveMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
 	}
 
-	gotAuthService, _ := s.ResourceMgr.GetAuthService("example-auth")
+	gotAuthService, _ := s.PrimitiveMgr.GetAuthService("example-auth")
 	if diff := cmp.Diff(gotAuthService, newAuth["example-auth"]); diff != "" {
 		t.Errorf("error updating server, authServices (-want +got):\n%s", diff)
 	}
 
-	gotTool, _ := s.ResourceMgr.GetTool("example-tool")
+	gotTool, _ := s.PrimitiveMgr.GetTool("example-tool")
 	if diff := cmp.Diff(gotTool, newTools["example-tool"]); diff != "" {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
-	gotToolset, ok := s.ResourceMgr.GetToolset("example-toolset")
+	wantGroup := newGroups["example-toolset"]
+	gotGroup, ok := s.PrimitiveMgr.GetGroup("example-toolset")
+	if !ok {
+		t.Fatal("expected group \"example-toolset\" to exist")
+	}
+	if diff := cmp.Diff(wantGroup, gotGroup, cmp.AllowUnexported(group.Group{})); diff != "" {
+		t.Errorf("error updating server, group (-want +got):\n%s", diff)
+	}
+
+	var nilTool tools.Tool
+	wantToolset := tools.Toolset{
+		ToolsetConfig: tools.ToolsetConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}},
+		Tools:         []*tools.Tool{&nilTool},
+	}
+	gotToolset, ok := s.PrimitiveMgr.GetToolset("example-toolset")
 	if !ok {
 		t.Fatal("expected toolset \"example-toolset\" to exist")
 	}
-	if gotToolset.Name != "example-toolset" || !gotToolset.ContainsTool("example-tool") {
-		t.Errorf("error updating server, toolset = %+v, want name %q containing tool %q", gotToolset, "example-toolset", "example-tool")
+	if diff := cmp.Diff(wantToolset, gotToolset, cmpopts.IgnoreUnexported(tools.Toolset{})); diff != "" {
+		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 
-	gotPrompt, ok := s.ResourceMgr.GetPrompt("example-prompt")
-	if !ok || gotPrompt == nil {
-		t.Errorf("error updating server, prompt %q not found", "example-prompt")
+	gotPrompt, _ := s.PrimitiveMgr.GetPrompt("example-prompt")
+	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
+		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
 	}
 
-	gotPromptset, ok := s.ResourceMgr.GetPromptset("example-promptset")
+	examplePrompt := newPrompts["example-prompt"]
+	wantPromptset := prompts.Promptset{
+		PromptsetConfig: prompts.PromptsetConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}},
+		Prompts:         []*prompts.Prompt{&examplePrompt},
+		Manifest: prompts.PromptsetManifest{
+			PromptsManifest: map[string]prompts.Manifest{"example-prompt": examplePrompt.Manifest()},
+		},
+		PromptNameSet: map[string]struct{}{"example-prompt": {}},
+	}
+	gotPromptset, ok := s.PrimitiveMgr.GetPromptset("example-promptset")
 	if !ok {
 		t.Fatal("expected promptset \"example-promptset\" to exist")
 	}
-	if gotPromptset.Name != "example-promptset" || !gotPromptset.ContainsPrompt("example-prompt") {
-		t.Errorf("error updating server, promptset = %+v, want name %q containing prompt %q", gotPromptset, "example-promptset", "example-prompt")
+	if diff := cmp.Diff(wantPromptset, gotPromptset, cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
+		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 }
 
@@ -1232,9 +1256,9 @@ mcpEnabled: true
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
 		})
 	}
@@ -1324,9 +1348,9 @@ scopesRequired:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
 		})
 	}
@@ -1338,6 +1362,7 @@ func TestGroupConfigParsing(t *testing.T) {
 	tests := []struct {
 		name      string
 		yaml      string
+		want      group.GroupConfig
 		wantError bool
 	}{
 		{
@@ -1352,7 +1377,12 @@ tools:
 prompts:
   - prompt_a
 `,
-			wantError: false,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "a group of tools and prompts",
+				ToolNames:   []string{"tool_a", "tool_b"},
+				PromptNames: []string{"prompt_a"},
+			},
 		},
 		{
 			name: "named group with only description",
@@ -1361,7 +1391,10 @@ kind: group
 name: my_group
 description: just a description
 `,
-			wantError: false,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "just a description",
+			},
 		},
 		{
 			name: "default group with only description",
@@ -1370,7 +1403,9 @@ kind: group
 name:
 description: default server instruction
 `,
-			wantError: false,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
 		},
 		{
 			name: "default group omitting name field",
@@ -1378,7 +1413,23 @@ description: default server instruction
 kind: group
 description: default server instruction
 `,
-			wantError: false,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
+		},
+		{
+			name: "kind toolset folds into a tools-only group",
+			yaml: `
+kind: toolset
+name: my_toolset
+tools:
+  - tool_a
+  - tool_b
+`,
+			want: group.GroupConfig{
+				Name:      "my_toolset",
+				ToolNames: []string{"tool_a", "tool_b"},
+			},
 		},
 		{
 			name: "default group declaring tools is an error",
@@ -1442,9 +1493,19 @@ tools:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+			if tc.wantError {
+				return
+			}
+			gc, ok := groups[tc.want.Name]
+			if !ok {
+				t.Fatalf("expected group %q to be parsed, got: %v", tc.want.Name, groups)
+			}
+			if diff := cmp.Diff(tc.want, gc); diff != "" {
+				t.Errorf("group mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -1462,9 +1523,9 @@ tools:
 prompts:
   - prompt_a
 `
-	_, _, _, _, _, _, groups, err := server.UnmarshalResourceConfig(ctx, []byte(yaml))
+	_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(yaml))
 	if err != nil {
-		t.Fatalf("UnmarshalResourceConfig() returned unexpected error: %v", err)
+		t.Fatalf("UnmarshalPrimitiveConfig() returned unexpected error: %v", err)
 	}
 	gc, ok := groups["my_group"]
 	if !ok {

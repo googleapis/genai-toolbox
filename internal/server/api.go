@@ -66,7 +66,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		span.End()
 	}()
 
-	toolset, ok := s.ResourceMgr.GetToolset(toolsetName)
+	g, ok := s.PrimitiveMgr.GetGroup(toolsetName)
 	if !ok {
 		err = fmt.Errorf("toolset %q does not exist", toolsetName)
 		s.logger.DebugContext(ctx, err.Error())
@@ -74,7 +74,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	manifest, err := toolset.BuildManifest(s.ResourceMgr.GetSourcesMap())
+	manifest, err := g.ToolsetManifest(s.version, s.PrimitiveMgr.GetToolsMap(), s.PrimitiveMgr.GetSourcesMap())
 	if err != nil {
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
@@ -101,14 +101,14 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		span.End()
 	}()
 
-	tool, ok := s.ResourceMgr.GetTool(toolName)
+	tool, ok := s.PrimitiveMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
-	toolManifest, err := tool.Manifest(s.ResourceMgr.GetSourcesMap())
+	toolManifest, err := tool.Manifest(s.PrimitiveMgr.GetSourcesMap())
 	if err != nil {
 		err = fmt.Errorf("error generating manifest for tool %q: %w", toolName, err)
 		s.logger.DebugContext(ctx, err.Error())
@@ -143,7 +143,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		span.End()
 	}()
 
-	tool, ok := s.ResourceMgr.GetTool(toolName)
+	tool, ok := s.PrimitiveMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		s.logger.DebugContext(ctx, err.Error())
@@ -156,7 +156,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	// Check if this specific tool requires the standard authorization header
-	clientAuth, err := tool.RequiresClientAuthorization(s.ResourceMgr)
+	clientAuth, err := tool.RequiresClientAuthorization(s.PrimitiveMgr)
 	if err != nil {
 		errMsg := fmt.Errorf("error during invocation: %w", err)
 		s.logger.DebugContext(ctx, errMsg.Error())
@@ -175,7 +175,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Tool authentication
 	// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
 	claimsFromAuth := make(map[string]map[string]any)
-	for _, aS := range s.ResourceMgr.GetAuthServiceMap() {
+	for _, aS := range s.PrimitiveMgr.GetAuthServiceMap() {
 		var claims map[string]any
 		var err error
 
@@ -234,7 +234,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	toolParams, err := tool.GetParameters(s.ResourceMgr.GetSourcesMap())
+	toolParams, err := tool.GetParameters(s.PrimitiveMgr.GetSourcesMap())
 	if err != nil {
 		err = fmt.Errorf("error getting parameters for tool: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
@@ -269,7 +269,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	params, err = tool.EmbedParams(ctx, params, s.ResourceMgr.GetEmbeddingModelMap())
+	params, err = tool.EmbedParams(ctx, params, s.PrimitiveMgr.GetEmbeddingModelMap())
 	if err != nil {
 		err = fmt.Errorf("error embedding parameters: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
@@ -277,7 +277,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := tool.Invoke(ctx, s.ResourceMgr, params, accessToken)
+	res, err := tool.Invoke(ctx, s.PrimitiveMgr, params, accessToken)
 
 	// Determine what error to return to the users.
 	if err != nil {

@@ -26,7 +26,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 
 	"github.com/spf13/cobra"
@@ -250,20 +250,9 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 // be generated with. In group mode, a group's own description takes precedence
 // over the --description flag, which acts as a fallback.
 func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap map[string]group.Group) (map[string]skillContent, error) {
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, nil, groupsMap)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, groupsMap)
 
 	skillsToContents := make(map[string]skillContent)
-
-	getToolsFromToolset := func(ts tools.Toolset) map[string]tools.Tool {
-		toolsetTools := make(map[string]tools.Tool)
-		for _, t := range ts.Tools {
-			if t != nil {
-				tool := *t
-				toolsetTools[tool.GetName()] = tool
-			}
-		}
-		return toolsetTools
-	}
 
 	getToolsFromGroup := func(g group.Group) map[string]tools.Tool {
 		groupTools := make(map[string]tools.Tool)
@@ -276,12 +265,12 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 	}
 
 	if c.toolset != "" {
-		ts, ok := resourceMgr.GetToolset(c.toolset)
+		g, ok := primitiveMgr.GetGroup(c.toolset)
 		if !ok {
 			return nil, fmt.Errorf("toolset %q not found", c.toolset)
 		}
 
-		skillsToContents[c.name] = skillContent{tools: getToolsFromToolset(ts), description: c.description}
+		skillsToContents[c.name] = skillContent{tools: getToolsFromGroup(g), description: c.description}
 		return skillsToContents, nil
 	}
 
