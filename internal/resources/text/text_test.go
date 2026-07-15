@@ -36,7 +36,7 @@ func TestTextResourceInitialization(t *testing.T) {
 		wantError   bool
 		errContains string
 		wantMime    string
-		wantPrior   float64
+		wantPrior   *float64
 	}{
 		{
 			name: "success with defaults",
@@ -46,7 +46,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			},
 			wantError: false,
 			wantMime:  "text/plain",
-			wantPrior: 1.0,
+			wantPrior: nil,
 		},
 		{
 			name: "success with overrides",
@@ -60,7 +60,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			},
 			wantError: false,
 			wantMime:  "application/json",
-			wantPrior: 0.5,
+			wantPrior: floatPtr(0.5),
 		},
 		{
 			name: "error missing text payload",
@@ -82,7 +82,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			},
 			wantError: false,
 			wantMime:  "text/plain",
-			wantPrior: 0.0,
+			wantPrior: floatPtr(0.0),
 		},
 		{
 			name: "multi-byte unicode size calculation",
@@ -92,7 +92,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			},
 			wantError: false,
 			wantMime:  "text/plain",
-			wantPrior: 1.0,
+			wantPrior: nil,
 		},
 		{
 			name: "pure whitespace payload",
@@ -102,7 +102,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			},
 			wantError: false,
 			wantMime:  "text/plain",
-			wantPrior: 1.0,
+			wantPrior: nil,
 		},
 		{
 			name: "explicit empty mimetype defaults to text/plain",
@@ -115,7 +115,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			},
 			wantError: false,
 			wantMime:  "text/plain",
-			wantPrior: 1.0,
+			wantPrior: nil,
 		},
 	}
 
@@ -152,8 +152,14 @@ func TestTextResourceInitialization(t *testing.T) {
 				t.Errorf("MimeType = %v, want %v", cfg.MimeType, tc.wantMime)
 			}
 
-			if cfg.Annotations.Priority == nil || *cfg.Annotations.Priority != tc.wantPrior {
-				t.Errorf("Annotations.Priority = %v, want %v", cfg.Annotations.Priority, tc.wantPrior)
+			if tc.wantPrior == nil {
+				if cfg.Annotations.Priority != nil {
+					t.Errorf("Annotations.Priority = %v, want nil", cfg.Annotations.Priority)
+				}
+			} else {
+				if cfg.Annotations.Priority == nil || *cfg.Annotations.Priority != *tc.wantPrior {
+					t.Errorf("Annotations.Priority = %v, want %v", cfg.Annotations.Priority, *tc.wantPrior)
+				}
 			}
 
 			if cfg.Size == nil {
