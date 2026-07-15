@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookerdeploytoproduction
+package lookerpushbranch
 
 import (
 	"context"
@@ -22,6 +22,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
@@ -29,7 +30,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const resourceType string = "looker-deploy-to-production"
+const resourceType string = "looker-push-branch"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -128,7 +129,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	mapParams := params.AsMap()
 	projectId := mapParams["project_id"].(string)
 
-	resp, err := sdk.DeployToProduction(projectId, source.LookerApiSettings())
+	resp, err := lookercommon.PushBranch(sdk, projectId, source.LookerApiSettings())
 	if err != nil {
 		if strings.Contains(err.Error(), "status=401") {
 			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)

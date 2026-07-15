@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookerdeploytoproduction
+package lookerprojectcommit
 
 import (
 	"context"
@@ -22,6 +22,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
@@ -29,7 +30,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const resourceType string = "looker-deploy-to-production"
+const resourceType string = "looker-project-commit"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -72,7 +73,17 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	projectIdParameter := parameters.NewStringParameter("project_id", "The project_id")
-	params := parameters.Parameters{projectIdParameter}
+	messageParameter := parameters.NewStringParameter("message", "The commit message", parameters.WithStringRequired(false))
+	filesParameter := parameters.NewArrayParameter(
+		"files",
+		"List of files to commit",
+		parameters.NewStringParameter("file", "File path"),
+		parameters.WithArrayRequired(false),
+		parameters.WithArrayDefault([]any{}),
+	)
+	amendParameter := parameters.NewBooleanParameter("amend", "Amend the last commit", parameters.WithBooleanRequired(false))
+
+	params := parameters.Parameters{projectIdParameter, messageParameter, filesParameter, amendParameter}
 
 	annotations := &tools.ToolAnnotations{}
 	if cfg.Annotations != nil {
@@ -128,7 +139,35 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	mapParams := params.AsMap()
 	projectId := mapParams["project_id"].(string)
 
-	resp, err := sdk.DeployToProduction(projectId, source.LookerApiSettings())
+	req := lookercommon.ProjectCommitRequest{}
+
+	if msgVal, ok := mapParams["message"]; ok && msgVal != nil {
+		if msg, ok := msgVal.(string); ok && msg != "" {
+			req.Message = &msg
+		}
+	}
+
+	if filesVal, ok := mapParams["files"]; ok && filesVal != nil {
+		if fSlice, ok := filesVal.([]any); ok && len(fSlice) > 0 {
+			files := make([]string, 0, len(fSlice))
+			for _, item := range fSlice {
+				if s, ok := item.(string); ok {
+					files = append(files, s)
+				}
+			}
+			if len(files) > 0 {
+				req.Files = &files
+			}
+		}
+	}
+
+	if amendVal, ok := mapParams["amend"]; ok && amendVal != nil {
+		if a, ok := amendVal.(bool); ok {
+			req.Amend = &a
+		}
+	}
+
+	resp, err := lookercommon.ProjectCommit(sdk, projectId, req, source.LookerApiSettings())
 	if err != nil {
 		if strings.Contains(err.Error(), "status=401") {
 			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
