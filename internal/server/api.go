@@ -74,25 +74,12 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	toolsMap := make(map[string]tools.Tool, len(g.ToolNames))
-	for _, name := range g.ToolNames {
-		tool, ok := s.ResourceMgr.GetTool(name)
-		if !ok {
-			err = fmt.Errorf("tool %q does not exist", name)
-			s.logger.DebugContext(ctx, err.Error())
-			_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
-			return
-		}
-		toolsMap[name] = tool
-	}
-
-	manifest, err := g.ToolsetManifest(s.version, toolsMap, s.ResourceMgr.GetSourcesMap())
+	manifest, err := g.ToolsetManifest(s.version, s.ResourceMgr.GetToolsMap(), s.ResourceMgr.GetSourcesMap())
 	if err != nil {
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 		return
 	}
-	manifest.ServerVersion = s.version
 
 	render.JSON(w, r, manifest)
 }
