@@ -102,7 +102,7 @@ func TestGroupConfig_Initialize(t *testing.T) {
 				Name:      "g",
 				ToolNames: []string{"nope"},
 			},
-			wantErr: "tool does not exist: nope",
+			wantErr: "tool does not exist: \"nope\"",
 		},
 		{
 			name: "missing prompt",
@@ -110,7 +110,7 @@ func TestGroupConfig_Initialize(t *testing.T) {
 				Name:        "g",
 				PromptNames: []string{"nope"},
 			},
-			wantErr: "prompt does not exist: nope",
+			wantErr: "prompt does not exist: \"nope\"",
 		},
 	}
 

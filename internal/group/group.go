@@ -48,13 +48,13 @@ type Group struct {
 // ContainsTool and ContainsPrompt.
 func (gc GroupConfig) Initialize(toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt) (Group, error) {
 	if !tools.IsValidName(gc.Name) {
-		return Group{}, fmt.Errorf("invalid group name: %s", gc.Name)
+		return Group{}, fmt.Errorf("invalid group name: %q", gc.Name)
 	}
 
 	toolNameSet := make(map[string]struct{}, len(gc.ToolNames))
 	for _, name := range gc.ToolNames {
 		if _, ok := toolsMap[name]; !ok {
-			return Group{}, fmt.Errorf("tool does not exist: %s", name)
+			return Group{}, fmt.Errorf("tool does not exist: %q", name)
 		}
 		toolNameSet[name] = struct{}{}
 	}
@@ -62,7 +62,7 @@ func (gc GroupConfig) Initialize(toolsMap map[string]tools.Tool, promptsMap map[
 	promptNameSet := make(map[string]struct{}, len(gc.PromptNames))
 	for _, name := range gc.PromptNames {
 		if _, ok := promptsMap[name]; !ok {
-			return Group{}, fmt.Errorf("prompt does not exist: %s", name)
+			return Group{}, fmt.Errorf("prompt does not exist: %q", name)
 		}
 		promptNameSet[name] = struct{}{}
 	}
