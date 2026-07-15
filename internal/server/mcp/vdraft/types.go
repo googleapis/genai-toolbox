@@ -469,8 +469,8 @@ type ListGroupsRequest struct {
 	PaginatedRequest
 }
 
-// GroupDescription is a single entry in a groups/list response.
-type GroupDescription struct {
+// Group is a single entry in a groups/list response.
+type Group struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 }
@@ -478,7 +478,7 @@ type GroupDescription struct {
 // ListGroupsResult is the server's response to a groups/list request.
 type ListGroupsResult struct {
 	jsonrpc.Result
-	Groups []GroupDescription `json:"groups"`
+	Groups []Group `json:"groups"`
 }
 
 // GetGroupRequest is sent from the client to request a single group's contents.

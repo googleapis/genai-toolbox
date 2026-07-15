@@ -160,10 +160,10 @@ func GenerateListGroupsResult(groupsMap map[string]group.Group) ListGroupsResult
 	}
 	sort.Strings(names)
 
-	groupsList := make([]GroupDescription, 0, len(names))
+	groupsList := make([]Group, 0, len(names))
 	for _, name := range names {
 		g := groupsMap[name]
-		groupsList = append(groupsList, GroupDescription{Name: g.Name, Description: g.Description})
+		groupsList = append(groupsList, Group{Name: g.Name, Description: g.Description})
 	}
 	return ListGroupsResult{Groups: groupsList}
 }
