@@ -162,7 +162,7 @@ type ToolConfigs map[string]tools.ToolConfig
 type PromptConfigs map[string]prompts.PromptConfig
 type GroupConfigs map[string]group.GroupConfig
 
-func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, PromptConfigs, GroupConfigs, error) {
+func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, PromptConfigs, GroupConfigs, error) {
 	// prepare configs map
 	var sourceConfigs SourceConfigs
 	var authServiceConfigs AuthServiceConfigs
@@ -328,6 +328,9 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 				groupConfigs = make(GroupConfigs)
 			}
 			if _, exists := groupConfigs[name]; exists {
+				if name == "" {
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("more than one default (nameless) group declared; only one is allowed")
+				}
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("group %q declared more than once", name)
 			}
 			groupConfigs[name] = c

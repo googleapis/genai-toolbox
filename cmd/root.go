@@ -146,7 +146,7 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap)
+	s.PrimitiveMgr.SetPrimitives(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap)
 
 	return nil
 }

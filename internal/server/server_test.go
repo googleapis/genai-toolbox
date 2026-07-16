@@ -261,28 +261,28 @@ func TestUpdateServer(t *testing.T) {
 		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}}),
 	}
-	s.ResourceMgr.SetResources(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
+	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
 
-	gotSource, _ := s.ResourceMgr.GetSource("example-source")
+	gotSource, _ := s.PrimitiveMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
 	}
 
-	gotAuthService, _ := s.ResourceMgr.GetAuthService("example-auth")
+	gotAuthService, _ := s.PrimitiveMgr.GetAuthService("example-auth")
 	if diff := cmp.Diff(gotAuthService, newAuth["example-auth"]); diff != "" {
 		t.Errorf("error updating server, authServices (-want +got):\n%s", diff)
 	}
 
-	gotTool, _ := s.ResourceMgr.GetTool("example-tool")
+	gotTool, _ := s.PrimitiveMgr.GetTool("example-tool")
 	if diff := cmp.Diff(gotTool, newTools["example-tool"]); diff != "" {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
 	wantGroup := newGroups["example-toolset"]
-	gotGroup, ok := s.ResourceMgr.GetGroup("example-toolset")
+	gotGroup, ok := s.PrimitiveMgr.GetGroup("example-toolset")
 	if !ok {
 		t.Fatal("expected group \"example-toolset\" to exist")
 	}
@@ -295,7 +295,7 @@ func TestUpdateServer(t *testing.T) {
 		ToolsetConfig: tools.ToolsetConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}},
 		Tools:         []*tools.Tool{&nilTool},
 	}
-	gotToolset, ok := s.ResourceMgr.GetToolset("example-toolset")
+	gotToolset, ok := s.PrimitiveMgr.GetToolset("example-toolset")
 	if !ok {
 		t.Fatal("expected toolset \"example-toolset\" to exist")
 	}
@@ -303,7 +303,7 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 
-	gotPrompt, _ := s.ResourceMgr.GetPrompt("example-prompt")
+	gotPrompt, _ := s.PrimitiveMgr.GetPrompt("example-prompt")
 	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
 	}
@@ -317,7 +317,7 @@ func TestUpdateServer(t *testing.T) {
 		},
 		PromptNameSet: map[string]struct{}{"example-prompt": {}},
 	}
-	gotPromptset, ok := s.ResourceMgr.GetPromptset("example-promptset")
+	gotPromptset, ok := s.PrimitiveMgr.GetPromptset("example-promptset")
 	if !ok {
 		t.Fatal("expected promptset \"example-promptset\" to exist")
 	}
@@ -1259,9 +1259,9 @@ mcpEnabled: true
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
 		})
 	}
@@ -1351,9 +1351,9 @@ scopesRequired:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
 		})
 	}
@@ -1470,12 +1470,12 @@ messages:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if err == nil {
-				t.Fatalf("UnmarshalResourceConfig() expected a duplicate error, got nil")
+				t.Fatalf("UnmarshalPrimitiveConfig() expected a duplicate error, got nil")
 			}
 			if !strings.Contains(err.Error(), "declared more than once") {
-				t.Fatalf("UnmarshalResourceConfig() error = %v, want it to mention 'declared more than once'", err)
+				t.Fatalf("UnmarshalPrimitiveConfig() error = %v, want it to mention 'declared more than once'", err)
 			}
 		})
 	}
@@ -1618,9 +1618,9 @@ tools:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, groups, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
 			if tc.wantError {
 				return
@@ -1633,6 +1633,40 @@ tools:
 				t.Errorf("group mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestGroupConfigValues(t *testing.T) {
+	ctx := context.Background()
+	yaml := `
+kind: group
+name: my_group
+description: a group
+tools:
+  - tool_a
+  - tool_b
+prompts:
+  - prompt_a
+`
+	_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(yaml))
+	if err != nil {
+		t.Fatalf("UnmarshalPrimitiveConfig() returned unexpected error: %v", err)
+	}
+	gc, ok := groups["my_group"]
+	if !ok {
+		t.Fatalf("expected group %q to be parsed, got: %v", "my_group", groups)
+	}
+	if gc.Name != "my_group" {
+		t.Errorf("group name: got %q, want %q", gc.Name, "my_group")
+	}
+	if gc.Description != "a group" {
+		t.Errorf("group description: got %q, want %q", gc.Description, "a group")
+	}
+	if diff := cmp.Diff([]string{"tool_a", "tool_b"}, gc.ToolNames); diff != "" {
+		t.Errorf("group tools mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]string{"prompt_a"}, gc.PromptNames); diff != "" {
+		t.Errorf("group prompts mismatch (-want +got):\n%s", diff)
 	}
 }
 

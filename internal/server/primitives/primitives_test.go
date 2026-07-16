@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources_test
+package primitives_test
 
 import (
 	"testing"
@@ -23,7 +23,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
@@ -47,7 +47,7 @@ func TestUpdateServer(t *testing.T) {
 		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}}),
 	}
-	resMgr := resources.NewResourceManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
+	resMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 
 	gotSource, _ := resMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
@@ -117,7 +117,7 @@ func TestUpdateServer(t *testing.T) {
 		},
 	}
 
-	resMgr.SetResources(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
+	resMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	gotSource, _ = resMgr.GetSource("example-source2")
 	if diff := cmp.Diff(gotSource, updateSource["example-source2"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
