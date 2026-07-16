@@ -100,11 +100,13 @@ You can explicitly select a protocol using the `core.WithProtocol` option during
 
 ### Supported Protocols
 
-We currently support different versions of the MCP protocol.
+We currently support different versions of the MCP protocol. For a complete and up-to-date list, see the [`Protocol` type definition on GitHub](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/protocol.go).
 
 | Constant | Description |
 | :--- | :--- |
-| `core.MCP` | **(Default)** Alias for the latest supported MCP version (currently `v2025-06-18`). |
+| `core.MCP` | **(Default)** Alias for the default MCP version (currently `v2025-11-25`). |
+| `core.MCPLatest` | Alias for the latest stable MCP version (currently `v2025-11-25`). |
+| `core.MCPDraft` | Alias for the upcoming draft MCP version (currently `v2026-draft`). |
 | `core.MCPv20251125` | MCP Protocol version 2025-11-25. |
 | `core.MCPv20250618` | MCP Protocol version 2025-06-18. |
 | `core.MCPv20250326` | MCP Protocol version 2025-03-26. |
@@ -112,7 +114,7 @@ We currently support different versions of the MCP protocol.
 
 ### Example
 
-// Initialize with the default MCP protocol (2025-06-18)
+// Initialize with the default MCP protocol (2025-11-25)
 
 ```go
 import "github.com/googleapis/mcp-toolbox-sdk-go/core"
@@ -122,7 +124,7 @@ client, err := core.NewToolboxClient(
 )
 ```
 
-If you want to pin the MCP Version 2025-03-26:
+If you want to set the preferred starting protocol to 2025-03-26 (allowing fallback negotiation if the server doesn't support it):
 
 ```go
 import "github.com/googleapis/mcp-toolbox-sdk-go/core"
@@ -132,6 +134,24 @@ client, err := core.NewToolboxClient(
     core.WithProtocol(core.MCPv20250326),
 )
 ```
+
+To restrict negotiation to a specific subset of versions, you can pass an array of supported protocols using `WithSupportedProtocols`:
+
+```go
+import "github.com/googleapis/mcp-toolbox-sdk-go/core"
+
+client, err := core.NewToolboxClient(
+    "http://localhost:5000",
+    core.WithSupportedProtocols([]core.Protocol{
+        core.MCPLatest,
+        core.MCPv20250618,
+    }),
+)
+```
+
+{{< notice tip >}}
+If you want to strictly pin the version and disable protocol fallback, you must pass an array containing just one value using `WithSupportedProtocols`: `core.WithSupportedProtocols([]core.Protocol{core.MCPDraft})`
+{{< /notice >}}
 
 ## Loading Tools
 

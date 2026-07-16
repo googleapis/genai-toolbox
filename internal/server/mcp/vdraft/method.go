@@ -28,7 +28,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -38,22 +38,22 @@ import (
 )
 
 // ProcessMethod returns a response for the request.
-func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, g group.Group, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, g group.Group, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
 	switch method {
 	case SERVER_DISCOVER:
 		return serverDiscoverHandler(ctx, id, body, header)
 	case TOOLS_LIST:
-		return toolsListHandler(ctx, id, resourceMgr, g, body, header)
+		return toolsListHandler(ctx, id, primitiveMgr, g, body, header)
 	case TOOLS_CALL:
-		return toolsCallHandler(ctx, id, g, resourceMgr, body, header)
+		return toolsCallHandler(ctx, id, g, primitiveMgr, body, header)
 	case PROMPTS_LIST:
-		return promptsListHandler(ctx, id, resourceMgr, g, body, header)
+		return promptsListHandler(ctx, id, primitiveMgr, g, body, header)
 	case PROMPTS_GET:
-		return promptsGetHandler(ctx, id, g, resourceMgr, body, header)
+		return promptsGetHandler(ctx, id, g, primitiveMgr, body, header)
 	case GROUPS_LIST:
-		return groupsListHandler(ctx, id, resourceMgr, body, header)
+		return groupsListHandler(ctx, id, primitiveMgr, body, header)
 	case GROUPS_GET:
-		return groupsGetHandler(ctx, id, resourceMgr, body, header)
+		return groupsGetHandler(ctx, id, primitiveMgr, body, header)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -174,7 +174,7 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 	return res, nil
 }
 
-func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, g group.Group, body []byte, header http.Header) (any, error) {
+func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *primitives.PrimitiveManager, g group.Group, body []byte, header http.Header) (any, error) {
 	var req ListToolsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools list request: %w", err)
@@ -190,8 +190,8 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	toolsMap := resourceMgr.GetToolsMap()
-	listToolsResult, err := GenerateListToolsResult(resourceMgr.GetSourcesMap(), g, toolsMap, urlParams)
+	toolsMap := primitiveMgr.GetToolsMap()
+	listToolsResult, err := GenerateListToolsResult(primitiveMgr.GetSourcesMap(), g, toolsMap, urlParams)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -204,8 +204,8 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 }
 
 // toolsCallHandler generate a response for tools call.
-func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
-	authServices := resourceMgr.GetAuthServiceMap()
+func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
+	authServices := primitiveMgr.GetAuthServiceMap()
 
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
@@ -245,7 +245,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
-	tool, ok := resourceMgr.GetTool(toolName)
+	tool, ok := primitiveMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
@@ -258,7 +258,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	}
 
 	// Get access token
-	authTokenHeadername, err := tool.GetAuthTokenHeaderName(resourceMgr)
+	authTokenHeadername, err := tool.GetAuthTokenHeaderName(primitiveMgr)
 	if err != nil {
 		errMsg := fmt.Errorf("error during invocation: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, errMsg.Error(), nil), errMsg
@@ -269,7 +269,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	}
 
 	// Check if this specific tool requires the standard authorization header
-	clientAuth, err := tool.RequiresClientAuthorization(resourceMgr)
+	clientAuth, err := tool.RequiresClientAuthorization(primitiveMgr)
 	if err != nil {
 		errMsg := fmt.Errorf("error during invocation: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, errMsg.Error(), nil), errMsg
@@ -355,7 +355,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	toolParams, err := tool.GetParameters(resourceMgr.GetSourcesMap())
+	toolParams, err := tool.GetParameters(primitiveMgr.GetSourcesMap())
 	if err != nil {
 		err = fmt.Errorf("error getting parameters for tool: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -371,7 +371,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	embeddingModels := resourceMgr.GetEmbeddingModelMap()
+	embeddingModels := primitiveMgr.GetEmbeddingModelMap()
 	params, err = tool.EmbedParams(ctx, params, embeddingModels)
 	if err != nil {
 		err = fmt.Errorf("error embedding parameters: %w", err)
@@ -383,7 +383,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 
 	// run tool invocation and generate response.
 	executionStart := time.Now()
-	results, err := tool.Invoke(ctx, resourceMgr, params, accessToken)
+	results, err := tool.Invoke(ctx, primitiveMgr, params, accessToken)
 	executionDuration := time.Since(executionStart).Seconds()
 
 	// Record tool execution duration metric
@@ -473,7 +473,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 }
 
 // promptsListHandler handles the "prompts/list" method.
-func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, g group.Group, body []byte, header http.Header) (any, error) {
+func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *primitives.PrimitiveManager, g group.Group, body []byte, header http.Header) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -495,7 +495,7 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *
 		return validateErr, err
 	}
 
-	promptsMap := resourceMgr.GetPromptsMap()
+	promptsMap := primitiveMgr.GetPromptsMap()
 	listPromptsResult, err := GenerateListPromptsResult(g, promptsMap)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
@@ -510,7 +510,7 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *
 }
 
 // promptsGetHandler handles the "prompts/get" method.
-func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -546,7 +546,7 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group,
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
-	prompt, ok := resourceMgr.GetPrompt(promptName)
+	prompt, ok := primitiveMgr.GetPrompt(promptName)
 	if !ok {
 		err := fmt.Errorf("prompt with name %q does not exist", promptName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
@@ -607,7 +607,7 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group,
 
 // groupsListHandler handles the "groups/list" method. It returns every named
 // group's name and description. The default nameless group is omitted.
-func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -629,7 +629,7 @@ func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *r
 		return validateErr, err
 	}
 
-	result := GenerateListGroupsResult(resourceMgr.GetGroupsMap())
+	result := GenerateListGroupsResult(primitiveMgr.GetGroupsMap())
 	logger.DebugContext(ctx, fmt.Sprintf("returning %d groups", len(result.Groups)))
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
@@ -640,7 +640,7 @@ func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *r
 
 // groupsGetHandler handles the "groups/get" method. It returns the named group's
 // tools and prompts.
-func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -670,7 +670,7 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	span.SetName(fmt.Sprintf("%s %s", GROUPS_GET, groupName))
 	span.SetAttributes(attribute.String("gen_ai.group.name", groupName))
 
-	g, ok := resourceMgr.GetGroup(groupName)
+	g, ok := primitiveMgr.GetGroup(groupName)
 	if !ok {
 		err := fmt.Errorf("invalid group name: group with name %q does not exist", groupName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
@@ -683,7 +683,7 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	result, err := GenerateGetGroupResult(resourceMgr.GetSourcesMap(), g, resourceMgr.GetToolsMap(), resourceMgr.GetPromptsMap(), urlParams)
+	result, err := GenerateGetGroupResult(primitiveMgr.GetSourcesMap(), g, primitiveMgr.GetToolsMap(), primitiveMgr.GetPromptsMap(), urlParams)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
