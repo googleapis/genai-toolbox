@@ -177,6 +177,11 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
+	if tool.HasSecureParams() {
+		err = fmt.Errorf("method not found: tool %q requires secure parameters which are not supported by the client", toolName)
+		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
+	}
+
 	srcName := tool.GetSourceName()
 	var src sources.Source
 	if srcName != "" {

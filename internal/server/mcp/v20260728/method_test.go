@@ -1305,7 +1305,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 				}
 			}`,
 			wantErr:     true,
-			errContains: "requires com.google.cloud/secure-params extension which is not supported by the client",
+			errContains: "method not found: tool \"secure_tool\" requires secure parameters which are not supported by the client",
 		},
 		{
 			desc: "Secure parameter passed in standard arguments",

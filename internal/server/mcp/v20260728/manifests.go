@@ -134,16 +134,8 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 			return ListToolsResult{}, fmt.Errorf("error getting parameters for tool %q: %w", toolName, err)
 		}
 
-		// Check if this Tool has secure params configured
-		var hasSecureParams bool
-		for _, p := range params {
-			if p != nil && p.GetSecure() {
-				hasSecureParams = true
-				break
-			}
-		}
 		// Skip a Tool that requires secure params extension if the client doesn't support it.
-		if hasSecureParams && !supportsSecureParams {
+		if tool.HasSecureParams() && !supportsSecureParams {
 			continue
 		}
 		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(), urlParams)
