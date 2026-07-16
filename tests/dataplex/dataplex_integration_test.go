@@ -234,7 +234,7 @@ func cleanupOldDataProducts(t *testing.T, ctx context.Context, client *dataplex.
 	for _, dpName := range dataProductsToDelete {
 		// Must delete child data assets before we can delete the data product.
 		assetIt := client.ListDataAssets(ctx, &dataplexpb.ListDataAssetsRequest{
-			Parent: dpName,
+			Parent:   dpName,
 			PageSize: 50, // Max Data Assets per Data Product.
 		})
 		for {
