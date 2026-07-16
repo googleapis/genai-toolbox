@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -364,64 +365,66 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 	}
 }
 
-func TestBuildSkillContents_GroupDescriptionPrecedence(t *testing.T) {
-	// len(groupsMap) > 1 (default group plus named groups) triggers group mode.
-	groupsMap := map[string]group.Group{
-		"": group.NewGroup(group.GroupConfig{Name: ""}),
-		"with-desc": group.NewGroup(
-			group.GroupConfig{Name: "with-desc", Description: "group's own description"}),
-		"no-desc": group.NewGroup(
-			group.GroupConfig{Name: "no-desc"}),
+func TestBuildSkillContents(t *testing.T) {
+	tests := []struct {
+		name      string
+		cmd       *skillsCmd
+		toolsMap  map[string]tools.Tool
+		groupsMap map[string]group.Group
+		want      map[string]skillContent
+	}{
+		{
+			// len(groupsMap) > 1 (default group plus named groups) triggers group mode.
+			name: "group mode: group description takes precedence over flag, flag is fallback",
+			cmd:  &skillsCmd{name: "my-skill", description: "flag fallback"},
+			groupsMap: map[string]group.Group{
+				"": group.NewGroup(group.GroupConfig{Name: ""}),
+				"with-desc": group.NewGroup(
+					group.GroupConfig{Name: "with-desc", Description: "group's own description"}),
+				"no-desc": group.NewGroup(
+					group.GroupConfig{Name: "no-desc"}),
+			},
+			// The default nameless group is skipped, so it produces no skill.
+			want: map[string]skillContent{
+				"my-skill-with-desc": {tools: map[string]tools.Tool{}, description: "group's own description"},
+				"my-skill-no-desc":   {tools: map[string]tools.Tool{}, description: "flag fallback"},
+			},
+		},
+		{
+			name: "toolset mode: uses flag description, ignores group description",
+			cmd:  &skillsCmd{name: "my-skill", description: "flag desc", toolset: "my-toolset"},
+			groupsMap: map[string]group.Group{
+				"": group.NewGroup(group.GroupConfig{Name: ""}),
+				"my-toolset": group.NewGroup(
+					group.GroupConfig{Name: "my-toolset", Description: "ignored in toolset mode"}),
+			},
+			want: map[string]skillContent{
+				"my-skill": {tools: map[string]tools.Tool{}, description: "flag desc"},
+			},
+		},
+		{
+			name:     "all-tools mode: uses flag description",
+			cmd:      &skillsCmd{name: "my-skill", description: "flag desc"},
+			toolsMap: map[string]tools.Tool{},
+			groupsMap: map[string]group.Group{
+				"": group.NewGroup(group.GroupConfig{Name: ""}),
+			},
+			want: map[string]skillContent{
+				"my-skill": {tools: map[string]tools.Tool{}, description: "flag desc"},
+			},
+		},
 	}
 
-	c := &skillsCmd{name: "my-skill", description: "flag fallback"}
-	contents, err := c.buildSkillContents(nil, groupsMap)
-	if err != nil {
-		t.Fatalf("buildSkillContents failed: %v", err)
-	}
-
-	if got := contents["my-skill-with-desc"].description; got != "group's own description" {
-		t.Errorf("group with description: got %q, want %q", got, "group's own description")
-	}
-	if got := contents["my-skill-no-desc"].description; got != "flag fallback" {
-		t.Errorf("group without description: got %q, want %q", got, "flag fallback")
-	}
-	if _, ok := contents["my-skill-"]; ok {
-		t.Errorf("default nameless group should not produce a skill")
-	}
-}
-
-func TestBuildSkillContents_ToolsetModeUsesFlagDescription(t *testing.T) {
-	groupsMap := map[string]group.Group{
-		"": group.NewGroup(group.GroupConfig{Name: ""}),
-		"my-toolset": group.NewGroup(
-			group.GroupConfig{Name: "my-toolset", Description: "ignored in toolset mode"}),
-	}
-
-	c := &skillsCmd{name: "my-skill", description: "flag desc", toolset: "my-toolset"}
-	contents, err := c.buildSkillContents(nil, groupsMap)
-	if err != nil {
-		t.Fatalf("buildSkillContents failed: %v", err)
-	}
-
-	if got := contents["my-skill"].description; got != "flag desc" {
-		t.Errorf("toolset mode: got %q, want %q", got, "flag desc")
-	}
-}
-
-func TestBuildSkillContents_AllToolsModeUsesFlagDescription(t *testing.T) {
-	groupsMap := map[string]group.Group{
-		"": group.NewGroup(group.GroupConfig{Name: ""}),
-	}
-
-	c := &skillsCmd{name: "my-skill", description: "flag desc"}
-	contents, err := c.buildSkillContents(map[string]tools.Tool{}, groupsMap)
-	if err != nil {
-		t.Fatalf("buildSkillContents failed: %v", err)
-	}
-
-	if got := contents["my-skill"].description; got != "flag desc" {
-		t.Errorf("all-tools mode: got %q, want %q", got, "flag desc")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.cmd.buildSkillContents(tt.toolsMap, tt.groupsMap)
+			if err != nil {
+				t.Fatalf("buildSkillContents failed: %v", err)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("buildSkillContents() = %#v, want %#v", got, tt.want)
+			}
+		})
 	}
 }
 
