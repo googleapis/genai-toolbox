@@ -194,7 +194,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	// Attempt initial metadata fetch at startup; if unauthenticated (e.g. user OAuth token required), lazy-load on first request.
 	if err := source.fetchMetadata(ctx, ""); err != nil {
-		fmt.Printf("Notice: OData OData metadata will be lazily fetched on first user request: %v\n", err)
+		fmt.Printf("Notice: OData metadata will be lazily fetched on first user request: %v\n", err)
 	}
 
 	return source, nil
