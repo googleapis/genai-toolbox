@@ -74,9 +74,9 @@ func TestBearerTokenStrategy_Authorize(t *testing.T) {
 }
 
 func TestDynamicUserOauthStrategy_Authorize(t *testing.T) {
-	strategy := &DynamicUserOauthStrategy{AuthTokenHeaderName: "X-SAP-Auth"}
+	strategy := &DynamicUserOauthStrategy{AuthTokenHeaderName: "X-OData-Token"}
 	req, _ := http.NewRequest("GET", "https://example.com", nil)
-	req.Header.Set("X-SAP-Auth", "user-dynamic-token")
+	req.Header.Set("X-OData-Token", "user-dynamic-token")
 
 	if err := strategy.Authorize(context.Background(), req, nil); err != nil {
 		t.Fatalf("Authorize failed: %v", err)
@@ -85,7 +85,7 @@ func TestDynamicUserOauthStrategy_Authorize(t *testing.T) {
 	if got := req.Header.Get("Authorization"); got != "Bearer user-dynamic-token" {
 		t.Errorf("unexpected Authorization header: %q", got)
 	}
-	if got := req.Header.Get("X-SAP-Auth"); got != "Bearer user-dynamic-token" {
-		t.Errorf("unexpected X-SAP-Auth header: %q", got)
+	if got := req.Header.Get("X-OData-Token"); got != "Bearer user-dynamic-token" {
+		t.Errorf("unexpected X-OData-Token header: %q", got)
 	}
 }

@@ -20,13 +20,13 @@ import (
 
 func TestParseMetadata(t *testing.T) {
 	xmlData := []byte(`
-<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData">
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:OData="http://www.OData.com/Protocols/ODataData">
     <edmx:DataServices m:DataServiceVersion="2.0">
         <Schema Namespace="API_SALES_ORDER_SRV" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
-            <EntityType Name="A_SalesOrderType" sap:label="Sales Order">
-                <Property Name="SalesOrder" Type="Edm.String" Nullable="false" MaxLength="10" sap:label="Sales Order ID" />
-                <Property Name="TotalNetAmount" Type="Edm.Decimal" Nullable="true" sap:label="Net Amount" />
-                <Property Name="CreationDate" Type="Edm.DateTime" sap:label="Created On" />
+            <EntityType Name="A_SalesOrderType" label="Sales Order">
+                <Property Name="SalesOrder" Type="Edm.String" Nullable="false" MaxLength="10" label="Sales Order ID" />
+                <Property Name="TotalNetAmount" Type="Edm.Decimal" Nullable="true" label="Net Amount" />
+                <Property Name="CreationDate" Type="Edm.DateTime" label="Created On" />
             </EntityType>
             <EntityContainer Name="API_SALES_ORDER_SRV_Entities" m:IsDefaultEntityContainer="true">
                 <EntitySet Name="A_SalesOrder" EntityType="API_SALES_ORDER_SRV.A_SalesOrderType" />
@@ -66,7 +66,7 @@ func TestParseMetadata(t *testing.T) {
 	}
 
 	// Check specific property
-	if et.Properties[0].Name != "SalesOrder" || et.Properties[0].Type != "Edm.String" || et.Properties[0].SAPLabel != "Sales Order ID" {
+	if et.Properties[0].Name != "SalesOrder" || et.Properties[0].Type != "Edm.String" || et.Properties[0].Label != "Sales Order ID" {
 		t.Errorf("Property 0 mapped incorrectly: %+v", et.Properties[0])
 	}
 	if et.Properties[0].Nullable {
