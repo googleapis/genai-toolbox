@@ -154,7 +154,7 @@ multiplier: 4
 ---
 kind: group
 name: admin
-description: Use these skills when you need to provision new Cloud SQL for SQL Server instances, create databases and users, clone existing environments, and monitor the progress of long-running operations.
+description: Use these skills when you need to provision new Cloud SQL for SQL Server instances, create databases and users, and monitor the progress of long-running operations.
 tools:
 - create_instance
 - get_instance
@@ -166,7 +166,7 @@ tools:
 ---
 kind: group
 name: data
-description: Use these skills when you need to explore the database schema, execute SQL queries to interact with your data, and monitor system-level performance metrics using PromQL queries.
+description: Use these skills when you need to explore the database schema and execute SQL queries to interact with your data.
 tools:
 - execute_sql
 - list_tables

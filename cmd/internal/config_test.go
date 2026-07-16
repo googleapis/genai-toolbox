@@ -1859,7 +1859,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantGroups: server.GroupConfigs{
 				"admin": group.GroupConfig{
 					Name:        "admin",
-					Description: "Use these skills when you need to provision new Cloud SQL for MySQL instances, create databases and users, clone existing environments, and monitor the progress of infrastructure operations.",
+					Description: "Use these skills when you need to provision new Cloud SQL for MySQL instances, create databases and users, and monitor the progress of infrastructure operations.",
 					ToolNames:   []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
 				},
 				"data": group.GroupConfig{
@@ -1885,12 +1885,12 @@ func TestPrebuiltTools(t *testing.T) {
 			wantGroups: server.GroupConfigs{
 				"admin": group.GroupConfig{
 					Name:        "admin",
-					Description: "Use these skills when you need to provision new Cloud SQL for SQL Server instances, create databases and users, clone existing environments, and monitor the progress of long-running operations.",
+					Description: "Use these skills when you need to provision new Cloud SQL for SQL Server instances, create databases and users, and monitor the progress of long-running operations.",
 					ToolNames:   []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
 				},
 				"data": group.GroupConfig{
 					Name:        "data",
-					Description: "Use these skills when you need to explore the database schema, execute SQL queries to interact with your data, and monitor system-level performance metrics using PromQL queries.",
+					Description: "Use these skills when you need to explore the database schema and execute SQL queries to interact with your data.",
 					ToolNames:   []string{"execute_sql", "list_tables"},
 				},
 				"monitor": group.GroupConfig{

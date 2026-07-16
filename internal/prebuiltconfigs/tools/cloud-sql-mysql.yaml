@@ -231,7 +231,7 @@ source: cloud-sql-admin-source
 ---
 kind: group
 name: admin
-description: Use these skills when you need to provision new Cloud SQL for MySQL instances, create databases and users, clone existing environments, and monitor the progress of infrastructure operations.
+description: Use these skills when you need to provision new Cloud SQL for MySQL instances, create databases and users, and monitor the progress of infrastructure operations.
 tools:
 - create_instance
 - get_instance
