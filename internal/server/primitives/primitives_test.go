@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/group"
@@ -70,19 +69,6 @@ func TestUpdateServer(t *testing.T) {
 	}
 	if diff := cmp.Diff(wantGroup, gotGroup, cmp.AllowUnexported(group.Group{})); diff != "" {
 		t.Errorf("error updating server, group (-want +got):\n%s", diff)
-	}
-
-	var nilTool tools.Tool
-	wantToolset := tools.Toolset{
-		ToolsetConfig: tools.ToolsetConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}},
-		Tools:         []*tools.Tool{&nilTool},
-	}
-	gotToolset, ok := resMgr.GetToolset("example-toolset")
-	if !ok {
-		t.Fatal("expected toolset \"example-toolset\" to exist")
-	}
-	if diff := cmp.Diff(wantToolset, gotToolset, cmpopts.IgnoreUnexported(tools.Toolset{})); diff != "" {
-		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 
 	gotPrompt, _ := resMgr.GetPrompt("example-prompt")

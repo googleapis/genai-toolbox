@@ -164,8 +164,7 @@ var MockPrompt2 = NewMockPrompt("prompt2", "", prompts.Arguments{
 
 // SetUpResources setups resources to test against. The returned groups map is the
 // source of truth used by PrimitiveManager; assert group membership via
-// groups[name].ContainsTool / ContainsPrompt, or the derived views via
-// PrimitiveManager.GetToolset / GetPromptset.
+// groups[name].ContainsTool / ContainsPrompt.
 func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]prompts.Prompt, map[string]group.Group) {
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
