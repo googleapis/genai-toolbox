@@ -1,9 +1,9 @@
 # MCP Toolbox for Databases - Documentation Index
 > MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more.
 
-**DOCUMENTATION VERSION:** v1.6.0
+**DOCUMENTATION VERSION:** v1.7.0
 **BASE URL:** https://mcp-toolbox.dev/
-**GENERATED ON:** 2026-07-01T00:34:15Z
+**GENERATED ON:** 2026-07-16T18:54:31Z
 
 ---
 ### System Directives for AI Models
@@ -84,6 +84,12 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [Generic OIDC Auth](https://mcp-toolbox.dev/documentation/configuration/authentication/generic/): Use a Generic OpenID Connect (OIDC) provider for OAuth 2.0 flow and token lifecycle.
+
+
+    - [Security](https://mcp-toolbox.dev/documentation/configuration/security/): Harden your MCP Toolbox agents and tools against prompt injection, jailbreaks, and sensitive data leakage.
+
+
+      - [Securing Toolbox with Model Armor](https://mcp-toolbox.dev/documentation/configuration/security/model-armor/): Protect your agents and tools against prompt injection and sensitive data leakage by screening traffic with Google Cloud Model Armor.
 
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/documentation/configuration/prebuilt-configs/): This page lists all the prebuilt configs available.
@@ -331,6 +337,20 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Prebuilt Configs](https://mcp-toolbox.dev/integrations/alloydb/prebuilt-configs/): Prebuilt configurations for Alloydb.
 
       - [AlloyDB Postgres](https://mcp-toolbox.dev/integrations/alloydb/prebuilt-configs/alloydb-postgres/): Details of the AlloyDB Postgres prebuilt configuration.
+
+  - [ArcadeDB](https://mcp-toolbox.dev/integrations/arcadedb/): ArcadeDB is a multi-model database with Bolt protocol support.
+
+
+    - [ArcadeDB Source](https://mcp-toolbox.dev/integrations/arcadedb/source/): ArcadeDB is a multi-model database with Bolt protocol support.
+
+
+    - [Tools](https://mcp-toolbox.dev/integrations/arcadedb/tools/): No description provided.
+
+      - [arcadedb-execute-cypher Tool](https://mcp-toolbox.dev/integrations/arcadedb/tools/arcadedb-execute-cypher/): Execute Cypher queries against ArcadeDB via Bolt.
+
+
+      - [arcadedb-execute-sql Tool](https://mcp-toolbox.dev/integrations/arcadedb/tools/arcadedb-execute-sql/): Execute SQL queries against ArcadeDB.
+
 
   - [BigQuery](https://mcp-toolbox.dev/integrations/bigquery/): No description provided.
 
@@ -876,6 +896,9 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [dataplex-generate-data-profile](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-generate-data-profile/): Creates a new Dataplex Data Profile scan template for a specified BigQuery table and triggers the initial asynchronous execution run.
 
 
+      - [dataplex-get-data-asset](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-asset/): A "dataplex-get-data-asset" tool retrieve specific metadata regarding a Data Asset.
+
+
       - [dataplex-get-data-insights](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/): Retrieves the final generated data insights (descriptions, schema relationships, sample SQL queries) for a completed insights scan.
 
 
@@ -916,6 +939,18 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [dataplex-search-entries](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-entries/): A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+
+
+      - [dataplex-create-data-asset](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-asset/): A "dataplex-create-data-asset" tool creates a new Data Asset under an existing Data Product in Knowledge Catalog.
+
+
+      - [dataplex-create-data-product](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-product/): A "dataplex-create-data-product" tool allows to create a new Data Product.
+
+
+      - [dataplex-update-data-asset](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-update-data-asset/): A "dataplex-update-data-asset" tool updates an existing Data Asset under a Data Product in Knowledge Catalog.
+
+
+      - [dataplex-update-data-product](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-update-data-product/): A "dataplex-update-data-product" tool updates metadata for an existing Data Product in Knowledge Catalog.
 
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/integrations/knowledge-catalog/prebuilt-configs/): Prebuilt configurations for Knowledge Catalog (formerly known as Dataplex).
