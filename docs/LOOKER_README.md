@@ -36,6 +36,22 @@ You'll now be able to see all enabled tools in the "Tools" tab.
 > [!NOTE]
 > If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
 
+### Connecting through a proxy
+
+If your network requires outbound traffic to go through an HTTP/HTTPS proxy,
+the Looker server honors the standard proxy environment variables. Set them in
+the MCP server's environment (e.g. in the `env` block of your MCP client config):
+
+```bash
+export HTTPS_PROXY="http://proxy.example.com:3128"
+export HTTP_PROXY="http://proxy.example.com:3128"
+export NO_PROXY="localhost,127.0.0.1"  # Optional, hosts that should bypass the proxy
+```
+
+This applies to both authentication modes (service-account credentials and
+end-user OAuth tokens). TLS verification is unaffected and continues to follow
+`LOOKER_VERIFY_SSL`.
+
 ## Usage
 
 Once configured, the MCP server will automatically provide Looker capabilities to your AI assistant. You can:

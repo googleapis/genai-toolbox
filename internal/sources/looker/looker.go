@@ -128,7 +128,17 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		if r.ClientId == "" || r.ClientSecret == "" {
 			return nil, fmt.Errorf("client_id and client_secret need to be specified")
 		}
-		s.Client = v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+		// The SDK's default auth session uses an http.Transport that does not
+		// honor proxy environment variables, so a custom transport is supplied
+		// to route requests through a proxy (HTTP_PROXY/HTTPS_PROXY/NO_PROXY)
+		// when one is configured. TLS verification continues to follow VerifySsl.
+		saTransport := &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: !cfg.VerifySsl,
+			},
+		}
+		s.Client = v4.NewLookerSDK(rtl.NewAuthSessionWithTransport(cfg, saTransport))
 		resp, err := s.Client.Me("", s.ApiSettings)
 		if err != nil {
 			return nil, fmt.Errorf("incorrect settings: %w", err)
@@ -241,8 +251,11 @@ func (s *Source) GetLookerSDK(ctx context.Context, accessToken string) (*v4.Look
 		clientIP, _ := util.ClientIPFromContext(ctx)
 
 		session := rtl.NewAuthSession(*s.LookerApiSettings())
-		// Configure base transport with TLS
+		// Configure base transport with TLS. Proxy is read from the environment
+		// (HTTP_PROXY/HTTPS_PROXY/NO_PROXY) so end-user-token requests can be
+		// routed through a proxy when one is configured.
 		transport := &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: !s.LookerApiSettings().VerifySsl,
 			},
