@@ -112,6 +112,34 @@ func initDataplexConnection(ctx context.Context) (*dataplex.CatalogClient, error
 	return client, nil
 }
 
+// retryOnQuotaExhausted executes fn up to maxRetries times if it encounters a ResourceExhausted (rate limit) gRPC error.
+// Upon encountering ResourceExhausted, it idles for a backoff duration before retrying.
+func retryOnQuotaExhausted[T any](ctx context.Context, t *testing.T, opName string, fn func() (T, error)) (T, error) {
+	const maxAttempts = 2
+	const maxBackoff = 2 * time.Minute
+	backoff := 1 * time.Minute
+
+	var zero T
+	for attempt := 1; attempt < maxAttempts; attempt++ {
+		res, err := fn()
+		if err == nil || grpcstatus.Code(err) != grpccodes.ResourceExhausted {
+			return res, err
+		}
+
+		t.Logf("Warning: %s hit quota limit (ResourceExhausted) on attempt %d/%d. Idling for %v before retrying...", opName, attempt, maxAttempts, backoff)
+		select {
+		case <-ctx.Done():
+			return zero, ctx.Err()
+		case <-time.After(backoff):
+		}
+		backoff *= 2
+		if backoff > maxBackoff {
+			backoff = maxBackoff
+		}
+	}
+	return fn()
+}
+
 // cleanupOldAspectTypes Deletes AspectTypes older than the specified duration.
 func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.CatalogClient, oldThreshold time.Duration) {
 	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
@@ -173,7 +201,8 @@ func cleanupOldDataProducts(t *testing.T, ctx context.Context, client *dataplex.
 
 	listReq := &dataplexpb.ListDataProductsRequest{
 		Parent:   parent,
-		PageSize: 100,
+		PageSize: 200, // Max Data Products per project per region.
+		Filter:   fmt.Sprintf("name:projects/%s/locations/us/dataProducts/param-data-product", DataplexProject),
 	}
 
 	const maxDeletes = 10
@@ -204,7 +233,10 @@ func cleanupOldDataProducts(t *testing.T, ctx context.Context, client *dataplex.
 
 	for _, dpName := range dataProductsToDelete {
 		// Must delete child data assets before we can delete the data product.
-		assetIt := client.ListDataAssets(ctx, &dataplexpb.ListDataAssetsRequest{Parent: dpName, PageSize: 100})
+		assetIt := client.ListDataAssets(ctx, &dataplexpb.ListDataAssetsRequest{
+			Parent: dpName,
+			PageSize: 50, // Max Data Assets per Data Product.
+		})
 		for {
 			asset, err := assetIt.Next()
 			if err == iterator.Done {
@@ -214,7 +246,9 @@ func cleanupOldDataProducts(t *testing.T, ctx context.Context, client *dataplex.
 				t.Logf("Warning: Failed to list data assets for %s: %v", dpName, err)
 				break
 			}
-			op, err := client.DeleteDataAsset(ctx, &dataplexpb.DeleteDataAssetRequest{Name: asset.GetName()})
+			op, err := retryOnQuotaExhausted(ctx, t, "DeleteDataAsset "+asset.GetName(), func() (*dataplex.DeleteDataAssetOperation, error) {
+				return client.DeleteDataAsset(ctx, &dataplexpb.DeleteDataAssetRequest{Name: asset.GetName()})
+			})
 			if err != nil {
 				t.Logf("Warning: Failed to initiate DeleteDataAsset for %s: %v", asset.GetName(), err)
 				continue
@@ -399,8 +433,10 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		teardownBucket,
 	}
 
-	time.Sleep(1 * time.Minute) // wait for table and aspect type to be ingested
-	// Execute teardowns concurrently using a WaitGroup to minimize overall test cleanup duration
+	// Wait for table and aspect type to be ingested.
+	// Also clears the Data Products API quota so calls made in cleanupOldDataProducts don't push the actual integration test calls over the quota limit.
+	time.Sleep(1 * time.Minute)
+	// Execute teardowns concurrently using a WaitGroup to minimize overall test cleanup duration.
 	defer func() {
 		var wg sync.WaitGroup
 		for _, fn := range teardowns {
