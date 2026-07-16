@@ -65,7 +65,7 @@ At startup, Toolbox validates groups:
 
 ## Relationship to toolsets
 
-Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations continue to work unchanged — they are treated as groups with tools and no other primitives, so no migration is required. Use a group when you need to scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.
+Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations continue to work unchanged — they are treated as groups with tools and no other primitives, so no migration is required. That said, we recommend migrating to a `kind: group` even for tools-only collections: a group lets you attach a `description` (surfaced via `groups/list`) and scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.
 
 ## Introspecting groups over MCP
 
