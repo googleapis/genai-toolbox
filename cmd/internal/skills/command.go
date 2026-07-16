@@ -275,8 +275,9 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 	}
 
 	if len(groupsMap) <= 1 {
-		// Default to all tools if no named group found
-		skillsToContents[c.name] = skillContent{tools: toolsMap, description: c.description}
+		// Default to all tools if no named group found. The default nameless
+		// group's description (if any) takes precedence over the flag.
+		skillsToContents[c.name] = skillContent{tools: toolsMap, description: c.descriptionFor(groupsMap[""])}
 		return skillsToContents, nil
 	}
 
@@ -286,14 +287,19 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 			continue
 		}
 		skillName := fmt.Sprintf("%s-%s", c.name, gName)
-		description := c.description
-		if g.Description != "" {
-			description = g.Description
-		}
-		skillsToContents[skillName] = skillContent{tools: getToolsFromGroup(g), description: description}
+		skillsToContents[skillName] = skillContent{tools: getToolsFromGroup(g), description: c.descriptionFor(g)}
 	}
 
 	return skillsToContents, nil
+}
+
+// descriptionFor returns the group's own description when set, falling back to
+// the --description flag otherwise.
+func (c *skillsCmd) descriptionFor(g group.Group) string {
+	if g.Description != "" {
+		return g.Description
+	}
+	return c.description
 }
 
 func copyFile(src, dst string) error {

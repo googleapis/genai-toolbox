@@ -403,7 +403,7 @@ func TestBuildSkillContents(t *testing.T) {
 			},
 		},
 		{
-			name:     "all-tools mode: uses flag description",
+			name:     "all-tools mode: falls back to flag when default group has no description",
 			cmd:      &skillsCmd{name: "my-skill", description: "flag desc"},
 			toolsMap: map[string]tools.Tool{},
 			groupsMap: map[string]group.Group{
@@ -411,6 +411,17 @@ func TestBuildSkillContents(t *testing.T) {
 			},
 			want: map[string]skillContent{
 				"my-skill": {tools: map[string]tools.Tool{}, description: "flag desc"},
+			},
+		},
+		{
+			name:     "all-tools mode: default group description takes precedence over flag",
+			cmd:      &skillsCmd{name: "my-skill", description: "flag desc"},
+			toolsMap: map[string]tools.Tool{},
+			groupsMap: map[string]group.Group{
+				"": group.NewGroup(group.GroupConfig{Name: "", Description: "default group description"}),
+			},
+			want: map[string]skillContent{
+				"my-skill": {tools: map[string]tools.Tool{}, description: "default group description"},
 			},
 		},
 	}
