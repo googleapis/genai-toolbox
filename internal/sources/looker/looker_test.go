@@ -19,7 +19,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	toolboxlog "github.com/googleapis/mcp-toolbox/internal/log"
@@ -234,5 +237,188 @@ func TestGetLookerSDK_ClientIPPropagation(t *testing.T) {
 	}
 	if gotAuth := serverReceivedHeaders.Get("Authorization"); gotAuth != "mock-token-123" {
 		t.Errorf("expected Authorization header to be %q, got %q", "mock-token-123", gotAuth)
+	}
+}
+
+func TestGetHostURL(t *testing.T) {
+	// 1. Setup mock server that handles /api/4.0/versions
+	var requestCount int
+	var responseBody []byte
+	var responseStatus int
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasSuffix(r.URL.Path, "/api/4.0/versions") {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		requestCount++
+		w.WriteHeader(responseStatus)
+		if _, err := w.Write(responseBody); err != nil {
+			t.Errorf("failed to write mock response: %v", err)
+		}
+	}))
+	defer ts.Close()
+
+	// 2. Configure Looker config pointing to mock server
+	cfg := looker.Config{
+		Name:            "test-looker",
+		Type:            "looker",
+		BaseURL:         ts.URL,
+		Timeout:         "5s",
+		SslVerification: false,
+	}
+
+	ctx := context.Background()
+	logger, _ := toolboxlog.NewStdLogger(io.Discard, io.Discard, "DEBUG")
+	ctx = util.WithLogger(ctx, logger)
+	ctx = util.WithUserAgent(ctx, "test-agent")
+
+	srcVal, err := cfg.Initialize(ctx, nil)
+	if err != nil {
+		t.Fatalf("failed to initialize source: %v", err)
+	}
+	src := srcVal.(*looker.Source)
+
+	sdk, err := src.GetLookerSDK(ctx, "mock-token-123")
+	if err != nil {
+		t.Fatalf("failed to get sdk: %v", err)
+	}
+
+	// Scenario 1: Success Path & Success Cache TTL
+	responseStatus = http.StatusOK
+	responseBody = []byte(`{"web_server_url": "https://public.customdomain.com"}`)
+	requestCount = 0
+
+	// First call - should perform request
+	url1, err := src.GetHostURL(ctx, sdk)
+	if err != nil {
+		t.Fatalf("GetHostURL failed: %v", err)
+	}
+	if url1 != "https://public.customdomain.com" {
+		t.Errorf("expected URL to be %q, got %q", "https://public.customdomain.com", url1)
+	}
+	if requestCount != 1 {
+		t.Errorf("expected exactly 1 request to mock server, got %d", requestCount)
+	}
+
+	// Second call - should hit success cache, no extra request
+	url2, err := src.GetHostURL(ctx, sdk)
+	if err != nil {
+		t.Fatalf("GetHostURL failed: %v", err)
+	}
+	if url2 != "https://public.customdomain.com" {
+		t.Errorf("expected URL to be %q, got %q", "https://public.customdomain.com", url2)
+	}
+	if requestCount != 1 {
+		t.Errorf("expected request count to remain 1 (cached), got %d", requestCount)
+	}
+
+	// Scenario 2: Failure Path & Fallback TTL
+	// Reinitialize Source to clear the success cache
+	srcVal, _ = cfg.Initialize(ctx, nil)
+	src = srcVal.(*looker.Source)
+	sdk, _ = src.GetLookerSDK(ctx, "mock-token-123")
+
+	responseStatus = http.StatusInternalServerError
+	responseBody = []byte(`Internal Server Error`)
+	requestCount = 0
+
+	// First failure call - should hit server and fallback to BaseUrl, returning error
+	expectedFallback := strings.TrimSuffix(ts.URL, "/")
+	urlFail1, err := src.GetHostURL(ctx, sdk)
+	if err == nil {
+		t.Fatal("expected GetHostURL to return an error on failure")
+	}
+	if urlFail1 != expectedFallback {
+		t.Errorf("expected fallback URL to be %q, got %q", expectedFallback, urlFail1)
+	}
+	if requestCount != 1 {
+		t.Errorf("expected exactly 1 request for failed fetch, got %d", requestCount)
+	}
+
+	// Second call within 1 minute - should immediately return fallback without hitting server, returning cached error
+	urlFail2, err := src.GetHostURL(ctx, sdk)
+	if err == nil {
+		t.Fatal("expected GetHostURL to return an error on cached failure")
+	}
+	if urlFail2 != expectedFallback {
+		t.Errorf("expected fallback URL to be %q, got %q", expectedFallback, urlFail2)
+	}
+	if requestCount != 1 {
+		t.Errorf("expected request count to remain 1 (cached failure), got %d", requestCount)
+	}
+}
+
+func TestGetHostURL_Concurrent(t *testing.T) {
+	// Setup mock server
+	var requestCount int
+	var mu sync.Mutex
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		requestCount++
+		mu.Unlock()
+		// simulate slow API latency
+		time.Sleep(100 * time.Millisecond)
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"web_server_url": "https://public-concurrent.looker.com"}`))
+	}))
+	defer ts.Close()
+
+	cfg := looker.Config{
+		Name:            "test-looker-concurrent",
+		Type:            "looker",
+		BaseURL:         ts.URL,
+		Timeout:         "5s",
+		SslVerification: false,
+	}
+
+	ctx := context.Background()
+	logger, _ := toolboxlog.NewStdLogger(io.Discard, io.Discard, "DEBUG")
+	ctx = util.WithLogger(ctx, logger)
+	ctx = util.WithUserAgent(ctx, "test-agent")
+
+	srcVal, _ := cfg.Initialize(ctx, nil)
+	src := srcVal.(*looker.Source)
+	sdk, _ := src.GetLookerSDK(ctx, "mock-token-123")
+
+	// Spawn 50 goroutines to concurrently call GetHostURL
+	concurrency := 50
+	errChan := make(chan error, concurrency)
+	urlChan := make(chan string, concurrency)
+
+	var wg sync.WaitGroup
+	for i := 0; i < concurrency; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			resolved, err := src.GetHostURL(ctx, sdk)
+			if err != nil {
+				errChan <- err
+				return
+			}
+			urlChan <- resolved
+		}()
+	}
+
+	wg.Wait()
+	close(errChan)
+	close(urlChan)
+
+	for err := range errChan {
+		t.Fatalf("concurrent GetHostURL failed: %v", err)
+	}
+
+	for resolved := range urlChan {
+		if resolved != "https://public-concurrent.looker.com" {
+			t.Errorf("expected resolved URL to be %q, got %q", "https://public-concurrent.looker.com", resolved)
+		}
+	}
+
+	// Verify singleflight deduplicated the requests to exactly 1
+	mu.Lock()
+	finalCount := requestCount
+	mu.Unlock()
+	if finalCount != 1 {
+		t.Errorf("expected exactly 1 network request due to singleflight deduplication, got %d", finalCount)
 	}
 }

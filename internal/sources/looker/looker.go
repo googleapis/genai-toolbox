@@ -18,7 +18,9 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	geminidataanalytics "cloud.google.com/go/geminidataanalytics/apiv1"
@@ -28,6 +30,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"golang.org/x/sync/singleflight"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -153,6 +156,13 @@ type Source struct {
 	ApiSettings         *rtl.ApiSettings
 	TokenSource         oauth2.TokenSource
 	AuthTokenHeaderName string
+
+	hostURLMu       sync.RWMutex
+	cachedHostURL   string
+	lastFetchTime   time.Time
+	lastFetchFailed bool
+	lastFetchErr    error
+	hostURLGroup    singleflight.Group
 }
 
 func (s *Source) SourceType() string {
@@ -273,4 +283,116 @@ func initGoogleCloudConnection(ctx context.Context) (oauth2.TokenSource, error) 
 	}
 
 	return cred.TokenSource, nil
+}
+
+func (s *Source) GetHostURL(ctx context.Context, sdk *v4.LookerSDK) (string, error) {
+	defaultURL := strings.TrimSuffix(s.ApiSettings.BaseUrl, "/")
+
+	if sdk == nil {
+		return defaultURL, nil
+	}
+
+	// 1. Fast path: Read lock to check cache TTL
+	s.hostURLMu.RLock()
+	if !s.lastFetchFailed && !s.lastFetchTime.IsZero() && time.Since(s.lastFetchTime) < 10*time.Minute {
+		urlStr := s.cachedHostURL
+		s.hostURLMu.RUnlock()
+		return urlStr, nil
+	}
+	if s.lastFetchFailed && time.Since(s.lastFetchTime) < time.Minute {
+		urlStr := s.cachedHostURL
+		if urlStr == "" {
+			urlStr = defaultURL
+		}
+		err := s.lastFetchErr
+		s.hostURLMu.RUnlock()
+		return urlStr, err
+	}
+	s.hostURLMu.RUnlock()
+
+	// 2. Slow path: Use singleflight to deduplicate concurrent network calls
+	res, err, _ := s.hostURLGroup.Do("get_host_url", func() (any, error) {
+		// Double check within singleflight callback if another thread updated cache just before us
+		s.hostURLMu.RLock()
+		if !s.lastFetchFailed && !s.lastFetchTime.IsZero() && time.Since(s.lastFetchTime) < 10*time.Minute {
+			urlStr := s.cachedHostURL
+			s.hostURLMu.RUnlock()
+			return urlStr, nil
+		}
+		if s.lastFetchFailed && time.Since(s.lastFetchTime) < time.Minute {
+			urlStr := s.cachedHostURL
+			if urlStr == "" {
+				urlStr = defaultURL
+			}
+			err := s.lastFetchErr
+			s.hostURLMu.RUnlock()
+			return urlStr, err
+		}
+		s.hostURLMu.RUnlock()
+
+		logger, err := util.LoggerFromContext(ctx)
+		if err != nil {
+			return defaultURL, err
+		}
+
+		// Perform network call outside of locks to prevent blocking concurrent readers
+		versionInfo, err := sdk.Versions("", s.ApiSettings)
+		if err != nil || versionInfo.WebServerUrl == nil || *versionInfo.WebServerUrl == "" {
+			fetchErr := err
+			if fetchErr == nil {
+				fetchErr = fmt.Errorf("empty web_server_url in versions payload")
+			}
+			s.hostURLMu.Lock()
+			s.lastFetchFailed = true
+			s.lastFetchTime = time.Now()
+			s.lastFetchErr = fetchErr
+			// DO NOT overwrite s.cachedHostURL on transient errors; keep the stale valid URL for stale fallbacks
+			s.hostURLMu.Unlock()
+
+			if err != nil {
+				logger.WarnContext(ctx, fmt.Sprintf("unable to retrieve host_url via versions, using stale/default fallback: %v", err))
+			} else {
+				logger.DebugContext(ctx, "versions web_server_url is empty, using stale/default fallback")
+			}
+			return "", fetchErr
+		}
+
+		// Validate the retrieved host_url is a valid absolute HTTP/HTTPS URL
+		valURL := *versionInfo.WebServerUrl
+		u, err := url.Parse(valURL)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			parseErr := fmt.Errorf("invalid web_server_url format: %q", valURL)
+			s.hostURLMu.Lock()
+			s.lastFetchFailed = true
+			s.lastFetchTime = time.Now()
+			s.lastFetchErr = parseErr
+			s.hostURLMu.Unlock()
+			logger.WarnContext(ctx, fmt.Sprintf("invalid host_url setting retrieved %q, using stale/default fallback: %v", valURL, err))
+			return "", parseErr
+		}
+
+		resolvedURL := strings.TrimSuffix(valURL, "/")
+
+		s.hostURLMu.Lock()
+		s.cachedHostURL = resolvedURL
+		s.lastFetchTime = time.Now()
+		s.lastFetchFailed = false
+		s.lastFetchErr = nil
+		s.hostURLMu.Unlock()
+
+		logger.DebugContext(ctx, "successfully fetched and cached host_url: "+resolvedURL)
+		return resolvedURL, nil
+	})
+
+	if err != nil {
+		// If singleflight failed, return last known good cache, else defaultURL
+		s.hostURLMu.RLock()
+		defer s.hostURLMu.RUnlock()
+		if s.cachedHostURL != "" {
+			return s.cachedHostURL, err
+		}
+		return defaultURL, err
+	}
+
+	return res.(string), nil
 }
