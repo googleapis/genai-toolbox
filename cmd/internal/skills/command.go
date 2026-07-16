@@ -281,8 +281,6 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap map[string]group.Group) (map[string]skillContent, error) {
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, groupsMap)
 
-	skillsToContents := make(map[string]skillContent)
-
 	getToolsFromGroup := func(g group.Group) map[string]tools.Tool {
 		groupTools := make(map[string]tools.Tool)
 		for _, name := range g.ToolNames {
@@ -293,18 +291,17 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 		return groupTools
 	}
 
+	// singleSkill builds a one-entry result keyed by the --name flag.
+	singleSkill := func(t map[string]tools.Tool, description string) map[string]skillContent {
+		return map[string]skillContent{c.name: {tools: t, description: description}}
+	}
+
 	if c.group != "" {
 		g, ok := primitiveMgr.GetGroup(c.group)
 		if !ok {
 			return nil, fmt.Errorf("group %q not found", c.group)
 		}
-
-		description := c.description
-		if g.Description != "" {
-			description = g.Description
-		}
-		skillsToContents[c.name] = skillContent{tools: getToolsFromGroup(g), description: description}
-		return skillsToContents, nil
+		return singleSkill(getToolsFromGroup(g), c.descriptionFor(g)), nil
 	}
 
 	if c.toolset != "" {
@@ -312,31 +309,35 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 		if !ok {
 			return nil, fmt.Errorf("toolset %q not found", c.toolset)
 		}
-
-		skillsToContents[c.name] = skillContent{tools: getToolsFromGroup(g), description: c.description}
-		return skillsToContents, nil
+		return singleSkill(getToolsFromGroup(g), c.description), nil
 	}
 
 	if len(groupsMap) <= 1 {
-		// Default to all tools if no named group found
-		skillsToContents[c.name] = skillContent{tools: toolsMap, description: c.description}
-		return skillsToContents, nil
+		// Default to all tools if no named group found. The default nameless
+		// group's description (if any) takes precedence over the flag.
+		return singleSkill(toolsMap, c.descriptionFor(groupsMap[""])), nil
 	}
 
 	// One skill per group
+	skillsToContents := make(map[string]skillContent)
 	for gName, g := range groupsMap {
 		if gName == "" {
 			continue
 		}
 		skillName := fmt.Sprintf("%s-%s", c.name, gName)
-		description := c.description
-		if g.Description != "" {
-			description = g.Description
-		}
-		skillsToContents[skillName] = skillContent{tools: getToolsFromGroup(g), description: description}
+		skillsToContents[skillName] = skillContent{tools: getToolsFromGroup(g), description: c.descriptionFor(g)}
 	}
 
 	return skillsToContents, nil
+}
+
+// descriptionFor returns the group's own description when set, falling back to
+// the --description flag otherwise.
+func (c *skillsCmd) descriptionFor(g group.Group) string {
+	if g.Description != "" {
+		return g.Description
+	}
+	return c.description
 }
 
 func copyFile(src, dst string) error {
