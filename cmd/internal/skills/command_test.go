@@ -561,6 +561,8 @@ func TestResolveSkillName(t *testing.T) {
 	tests := []struct {
 		name            string
 		flagName        string
+		group           string
+		toolset         string
 		prebuiltConfigs []string
 		want            string
 		wantErr         bool
@@ -575,6 +577,28 @@ func TestResolveSkillName(t *testing.T) {
 			flagName:        "my-skill",
 			prebuiltConfigs: []string{"alloydb-postgres"},
 			want:            "my-skill",
+		},
+		{
+			name:     "explicit name wins over group",
+			flagName: "my-skill",
+			group:    "greeting",
+			want:     "my-skill",
+		},
+		{
+			name:  "defaults to group",
+			group: "greeting",
+			want:  "greeting",
+		},
+		{
+			name:    "defaults to toolset",
+			toolset: "greeting",
+			want:    "greeting",
+		},
+		{
+			name:            "group wins over prebuilt",
+			group:           "greeting",
+			prebuiltConfigs: []string{"alloydb-postgres"},
+			want:            "greeting",
 		},
 		{
 			name:            "defaults to single prebuilt",
@@ -599,7 +623,7 @@ func TestResolveSkillName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := resolveSkillName(tt.flagName, tt.prebuiltConfigs)
+			got, err := resolveSkillName(tt.flagName, tt.group, tt.toolset, tt.prebuiltConfigs)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil (got %q)", got)

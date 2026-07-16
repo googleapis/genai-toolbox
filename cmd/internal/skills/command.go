@@ -99,7 +99,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		return err
 	}
 
-	name, err := resolveSkillName(cmd.name, opts.PrebuiltConfigs)
+	name, err := resolveSkillName(cmd.name, cmd.group, cmd.toolset, opts.PrebuiltConfigs)
 	if err != nil {
 		opts.Logger.ErrorContext(ctx, err.Error())
 		return err
@@ -244,17 +244,24 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	return nil
 }
 
-// resolveSkillName returns the explicit --name when set. Otherwise it defaults
-// to the prebuilt config name when exactly one --prebuilt config is given, so
-// prebuilt generation needs no naming flag; any other case requires --name.
-func resolveSkillName(name string, prebuiltConfigs []string) (string, error) {
+// resolveSkillName returns the explicit --name when set. Otherwise, in the
+// single-skill modes it defaults to the --group or --toolset name, and for
+// prebuilt generation it defaults to the config name when exactly one
+// --prebuilt config is given. Any other case requires --name.
+func resolveSkillName(name, group, toolset string, prebuiltConfigs []string) (string, error) {
 	if name != "" {
 		return name, nil
+	}
+	if group != "" {
+		return group, nil
+	}
+	if toolset != "" {
+		return toolset, nil
 	}
 	if len(prebuiltConfigs) == 1 {
 		return strings.ReplaceAll(prebuiltConfigs[0], "/", "-"), nil
 	}
-	return "", fmt.Errorf("--name is required unless exactly one --prebuilt config is provided")
+	return "", fmt.Errorf("--name is required unless --group or --toolset is set, or exactly one --prebuilt config is provided")
 }
 
 func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOptions) (map[string]skillContent, error) {
