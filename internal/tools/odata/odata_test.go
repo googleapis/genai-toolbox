@@ -84,7 +84,7 @@ func TestToolInitializationREAD(t *testing.T) {
 	}
 
 	mockSrc := &mockODataSource{
-		baseURL:  "https://mock.OData/odata",
+		baseURL:  "https://mock.odata.example.com",
 		metadata: metadata,
 	}
 
@@ -115,13 +115,13 @@ description: Reads sales orders
 		t.Fatalf("Failed to initialize tool: %v", err)
 	}
 
-	ODataTool := tool.(Tool)
-	if ODataTool.Method != "GET" {
-		t.Errorf("Expected GET for READ operation, got %s", ODataTool.Method)
+	odataTool := tool.(Tool)
+	if odataTool.Method != "GET" {
+		t.Errorf("Expected GET for READ operation, got %s", odataTool.Method)
 	}
 
 	// Verify dynamic parameters
-	params, err := ODataTool.GetParameters(srcs)
+	params, err := odataTool.GetParameters(srcs)
 	if err != nil {
 		t.Fatalf("Failed to get parameters: %v", err)
 	}
@@ -169,6 +169,16 @@ func TestApplyODataFormatting(t *testing.T) {
 	if applyODataFormatting("O'Brien", "LastName", "string", "2.0", true, compat) != "'O''Brien'" {
 		t.Errorf("Expected escaped quotes ''O''''Brien'' for LastName param, got %s", applyODataFormatting("O'Brien", "LastName", "string", "2.0", true, compat))
 	}
+	// Test partial quoting vs full quoting
+	if applyODataFormatting("'partial", "LastName", "string", "2.0", true, compat) != "'''partial'" {
+		t.Errorf("Expected partial leading quote to be escaped and quoted, got %s", applyODataFormatting("'partial", "LastName", "string", "2.0", true, compat))
+	}
+	if applyODataFormatting("partial'", "LastName", "string", "2.0", true, compat) != "'partial'''" {
+		t.Errorf("Expected partial trailing quote to be escaped and quoted, got %s", applyODataFormatting("partial'", "LastName", "string", "2.0", true, compat))
+	}
+	if applyODataFormatting("'fully_quoted'", "LastName", "string", "2.0", true, compat) != "'fully_quoted'" {
+		t.Errorf("Expected fully quoted string to remain unchanged, got %s", applyODataFormatting("'fully_quoted'", "LastName", "string", "2.0", true, compat))
+	}
 }
 
 type mockODataSourceWithResponse struct {
@@ -204,11 +214,11 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestToolInvokePaginationV2(t *testing.T) {
 	mockSrc := &mockODataSourceWithResponse{
-		baseURL: "https://mock.OData/odata",
+		baseURL: "https://mock.odata.example.com",
 		response: map[string]interface{}{
 			"d": map[string]interface{}{
 				"results": []interface{}{},
-				"__next":  "https://mock.OData/odata/A_SalesOrder?$skiptoken=123",
+				"__next":  "https://mock.odata.example.com/A_SalesOrder?$skiptoken=123",
 			},
 		},
 	}
@@ -244,10 +254,10 @@ func TestToolInvokePaginationV2(t *testing.T) {
 
 func TestToolInvokePaginationV4(t *testing.T) {
 	mockSrc := &mockODataSourceWithResponse{
-		baseURL: "https://mock.OData/odata",
+		baseURL: "https://mock.odata.example.com",
 		response: map[string]interface{}{
 			"value":           []interface{}{},
-			"@odata.nextLink": "https://mock.OData/odata/A_SalesOrder?$skiptoken=123",
+			"@odata.nextLink": "https://mock.odata.example.com/A_SalesOrder?$skiptoken=123",
 		},
 	}
 
@@ -277,6 +287,63 @@ func TestToolInvokePaginationV4(t *testing.T) {
 	notice, ok := respMap["_NOTICE"].(string)
 	if !ok || !strings.Contains(notice, "$skiptoken") {
 		t.Errorf("Expected pagination notice, got: %v", respMap["_NOTICE"])
+	}
+}
+
+type mockTunnelingSource struct {
+	baseURL    string
+	lastReq    *http.Request
+	useTunnel  bool
+}
+
+func (m *mockTunnelingSource) SourceType() string             { return "odata" }
+func (m *mockTunnelingSource) ToConfig() sources.SourceConfig { return nil }
+func (m *mockTunnelingSource) HttpBaseURL() string            { return m.baseURL }
+func (m *mockTunnelingSource) RunODataRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
+	m.lastReq = req
+	return map[string]interface{}{"status": "ok"}, nil
+}
+func (m *mockTunnelingSource) UseClientAuthorization() bool   { return false }
+func (m *mockTunnelingSource) Metadata() *odata.ODataMetadata { return nil }
+func (m *mockTunnelingSource) Compatibility() odata.CompatibilityConfig {
+	return odata.CompatibilityConfig{UseTunnelingHeaders: m.useTunnel}
+}
+func (m *mockTunnelingSource) GetAuthTokenHeaderName() string { return "Authorization" }
+
+func TestUseTunnelingHeaders(t *testing.T) {
+	mockSrc := &mockTunnelingSource{
+		baseURL:   "https://mock.odata.example.com",
+		useTunnel: true,
+	}
+	srcs := map[string]sources.Source{"my_mock_odata": mockSrc}
+	sp := &mockSourceProvider{sources: srcs}
+
+	cfg := Config{
+		Source:    "my_mock_odata",
+		EntitySet: "A_SalesOrder",
+		Operation: "UPDATE",
+	}
+	tool := Tool{
+		BaseTool: tools.NewBaseTool(cfg, tools.NewDestructiveAnnotations(), tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired}, cfg.QueryParams),
+		Method:   "PATCH",
+	}
+
+	_, err := tool.Invoke(context.Background(), sp, parameters.ParamValues{}, "")
+	if err != nil {
+		t.Fatalf("Invoke failed: %v", err)
+	}
+
+	if mockSrc.lastReq == nil {
+		t.Fatalf("Expected HTTP request to be executed")
+	}
+	if mockSrc.lastReq.Method != "POST" {
+		t.Errorf("Expected method POST with tunneling enabled, got %s", mockSrc.lastReq.Method)
+	}
+	if got := mockSrc.lastReq.Header.Get("X-HTTP-Method"); got != "PATCH" {
+		t.Errorf("Expected X-HTTP-Method: PATCH header, got %s", got)
+	}
+	if got := mockSrc.lastReq.Header.Get("X-HTTP-Method-Override"); got != "PATCH" {
+		t.Errorf("Expected X-HTTP-Method-Override: PATCH header, got %s", got)
 	}
 }
 

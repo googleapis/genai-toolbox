@@ -25,7 +25,10 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
+
+	"log/slog"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -175,7 +178,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	var authStrategy AuthStrategy
-	if c.AuthStrategy == "gateway" {
+	if c.AuthStrategy == "gateway" || c.AuthStrategy == "csrf-token" {
 		authStrategy = NewGatewayStrategy(c.BaseURL, c.DefaultHeaders, primary, dynamic, headerName)
 	} else {
 		if dynamic != nil {
@@ -194,7 +197,12 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	// Attempt initial metadata fetch at startup; if unauthenticated (e.g. user OAuth token required), lazy-load on first request.
 	if err := source.fetchMetadata(ctx, ""); err != nil {
-		fmt.Printf("Notice: OData metadata will be lazily fetched on first user request: %v\n", err)
+		logger, _ := util.LoggerFromContext(ctx)
+		if logger != nil {
+			logger.InfoContext(ctx, "OData metadata will be lazily fetched on first user request", "err", err)
+		} else {
+			slog.InfoContext(ctx, "OData metadata will be lazily fetched on first user request", "err", err)
+		}
 	}
 
 	return source, nil
@@ -202,6 +210,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 type Source struct {
 	Config
+	mu                  sync.RWMutex
 	client              *http.Client
 	metadata            *ODataMetadata
 	authStrategy        AuthStrategy
@@ -234,6 +243,8 @@ func (s *Source) GetAuthTokenHeaderName() string {
 }
 
 func (s *Source) Metadata() *ODataMetadata {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.metadata
 }
 
@@ -284,7 +295,9 @@ func (s *Source) fetchMetadata(ctx context.Context, accessToken tools.AccessToke
 	if err != nil {
 		return fmt.Errorf("failed to parse metadata XML: %v", err)
 	}
+	s.mu.Lock()
 	s.metadata = meta
+	s.mu.Unlock()
 
 	return nil
 }
@@ -293,6 +306,10 @@ func (s *Source) fetchMetadata(ctx context.Context, accessToken tools.AccessToke
 func (s *Source) RunODataRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
 	ctx := req.Context()
 
+	if s.Metadata() == nil {
+		_ = s.fetchMetadata(ctx, accessToken)
+	}
+
 	// 1. Pass context token via header so DynamicUserOauthStrategy can read it
 	if accessToken != "" {
 		req.Header.Set(s.GetAuthTokenHeaderName(), string(accessToken))
@@ -300,7 +317,7 @@ func (s *Source) RunODataRequest(req *http.Request, accessToken tools.AccessToke
 
 	// 2. Delegate Authentication and Handshake to Strategy
 	if err := s.authStrategy.Authorize(ctx, req, s.client); err != nil {
-		return nil, fmt.Errorf("OData authorization failed: %w", err)
+		return nil, fmt.Errorf("authorization failed: %w", err)
 	}
 
 	// Inject Default Headers
@@ -312,7 +329,7 @@ func (s *Source) RunODataRequest(req *http.Request, accessToken tools.AccessToke
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("OData http execution failed: %v", err)
+		return nil, fmt.Errorf("http execution failed: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -326,7 +343,7 @@ func (s *Source) RunODataRequest(req *http.Request, accessToken tools.AccessToke
 		if resp.StatusCode == 403 && req.Method != "GET" && req.Method != "HEAD" {
 			s.authStrategy.Evict(ctx, req)
 		}
-		return nil, fmt.Errorf("OData http error %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("http error %d: %s", resp.StatusCode, string(body))
 	}
 
 	// If 204 No Content, return empty
