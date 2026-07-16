@@ -64,6 +64,7 @@ type compatibleSource interface {
 	BigQueryTokenSourceWithScope(ctx context.Context, scopes []string) (oauth2.TokenSource, error)
 	BigQueryProject() string
 	BigQueryLocation() string
+	BigQueryQuotaProject() string
 	GetMaxQueryResultRows() int
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
@@ -215,6 +216,9 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 	headers := map[string]string{
 		"Content-Type":      "application/json",
 		"X-Goog-API-Client": util.GDAClientID,
+	}
+	if quotaProject := source.BigQueryQuotaProject(); quotaProject != "" {
+		headers["X-Goog-User-Project"] = quotaProject
 	}
 
 	payload := CAPayload{
