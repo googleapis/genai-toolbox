@@ -26,7 +26,7 @@ import (
 )
 
 // PrimitiveManager contains available resources for the server. Should be initialized with NewPrimitiveManager().
-// groups is the source of truth for named collections; toolset and prompt views
+// groups is the source of truth for named collections; toolset views (manifests)
 // are derived from the group on demand by the callers that render them.
 type PrimitiveManager struct {
 	mu              sync.RWMutex
