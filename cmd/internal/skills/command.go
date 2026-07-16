@@ -273,11 +273,7 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 			return nil, fmt.Errorf("group %q not found", c.group)
 		}
 
-		description := c.description
-		if g.Description != "" {
-			description = g.Description
-		}
-		skillsToContents[c.name] = skillContent{tools: getToolsFromGroup(g), description: description}
+		skillsToContents[c.name] = skillContent{tools: getToolsFromGroup(g), description: c.descriptionFor(g)}
 		return skillsToContents, nil
 	}
 

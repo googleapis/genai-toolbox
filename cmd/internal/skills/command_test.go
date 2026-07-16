@@ -340,11 +340,9 @@ tools:
     statement: "SELECT 'bye' as greeting"
 toolsets:
   greeting:
-    tools:
-      - hello-sqlite
+    - hello-sqlite
   farewell:
-    tools:
-      - bye-sqlite
+    - bye-sqlite
 `
 
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
