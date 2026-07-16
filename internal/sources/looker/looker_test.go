@@ -65,10 +65,40 @@ func TestParseFromYamlLooker(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with quota project",
+			in: `
+			kind: source
+			name: my-looker-instance
+			type: looker
+			base_url: http://example.looker.com/
+			client_id: jasdl;k;tjl
+			client_secret: sdakl;jgflkasdfkfg
+			quotaProject: billing-project
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-looker-instance": looker.Config{
+					Name:               "my-looker-instance",
+					Type:               looker.SourceType,
+					BaseURL:            "http://example.looker.com/",
+					ClientId:           "jasdl;k;tjl",
+					ClientSecret:       "sdakl;jgflkasdfkfg",
+					Timeout:            "600s",
+					SslVerification:    true,
+					UseClientOAuth:     "false",
+					ShowHiddenModels:   true,
+					ShowHiddenExplores: true,
+					ShowHiddenFields:   true,
+					Location:           "us",
+					QuotaProject:       "billing-project",
+					SessionLength:      1200,
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			got, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -111,7 +141,7 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

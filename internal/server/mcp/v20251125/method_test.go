@@ -23,7 +23,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -168,7 +168,7 @@ func TestToolsListHandler(t *testing.T) {
 	// Initialize tools using provided testutils mock instances
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 
 	tests := []struct {
 		name        string
@@ -221,7 +221,7 @@ func TestToolsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsListHandler(context.Background(), dummyID, resourceMgr, tt.toolset, body)
+			got, err := toolsListHandler(context.Background(), dummyID, primitiveMgr, tt.toolset, body)
 
 			if tt.wantErr {
 				if err == nil {
@@ -257,7 +257,7 @@ func TestToolsCallHandler(t *testing.T) {
 		testutils.MockTool5,
 	}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 
 	tests := []struct {
 		name        string
@@ -353,7 +353,7 @@ func TestToolsCallHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsCallHandler(tt.context, dummyID, toolsets[""], resourceMgr, body, nil)
+			got, err := toolsCallHandler(tt.context, dummyID, toolsets[""], primitiveMgr, body, nil)
 
 			if tt.wantErr {
 				if err == nil {
@@ -385,7 +385,7 @@ func TestPromptsListHandler(t *testing.T) {
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, nil, mockPrompts)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 	tests := []struct {
 		name        string
 		body        ListPromptsRequest
@@ -422,7 +422,7 @@ func TestPromptsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsListHandler(ctx, dummyID, resourceMgr, promptsets[""], body)
+			got, err := promptsListHandler(ctx, dummyID, primitiveMgr, promptsets[""], body)
 
 			if tt.wantErr {
 				if err == nil {
@@ -454,7 +454,7 @@ func TestPromptsGetHandler(t *testing.T) {
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, nil, mockPrompts)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 	tests := []struct {
 		name        string
 		body        GetPromptRequest
@@ -529,7 +529,7 @@ func TestPromptsGetHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsGetHandler(ctx, dummyID, promptsets[""], resourceMgr, body)
+			got, err := promptsGetHandler(ctx, dummyID, promptsets[""], primitiveMgr, body)
 
 			if tt.wantErr {
 				if err == nil {
