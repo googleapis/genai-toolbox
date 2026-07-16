@@ -26,8 +26,9 @@ import (
 )
 
 type mockParameter struct {
-	name string
-	typ  string
+	name   string
+	typ    string
+	secure bool
 }
 
 func (m mockParameter) GetName() string                                { return m.name }
@@ -38,7 +39,7 @@ func (m mockParameter) GetRequired() bool                              { return 
 func (m mockParameter) GetAuthServices() []parameters.ParamAuthService { return nil }
 func (m mockParameter) GetEmbeddedBy() string                          { return "" }
 func (m mockParameter) GetValueFromParam() string                      { return "" }
-func (m mockParameter) GetSecure() bool                                { return false }
+func (m mockParameter) GetSecure() bool                                { return m.secure }
 func (m mockParameter) Parse(any) (any, error)                         { return nil, nil }
 func (m mockParameter) Manifest() parameters.ParameterManifest         { return parameters.ParameterManifest{} }
 func (m mockParameter) McpManifest() (parameters.ParameterMcpManifest, []string) {
@@ -121,6 +122,7 @@ func TestPopulateUrlParams(t *testing.T) {
 		toolParams   parameters.Parameters
 		expected     map[string]any
 		expectedLogs []logEntry
+		expectedErr  bool
 	}{
 		{
 			name: "no URL params in context",
@@ -135,6 +137,31 @@ func TestPopulateUrlParams(t *testing.T) {
 				"existing": "val",
 			},
 			expectedLogs: nil,
+			expectedErr:  false,
+		},
+		{
+			name: "URL params cannot bind to secure parameters",
+			setupCtx: func(ctx context.Context, logger log.Logger) context.Context {
+				ctx = util.WithLogger(ctx, logger)
+				return util.WithUrlParams(ctx, map[string]string{
+					"secure_param": "some_value",
+				})
+			},
+			initial: map[string]any{},
+			toolParams: parameters.Parameters{
+				mockParameter{name: "secure_param", typ: "string", secure: true},
+			},
+			expected: nil,
+			expectedLogs: []logEntry{
+				{
+					level: "WARN",
+					msg:   "URL parameter cannot bind to a secure parameter",
+					params: []any{
+						"parameter", "secure_param",
+					},
+				},
+			},
+			expectedErr: true,
 		},
 		{
 			name: "URL params present but key already exists in data",
@@ -461,8 +488,11 @@ func TestPopulateUrlParams(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			logger := &mockLogger{}
 			ctx := tc.setupCtx(context.Background(), logger)
-			actual := PopulateUrlParams(ctx, tc.initial, tc.toolParams)
-			if !reflect.DeepEqual(actual, tc.expected) {
+			actual, err := PopulateUrlParams(ctx, tc.initial, tc.toolParams)
+			if (err != nil) != tc.expectedErr {
+				t.Errorf("PopulateUrlParams() error = %v, expectedErr %v", err, tc.expectedErr)
+			}
+			if !tc.expectedErr && !reflect.DeepEqual(actual, tc.expected) {
 				t.Errorf("PopulateUrlParams() = %v, want %v", actual, tc.expected)
 			}
 			assertLogs(t, tc.expectedLogs, logger.logs)

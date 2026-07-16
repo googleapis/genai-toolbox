@@ -17,6 +17,7 @@ package util
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -25,10 +26,10 @@ import (
 
 // PopulateUrlParams injects bound URL query parameters into the data arguments
 // and performs automatic type conversion for integer, boolean, and float parameters.
-func PopulateUrlParams(ctx context.Context, data map[string]any, toolParams parameters.Parameters) map[string]any {
+func PopulateUrlParams(ctx context.Context, data map[string]any, toolParams parameters.Parameters) (map[string]any, error) {
 	urlParams, ok := util.UrlParamsFromContext(ctx)
 	if !ok {
-		return data
+		return data, nil
 	}
 	if data == nil {
 		data = make(map[string]any)
@@ -42,9 +43,14 @@ func PopulateUrlParams(ctx context.Context, data map[string]any, toolParams para
 
 			// Attempt type conversion for known parameters
 			found := false
+			isSecure := false
 			for _, p := range toolParams {
 				if p.GetName() == name {
 					found = true
+					if p.GetSecure() {
+						isSecure = true
+						break
+					}
 					switch p.GetType() {
 					case "integer":
 						if i, err := strconv.Atoi(val); err == nil {
@@ -82,10 +88,19 @@ func PopulateUrlParams(ctx context.Context, data map[string]any, toolParams para
 					break
 				}
 			}
+
+			if isSecure {
+				delete(data, name)
+				if logger != nil {
+					logger.WarnContext(ctx, "URL parameter cannot bind to a secure parameter", "parameter", name)
+				}
+				return nil, fmt.Errorf("URL parameter %q cannot bind to a secure parameter", name)
+			}
+
 			if !found && logger != nil {
 				logger.WarnContext(ctx, "URL parameter not defined in tool parameters", "parameter", name)
 			}
 		}
 	}
-	return data
+	return data, nil
 }

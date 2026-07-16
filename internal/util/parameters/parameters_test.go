@@ -1995,6 +1995,21 @@ func TestFailParametersUnmarshal(t *testing.T) {
 			},
 			err: "unsupported valueType \"not-a-real-type\" for map parameter",
 		},
+		{
+			name: "both secure and authServices",
+			in: []map[string]any{
+				{
+					"name":         "my_string",
+					"type":         "string",
+					"description":  "this param",
+					"secure":       true,
+					"authServices": []map[string]any{
+						{"name": "service_one"},
+					},
+				},
+			},
+			err: "parameter \"my_string\" cannot have both 'secure' set to true and 'authServices' specified",
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {

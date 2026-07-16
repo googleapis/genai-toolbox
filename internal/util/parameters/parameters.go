@@ -382,7 +382,16 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 		return nil, fmt.Errorf("parameter 'type' field must be a string, got %T", t)
 	}
 
-	return ParseParameter(ctx, p, typeStr)
+	param, err := ParseParameter(ctx, p, typeStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if param.GetSecure() && len(param.GetAuthServices()) > 0 {
+		return nil, fmt.Errorf("parameter %q cannot have both 'secure' set to true and 'authServices' specified", param.GetName())
+	}
+
+	return param, nil
 }
 
 // ParseParameter parses a raw map into a Parameter object based on its "type" field.
