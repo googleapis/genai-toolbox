@@ -299,6 +299,10 @@ func (s *Source) CanExecuteWrite(sql string) error {
 	return nil
 }
 
+// limitClauseRegexp matches a LIMIT keyword regardless of surrounding
+// whitespace, so multiline or tab-formatted queries are detected too.
+var limitClauseRegexp = regexp.MustCompile(`(?i)\bLIMIT\b`)
+
 // ApplyQueryLimits applies row limits to a SQL query for MCP security compliance.
 // Context timeout management is the responsibility of the caller (following Go best practices).
 // Returns potentially modified SQL with LIMIT clause for SELECT queries.
@@ -308,8 +312,9 @@ func (s *Source) ApplyQueryLimits(sql string) (string, error) {
 	// Apply row limit only to SELECT queries
 	if sqlType == SQLTypeSelect && s.MaxRowLimit > 0 {
 		// Check if query already has LIMIT clause
-		normalized := strings.ToUpper(sql)
-		if !strings.Contains(normalized, " LIMIT ") {
+		if limitClauseRegexp.MatchString(sql) {
+			slog.Warn("configured row limit skipped because query already contains a LIMIT clause", "source", s.Name, "maxRowLimit", s.MaxRowLimit)
+		} else {
 			// Add LIMIT clause - trim trailing whitespace and semicolon
 			sql = strings.TrimSpace(sql)
 			sql = strings.TrimSuffix(sql, ";")
