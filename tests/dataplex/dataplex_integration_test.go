@@ -260,7 +260,9 @@ func cleanupOldDataProducts(t *testing.T, ctx context.Context, client *dataplex.
 			}
 		}
 
-		op, err := client.DeleteDataProduct(ctx, &dataplexpb.DeleteDataProductRequest{Name: dpName})
+		op, err := retryOnQuotaExhausted(ctx, t, "DeleteDataProduct "+dpName, func() (*dataplex.DeleteDataProductOperation, error) {
+			return client.DeleteDataProduct(ctx, &dataplexpb.DeleteDataProductRequest{Name: dpName})
+		})
 		if err != nil {
 			t.Logf("Warning: Failed to initiate DeleteDataProduct for %s: %v", dpName, err)
 			continue
@@ -302,7 +304,9 @@ func setupDataplexSearchDataQualityScan(t *testing.T, ctx context.Context, clien
 		},
 	}
 
-	op, err := client.CreateDataScan(ctx, createDataScanReq)
+	op, err := retryOnQuotaExhausted(ctx, t, "CreateDataScan ", func() (*dataplex.CreateDataScanOperation, error) {
+		return client.CreateDataScan(ctx, createDataScanReq)
+	})
 	if err != nil {
 		t.Fatalf("Failed to create data scan %s: %v", dataScanId, err)
 	}
