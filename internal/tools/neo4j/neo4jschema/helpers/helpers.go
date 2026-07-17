@@ -80,6 +80,12 @@ func ParseAPOCRelationshipRecord(values []any) (types.Relationship, bool) {
 				Types: []string{GetStringValue(propType)},
 			})
 		}
+		// Sort by name so the extracted schema is deterministic across runs
+		// (Go map iteration order is unspecified), matching the other schema
+		// helpers.
+		sort.Slice(rel.Properties, func(i, j int) bool {
+			return rel.Properties[i].Name < rel.Properties[j].Name
+		})
 	}
 	return rel, true
 }

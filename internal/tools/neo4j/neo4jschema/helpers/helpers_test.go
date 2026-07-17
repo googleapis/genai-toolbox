@@ -578,6 +578,28 @@ func TestParseAPOCRelationshipRecord(t *testing.T) {
 			wantOK: true,
 		},
 		{
+			// Go map iteration order is unspecified, so several properties must be
+			// sorted by name for the extracted schema to be stable across runs.
+			name: "multiple properties are sorted by name",
+			values: []any{
+				"KNOWS", "Person", "Company",
+				map[string]any{"since": "INTEGER", "active": "BOOLEAN", "role": "STRING"},
+				int64(2),
+			},
+			want: types.Relationship{
+				Type:      "KNOWS",
+				StartNode: "Person",
+				EndNode:   "Company",
+				Count:     2,
+				Properties: []types.PropertyInfo{
+					{Name: "active", Types: []string{"BOOLEAN"}},
+					{Name: "role", Types: []string{"STRING"}},
+					{Name: "since", Types: []string{"INTEGER"}},
+				},
+			},
+			wantOK: true,
+		},
+		{
 			// labels(n)[0] is null for a label-less node, so the start/end node
 			// value arrives as nil. The previous bare values[i].(string) panicked
 			// on it; ParseAPOCRelationshipRecord must instead yield an empty label.
