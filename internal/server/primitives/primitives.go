@@ -16,6 +16,7 @@ package primitives
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -30,16 +31,16 @@ import (
 
 // PrimitiveManager contains available primitives for the server. Should be initialized with NewPrimitiveManager().
 type PrimitiveManager struct {
-	mu                sync.RWMutex
-	sources           map[string]sources.Source
-	authServices      map[string]auth.AuthService
-	embeddingModels   map[string]embeddingmodels.EmbeddingModel
-	tools             map[string]tools.Tool
-	toolsets          map[string]tools.Toolset
-	prompts           map[string]prompts.Prompt
-	promptsets        map[string]prompts.Promptset
-	resources         map[string]resources.Resource
-	resourceTemplates map[string]resources.ResourceTemplate
+	mu                 sync.RWMutex
+	sources            map[string]sources.Source
+	authServices       map[string]auth.AuthService
+	embeddingModels    map[string]embeddingmodels.EmbeddingModel
+	tools              map[string]tools.Tool
+	toolsets           map[string]tools.Toolset
+	prompts            map[string]prompts.Prompt
+	promptsets         map[string]prompts.Promptset
+	resources          map[string]resources.Resource
+	resourceTemplates  map[string]resources.ResourceTemplate
 	templateRegexCache sync.Map
 }
 
@@ -234,32 +235,41 @@ func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string) (resources.Res
 		}
 	}
 
+	parsedURI, err := url.Parse(uri)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("invalid URI: %w", err)
+	}
+
 	// Template matching for {path} anywhere in the URI
 	for _, rt := range r.resourceTemplates {
 		tmpl := rt.ToConfig().GetURITemplate()
 		if strings.Contains(tmpl, "{path}") {
-			matchURI := uri
-			if !strings.Contains(tmpl, "?") {
-				matchURI = strings.Split(matchURI, "?")[0]
-			}
-			if !strings.Contains(tmpl, "#") {
-				matchURI = strings.Split(matchURI, "#")[0]
+			// Parse the template URI to isolate the path component
+			// Replace {path} with a dummy placeholder to make it a valid parseable URI
+			dummyTmpl := strings.ReplaceAll(tmpl, "{path}", "dummy_path_placeholder")
+			parsedTmpl, err := url.Parse(dummyTmpl)
+			if err != nil {
+				continue
 			}
 
+			// Reconstruct the path template
+			pathTmpl := strings.ReplaceAll(parsedTmpl.Path, "dummy_path_placeholder", "{path}")
+
 			var re *regexp.Regexp
-			if val, ok := r.templateRegexCache.Load(tmpl); ok {
+			if val, ok := r.templateRegexCache.Load(pathTmpl); ok {
 				re = val.(*regexp.Regexp)
 			} else {
-				regexPattern := regexp.QuoteMeta(tmpl)
+				regexPattern := regexp.QuoteMeta(pathTmpl)
 				regexPattern = strings.ReplaceAll(regexPattern, "\\{path\\}", "(.*)")
 				var err error
 				re, err = regexp.Compile("^" + regexPattern + "$")
 				if err != nil {
 					continue
 				}
-				r.templateRegexCache.Store(tmpl, re)
+				r.templateRegexCache.Store(pathTmpl, re)
 			}
-			matches := re.FindStringSubmatch(matchURI)
+
+			matches := re.FindStringSubmatch(parsedURI.Path)
 			if len(matches) == 2 {
 				return nil, rt, map[string]any{"path": matches[1]}, nil
 			}

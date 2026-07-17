@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"mime"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -129,8 +130,6 @@ func containsTraversal(path string) bool {
 	}
 	return false
 }
-
-
 
 // Initialize validates the configuration and initializes the file resource.
 func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
@@ -432,22 +431,17 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 			// Interpolate {path} back into the template to capture prefix AND suffix
 			fullURI := strings.Replace(uriTemplate, "{path}", pathStr, 1)
 
-			// Strip scheme
-			base := strings.TrimPrefix(fullURI, "file://")
+			parsed, err := url.Parse(fullURI)
+			if err != nil {
+				return nil, fmt.Errorf("invalid URI reconstructed from template: %w", err)
+			}
 
-			// Strip any query params or fragments that might have been part of the template config
-			if idx := strings.Index(base, "?"); idx != -1 {
-				base = base[:idx]
-			}
-			if idx := strings.Index(base, "#"); idx != -1 {
-				base = base[:idx]
-			}
+			base := parsed.Path
 
 			// Handle Windows drive letter quirks (e.g., /C:/...)
 			if len(base) > 2 && base[0] == '/' && base[2] == ':' {
 				base = base[1:]
 			}
-
 			pathStr = filepath.FromSlash(base)
 		}
 	}
