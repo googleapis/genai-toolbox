@@ -26,6 +26,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -161,8 +162,15 @@ var MockPrompt2 = NewMockPrompt("prompt2", "", prompts.Arguments{
 	{Parameter: parameters.NewStringParameter("arg1", "This is the first argument.")},
 })
 
-// SetUpResources setups resources to test against
-func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
+var MockResource1 = NewMockResource("mock_resource_1", "file:///mock/resource/1")
+// TODO: Change to text type resource
+var MockResource2 = NewMockResource("mock_resource_2", "file:///mock/resource/2")
+
+var MockTemplate1 = NewMockResourceTemplate("mock_template_1", "file://{path}")
+var MockTemplate2 = NewMockResourceTemplate("mock_template_2", "file:///logs/{path}")
+
+// SetUpPrimitives sets up primitives to test against
+func SetUpPrimitives(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt, mockResources []MockResource, mockTemplates []MockResourceTemplate) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, map[string]resources.Resource, map[string]resources.ResourceTemplate) {
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
 	for _, tool := range mockTools {
@@ -203,5 +211,15 @@ func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 		promptsets[""] = ps
 	}
 
-	return toolsMap, toolsets, promptsMap, promptsets
+	resourcesMap := make(map[string]resources.Resource)
+	for _, res := range mockResources {
+		resourcesMap[res.config.Name] = res
+	}
+
+	resourceTemplatesMap := make(map[string]resources.ResourceTemplate)
+	for _, tpl := range mockTemplates {
+		resourceTemplatesMap[tpl.config.Name] = tpl
+	}
+
+	return toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap
 }

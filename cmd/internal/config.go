@@ -33,13 +33,14 @@ import (
 )
 
 type Config struct {
-	Sources         server.SourceConfigs         `yaml:"sources"`
-	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
-	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
-	Tools           server.ToolConfigs           `yaml:"tools"`
-	Toolsets        server.ToolsetConfigs        `yaml:"toolsets"`
-	Prompts         server.PromptConfigs         `yaml:"prompts"`
-	Resources       server.ResourceConfigs       `yaml:"resources"`
+	Sources           server.SourceConfigs           `yaml:"sources"`
+	AuthServices      server.AuthServiceConfigs      `yaml:"authServices"`
+	EmbeddingModels   server.EmbeddingModelConfigs   `yaml:"embeddingModels"`
+	Tools             server.ToolConfigs             `yaml:"tools"`
+	Toolsets          server.ToolsetConfigs          `yaml:"toolsets"`
+	Prompts           server.PromptConfigs           `yaml:"prompts"`
+	Resources         server.ResourceConfigs         `yaml:"resources"`
+	ResourceTemplates server.ResourceTemplateConfigs `yaml:"resource_templates"`
 }
 
 type ConfigParser struct {
@@ -151,7 +152,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 
 	// Parse contents
-	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, config.Resources, err = server.UnmarshalPrimitiveConfig(ctx, raw)
+	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, config.Resources, config.ResourceTemplates, err = server.UnmarshalPrimitiveConfig(ctx, raw)
 	if err != nil {
 		return config, err
 	}
@@ -181,7 +182,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 	encoder := yaml.NewEncoder(&buf, yaml.UseLiteralStyleIfMultiline(true))
 
-	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts", "resources", "resourceTemplates"}
 	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
@@ -218,6 +219,10 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					key = "toolset"
 				case "prompts":
 					key = "prompt"
+				case "resources":
+					key = "resource"
+				case "resourceTemplates":
+					key = "resourceTemplate"
 				}
 				transformed, err := transformDocs(key, slice)
 				if err != nil {
@@ -311,13 +316,14 @@ func processValue(v any, isToolset bool) any {
 // All resource names (sources, authServices, tools, toolsets) must be unique across all files.
 func mergeConfigs(files ...Config) (Config, error) {
 	merged := Config{
-		Sources:         make(server.SourceConfigs),
-		AuthServices:    make(server.AuthServiceConfigs),
-		EmbeddingModels: make(server.EmbeddingModelConfigs),
-		Tools:           make(server.ToolConfigs),
-		Toolsets:        make(server.ToolsetConfigs),
-		Prompts:         make(server.PromptConfigs),
-		Resources:       make(server.ResourceConfigs),
+		Sources:           make(server.SourceConfigs),
+		AuthServices:      make(server.AuthServiceConfigs),
+		EmbeddingModels:   make(server.EmbeddingModelConfigs),
+		Tools:             make(server.ToolConfigs),
+		Toolsets:          make(server.ToolsetConfigs),
+		Prompts:           make(server.PromptConfigs),
+		Resources:         make(server.ResourceConfigs),
+		ResourceTemplates: make(server.ResourceTemplateConfigs),
 	}
 
 	var conflicts []string
@@ -398,6 +404,22 @@ func mergeConfigs(files ...Config) (Config, error) {
 			}
 
 			merged.Resources[name] = resource
+		}
+
+		// Check for conflicts and merge resource templates
+		for name, rt := range file.ResourceTemplates {
+			if _, exists := merged.ResourceTemplates[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("resourceTemplate '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				// Check for URI collisions with static resources
+				uriStr := rt.GetURITemplate()
+				if existingName, exists := seenResourceURIs[uriStr]; exists {
+					conflicts = append(conflicts, fmt.Sprintf("resourceTemplate '%s' (file #%d) URI %q collides with resource '%s'", name, fileIndex+1, uriStr, existingName))
+				} else {
+					seenResourceURIs[uriStr] = name
+					merged.ResourceTemplates[name] = rt
+				}
+			}
 		}
 	}
 

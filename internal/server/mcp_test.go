@@ -116,8 +116,10 @@ var prompt2Args = []any{
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	mockResources := []testutils.MockResource{testutils.MockResource1}
+	mockTemplates := []testutils.MockResourceTemplate{testutils.MockTemplate1}
+	toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap := testutils.SetUpPrimitives(t, mockTools, mockPrompts, mockResources, mockTemplates)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -461,8 +463,10 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5, testutils.MockToolUrlBinding}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets, withEnableDraftSpecs())
+	mockResources := []testutils.MockResource{testutils.MockResource1}
+	mockTemplates := []testutils.MockResourceTemplate{testutils.MockTemplate1}
+	toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap := testutils.SetUpPrimitives(t, mockTools, mockPrompts, mockResources, mockTemplates)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap, withEnableDraftSpecs())
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1283,8 +1287,10 @@ func TestMcpEndpoint(t *testing.T) {
 func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	mockResources := []testutils.MockResource{testutils.MockResource1}
+	mockTemplates := []testutils.MockResourceTemplate{testutils.MockTemplate1}
+	toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap := testutils.SetUpPrimitives(t, mockTools, mockPrompts, mockResources, mockTemplates)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1366,9 +1372,11 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 
 func TestInvalidProtocolVersionHeader(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
-	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
+	mockResources := []testutils.MockResource{testutils.MockResource1}
+	mockTemplates := []testutils.MockResourceTemplate{testutils.MockTemplate1}
+	toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap := testutils.SetUpPrimitives(t, mockTools, mockPrompts, mockResources, mockTemplates)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1413,7 +1421,7 @@ func TestInvalidProtocolVersionHeader(t *testing.T) {
 }
 
 func TestDeleteEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1428,7 +1436,7 @@ func TestDeleteEndpoint(t *testing.T) {
 }
 
 func TestGetEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1451,7 +1459,7 @@ func TestGetEndpoint(t *testing.T) {
 }
 
 func TestMcpRequestBodyLimit(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1483,7 +1491,7 @@ func TestMcpRequestBodyLimit(t *testing.T) {
 
 func TestMcpRequestBodyLimitOverride(t *testing.T) {
 	customLimit := int64(1 << 20)
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1513,7 +1521,7 @@ func TestMcpRequestBodyLimitOverride(t *testing.T) {
 }
 
 func TestSseEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1631,7 +1639,9 @@ func TestStdioSession(t *testing.T) {
 
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
+	mockResources := []testutils.MockResource{testutils.MockResource1}
+	mockTemplates := []testutils.MockResourceTemplate{testutils.MockTemplate1}
+	toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap := testutils.SetUpPrimitives(t, mockTools, mockPrompts, mockResources, mockTemplates)
 
 	pr, pw, err := os.Pipe()
 	if err != nil {
@@ -1661,7 +1671,7 @@ func TestStdioSession(t *testing.T) {
 
 	sseManager := newSseManager(ctx)
 
-	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, nil)
+	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap)
 
 	server := &Server{
 		version:         testutils.MockVersionString,

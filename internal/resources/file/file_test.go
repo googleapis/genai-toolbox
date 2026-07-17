@@ -644,3 +644,236 @@ func TestFileResource_ToConfigNonRegularFile(t *testing.T) {
 		t.Errorf("Expected LastModified to be empty for non-regular file, got %q", config.Annotations.LastModified)
 	}
 }
+
+// TestFileTemplate_AllowedPaths verifies that FileTemplate correctly
+// restricts read access to files within the specified AllowedPaths.
+func TestFileTemplate_AllowedPaths(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	allowedDir := filepath.Join(tmpDir, "allowed")
+	if err := os.Mkdir(allowedDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	forbiddenDir := filepath.Join(tmpDir, "forbidden")
+	if err := os.Mkdir(forbiddenDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	allowedFile := filepath.Join(allowedDir, "test.txt")
+	if err := os.WriteFile(allowedFile, []byte("allowed content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	forbiddenFile := filepath.Join(forbiddenDir, "secret.txt")
+	if err := os.WriteFile(forbiddenFile, []byte("secret content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlStr := fmt.Sprintf("uriTemplate: file://{path}\nallowedPaths:\n  - %s\n", filepath.ToSlash(allowedDir))
+	ctx := context.Background()
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeTemplateConfig(ctx, "file", "test_template", decoder)
+	if err != nil {
+		t.Fatalf("DecodeTemplateConfig failed: %v", err)
+	}
+
+	resTmpl, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed: %v", err)
+	}
+
+	// Test reading an allowed file
+	content, err := resTmpl.Read(ctx, map[string]any{"path": allowedFile})
+	if err != nil {
+		t.Fatalf("expected to read allowed file, got error: %v", err)
+	}
+	if content.(string) != "allowed content" {
+		t.Errorf("unexpected content: %v", content)
+	}
+
+	// Test reading a forbidden file
+	_, err = resTmpl.Read(ctx, map[string]any{"path": forbiddenFile})
+	if err == nil {
+		t.Fatal("expected error when reading forbidden file, got none")
+	}
+	if !strings.Contains(err.Error(), "security violation") {
+		t.Errorf("expected security violation error, got: %v", err)
+	}
+
+	// Test directory traversal attempt
+	traversalPath := filepath.Join(allowedDir, "..", "forbidden", "secret.txt")
+	_, err = resTmpl.Read(ctx, map[string]any{"path": traversalPath})
+	if err == nil {
+		t.Fatal("expected error when reading via directory traversal, got none")
+	}
+	if !strings.Contains(err.Error(), "security violation") {
+		t.Errorf("expected security violation error, got: %v", err)
+	}
+
+	// Test hidden file success (allowed since we explicitly trust allowedPaths)
+	hiddenFile := filepath.Join(allowedDir, ".hidden.txt")
+	if err := os.WriteFile(hiddenFile, []byte("hidden content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	content, err = resTmpl.Read(ctx, map[string]any{"path": hiddenFile})
+	if err != nil {
+		t.Fatalf("unexpected error when reading hidden file in allowed path: %v", err)
+	}
+	if content.(string) != "hidden content" {
+		t.Errorf("expected 'hidden content', got: %s", content)
+	}
+}
+
+// TestFileTemplate_SymlinkEscape verifies that FileTemplate strictly
+// evaluates symlinks and blocks access if the resolved target points
+// outside the configured sandbox.
+func TestFileTemplate_SymlinkEscape(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	allowedDir := filepath.Join(tmpDir, "allowed")
+	if err := os.Mkdir(allowedDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	forbiddenDir := filepath.Join(tmpDir, "forbidden")
+	if err := os.Mkdir(forbiddenDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	secretFile := filepath.Join(forbiddenDir, "secret.txt")
+	if err := os.WriteFile(secretFile, []byte("secret content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	symlinkPath := filepath.Join(allowedDir, "link.txt")
+	if err := os.Symlink(secretFile, symlinkPath); err != nil {
+		t.Skipf("symlink creation failed: %v", err)
+	}
+
+	yamlStr := fmt.Sprintf("uriTemplate: file://{path}\nallowedPaths:\n  - %s\n", filepath.ToSlash(allowedDir))
+	ctx := context.Background()
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeTemplateConfig(ctx, "file", "test_template", decoder)
+	if err != nil {
+		t.Fatalf("DecodeTemplateConfig failed: %v", err)
+	}
+
+	resTmpl, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed: %v", err)
+	}
+
+	_, err = resTmpl.Read(ctx, map[string]any{"path": symlinkPath})
+	if err == nil {
+		t.Fatal("expected error when reading via symlink escape, got none")
+	}
+	if !strings.Contains(err.Error(), "security violation: path") && !strings.Contains(err.Error(), "not within any allowedPaths") {
+		t.Errorf("expected security violation error, got: %v", err)
+	}
+}
+
+// TestFileTemplate_ExtensionValidation ensures that the FileTemplate
+// rejects files with non-allowlisted extensions (e.g., binary files),
+// mirroring the safety guarantees of static file resources.
+func TestFileTemplate_ExtensionValidation(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	binFile := filepath.Join(tmpDir, "image.png")
+	if err := os.WriteFile(binFile, []byte("fake png content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlStr := fmt.Sprintf("uriTemplate: file://{path}\nallowedPaths:\n  - %s\n", filepath.ToSlash(tmpDir))
+	ctx := context.Background()
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeTemplateConfig(ctx, "file", "test_template", decoder)
+	if err != nil {
+		t.Fatalf("DecodeTemplateConfig failed: %v", err)
+	}
+
+	resTmpl, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed: %v", err)
+	}
+
+	_, err = resTmpl.Read(ctx, map[string]any{"path": binFile})
+	if err == nil {
+		t.Fatal("expected error when reading binary file, got none")
+	}
+	if !strings.Contains(err.Error(), "file extension not allowed") {
+		t.Errorf("expected extension validation error, got: %v", err)
+	}
+}
+
+// TestFileTemplate_FileSizeLimit validates that the FileTemplate enforces
+// the safety byte limit (defaultMaxFileSize), accurately truncates output,
+// and successfully appends the server truncation warning.
+func TestFileTemplate_FileSizeLimit(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	largeFile := filepath.Join(tmpDir, "large.txt")
+	// defaultMaxFileSize is 10MB. We'll write 10MB + 10 bytes
+	size := 10*1024*1024 + 10
+	data := make([]byte, size)
+	for i := 0; i < size; i++ {
+		data[i] = 'a'
+	}
+	if err := os.WriteFile(largeFile, data, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlStr := fmt.Sprintf("uriTemplate: file://{path}\nallowedPaths:\n  - %s\n", filepath.ToSlash(tmpDir))
+	ctx := context.Background()
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeTemplateConfig(ctx, "file", "test_template", decoder)
+	if err != nil {
+		t.Fatalf("DecodeTemplateConfig failed: %v", err)
+	}
+
+	resTmpl, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed: %v", err)
+	}
+
+	content, err := resTmpl.Read(ctx, map[string]any{"path": largeFile})
+	if err != nil {
+		t.Fatalf("expected to read large file, got error: %v", err)
+	}
+	contentStr := content.(string)
+
+	if len(contentStr) > 10*1024*1024+200 {
+		t.Errorf("expected content to be truncated, but size is %d", len(contentStr))
+	}
+	if !strings.Contains(contentStr, "[TRUNCATED BY SERVER") {
+		t.Errorf("expected truncation warning, got %q", contentStr[len(contentStr)-200:])
+	}
+}
+
+// TestFileResource_ToConfigAndType verifies that the file resource
+// and its config correctly return their type and can be converted back to config.
+func TestFileResource_ToConfigAndType(t *testing.T) {
+	cfg := Config{}
+	if cfg.ResourceConfigType() != "file" {
+		t.Errorf("expected ResourceConfigType to be 'file', got %q", cfg.ResourceConfigType())
+	}
+
+	res := FileResource{config: &cfg}
+	if res.ToConfig() == nil {
+		t.Errorf("expected ToConfig to return a valid config")
+	}
+}
+
+// TestFileTemplate_ToConfigAndType verifies that the file template
+// and its config correctly return their type and can be converted back to config.
+func TestFileTemplate_ToConfigAndType(t *testing.T) {
+	cfg := TemplateConfig{}
+	if cfg.ResourceTemplateConfigType() != "file" {
+		t.Errorf("expected ResourceTemplateConfigType to be 'file', got %q", cfg.ResourceTemplateConfigType())
+	}
+
+	res := FileTemplate{config: &cfg}
+	if res.ToConfig() == nil {
+		t.Errorf("expected ToConfig to return a valid config")
+	}
+}

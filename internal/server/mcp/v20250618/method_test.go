@@ -165,10 +165,10 @@ func TestPingHandler(t *testing.T) {
 }
 
 func TestToolsListHandler(t *testing.T) {
-	// Initialize tools using provided testutils mock instances
+	// Initialize primitives
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, nil)
+	toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap := testutils.SetUpPrimitives(t, mockTools, nil, nil, nil)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap)
 
 	tests := []struct {
 		name        string
@@ -256,8 +256,8 @@ func TestToolsCallHandler(t *testing.T) {
 		testutils.MockTool4,
 		testutils.MockTool5,
 	}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, nil)
+	toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap := testutils.SetUpPrimitives(t, mockTools, nil, nil, nil)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap)
 
 	tests := []struct {
 		name        string
@@ -382,10 +382,10 @@ func TestPromptsListHandler(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 	ctx = util.WithLogger(ctx, testLogger)
-	// Initialize prompts
+	// Initialize primitives
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, nil, mockPrompts)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, nil)
+	toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap := testutils.SetUpPrimitives(t, nil, mockPrompts, nil, nil)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap)
 	tests := []struct {
 		name        string
 		body        ListPromptsRequest
@@ -451,10 +451,10 @@ func TestPromptsGetHandler(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 	ctx = util.WithLogger(ctx, testLogger)
-	// Initialize prompts
+	// Initialize primitives
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, nil, mockPrompts)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, nil)
+	toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap := testutils.SetUpPrimitives(t, nil, mockPrompts, nil, nil)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, resourcesMap, resourceTemplatesMap)
 	tests := []struct {
 		name        string
 		body        GetPromptRequest

@@ -38,13 +38,33 @@ func init() {
 	if !resources.Register(resourceType, newConfig) {
 		panic(fmt.Sprintf("resource type %q already registered", resourceType))
 	}
+	if !resources.RegisterTemplate(resourceType, newTemplateConfig) {
+		panic(fmt.Sprintf("resource template type %q already registered", resourceType))
+	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
 	cfg := &Config{
-		BaseConfig: resources.BaseConfig{
-			Name: name,
-			Type: resourceType,
+		BaseResourceConfig: resources.BaseResourceConfig{
+			BaseConfig: resources.BaseConfig{
+				Name: name,
+				Type: resourceType,
+			},
+		},
+	}
+	if err := decoder.DecodeContext(ctx, cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
+func newTemplateConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceTemplateConfig, error) {
+	cfg := &TemplateConfig{
+		BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{
+			BaseConfig: resources.BaseConfig{
+				Name: name,
+				Type: resourceType,
+			},
 		},
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
@@ -55,8 +75,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 
 // Config represents the configuration for a file resource.
 type Config struct {
-	resources.BaseConfig `yaml:",inline"`
-	Path                 string `yaml:"path" validate:"required"`
+	resources.BaseResourceConfig `yaml:",inline"`
+	Path                 string `yaml:"path"`
 	MaxSize              *int64 `yaml:"max_size,omitempty"`
 
 	absPath         string
@@ -97,6 +117,28 @@ func (c *Config) Validate() error {
 		}
 	}
 	return c.BaseConfig.Validate()
+}
+
+// containsTraversal checks if any component of the path is a backward traversal
+func containsTraversal(path string) bool {
+	parts := strings.Split(filepath.ToSlash(path), "/")
+	for _, part := range parts {
+		if part == ".." {
+			return true
+		}
+	}
+	return false
+}
+
+// containsHidden checks if any component of the path starts with a dot
+func containsHidden(path string) bool {
+	parts := strings.Split(path, string(filepath.Separator))
+	for _, part := range parts {
+		if strings.HasPrefix(part, ".") && part != "." && part != ".." {
+			return true
+		}
+	}
+	return false
 }
 
 // Initialize validates the configuration and initializes the file resource.
@@ -308,4 +350,180 @@ func (r *FileResource) ToConfig() resources.ResourceConfig {
 	}
 
 	return &cfgCopy
+}
+
+// TemplateConfig represents the configuration for a file resource template.
+type TemplateConfig struct {
+	resources.BaseResourceTemplateConfig `yaml:",inline"`
+	AllowedPaths                 []string `yaml:"allowedPaths,omitempty"`
+}
+
+// ResourceTemplateConfigType returns the resource template type identifier.
+func (c *TemplateConfig) ResourceTemplateConfigType() string {
+	return "file"
+}
+
+// Initialize validates the configuration and initializes the file resource template.
+func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemplate, error) {
+	// Validate and resolve allowed paths if specified
+	var resolvedAllowedPaths []string
+	baseDir := resources.GetBaseDirFromContext(ctx)
+	if baseDir == "" {
+		baseDir = "."
+	}
+
+	for _, p := range c.AllowedPaths {
+		// Resolve relative allowedPaths against the config file's base directory
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(baseDir, p)
+		}
+
+		abs, err := filepath.Abs(filepath.Clean(p))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get absolute path for allowed path %q: %w", p, err)
+		}
+
+		resolved, err := filepath.EvalSymlinks(abs)
+		if err != nil {
+			if os.IsNotExist(err) {
+				// If directory doesn't exist yet, we still track its intended absolute path
+				resolvedAllowedPaths = append(resolvedAllowedPaths, abs)
+			} else {
+				return nil, fmt.Errorf("failed to evaluate symlinks for allowed path %q: %w", abs, err)
+			}
+		} else {
+			resolvedAllowedPaths = append(resolvedAllowedPaths, resolved)
+		}
+	}
+
+	c.AllowedPaths = resolvedAllowedPaths
+
+	if c.Annotations == nil {
+		c.Annotations = &resources.ResourceAnnotations{}
+	}
+
+	return &FileTemplate{
+		config: c,
+	}, nil
+}
+
+// FileTemplate handles reading content from a file template URI.
+type FileTemplate struct {
+	config *TemplateConfig
+}
+
+// Read retrieves the file content using template parameters.
+func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, error) {
+	pathVal, ok := params["path"]
+	if !ok {
+		return nil, fmt.Errorf("missing 'path' parameter in template execution")
+	}
+
+	pathStr, ok := pathVal.(string)
+	if !ok {
+		return nil, fmt.Errorf("'path' parameter must be a string")
+	}
+
+	// Explicitly block backward traversal in the raw input
+	if containsTraversal(pathStr) {
+		return nil, fmt.Errorf("security violation: path %q contains backward traversal components (..)", pathStr)
+	}
+
+	// If the client provides an absolute path like "/logs/server.txt",
+	// filepath.Abs will evaluate it as the OS root (not relative to the sandbox).
+	// This will cause the subsequent filepath.Rel sandbox check to fail if it's not actually within allowedPaths.
+	absPath, err := filepath.Abs(filepath.Clean(pathStr))
+	if err != nil {
+		return nil, fmt.Errorf("invalid path %q: %w", pathStr, err)
+	}
+
+	resolvedPath, err := filepath.EvalSymlinks(absPath)
+	if err != nil {
+		// file does not exist
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("file not found: %q", pathStr)
+		}
+		return nil, fmt.Errorf("failed to evaluate symlinks for %q: %w", absPath, err)
+	}
+
+	// Security check against AllowedPaths
+	if len(r.config.AllowedPaths) > 0 {
+		isAllowed := false
+		for _, allowedDir := range r.config.AllowedPaths {
+			rel, err := filepath.Rel(allowedDir, resolvedPath)
+			if err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+				isAllowed = true
+				break
+			}
+		}
+		if !isAllowed {
+			return nil, fmt.Errorf("security violation: path %q is not within any allowedPaths", resolvedPath)
+		}
+	} else {
+		// Even if no sandbox, block hidden files for templates
+		if containsHidden(resolvedPath) {
+			return nil, fmt.Errorf("security violation: path %q contains hidden file components", resolvedPath)
+		}
+	}
+
+	// Security check for extension
+	if err := validateExtension(resolvedPath); err != nil {
+		return nil, fmt.Errorf("security violation: file extension not allowed: %w", err)
+	}
+
+	statInfo, err := os.Lstat(resolvedPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lstat file %q: %w", resolvedPath, err)
+	}
+
+	if statInfo.Mode()&os.ModeSymlink != 0 {
+		return nil, fmt.Errorf("security violation: TOCTOU symlink swap detected on %q", resolvedPath)
+	}
+
+	f, err := os.Open(resolvedPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file %q: %w", resolvedPath, err)
+	}
+	defer f.Close()
+
+	openInfo, err := f.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("failed to stat opened file %q: %w", resolvedPath, err)
+	}
+
+	if !os.SameFile(statInfo, openInfo) {
+		return nil, fmt.Errorf("security violation: TOCTOU file swap detected on %q between stat and open", resolvedPath)
+	}
+
+	if !openInfo.Mode().IsRegular() {
+		return nil, fmt.Errorf("security violation: file %q was swapped with a non-regular file during read", resolvedPath)
+	}
+
+	limit := int64(defaultMaxFileSize) // Templates don't currently expose MaxSize
+	limitedReader := io.LimitReader(f, limit+1)
+	content, err := io.ReadAll(limitedReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %q: %w", resolvedPath, err)
+	}
+
+	if int64(len(content)) > limit {
+		truncated := content[:limit]
+		for len(truncated) > 0 {
+			runeVal, size := utf8.DecodeLastRune(truncated)
+			if runeVal == utf8.RuneError && size == 1 {
+				truncated = truncated[:len(truncated)-1]
+			} else {
+				break
+			}
+		}
+		warning := fmt.Sprintf("\n\n...[TRUNCATED BY SERVER: Payload exceeded %d byte safety limit]...", limit)
+		return string(truncated) + warning, nil
+	}
+
+	return string(content), nil
+}
+
+// ToConfig returns the runtime config struct back to the caller.
+func (r *FileTemplate) ToConfig() resources.ResourceTemplateConfig {
+	return r.config
 }

@@ -36,6 +36,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/yosida95/uritemplate/v3"
 )
 
 type ServerConfig struct {
@@ -65,6 +66,8 @@ type ServerConfig struct {
 	PromptsetConfigs PromptsetConfigs
 	// ResourceConfigs defines what resources are available.
 	ResourceConfigs ResourceConfigs
+	// ResourceTemplateConfigs defines what resource templates are available.
+	ResourceTemplateConfigs ResourceTemplateConfigs
 	// IgnoreUnknownTools logs warnings and skips unknown/unsupported tool types instead of failing to start.
 	IgnoreUnknownTools bool
 	// LoggingFormat defines whether structured loggings are used.
@@ -167,8 +170,9 @@ type ToolsetConfigs map[string]tools.ToolsetConfig
 type PromptConfigs map[string]prompts.PromptConfig
 type PromptsetConfigs map[string]prompts.PromptsetConfig
 type ResourceConfigs map[string]resources.ResourceConfig
+type ResourceTemplateConfigs map[string]resources.ResourceTemplateConfig
 
-func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, ResourceConfigs, error) {
+func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, ResourceConfigs, ResourceTemplateConfigs, error) {
 	// prepare configs map
 	var sourceConfigs SourceConfigs
 	var authServiceConfigs AuthServiceConfigs
@@ -177,12 +181,13 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 	var toolsetConfigs ToolsetConfigs
 	var promptConfigs PromptConfigs
 	var resourceConfigs ResourceConfigs
+	var resourceTemplateConfigs ResourceTemplateConfigs
 	// promptset configs is not yet supported
 	seenResourceURIs := make(map[string]string)
 
 	file, err := parser.ParseBytes(raw, 0)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to parse YAML: %s", yaml.FormatError(err, false, false))
+		return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to parse YAML: %s", yaml.FormatError(err, false, false))
 	}
 
 	decoder := yaml.NewDecoder(bytes.NewReader(raw))
@@ -194,17 +199,17 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 		var resource map[string]any
 		if err := decoder.DecodeFromNodeContext(ctx, doc.Body, &resource); err != nil {
 			if len(file.Docs) > 1 {
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: %s", docIndex, yaml.FormatError(err, false, false))
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: %s", docIndex, yaml.FormatError(err, false, false))
 			}
-			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to decode YAML document: %s", yaml.FormatError(err, false, false))
+			return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to decode YAML document: %s", yaml.FormatError(err, false, false))
 		}
 		var kind, name string
 		var ok bool
 		if kind, ok = resource["kind"].(string); !ok {
 			if len(file.Docs) > 1 {
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'kind' field or it is not a string", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body))
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'kind' field or it is not a string", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body))
 			}
-			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string: %v", resource)
+			return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string: %v", resource)
 		}
 		if name, ok = resource["name"].(string); !ok {
 			if len(file.Docs) > 1 {
@@ -212,9 +217,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 				if fallbackToken == nil {
 					fallbackToken = keyToken(doc.Body, "kind")
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'name' field or it is not a string", formatDocLocation(docIndex, fallbackToken, doc.Body))
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'name' field or it is not a string", formatDocLocation(docIndex, fallbackToken, doc.Body))
 			}
-			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'name' field or it is not a string")
+			return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'name' field or it is not a string")
 		}
 		// remove 'kind' from map for strict unmarshaling
 		delete(resource, "kind")
@@ -224,9 +229,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			c, err := UnmarshalYAMLSourceConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if sourceConfigs == nil {
 				sourceConfigs = make(SourceConfigs)
@@ -236,9 +241,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			c, err := UnmarshalYAMLAuthServiceConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if authServiceConfigs == nil {
 				authServiceConfigs = make(AuthServiceConfigs)
@@ -248,9 +253,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			c, err := UnmarshalYAMLToolConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if c == nil {
 				continue
@@ -263,9 +268,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			c, err := UnmarshalYAMLToolsetConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if toolsetConfigs == nil {
 				toolsetConfigs = make(ToolsetConfigs)
@@ -275,9 +280,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			c, err := UnmarshalYAMLEmbeddingModelConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if embeddingModelConfigs == nil {
 				embeddingModelConfigs = make(EmbeddingModelConfigs)
@@ -287,9 +292,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			c, err := UnmarshalYAMLPromptConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if promptConfigs == nil {
 				promptConfigs = make(PromptConfigs)
@@ -299,31 +304,52 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			c, err := UnmarshalYAMLResourceConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if resourceConfigs == nil {
 				resourceConfigs = make(ResourceConfigs)
 			}
 			if _, exists := resourceConfigs[name]; exists {
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("duplicate resource name: %q", name)
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("duplicate resource name: %q", name)
 			}
 			if c.GetURI() != "" {
 				if existingName, exists := seenResourceURIs[c.GetURI()]; exists {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("duplicate resource URI %q used by resources %q and %q", c.GetURI(), existingName, name)
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("duplicate resource URI %q used by resources %q and %q", c.GetURI(), existingName, name)
 				}
 				seenResourceURIs[c.GetURI()] = name
 			}
 			resourceConfigs[name] = c
+		case "resourceTemplate":
+			c, err := UnmarshalYAMLResourceTemplateConfig(ctx, name, resource)
+			if err != nil {
+				if len(file.Docs) > 1 {
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+				}
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+			}
+			if resourceTemplateConfigs == nil {
+				resourceTemplateConfigs = make(ResourceTemplateConfigs)
+			}
+			if _, exists := resourceTemplateConfigs[name]; exists {
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("duplicate resourceTemplate name: %q", name)
+			}
+			if c.GetURITemplate() != "" {
+				if existingName, exists := seenResourceURIs[c.GetURITemplate()]; exists {
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("duplicate resource URI %q used by resources %q and %q", c.GetURITemplate(), existingName, name)
+				}
+				seenResourceURIs[c.GetURITemplate()] = name
+			}
+			resourceTemplateConfigs[name] = c
 		default:
 			if len(file.Docs) > 1 {
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s invalid kind %q", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body), kind)
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s invalid kind %q", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body), kind)
 			}
-			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("invalid kind %s", kind)
+			return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("invalid kind %s", kind)
 		}
 	}
-	return sourceConfigs, authServiceConfigs, embeddingModelConfigs, toolConfigs, toolsetConfigs, promptConfigs, resourceConfigs, nil
+	return sourceConfigs, authServiceConfigs, embeddingModelConfigs, toolConfigs, toolsetConfigs, promptConfigs, resourceConfigs, resourceTemplateConfigs, nil
 }
 
 func UnmarshalYAMLSourceConfig(ctx context.Context, name string, r map[string]any) (sources.SourceConfig, error) {
@@ -555,7 +581,7 @@ func UnmarshalYAMLResourceConfig(ctx context.Context, name string, r map[string]
 		if uriStr, isString := uriVal.(string); !isString {
 			return nil, fmt.Errorf("invalid 'uri' field for resource %q (must be a string)", name)
 		} else {
-			parsed, err := url.Parse(uriStr)
+			parsed, err := url.ParseRequestURI(uriStr)
 			if err != nil || parsed.Scheme == "" {
 				return nil, fmt.Errorf("invalid 'uri' field for resource %q: must be a valid RFC-compliant absolute URI with a scheme", name)
 			}
@@ -650,4 +676,68 @@ func keyToken(body ast.Node, key string) *token.Token {
 		}
 	}
 	return nil
+}
+
+func UnmarshalYAMLResourceTemplateConfig(ctx context.Context, name string, r map[string]any) (resources.ResourceTemplateConfig, error) {
+	resourceType := "file"
+	if typeVal, ok := r["type"]; ok {
+		var isString bool
+		resourceType, isString = typeVal.(string)
+		if !isString {
+			return nil, fmt.Errorf("invalid 'type' field for resourceTemplate %q (must be a string)", name)
+		}
+		resourceType = strings.ToLower(resourceType)
+	}
+
+	if resourceType != "file" {
+		return nil, fmt.Errorf("invalid 'type' field for resourceTemplate %q: only 'file' is supported", name)
+	}
+
+	if uriVal, ok := r["uriTemplate"]; ok {
+		if uriStr, isString := uriVal.(string); !isString {
+			return nil, fmt.Errorf("invalid 'uriTemplate' field for resourceTemplate %q (must be a string)", name)
+		} else {
+			// Validate RFC 6570 compliance
+			tmpl, err := uritemplate.New(uriStr)
+			if err != nil {
+				return nil, fmt.Errorf("invalid RFC 6570 uriTemplate %q: %w", name, err)
+			}
+
+			// Enforce only 'path' is allowed as a variable
+			for _, varName := range tmpl.Varnames() {
+				if varName != "path" {
+					return nil, fmt.Errorf("invalid uriTemplate %q: only the 'path' variable is supported (found %q)", name, varName)
+				}
+			}
+
+			// Strip all {variables} to validate the base URI structure natively
+			re := regexp.MustCompile(`\{[^}]+\}`)
+			parseableURI := re.ReplaceAllString(uriStr, "dummy")
+			parsed, err := url.ParseRequestURI(parseableURI)
+			if err != nil || parsed.Scheme == "" {
+				return nil, fmt.Errorf("invalid 'uriTemplate' field for resourceTemplate %q: must be a valid RFC-compliant absolute URI with a scheme", name)
+			}
+
+			// Must be a URI starting with file:// per user requirements
+			if resourceType == "file" && parsed.Scheme != "file" {
+				return nil, fmt.Errorf("invalid scheme for file resource template %q: must be 'file'", name)
+			}
+
+			// Update the map with the normalized URI
+			r["uriTemplate"] = uriStr
+		}
+	} else {
+		return nil, fmt.Errorf("missing required 'uriTemplate' field for resourceTemplate %q", name)
+	}
+
+	dec, err := util.NewStrictDecoder(r)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %s", err)
+	}
+
+	resCfg, err := resources.DecodeTemplateConfig(ctx, resourceType, name, dec)
+	if err != nil {
+		return nil, err
+	}
+	return resCfg, nil
 }

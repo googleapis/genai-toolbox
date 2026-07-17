@@ -64,14 +64,14 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 	}
 
 	// Initialize Resources
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, err := server.InitializeConfigs(ctx, opts.Cfg)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, resourceTemplatesMap, err := server.InitializeConfigs(ctx, opts.Cfg)
 	if err != nil {
 		errMsg := fmt.Errorf("failed to initialize resources: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 
-	primitiveMgr := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap)
+	primitiveMgr := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, resourceTemplatesMap)
 
 	// Execute Tool
 	toolName := args[0]

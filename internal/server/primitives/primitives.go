@@ -15,6 +15,8 @@
 package primitives
 
 import (
+	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -27,15 +29,16 @@ import (
 
 // PrimitiveManager contains available primitives for the server. Should be initialized with NewPrimitiveManager().
 type PrimitiveManager struct {
-	mu              sync.RWMutex
-	sources         map[string]sources.Source
-	authServices    map[string]auth.AuthService
-	embeddingModels map[string]embeddingmodels.EmbeddingModel
-	tools           map[string]tools.Tool
-	toolsets        map[string]tools.Toolset
-	prompts         map[string]prompts.Prompt
-	promptsets      map[string]prompts.Promptset
-	resources       map[string]resources.Resource
+	mu                sync.RWMutex
+	sources           map[string]sources.Source
+	authServices      map[string]auth.AuthService
+	embeddingModels   map[string]embeddingmodels.EmbeddingModel
+	tools             map[string]tools.Tool
+	toolsets          map[string]tools.Toolset
+	prompts           map[string]prompts.Prompt
+	promptsets        map[string]prompts.Promptset
+	resources         map[string]resources.Resource
+	resourceTemplates map[string]resources.ResourceTemplate
 }
 
 func NewPrimitiveManager(
@@ -45,17 +48,19 @@ func NewPrimitiveManager(
 	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
 	promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset,
 	resourcesMap map[string]resources.Resource,
+	resourceTemplatesMap map[string]resources.ResourceTemplate,
 ) *PrimitiveManager {
 	primitiveMgr := &PrimitiveManager{
-		mu:              sync.RWMutex{},
-		sources:         sourcesMap,
-		authServices:    authServicesMap,
-		embeddingModels: embeddingModelsMap,
-		tools:           toolsMap,
-		toolsets:        toolsetsMap,
-		prompts:         promptsMap,
-		promptsets:      promptsetsMap,
-		resources:       resourcesMap,
+		mu:                sync.RWMutex{},
+		sources:           sourcesMap,
+		authServices:      authServicesMap,
+		embeddingModels:   embeddingModelsMap,
+		tools:             toolsMap,
+		toolsets:          toolsetsMap,
+		prompts:           promptsMap,
+		promptsets:        promptsetsMap,
+		resources:         resourcesMap,
+		resourceTemplates: resourceTemplatesMap,
 	}
 
 	return primitiveMgr
@@ -120,7 +125,7 @@ func (r *PrimitiveManager) GetPromptset(promptsetName string) (prompts.Promptset
 	return promptset, ok
 }
 
-func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset, resourcesMap map[string]resources.Resource) {
+func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset, resourcesMap map[string]resources.Resource, resourceTemplatesMap map[string]resources.ResourceTemplate) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sources = sourcesMap
@@ -131,6 +136,7 @@ func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, a
 	r.prompts = promptsMap
 	r.promptsets = promptsetsMap
 	r.resources = resourcesMap
+	r.resourceTemplates = resourceTemplatesMap
 }
 
 func (r *PrimitiveManager) GetSourcesMap() map[string]sources.Source {
@@ -192,4 +198,43 @@ func (r *PrimitiveManager) GetResourcesMap() map[string]resources.Resource {
 		copiedMap[k] = v
 	}
 	return copiedMap
+}
+
+// GetResourceTemplatesMap returns a copy of the resource templates map.
+func (r *PrimitiveManager) GetResourceTemplatesMap() map[string]resources.ResourceTemplate {
+	copied := make(map[string]resources.ResourceTemplate)
+	for name, rt := range r.resourceTemplates {
+		copied[name] = rt
+	}
+	return copied
+}
+
+// GetResourceTemplate returns a specific resource template by name.
+func (r *PrimitiveManager) GetResourceTemplate(name string) (resources.ResourceTemplate, bool) {
+	rt, exists := r.resourceTemplates[name]
+	return rt, exists
+}
+
+// GetResourceOrTemplateByURI looks up a resource by exact URI match.
+// If not found, it attempts to match against resource templates (e.g. file://{path}).
+// Returns the matched resource OR template, plus extracted params if a template was matched.
+func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string) (resources.Resource, resources.ResourceTemplate, map[string]any, error) {
+	for _, res := range r.resources {
+		if res.ToConfig().GetURI() == uri {
+			return res, nil, nil, nil
+		}
+	}
+
+	// Template matching for file://{path}
+	for _, rt := range r.resourceTemplates {
+		tmpl := rt.ToConfig().GetURITemplate()
+		if strings.HasSuffix(tmpl, "{path}") {
+			prefix := strings.TrimSuffix(tmpl, "{path}")
+			if strings.HasPrefix(uri, prefix) {
+				pathParam := strings.TrimPrefix(uri, prefix)
+				return nil, rt, map[string]any{"path": pathParam}, nil
+			}
+		}
+	}
+	return nil, nil, nil, fmt.Errorf("no resource or template found for URI: %s", uri)
 }

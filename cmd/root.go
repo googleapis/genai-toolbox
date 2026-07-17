@@ -139,14 +139,14 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, resourceTemplatesMap, err := validateReloadEdits(ctx, toolsFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
 		return err
 	}
 
-	s.PrimitiveMgr.SetPrimitives(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap)
+	s.PrimitiveMgr.SetPrimitives(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, resourceTemplatesMap)
 
 	return nil
 }
@@ -154,7 +154,7 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 // validateReloadEdits checks that the reloaded config configs can initialized without failing
 func validateReloadEdits(
 	ctx context.Context, toolsFile internal.Config,
-) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, map[string]resources.Resource, error,
+) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, map[string]resources.Resource, map[string]resources.ResourceTemplate, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -172,25 +172,26 @@ func validateReloadEdits(
 	defer span.End()
 
 	reloadedConfig := server.ServerConfig{
-		Version:               versionString,
-		SourceConfigs:         toolsFile.Sources,
-		AuthServiceConfigs:    toolsFile.AuthServices,
-		EmbeddingModelConfigs: toolsFile.EmbeddingModels,
-		ToolConfigs:           toolsFile.Tools,
-		ToolsetConfigs:        toolsFile.Toolsets,
-		PromptConfigs:         toolsFile.Prompts,
-		ResourceConfigs:       toolsFile.Resources,
-		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
+		Version:                 versionString,
+		SourceConfigs:           toolsFile.Sources,
+		AuthServiceConfigs:      toolsFile.AuthServices,
+		EmbeddingModelConfigs:   toolsFile.EmbeddingModels,
+		ToolConfigs:             toolsFile.Tools,
+		ToolsetConfigs:          toolsFile.Toolsets,
+		PromptConfigs:           toolsFile.Prompts,
+		ResourceConfigs:         toolsFile.Resources,
+		ResourceTemplateConfigs: toolsFile.ResourceTemplates,
+		IgnoreUnknownTools:      util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, err := server.InitializeConfigs(ctx, reloadedConfig)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, resourceTemplatesMap, err := server.InitializeConfigs(ctx, reloadedConfig)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
-		return nil, nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
-	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, nil
+	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, resourceTemplatesMap, nil
 }
 
 // Helper to check if a file has a newer ModTime than stored in the map

@@ -195,7 +195,7 @@ func NewMockPrompt(name, desc string, args prompts.Arguments) MockPrompt {
 
 // MockResourceConfig is a mock implementation of resources.ResourceConfig
 type MockResourceConfig struct {
-	resources.BaseConfig `yaml:",inline"`
+	resources.BaseResourceConfig `yaml:",inline"`
 }
 
 func (m MockResourceConfig) ResourceConfigType() string {
@@ -217,4 +217,57 @@ func (m MockResource) Read(ctx context.Context, params map[string]any) (any, err
 
 func (m MockResource) ToConfig() resources.ResourceConfig {
 	return m.config
+}
+
+// MockResourceTemplateConfig is a mock implementation of resources.ResourceTemplateConfig
+type MockResourceTemplateConfig struct {
+	resources.BaseResourceTemplateConfig `yaml:",inline"`
+}
+
+func (m MockResourceTemplateConfig) ResourceTemplateConfigType() string {
+	if m.Type != "" {
+		return m.Type
+	}
+	return "mock"
+}
+
+func (m MockResourceTemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemplate, error) {
+	return MockResourceTemplate{config: m}, nil
+}
+
+// MockResourceTemplate is a mock implementation of resources.ResourceTemplate
+type MockResourceTemplate struct {
+	config MockResourceTemplateConfig
+}
+
+func (m MockResourceTemplate) Read(ctx context.Context, params map[string]any) (any, error) {
+	return "mock resource template data", nil
+}
+
+func (m MockResourceTemplate) ToConfig() resources.ResourceTemplateConfig {
+	return m.config
+}
+
+// NewMockResource creates a new mock resource for testing
+func NewMockResource(name, uri string) MockResource {
+	return MockResource{
+		config: MockResourceConfig{
+			BaseResourceConfig: resources.BaseResourceConfig{
+				BaseConfig: resources.BaseConfig{Name: name},
+				URI:        uri,
+			},
+		},
+	}
+}
+
+// NewMockResourceTemplate creates a new mock resource template for testing
+func NewMockResourceTemplate(name, uriTemplate string) MockResourceTemplate {
+	return MockResourceTemplate{
+		config: MockResourceTemplateConfig{
+			BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{
+				BaseConfig:  resources.BaseConfig{Name: name},
+				URITemplate: uriTemplate,
+			},
+		},
+	}
 }
