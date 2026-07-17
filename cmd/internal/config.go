@@ -40,7 +40,7 @@ type Config struct {
 	Toolsets          server.ToolsetConfigs          `yaml:"toolsets"`
 	Prompts           server.PromptConfigs           `yaml:"prompts"`
 	Resources         server.ResourceConfigs         `yaml:"resources"`
-	ResourceTemplates server.ResourceTemplateConfigs `yaml:"resource_templates"`
+	ResourceTemplates server.ResourceTemplateConfigs `yaml:"resourceTemplates"`
 }
 
 type ConfigParser struct {

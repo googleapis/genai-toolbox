@@ -130,16 +130,7 @@ func containsTraversal(path string) bool {
 	return false
 }
 
-// containsHidden checks if any component of the path starts with a dot
-func containsHidden(path string) bool {
-	parts := strings.Split(path, string(filepath.Separator))
-	for _, part := range parts {
-		if strings.HasPrefix(part, ".") && part != "." && part != ".." {
-			return true
-		}
-	}
-	return false
-}
+
 
 // Initialize validates the configuration and initializes the file resource.
 func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
@@ -366,6 +357,7 @@ func (c *TemplateConfig) ResourceTemplateConfigType() string {
 // Initialize validates the configuration and initializes the file resource template.
 func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemplate, error) {
 	// Validate and resolve allowed paths if specified
+	var unresolvedAllowedPaths []string
 	var resolvedAllowedPaths []string
 	baseDir := resources.GetBaseDirFromContext(ctx)
 	if baseDir == "" {
@@ -383,6 +375,8 @@ func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemp
 			return nil, fmt.Errorf("failed to get absolute path for allowed path %q: %w", p, err)
 		}
 
+		unresolvedAllowedPaths = append(unresolvedAllowedPaths, abs)
+
 		resolved, err := filepath.EvalSymlinks(abs)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -396,20 +390,22 @@ func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemp
 		}
 	}
 
-	c.AllowedPaths = resolvedAllowedPaths
-
 	if c.Annotations == nil {
 		c.Annotations = &resources.ResourceAnnotations{}
 	}
 
 	return &FileTemplate{
-		config: c,
+		config:                 c,
+		unresolvedAllowedPaths: unresolvedAllowedPaths,
+		resolvedAllowedPaths:   resolvedAllowedPaths,
 	}, nil
 }
 
 // FileTemplate handles reading content from a file template URI.
 type FileTemplate struct {
-	config *TemplateConfig
+	config                 *TemplateConfig
+	unresolvedAllowedPaths []string
+	resolvedAllowedPaths   []string
 }
 
 // Read retrieves the file content using template parameters.
@@ -437,10 +433,10 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("invalid path %q: %w", pathStr, err)
 	}
 
-	checkSandbox := func(pathToCheck string) error {
-		if len(r.config.AllowedPaths) > 0 {
+	checkSandbox := func(pathToCheck string, allowedPaths []string) error {
+		if len(allowedPaths) > 0 {
 			isAllowed := false
-			for _, allowedDir := range r.config.AllowedPaths {
+			for _, allowedDir := range allowedPaths {
 				rel, err := filepath.Rel(allowedDir, pathToCheck)
 				if err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 					isAllowed = true
@@ -456,7 +452,7 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 
 	// First security check on the unresolved absolute path to prevent leaking existence
 	// of files outside the sandbox during EvalSymlinks.
-	if err := checkSandbox(absPath); err != nil {
+	if err := checkSandbox(absPath, r.unresolvedAllowedPaths); err != nil {
 		return nil, err
 	}
 
@@ -470,7 +466,7 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 	}
 
 	// Second security check on the resolved path to prevent symlink escape attacks
-	if err := checkSandbox(resolvedPath); err != nil {
+	if err := checkSandbox(resolvedPath, r.resolvedAllowedPaths); err != nil {
 		return nil, err
 	}
 

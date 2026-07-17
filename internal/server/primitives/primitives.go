@@ -40,6 +40,7 @@ type PrimitiveManager struct {
 	promptsets        map[string]prompts.Promptset
 	resources         map[string]resources.Resource
 	resourceTemplates map[string]resources.ResourceTemplate
+	templateRegexCache sync.Map
 }
 
 func NewPrimitiveManager(
@@ -203,6 +204,8 @@ func (r *PrimitiveManager) GetResourcesMap() map[string]resources.Resource {
 
 // GetResourceTemplatesMap returns a copy of the resource templates map.
 func (r *PrimitiveManager) GetResourceTemplatesMap() map[string]resources.ResourceTemplate {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	copied := make(map[string]resources.ResourceTemplate)
 	for name, rt := range r.resourceTemplates {
 		copied[name] = rt
@@ -212,6 +215,8 @@ func (r *PrimitiveManager) GetResourceTemplatesMap() map[string]resources.Resour
 
 // GetResourceTemplate returns a specific resource template by name.
 func (r *PrimitiveManager) GetResourceTemplate(name string) (resources.ResourceTemplate, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	rt, exists := r.resourceTemplates[name]
 	return rt, exists
 }
@@ -220,6 +225,9 @@ func (r *PrimitiveManager) GetResourceTemplate(name string) (resources.ResourceT
 // If not found, it attempts to match against resource templates (e.g. file://{path}).
 // Returns the matched resource OR template, plus extracted params if a template was matched.
 func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string) (resources.Resource, resources.ResourceTemplate, map[string]any, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
 	for _, res := range r.resources {
 		if res.ToConfig().GetURI() == uri {
 			return res, nil, nil, nil
@@ -230,11 +238,18 @@ func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string) (resources.Res
 	for _, rt := range r.resourceTemplates {
 		tmpl := rt.ToConfig().GetURITemplate()
 		if strings.Contains(tmpl, "{path}") {
-			regexPattern := regexp.QuoteMeta(tmpl)
-			regexPattern = strings.ReplaceAll(regexPattern, "\\{path\\}", "(.*)")
-			re, err := regexp.Compile("^" + regexPattern + "$")
-			if err != nil {
-				continue
+			var re *regexp.Regexp
+			if val, ok := r.templateRegexCache.Load(tmpl); ok {
+				re = val.(*regexp.Regexp)
+			} else {
+				regexPattern := regexp.QuoteMeta(tmpl)
+				regexPattern = strings.ReplaceAll(regexPattern, "\\{path\\}", "(.*)")
+				var err error
+				re, err = regexp.Compile("^" + regexPattern + "$")
+				if err != nil {
+					continue
+				}
+				r.templateRegexCache.Store(tmpl, re)
 			}
 			matches := re.FindStringSubmatch(uri)
 			if len(matches) == 2 {
