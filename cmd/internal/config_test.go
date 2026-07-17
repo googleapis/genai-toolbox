@@ -912,6 +912,9 @@ func TestParseConfigFailure(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			parser := ConfigParser{}
 			_, err := parser.ParseConfig(ctx, testutils.FormatYaml(tc.in))
+			if err == nil {
+				t.Fatalf("expected error containing %s, got nil", tc.wantError)
+			}
 			if !strings.Contains(err.Error(), tc.wantError) {
 				t.Fatalf("want error: %s, got error: %s", tc.wantError, err.Error())
 			}
