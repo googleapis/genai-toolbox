@@ -36,6 +36,8 @@ func TestBigQueryDatasetFromResource(t *testing.T) {
 		{"project-level policy is not dataset-scoped", "//bigquery.googleapis.com/projects/p/policies/pol", "", "", false},
 		{"project only", "//bigquery.googleapis.com/projects/p", "", "", false},
 		{"non-bigquery resource", "//storage.googleapis.com/projects/p/buckets/b", "", "", false},
+		{"empty project segment", "//bigquery.googleapis.com/projects//datasets/d", "", "", false},
+		{"empty dataset segment", "//bigquery.googleapis.com/projects/p/datasets/", "", "", false},
 		{"empty", "", "", "", false},
 	}
 	for _, tc := range tests {

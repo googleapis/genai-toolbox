@@ -956,7 +956,10 @@ func bigQueryDatasetFromResource(resource string) (projectID, datasetID string, 
 		return "", "", false
 	}
 	parts := strings.Split(path, "/")
-	if len(parts) < 4 || parts[0] != "projects" || parts[2] != "datasets" {
+	// The project and dataset segments must both be present and non-empty; a path
+	// like `projects//datasets/d` or `projects/p/datasets/` is malformed and must
+	// not be treated as a valid dataset for allowlist filtering.
+	if len(parts) < 4 || parts[0] != "projects" || parts[2] != "datasets" || parts[1] == "" || parts[3] == "" {
 		return "", "", false
 	}
 	return parts[1], parts[3], true
