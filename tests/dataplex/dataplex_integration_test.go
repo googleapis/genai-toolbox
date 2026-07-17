@@ -35,6 +35,7 @@ import (
 	longrunningpb "cloud.google.com/go/longrunning/autogen/longrunningpb"
 	storageapi "cloud.google.com/go/storage"
 	"github.com/google/uuid"
+	"github.com/googleapis/gax-go/v2"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
@@ -112,32 +113,40 @@ func initDataplexConnection(ctx context.Context) (*dataplex.CatalogClient, error
 	return client, nil
 }
 
-// retryOnQuotaExhausted executes fn up to maxRetries times if it encounters a ResourceExhausted (rate limit) gRPC error.
-// Upon encountering ResourceExhausted, it idles for a backoff duration before retrying.
-func retryOnQuotaExhausted[T any](ctx context.Context, t *testing.T, opName string, fn func() (T, error)) (T, error) {
-	const maxAttempts = 2
-	const maxBackoff = 2 * time.Minute
-	backoff := 1 * time.Minute
+type pollableDeleteOperation interface {
+	Poll(ctx context.Context, opts ...gax.CallOption) error
+	Done() bool
+}
 
-	var zero T
-	for attempt := 1; attempt < maxAttempts; attempt++ {
-		res, err := fn()
-		if err == nil || grpcstatus.Code(err) != grpccodes.ResourceExhausted {
-			return res, err
-		}
+// waitSlowlyForDeletion blocks and polls the deletion operation status using
+// an exponential backoff, polling for the first time after 3s, doubling up to
+// a maximum of 60s.
+// We use our own function for polling LROs during the aspect type and data
+// product cleanup since the default op.Wait(ctx) method polls too quickly,
+// hitting rate limits (sending ~3 poll requests per call).
+func waitSlowlyForDeletion(ctx context.Context, op pollableDeleteOperation) error {
+	backoff := 3 * time.Second
+	const maxBackoff = 60 * time.Second
 
-		t.Logf("Warning: %s hit quota limit (ResourceExhausted) on attempt %d/%d. Idling for %v before retrying...", opName, attempt, maxAttempts, backoff)
+	for {
 		select {
 		case <-ctx.Done():
-			return zero, ctx.Err()
+			return ctx.Err()
 		case <-time.After(backoff):
 		}
+
+		if err := op.Poll(ctx); err != nil {
+			return err
+		}
+		if op.Done() {
+			return nil
+		}
+
 		backoff *= 2
 		if backoff > maxBackoff {
 			backoff = maxBackoff
 		}
 	}
-	return fn()
 }
 
 // cleanupOldAspectTypes Deletes AspectTypes older than the specified duration.
@@ -186,7 +195,7 @@ func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.C
 			continue // Skip to the next item if initiation fails
 		}
 
-		if err := op.Wait(ctx); err != nil {
+		if err := waitSlowlyForDeletion(ctx, op); err != nil {
 			t.Logf("Warning: Failed to delete aspect type %s, operation error: %v", aspectTypeName, err)
 		} else {
 			t.Logf("cleanupOldAspectTypes: Successfully deleted %s", aspectTypeName)
@@ -246,28 +255,24 @@ func cleanupOldDataProducts(t *testing.T, ctx context.Context, client *dataplex.
 				t.Logf("Warning: Failed to list data assets for %s: %v", dpName, err)
 				break
 			}
-			op, err := retryOnQuotaExhausted(ctx, t, "DeleteDataAsset "+asset.GetName(), func() (*dataplex.DeleteDataAssetOperation, error) {
-				return client.DeleteDataAsset(ctx, &dataplexpb.DeleteDataAssetRequest{Name: asset.GetName()})
-			})
+			op, err := client.DeleteDataAsset(ctx, &dataplexpb.DeleteDataAssetRequest{Name: asset.GetName()})
 			if err != nil {
 				t.Logf("Warning: Failed to initiate DeleteDataAsset for %s: %v", asset.GetName(), err)
 				continue
 			}
-			if err := op.Wait(ctx); err != nil {
+			if err := waitSlowlyForDeletion(ctx, op); err != nil {
 				t.Logf("Warning: Failed to wait for DeleteDataAsset %s: %v", asset.GetName(), err)
 			} else {
 				t.Logf("cleanupOldDataProducts: Successfully deleted asset %s", asset.GetName())
 			}
 		}
 
-		op, err := retryOnQuotaExhausted(ctx, t, "DeleteDataProduct "+dpName, func() (*dataplex.DeleteDataProductOperation, error) {
-			return client.DeleteDataProduct(ctx, &dataplexpb.DeleteDataProductRequest{Name: dpName})
-		})
+		op, err := client.DeleteDataProduct(ctx, &dataplexpb.DeleteDataProductRequest{Name: dpName})
 		if err != nil {
 			t.Logf("Warning: Failed to initiate DeleteDataProduct for %s: %v", dpName, err)
 			continue
 		}
-		if err := op.Wait(ctx); err != nil {
+		if err := waitSlowlyForDeletion(ctx, op); err != nil {
 			t.Logf("Warning: Failed to wait for DeleteDataProduct %s: %v", dpName, err)
 		} else {
 			t.Logf("cleanupOldDataProducts: Successfully deleted data product %s", dpName)
@@ -304,9 +309,7 @@ func setupDataplexSearchDataQualityScan(t *testing.T, ctx context.Context, clien
 		},
 	}
 
-	op, err := retryOnQuotaExhausted(ctx, t, "CreateDataScan ", func() (*dataplex.CreateDataScanOperation, error) {
-		return client.CreateDataScan(ctx, createDataScanReq)
-	})
+	op, err := client.CreateDataScan(ctx, createDataScanReq)
 	if err != nil {
 		t.Fatalf("Failed to create data scan %s: %v", dataScanId, err)
 	}
