@@ -913,8 +913,8 @@ func TestParseConfig(t *testing.T) {
 					"my-resource": &file.Config{
 						BaseResourceConfig: resources.BaseResourceConfig{
 							BaseConfig: resources.BaseConfig{
-								Name: "my-resource",
-								Type: "file",
+								Name:        "my-resource",
+								Type:        "file",
 								Annotations: &resources.ResourceAnnotations{Priority: float64Ptr(1.0)},
 							},
 							URI: "file:///my/test/path",

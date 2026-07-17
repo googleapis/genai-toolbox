@@ -150,7 +150,7 @@ func TestPrimitiveManager_GetResourceOrTemplateByURI(t *testing.T) {
 	}
 
 	// Test matching template
-	res, tmpl, params, err = primMgr.GetResourceOrTemplateByURI("file:///dynamic/dir/file.log")
+	res, tmpl, params, err = primMgr.GetResourceOrTemplateByURI("file:///logs/dynamic/dir/file.log")
 	if err != nil {
 		t.Fatalf("GetResourceOrTemplateByURI failed for template match: %v", err)
 	}
@@ -160,8 +160,8 @@ func TestPrimitiveManager_GetResourceOrTemplateByURI(t *testing.T) {
 	if tmpl == nil {
 		t.Errorf("Expected to find template, got nil")
 	}
-	if params == nil || params["path"] != "/dynamic/dir/file.log" {
-		t.Errorf("Expected params to contain path=/dynamic/dir/file.log, got %v", params)
+	if params == nil || params["path"] != "dynamic/dir/file.log" {
+		t.Errorf("Expected params to contain path=dynamic/dir/file.log, got %v", params)
 	}
 
 	// Test no match

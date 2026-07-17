@@ -163,6 +163,7 @@ var MockPrompt2 = NewMockPrompt("prompt2", "", prompts.Arguments{
 })
 
 var MockResource1 = NewMockResource("mock_resource_1", "file:///mock/resource/1")
+
 // TODO: Change to text type resource
 var MockResource2 = NewMockResource("mock_resource_2", "file:///mock/resource/2")
 

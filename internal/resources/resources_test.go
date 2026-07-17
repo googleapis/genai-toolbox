@@ -26,7 +26,7 @@ import (
 
 type mockResourceConfig struct {
 	BaseResourceConfig `yaml:",inline"`
-	CustomProp string `yaml:"customProp"`
+	CustomProp         string `yaml:"customProp"`
 }
 
 func (m mockResourceConfig) ResourceConfigType() string {

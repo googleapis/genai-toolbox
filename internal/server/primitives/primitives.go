@@ -16,6 +16,7 @@ package primitives
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -225,14 +226,19 @@ func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string) (resources.Res
 		}
 	}
 
-	// Template matching for file://{path}
+	// Template matching for {path} anywhere in the URI
 	for _, rt := range r.resourceTemplates {
 		tmpl := rt.ToConfig().GetURITemplate()
-		if strings.HasSuffix(tmpl, "{path}") {
-			prefix := strings.TrimSuffix(tmpl, "{path}")
-			if strings.HasPrefix(uri, prefix) {
-				pathParam := strings.TrimPrefix(uri, prefix)
-				return nil, rt, map[string]any{"path": pathParam}, nil
+		if strings.Contains(tmpl, "{path}") {
+			regexPattern := regexp.QuoteMeta(tmpl)
+			regexPattern = strings.ReplaceAll(regexPattern, "\\{path\\}", "(.*)")
+			re, err := regexp.Compile("^" + regexPattern + "$")
+			if err != nil {
+				continue
+			}
+			matches := re.FindStringSubmatch(uri)
+			if len(matches) == 2 {
+				return nil, rt, map[string]any{"path": matches[1]}, nil
 			}
 		}
 	}
