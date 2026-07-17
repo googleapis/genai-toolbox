@@ -581,7 +581,7 @@ func UnmarshalYAMLResourceConfig(ctx context.Context, name string, r map[string]
 		if uriStr, isString := uriVal.(string); !isString {
 			return nil, fmt.Errorf("invalid 'uri' field for resource %q (must be a string)", name)
 		} else {
-			parsed, err := url.ParseRequestURI(uriStr)
+			parsed, err := url.Parse(uriStr)
 			if err != nil || parsed.Scheme == "" {
 				return nil, fmt.Errorf("invalid 'uri' field for resource %q: must be a valid RFC-compliant absolute URI with a scheme", name)
 			}
@@ -713,7 +713,7 @@ func UnmarshalYAMLResourceTemplateConfig(ctx context.Context, name string, r map
 			// Strip all {variables} to validate the base URI structure natively
 			re := regexp.MustCompile(`\{[^}]+\}`)
 			parseableURI := re.ReplaceAllString(uriStr, "dummy")
-			parsed, err := url.ParseRequestURI(parseableURI)
+			parsed, err := url.Parse(parseableURI)
 			if err != nil || parsed.Scheme == "" {
 				return nil, fmt.Errorf("invalid 'uriTemplate' field for resourceTemplate %q: must be a valid RFC-compliant absolute URI with a scheme", name)
 			}

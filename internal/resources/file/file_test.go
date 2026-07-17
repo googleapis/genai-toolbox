@@ -877,3 +877,102 @@ func TestFileTemplate_ToConfigAndType(t *testing.T) {
 		t.Errorf("expected ToConfig to return a valid config")
 	}
 }
+
+func TestFileTemplate_HiddenFilesWhenNoAllowedPaths(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a visible file
+	visibleFile := filepath.Join(tmpDir, "visible.txt")
+	if err := os.WriteFile(visibleFile, []byte("visible"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a hidden file
+	hiddenFile := filepath.Join(tmpDir, ".hidden.txt")
+	if err := os.WriteFile(hiddenFile, []byte("hidden"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a file inside a hidden directory
+	hiddenDir := filepath.Join(tmpDir, ".secrets")
+	if err := os.Mkdir(hiddenDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	hiddenDirFile := filepath.Join(hiddenDir, "data.txt")
+	if err := os.WriteFile(hiddenDirFile, []byte("hidden dir"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// NO allowedPaths specified
+	yamlStr := "uriTemplate: file://{path}\n"
+	ctx := context.Background()
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeTemplateConfig(ctx, "file", "test", decoder)
+	if err != nil {
+		t.Fatalf("DecodeTemplateConfig failed: %v", err)
+	}
+	resTmpl, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed: %v", err)
+	}
+
+	// Visible file should succeed
+	_, err = resTmpl.Read(ctx, map[string]any{"path": visibleFile})
+	if err != nil {
+		t.Fatalf("Expected visible file to succeed, got: %v", err)
+	}
+
+	// Hidden file should fail
+	_, err = resTmpl.Read(ctx, map[string]any{"path": hiddenFile})
+	if err == nil || !strings.Contains(err.Error(), "security violation: access to hidden file") {
+		t.Fatalf("Expected hidden file to fail with security violation, got: %v", err)
+	}
+
+	// File inside hidden dir should fail
+	_, err = resTmpl.Read(ctx, map[string]any{"path": hiddenDirFile})
+	if err == nil || !strings.Contains(err.Error(), "security violation: access to hidden file") {
+		t.Fatalf("Expected hidden dir file to fail with security violation, got: %v", err)
+	}
+}
+
+func TestFileTemplate_RelativePathMiddleURITemplate(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Target file: <tmpDir>/logs/server1/data.txt
+	serverDir := filepath.Join(tmpDir, "logs", "server1")
+	if err := os.MkdirAll(serverDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	targetFile := filepath.Join(serverDir, "data.txt")
+	if err := os.WriteFile(targetFile, []byte("server logs"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Convert tmpDir to a slash path for the URI template
+	tmpDirSlash := filepath.ToSlash(tmpDir)
+	if !strings.HasPrefix(tmpDirSlash, "/") {
+		tmpDirSlash = "/" + tmpDirSlash
+	}
+	uriTemplate := fmt.Sprintf("file://%s/logs/{path}/data.txt", tmpDirSlash)
+
+	yamlStr := fmt.Sprintf("uriTemplate: %s\n", uriTemplate)
+	ctx := context.Background()
+	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+	cfg, err := resources.DecodeTemplateConfig(ctx, "file", "test", decoder)
+	if err != nil {
+		t.Fatalf("DecodeTemplateConfig failed: %v", err)
+	}
+	resTmpl, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("Initialize failed: %v", err)
+	}
+
+	// We pass "server1" as the path parameter.
+	content, err := resTmpl.Read(ctx, map[string]any{"path": "server1"})
+	if err != nil {
+		t.Fatalf("Expected to read file, got error: %v", err)
+	}
+	if content.(string) != "server logs" {
+		t.Errorf("Expected 'server logs', got %q", content)
+	}
+}

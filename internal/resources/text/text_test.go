@@ -51,29 +51,33 @@ func TestTextResourceInitialization(t *testing.T) {
 		{
 			name: "success with overrides",
 			config: Config{
-				BaseResourceConfig: resources.BaseResourceConfig{
-					BaseConfig: resources.BaseConfig{
-						Name:        "test2",
-						MimeType:    "application/json",
-						Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.5)},
-					},
-				},
+				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{
+					Name:        "test2",
+					MimeType:    "application/json",
+					Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.5)},
+				}},
 				Text: `{"hello":"world"}`,
 			},
 			wantError: false,
 			wantMime:  "application/json",
 			wantPrior: floatPtr(0.5),
 		},
-
+		{
+			name: "error missing text payload",
+			config: Config{
+				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "test3"}},
+				Text:       "",
+			},
+			wantError:   true,
+			errContains: "missing required 'text' field",
+		},
 		{
 			name: "explicit 0.0 priority",
 			config: Config{
-				BaseResourceConfig: resources.BaseResourceConfig{
-					BaseConfig: resources.BaseConfig{
-						Name:        "test-priority",
-						Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.0)},
-					},
-				},
+				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{
+					Name:        "test-priority",
+					Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.0)},
+				}},
 				Text: "priority test",
 			},
 			wantError: false,
@@ -103,12 +107,10 @@ func TestTextResourceInitialization(t *testing.T) {
 		{
 			name: "explicit empty mimetype defaults to text/plain",
 			config: Config{
-				BaseResourceConfig: resources.BaseResourceConfig{
-					BaseConfig: resources.BaseConfig{
-						Name:     "test-empty-mime",
-						MimeType: "",
-					},
-				},
+				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{
+					Name:     "test-empty-mime",
+					MimeType: "",
+				}},
 				Text: "hello",
 			},
 			wantError: false,

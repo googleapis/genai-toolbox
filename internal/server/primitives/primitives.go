@@ -238,6 +238,14 @@ func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string) (resources.Res
 	for _, rt := range r.resourceTemplates {
 		tmpl := rt.ToConfig().GetURITemplate()
 		if strings.Contains(tmpl, "{path}") {
+			matchURI := uri
+			if !strings.Contains(tmpl, "?") {
+				matchURI = strings.Split(matchURI, "?")[0]
+			}
+			if !strings.Contains(tmpl, "#") {
+				matchURI = strings.Split(matchURI, "#")[0]
+			}
+
 			var re *regexp.Regexp
 			if val, ok := r.templateRegexCache.Load(tmpl); ok {
 				re = val.(*regexp.Regexp)
@@ -251,7 +259,7 @@ func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string) (resources.Res
 				}
 				r.templateRegexCache.Store(tmpl, re)
 			}
-			matches := re.FindStringSubmatch(uri)
+			matches := re.FindStringSubmatch(matchURI)
 			if len(matches) == 2 {
 				return nil, rt, map[string]any{"path": matches[1]}, nil
 			}

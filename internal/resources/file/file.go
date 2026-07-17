@@ -425,6 +425,33 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("security violation: path %q contains backward traversal components (..)", pathStr)
 	}
 
+	// If the path is relative, reconstruct the full path from the URI template
+	if !filepath.IsAbs(pathStr) {
+		uriTemplate := r.config.URITemplate
+		if strings.Contains(uriTemplate, "{path}") {
+			// Interpolate {path} back into the template to capture prefix AND suffix
+			fullURI := strings.Replace(uriTemplate, "{path}", pathStr, 1)
+
+			// Strip scheme
+			base := strings.TrimPrefix(fullURI, "file://")
+
+			// Strip any query params or fragments that might have been part of the template config
+			if idx := strings.Index(base, "?"); idx != -1 {
+				base = base[:idx]
+			}
+			if idx := strings.Index(base, "#"); idx != -1 {
+				base = base[:idx]
+			}
+
+			// Handle Windows drive letter quirks (e.g., /C:/...)
+			if len(base) > 2 && base[0] == '/' && base[2] == ':' {
+				base = base[1:]
+			}
+
+			pathStr = filepath.FromSlash(base)
+		}
+	}
+
 	// If the client provides an absolute path like "/logs/server.txt",
 	// filepath.Abs will evaluate it as the OS root (not relative to the sandbox).
 	// This will cause the subsequent filepath.Rel sandbox check to fail if it's not actually within allowedPaths.
@@ -445,6 +472,13 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 			}
 			if !isAllowed {
 				return fmt.Errorf("security violation: path %q is not within any allowedPaths", pathToCheck)
+			}
+		} else {
+			parts := strings.Split(filepath.ToSlash(pathToCheck), "/")
+			for _, part := range parts {
+				if strings.HasPrefix(part, ".") && part != "." && part != ".." {
+					return fmt.Errorf("security violation: access to hidden file or directory %q is blocked when allowedPaths is not specified", pathToCheck)
+				}
 			}
 		}
 		return nil
