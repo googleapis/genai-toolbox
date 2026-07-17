@@ -1245,6 +1245,47 @@ mcpEnabled: true
 	}
 }
 
+func TestUnmarshalPrimitiveConfigRejectsDuplicateNames(t *testing.T) {
+	ctx := context.Background()
+	raw := []byte(`kind: authService
+name: duplicate
+type: google
+clientId: first
+---
+kind: authService
+name: duplicate
+type: google
+clientId: second
+`)
+
+	_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, raw)
+	if err == nil {
+		t.Fatal("UnmarshalPrimitiveConfig() accepted duplicate authService names")
+	}
+	want := `document 2 (line 7, column 1): duplicate authService name "duplicate"`
+	if err.Error() != want {
+		t.Fatalf("UnmarshalPrimitiveConfig() error = %q, want %q", err, want)
+	}
+}
+
+func TestUnmarshalPrimitiveConfigAllowsNameAcrossKinds(t *testing.T) {
+	ctx := context.Background()
+	raw := []byte(`kind: authService
+name: shared
+type: google
+clientId: test
+---
+kind: toolset
+name: shared
+tools: []
+`)
+
+	_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, raw)
+	if err != nil {
+		t.Fatalf("UnmarshalPrimitiveConfig() rejected a name shared across kinds: %v", err)
+	}
+}
+
 func TestGenericAuthConfigValidation(t *testing.T) {
 	ctx := context.Background()
 

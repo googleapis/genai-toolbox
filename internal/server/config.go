@@ -179,6 +179,7 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 	}
 
 	decoder := yaml.NewDecoder(bytes.NewReader(raw))
+	seenPrimitiveNames := make(map[string]map[string]struct{})
 	for index, doc := range file.Docs {
 		if doc == nil || doc.Body == nil {
 			continue
@@ -221,6 +222,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 				}
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
+			if err := registerPrimitiveName(seenPrimitiveNames, kind, name, docIndex, doc.Body); err != nil {
+				return nil, nil, nil, nil, nil, nil, err
+			}
 			if sourceConfigs == nil {
 				sourceConfigs = make(SourceConfigs)
 			}
@@ -232,6 +236,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+			}
+			if err := registerPrimitiveName(seenPrimitiveNames, kind, name, docIndex, doc.Body); err != nil {
+				return nil, nil, nil, nil, nil, nil, err
 			}
 			if authServiceConfigs == nil {
 				authServiceConfigs = make(AuthServiceConfigs)
@@ -248,6 +255,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			if c == nil {
 				continue
 			}
+			if err := registerPrimitiveName(seenPrimitiveNames, kind, name, docIndex, doc.Body); err != nil {
+				return nil, nil, nil, nil, nil, nil, err
+			}
 			if toolConfigs == nil {
 				toolConfigs = make(ToolConfigs)
 			}
@@ -259,6 +269,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+			}
+			if err := registerPrimitiveName(seenPrimitiveNames, kind, name, docIndex, doc.Body); err != nil {
+				return nil, nil, nil, nil, nil, nil, err
 			}
 			if toolsetConfigs == nil {
 				toolsetConfigs = make(ToolsetConfigs)
@@ -272,6 +285,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 				}
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
+			if err := registerPrimitiveName(seenPrimitiveNames, kind, name, docIndex, doc.Body); err != nil {
+				return nil, nil, nil, nil, nil, nil, err
+			}
 			if embeddingModelConfigs == nil {
 				embeddingModelConfigs = make(EmbeddingModelConfigs)
 			}
@@ -283,6 +299,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+			}
+			if err := registerPrimitiveName(seenPrimitiveNames, kind, name, docIndex, doc.Body); err != nil {
+				return nil, nil, nil, nil, nil, nil, err
 			}
 			if promptConfigs == nil {
 				promptConfigs = make(PromptConfigs)
@@ -564,5 +583,18 @@ func keyToken(body ast.Node, key string) *token.Token {
 			return token
 		}
 	}
+	return nil
+}
+
+func registerPrimitiveName(seen map[string]map[string]struct{}, kind, name string, docIndex int, body ast.Node) error {
+	names := seen[kind]
+	if _, exists := names[name]; exists {
+		return fmt.Errorf("%s duplicate %s name %q", formatDocLocation(docIndex, keyToken(body, "name"), body), kind, name)
+	}
+	if names == nil {
+		names = make(map[string]struct{})
+		seen[kind] = names
+	}
+	names[name] = struct{}{}
 	return nil
 }

@@ -853,6 +853,33 @@ func TestParseConfig(t *testing.T) {
 	}
 }
 
+func TestParseConfigRejectsDuplicatePrimitiveNames(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	raw := []byte(`kind: authService
+name: duplicate
+type: google
+clientId: first
+---
+kind: authService
+name: duplicate
+type: google
+clientId: second
+`)
+
+	parser := ConfigParser{}
+	_, err = parser.ParseConfig(ctx, raw)
+	if err == nil {
+		t.Fatal("ParseConfig() accepted duplicate authService names")
+	}
+	want := `document 2 (line 7, column 1): duplicate authService name "duplicate"`
+	if err.Error() != want {
+		t.Fatalf("ParseConfig() error = %q, want %q", err, want)
+	}
+}
+
 func TestParseConfigWithAuth(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
