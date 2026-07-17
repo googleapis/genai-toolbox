@@ -437,6 +437,29 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("invalid path %q: %w", pathStr, err)
 	}
 
+	checkSandbox := func(pathToCheck string) error {
+		if len(r.config.AllowedPaths) > 0 {
+			isAllowed := false
+			for _, allowedDir := range r.config.AllowedPaths {
+				rel, err := filepath.Rel(allowedDir, pathToCheck)
+				if err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+					isAllowed = true
+					break
+				}
+			}
+			if !isAllowed {
+				return fmt.Errorf("security violation: path %q is not within any allowedPaths", pathToCheck)
+			}
+		}
+		return nil
+	}
+
+	// First security check on the unresolved absolute path to prevent leaking existence
+	// of files outside the sandbox during EvalSymlinks.
+	if err := checkSandbox(absPath); err != nil {
+		return nil, err
+	}
+
 	resolvedPath, err := filepath.EvalSymlinks(absPath)
 	if err != nil {
 		// file does not exist
@@ -446,24 +469,9 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("failed to evaluate symlinks for %q: %w", absPath, err)
 	}
 
-	// Security check against AllowedPaths
-	if len(r.config.AllowedPaths) > 0 {
-		isAllowed := false
-		for _, allowedDir := range r.config.AllowedPaths {
-			rel, err := filepath.Rel(allowedDir, resolvedPath)
-			if err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-				isAllowed = true
-				break
-			}
-		}
-		if !isAllowed {
-			return nil, fmt.Errorf("security violation: path %q is not within any allowedPaths", resolvedPath)
-		}
-	} else {
-		// Even if no sandbox, block hidden files for templates
-		if containsHidden(resolvedPath) {
-			return nil, fmt.Errorf("security violation: path %q contains hidden file components", resolvedPath)
-		}
+	// Second security check on the resolved path to prevent symlink escape attacks
+	if err := checkSandbox(resolvedPath); err != nil {
+		return nil, err
 	}
 
 	// Security check for extension
