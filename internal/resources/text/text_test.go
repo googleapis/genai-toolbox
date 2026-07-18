@@ -42,7 +42,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			name: "success with defaults",
 			config: Config{
 				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "test1"}},
-				Text:       "Hello, world!",
+				Text:               "Hello, world!",
 			},
 			wantError: false,
 			wantMime:  "text/plain",
@@ -66,7 +66,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			name: "error missing text payload",
 			config: Config{
 				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "test3"}},
-				Text:       "",
+				Text:               "",
 			},
 			wantError:   true,
 			errContains: "missing required 'text' field",
@@ -88,7 +88,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			name: "multi-byte unicode size calculation",
 			config: Config{
 				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "test-unicode"}},
-				Text:       "Hello 🌍",
+				Text:               "Hello 🌍",
 			},
 			wantError: false,
 			wantMime:  "text/plain",
@@ -98,7 +98,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			name: "pure whitespace payload",
 			config: Config{
 				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "test-whitespace"}},
-				Text:       "   \n  ",
+				Text:               "   \n  ",
 			},
 			wantError: false,
 			wantMime:  "text/plain",
