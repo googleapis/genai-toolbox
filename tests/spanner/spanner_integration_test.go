@@ -1042,6 +1042,8 @@ func TestSpannerPostgresqlToolEndpoints(t *testing.T) {
 		t.Skip("SPANNER_PROJECT or SPANNER_INSTANCE not set, skipping PostgreSQL tests")
 	}
 
+	args := []string{"--enable-api"}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancel()
 
@@ -1087,7 +1089,7 @@ func TestSpannerPostgresqlToolEndpoints(t *testing.T) {
 
 	toolsConfig := tests.AddSemanticSearchConfig(t, config, SpannerToolType, insertStmt, searchStmt)
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig)
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
