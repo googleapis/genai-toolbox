@@ -429,7 +429,8 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 		uriTemplate := r.config.URITemplate
 		if strings.Contains(uriTemplate, "{path}") {
 			// Interpolate {path} back into the template to capture prefix AND suffix
-			fullURI := strings.Replace(uriTemplate, "{path}", pathStr, 1)
+			escapedPath := url.PathEscape(pathStr)
+			fullURI := strings.Replace(uriTemplate, "{path}", escapedPath, 1)
 
 			parsed, err := url.Parse(fullURI)
 			if err != nil {

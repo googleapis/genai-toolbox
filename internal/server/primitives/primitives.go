@@ -252,6 +252,10 @@ func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string) (resources.Res
 				continue
 			}
 
+			if parsedURI.Scheme != parsedTmpl.Scheme || parsedURI.Host != parsedTmpl.Host {
+				continue
+			}
+
 			// Reconstruct the path template
 			pathTmpl := strings.ReplaceAll(parsedTmpl.Path, "dummy_path_placeholder", "{path}")
 
