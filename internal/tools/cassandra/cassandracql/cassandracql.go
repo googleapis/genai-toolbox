@@ -21,7 +21,6 @@ import (
 
 	gocql "github.com/apache/cassandra-gocql-driver/v2"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -66,7 +65,7 @@ func (c Config) ToolConfigType() string {
 }
 
 // Initialize implements tools.ToolConfig.
-func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (c Config) Initialize(context.Context) (tools.Tool, error) {
 	if c.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", c.Name)
 	}
@@ -97,8 +96,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke implements tools.Tool.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}

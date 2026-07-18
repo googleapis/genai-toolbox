@@ -66,7 +66,7 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -85,7 +85,8 @@ func TestListTablesToolParseParams(t *testing.T) {
 		},
 	}
 
-	params, err := parameters.ParseParams(tool.GetParameters(), map[string]any{"database": "test_db"}, map[string]map[string]any{})
+	toolParams, _ := tool.GetParameters(nil)
+	params, err := parameters.ParseParams(toolParams, map[string]any{"database": "test_db"}, map[string]map[string]any{})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}

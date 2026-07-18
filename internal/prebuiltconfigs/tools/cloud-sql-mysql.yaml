@@ -48,7 +48,7 @@ kind: tool
 name: get_query_plan
 type: mysql-get-query-plan
 source: cloud-sql-mysql-source
-description: "Provide information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evalueate new ones."
+description: "Provide information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evaluate new ones. Pass a single SQL statement in sql_statement; the tool returns its execution plan without running it."
 ---
 kind: tool
 name: list_tables
@@ -73,6 +73,18 @@ name: list_table_fragmentation
 type: mysql-list-table-fragmentation
 source: cloud-sql-mysql-source
 description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
+---
+kind: tool
+name: list_all_locks
+type: mysql-list-all-locks
+source: cloud-sql-mysql-source
+description: Lists top N (default 10) locks on the specified database ordered by query execution time in descending order.
+---
+kind: tool
+name: show_query_stats
+type: mysql-show-query-stats
+source: cloud-sql-mysql-source
+description: Displays query execution statistics including execution count, total and average latency, max latency, total rows examined, full table scans, and inefficient index usage.
 ---
 kind: tool
 name: create_backup
@@ -241,11 +253,13 @@ name: monitor
 tools:
 - get_query_plan
 - list_active_queries
+- list_all_locks
 - get_query_metrics
 - get_system_metrics
 - list_table_fragmentation
 - list_table_stats
 - list_tables_missing_unique_indexes
+- show_query_stats
 ---
 kind: toolset
 name: lifecycle

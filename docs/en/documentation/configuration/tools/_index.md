@@ -216,9 +216,13 @@ for performance and safety reasons.
 {{< notice tip >}}
 To minimize SQL injection risk when using template parameters, always provide
 the `allowedValues` field within the parameter to restrict inputs.
+
 Alternatively, for `string` type parameters, you can use the `escape` field to
-add delimiters to the identifier. For `integer` or `float` type parameters, you
-can use `minValue` and `maxValue` to define the allowable range.
+add delimiters to the identifier, though please note that escaping alone does
+not fully secure the parameter.
+
+For `integer` or `float` type parameters, you can use `minValue` and `maxValue`
+to define the allowable range.
 {{< /notice >}}
 
 ```yaml

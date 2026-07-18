@@ -22,7 +22,6 @@ import (
 
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -50,8 +49,9 @@ type compatibleSource interface {
 
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
-	Type             string `yaml:"type" validate:"required"`
-	Source           string `yaml:"source" validate:"required"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -61,18 +61,18 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	filter := parameters.NewStringParameterWithDefault("filter", "", "Optional. Filter string to search/filter data quality scans. E.g. \"display_name = \\\"my-scan\\\"\"")
-	dataScanID := parameters.NewStringParameterWithDefault("data_scan_id", "", "Optional. The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.")
-	tableName := parameters.NewStringParameterWithDefault("table_name", "", "Optional. The name of the table to filter by. Maps to data.entity in the filter string. E.g. \"//bigquery.googleapis.com/projects/P/datasets/D/tables/T\"")
-	pageSize := parameters.NewIntParameterWithDefault("pageSize", 10, "Number of returned data quality scans in the page.")
-	orderBy := parameters.NewStringParameterWithDefault("orderBy", "", "Specifies the ordering of results.")
-	allParameters := parameters.Parameters{filter, dataScanID, tableName, pageSize, orderBy}
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	filter := parameters.NewStringParameter("filter", "Optional. Filter string to search/filter data quality scans. E.g. \"display_name = \\\"my-scan\\\"\"", parameters.WithStringDefault(""))
+	dataScanID := parameters.NewStringParameter("dataScanId", "Optional. The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.", parameters.WithStringDefault(""))
+	resourcePath := parameters.NewStringParameter("resourcePath", "Optional. The resource path of the table or storage bucket to filter by. Maps to data.entity in the filter string. E.g. \"//bigquery.googleapis.com/projects/P/datasets/D/tables/T\"", parameters.WithStringDefault(""))
+	pageSize := parameters.NewIntParameter("pageSize", "Number of returned data quality scans in the page.", parameters.WithIntDefault(10))
+	orderBy := parameters.NewStringParameter("orderBy", "Specifies the ordering of results.", parameters.WithStringDefault(""))
+	allParameters := parameters.Parameters{filter, dataScanID, resourcePath, pageSize, orderBy}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
-			nil,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
 			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),
@@ -90,15 +90,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 	paramsMap := params.AsMap()
 	filter, _ := paramsMap["filter"].(string)
-	dataScanID, _ := paramsMap["data_scan_id"].(string)
-	tableName, _ := paramsMap["table_name"].(string)
+	dataScanID, _ := paramsMap["dataScanId"].(string)
+	resourcePath, _ := paramsMap["resourcePath"].(string)
 	pageSize, _ := paramsMap["pageSize"].(int)
 	orderBy, _ := paramsMap["orderBy"].(string)
 
@@ -109,8 +109,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if dataScanID != "" {
 		filters = append(filters, fmt.Sprintf("name = %q", dataScanID))
 	}
-	if tableName != "" {
-		filters = append(filters, fmt.Sprintf("data.resource = %q", tableName))
+	if resourcePath != "" {
+		filters = append(filters, fmt.Sprintf("data.resource = %q", resourcePath))
 	}
 
 	finalFilter := strings.Join(filters, " AND ")

@@ -63,7 +63,7 @@ func TestParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -99,7 +99,7 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
@@ -141,10 +141,10 @@ func (m MockSourceProvider) GetSource(name string) (sources.Source, bool) {
 }
 
 func TestInvokeValidation(t *testing.T) {
-	resourceMgr := MockSourceProvider{source: MockSource{}}
+	primitiveMgr := MockSourceProvider{source: MockSource{}}
 
 	// No validation errors to mock for this simple tool that throws errors from Invoke directly
-	_ = resourceMgr
+	_ = primitiveMgr
 
 }
 
@@ -158,12 +158,15 @@ func TestManifest(t *testing.T) {
 		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	manifest := tool.Manifest()
+	manifest, err := tool.Manifest(nil)
+	if err != nil {
+		t.Fatalf("Manifest() returned unexpected error: %v", err)
+	}
 	if manifest.Description != cfg.Description {
 		t.Errorf("manifest description mismatch: got %q, want %q", manifest.Description, cfg.Description)
 	}
@@ -197,7 +200,7 @@ func TestAnnotations(t *testing.T) {
 		},
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

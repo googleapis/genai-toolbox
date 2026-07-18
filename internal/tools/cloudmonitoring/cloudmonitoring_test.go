@@ -15,33 +15,24 @@
 package cloudmonitoring_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
-	cloudmonitoringsrc "github.com/googleapis/mcp-toolbox/internal/sources/cloudmonitoring"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudmonitoring"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-// mockIncompatibleSource is a source of a different type to test error paths.
-type mockIncompatibleSource struct{ sources.Source }
-
 func TestInitialize(t *testing.T) {
 	t.Parallel()
-	testSource := &cloudmonitoringsrc.Source{Config: cloudmonitoringsrc.Config{Type: "cloud-monitoring"}}
-	srcs := map[string]sources.Source{
-		"my-monitoring-source": testSource,
-		"incompatible-source":  &mockIncompatibleSource{},
-	}
 
 	wantParams := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
-		parameters.NewStringParameterWithRequired("query", "The promql query to execute.", true),
+		parameters.NewStringParameter("projectId", "The Id of the Google Cloud project.", parameters.WithStringRequired(true)),
+		parameters.NewStringParameter("query", "The promql query to execute.", parameters.WithStringRequired(true)),
 	}
 
 	testCases := []struct {
@@ -88,7 +79,7 @@ func TestInitialize(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tool, err := tc.cfg.Initialize(srcs)
+			tool, err := tc.cfg.Initialize(context.Background())
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -104,7 +95,10 @@ func TestInitialize(t *testing.T) {
 				t.Fatalf("Initialize() failed: %v", err)
 			}
 
-			got := tool.Manifest()
+			got, err := tool.Manifest(nil)
+			if err != nil {
+				t.Fatalf("Manifest() failed: %v", err)
+			}
 			if diff := cmp.Diff(tc.want, &got); diff != "" {
 				t.Errorf("Initialize() manifest mismatch (-want +got):\n%s", diff)
 			}
@@ -170,7 +164,7 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -215,7 +209,7 @@ func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

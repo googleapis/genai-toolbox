@@ -23,6 +23,7 @@ import (
 type AuthServiceConfig interface {
 	AuthServiceConfigType() string
 	Initialize() (AuthService, error)
+	IsMCPEnabled() bool
 }
 
 // AuthService is the interface for authentication services.

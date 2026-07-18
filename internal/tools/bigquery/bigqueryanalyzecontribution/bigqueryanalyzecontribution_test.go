@@ -70,7 +70,7 @@ func TestParseFromYamlBigQueryAnalyzeContribution(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -130,7 +130,7 @@ func TestInvoke(t *testing.T) {
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": src,
 	}
-	tool, err := cfg.Initialize(sourcesMap)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -205,7 +205,11 @@ func TestInvoke(t *testing.T) {
 				data["dimension_id_cols"] = tc.dimensionIdCols
 			}
 
-			paramVals, err := parameters.ParseParams(analyzeContributionTool.GetParameters(), data, nil)
+			params, err := analyzeContributionTool.GetParameters(sourcesMap)
+			if err != nil {
+				t.Fatalf("failed to get parameters: %v", err)
+			}
+			paramVals, err := parameters.ParseParams(params, data, nil)
 			if err != nil {
 				if tc.wantErr {
 					if !strings.Contains(err.Error(), tc.wantSubstr) {
@@ -332,7 +336,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": testSrc,
 	}
-	tool, err := cfg.Initialize(sourcesMap)
+	tool, err := cfg.Initialize(ctx)
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -350,7 +354,11 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 		"dimension_id_cols":   []any{"dim1"},
 	}
 
-	paramVals, err := parameters.ParseParams(analyzeContributionTool.GetParameters(), data, nil)
+	params, err := analyzeContributionTool.GetParameters(sourcesMap)
+	if err != nil {
+		t.Fatalf("failed to get parameters: %v", err)
+	}
+	paramVals, err := parameters.ParseParams(params, data, nil)
 	if err != nil {
 		t.Fatalf("unexpected error parsing parameters: %v", err)
 	}

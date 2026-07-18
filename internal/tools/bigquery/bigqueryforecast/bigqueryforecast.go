@@ -73,45 +73,14 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
-	allowedDatasets := s.BigQueryAllowedDatasets()
-	historyDataDescription := "The table id or the query of the history time series data."
-	if len(allowedDatasets) > 0 {
-		datasetIDs := []string{}
-		for _, ds := range allowedDatasets {
-			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
-		}
-		historyDataDescription += fmt.Sprintf(" The query or table must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
-	}
-
-	historyDataParameter := parameters.NewStringParameter("history_data", historyDataDescription)
-	timestampColumnNameParameter := parameters.NewStringParameterWithEscape("timestamp_col",
-		"The name of the time series timestamp column.", "single-quotes")
-	dataColumnNameParameter := parameters.NewStringParameterWithEscape("data_col",
-		"The name of the time series data column.", "single-quotes")
-	idColumnNameParameter := parameters.NewArrayParameterWithDefault("id_cols", []any{},
-		"An array of the time series id column names.",
-		parameters.NewStringParameterWithEscape("id_col", "The name of time series id column.", "single-quotes"))
-	horizonParameter := parameters.NewIntParameterWithDefault("horizon", 10, "The number of forecasting steps.")
-	params := parameters.Parameters{historyDataParameter,
-		timestampColumnNameParameter, dataColumnNameParameter, idColumnNameParameter, horizonParameter}
-
+	// params is the static skeleton (no source at init ⇒ no allowed-dataset restriction).
+	// Manifest/GetParameters re-resolve against the source lazily.
+	params := buildParams(nil)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
@@ -133,8 +102,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -286,18 +255,62 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) RequiresClientAuthorization(primitiveMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}
 	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) GetAuthTokenHeaderName(primitiveMgr tools.SourceProvider) (string, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
+}
+
+// resolveParams builds the tool's parameters using the source's allowed-dataset configuration.
+func buildParams(allowedDatasets []string) parameters.Parameters {
+	historyDataDescription := "The table id or the query of the history time series data."
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+		historyDataDescription += fmt.Sprintf(" The query or table must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
+	}
+
+	historyDataParameter := parameters.NewStringParameter("history_data", historyDataDescription)
+	timestampColumnNameParameter := parameters.NewStringParameter("timestamp_col", "The name of the time series timestamp column.", parameters.WithStringEscape(
+		"single-quotes"))
+	dataColumnNameParameter := parameters.NewStringParameter("data_col", "The name of the time series data column.", parameters.WithStringEscape(
+		"single-quotes"))
+	idColumnNameParameter := parameters.NewArrayParameter("id_cols", "An array of the time series id column names.", parameters.NewStringParameter("id_col", "The name of time series id column.", parameters.WithStringEscape("single-quotes")), parameters.WithArrayDefault([]any{}))
+	horizonParameter := parameters.NewIntParameter("horizon", "The number of forecasting steps.", parameters.WithIntDefault(10))
+	return parameters.Parameters{historyDataParameter,
+		timestampColumnNameParameter, dataColumnNameParameter, idColumnNameParameter, horizonParameter}
+}
+
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.BigQueryAllowedDatasets()), nil
+}
+
+// GetParameters returns the tool's parameters, resolved against the source.
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
+}
+
+// Manifest returns the tool's manifest, resolved against the source.
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	params, err := t.resolveParams(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	return tools.Manifest{Description: t.Cfg.Description, Parameters: params.Manifest(), AuthRequired: t.Cfg.AuthRequired}, nil
 }

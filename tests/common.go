@@ -466,6 +466,16 @@ func AddMySQLPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]
 		"source":      "my-instance",
 		"description": "Gets the query plan for a SQL statement.",
 	}
+	tools["show_query_stats"] = map[string]any{
+		"type":        "mysql-show-query-stats",
+		"source":      "my-instance",
+		"description": "Lists query statistics in the database.",
+	}
+	tools["list_all_locks"] = map[string]any{
+		"type":        "mysql-list-all-locks",
+		"source":      "my-instance",
+		"description": "Lists all table, row locks in the database.",
+	}
 	config["tools"] = tools
 	return config
 }
@@ -968,7 +978,7 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			got, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

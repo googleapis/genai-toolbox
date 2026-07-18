@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -71,17 +70,17 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	actionParameter := parameters.NewStringParameterWithRequired("action", "The analysis to run. Can be 'projects', 'models', or 'explores'.", true)
-	projectParameter := parameters.NewStringParameterWithRequired("project", "The Looker project to analyze (optional).", false)
-	modelParameter := parameters.NewStringParameterWithRequired("model", "The Looker model to analyze (optional).", false)
-	exploreParameter := parameters.NewStringParameterWithRequired("explore", "The Looker explore to analyze (optional).", false)
-	timeframeParameter := parameters.NewIntParameterWithDefault("timeframe", 90, "The timeframe in days to analyze.")
-	minQueriesParameter := parameters.NewIntParameterWithDefault("min_queries", 0, "The minimum number of queries for a model or explore to be considered used.")
+	actionParameter := parameters.NewStringParameter("action", "The analysis to run. Can be 'projects', 'models', or 'explores'.", parameters.WithStringRequired(true))
+	projectParameter := parameters.NewStringParameter("project", "The Looker project to analyze (optional).", parameters.WithStringRequired(false))
+	modelParameter := parameters.NewStringParameter("model", "The Looker model to analyze (optional).", parameters.WithStringRequired(false))
+	exploreParameter := parameters.NewStringParameter("explore", "The Looker explore to analyze (optional).", parameters.WithStringRequired(false))
+	timeframeParameter := parameters.NewIntParameter("timeframe", "The timeframe in days to analyze.", parameters.WithIntDefault(90))
+	minQueriesParameter := parameters.NewIntParameter("min_queries", "The minimum number of queries for a model or explore to be considered used.", parameters.WithIntDefault(0))
 
 	allParameters := parameters.Parameters{
 		actionParameter,
@@ -112,8 +111,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -190,8 +189,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) RequiresClientAuthorization(primitiveMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}
@@ -545,8 +544,8 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 // END LOOKER HEALTH ANALYZE CORE LOGIC
 // =================================================================================================================
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) GetAuthTokenHeaderName(primitiveMgr tools.SourceProvider) (string, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return "", err
 	}

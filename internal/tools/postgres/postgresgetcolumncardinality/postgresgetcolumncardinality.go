@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -80,11 +79,11 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("schema_name", "public", "Optional: The schema name in which the table is present."),
-		parameters.NewStringParameterWithRequired("table_name", "Required: The table name in which the column is present.", true),
-		parameters.NewStringParameterWithRequired("column_name", "Optional: The column name for which the cardinality is to be found. If not provided, cardinality for all columns will be returned.", false),
+		parameters.NewStringParameter("schema_name", "Optional: The schema name in which the table is present.", parameters.WithStringDefault("public")),
+		parameters.NewStringParameter("table_name", "Required: The table name in which the column is present.", parameters.WithStringRequired(true)),
+		parameters.NewStringParameter("column_name", "Optional: The column name for which the cardinality is to be found. If not provided, cardinality for all columns will be returned.", parameters.WithStringRequired(false)),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -108,8 +107,8 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}

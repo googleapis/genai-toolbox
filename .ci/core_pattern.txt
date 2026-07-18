@@ -1,0 +1,1 @@
+(^|/)internal/server/|(^|/)internal/util/|internal/tools/[^/]+\.go|internal/sources/[^/]+\.go|(^|/)internal/auth/|(^|/)internal/telemetry/|(^|/)internal/log/|(^|/)internal/testutils/|(^|/)internal/embeddingmodels/|(^|/)internal/sources/sqlcommenter/|(^|/)internal/prebuiltconfigs/|(^|/)internal/prompts/|tests/[^/]+\.go|\.ci/|go\.mod|go\.sum|main\.go|(^|/)cmd/

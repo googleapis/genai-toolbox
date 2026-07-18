@@ -39,7 +39,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -59,8 +59,10 @@ type Server struct {
 	logger              log.Logger
 	instrumentation     *telemetry.Instrumentation
 	sseManager          *sseManager
-	ResourceMgr         *resources.ResourceManager
+	PrimitiveMgr        *primitives.PrimitiveManager
 	mcpPrmFile          string
+	httpMaxRequestBytes int64
+	enableDraftSpecs    bool
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -73,6 +75,14 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	map[string]prompts.Promptset,
 	error,
 ) {
+	if cfg.EnableAPI {
+		for _, sc := range cfg.AuthServiceConfigs {
+			if sc.IsMCPEnabled() {
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (EnableAPI)")
+			}
+		}
+	}
+
 	metadataStr := cfg.Version
 	if len(cfg.UserAgentMetadata) > 0 {
 		metadataStr += "+" + strings.Join(cfg.UserAgentMetadata, "+")
@@ -80,12 +90,12 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	ctx = util.WithUserAgent(ctx, metadataStr)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
 	// initialize and validate the sources from configs
@@ -138,6 +148,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		authServicesMap[name] = a
 	}
+
 	authServiceNames := make([]string, 0, len(authServicesMap))
 	for name := range authServicesMap {
 		authServiceNames = append(authServiceNames, name)
@@ -172,87 +183,15 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d embeddingModels: %s", len(embeddingModelsMap), strings.Join(embeddingModelNames, ", ")))
 
-	// initialize and validate the tools from configs
-	toolsMap := make(map[string]tools.Tool)
-	for name, tc := range cfg.ToolConfigs {
-		t, err := func() (tools.Tool, error) {
-			_, span := instrumentation.Tracer.Start(
-				ctx,
-				"toolbox/server/tool/init",
-				trace.WithAttributes(attribute.String("tool_type", tc.ToolConfigType())),
-				trace.WithAttributes(attribute.String("tool_name", name)),
-			)
-			defer span.End()
-			t, err := tc.Initialize(sourcesMap)
-			if err != nil {
-				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
-			}
-			return t, nil
-		}()
-		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
-		}
-		toolsMap[name] = t
+	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
 	}
-	toolNames := make([]string, 0, len(toolsMap))
-	for name := range toolsMap {
-		toolNames = append(toolNames, name)
-	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
 
-	// create a default toolset that contains all tools
-	allToolNames := make([]string, 0, len(toolsMap))
-	for name := range toolsMap {
-		allToolNames = append(allToolNames, name)
+	toolsetsMap, err := initializeToolsets(ctx, cfg, toolsMap, instrumentation, l)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
 	}
-	if cfg.ToolsetConfigs == nil {
-		cfg.ToolsetConfigs = make(ToolsetConfigs)
-	}
-	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
-
-	// initialize and validate the toolsets from configs
-	toolsetsMap := make(map[string]tools.Toolset)
-	for name, tc := range cfg.ToolsetConfigs {
-		if cfg.IgnoreUnknownTools {
-			filteredToolNames := make([]string, 0, len(tc.ToolNames))
-			for _, tn := range tc.ToolNames {
-				if _, ok := toolsMap[tn]; ok {
-					filteredToolNames = append(filteredToolNames, tn)
-				} else {
-					l.WarnContext(ctx, fmt.Sprintf("Skipping missing tool %q in toolset %q", tn, name))
-				}
-			}
-			tc.ToolNames = filteredToolNames
-			cfg.ToolsetConfigs[name] = tc
-		}
-
-		t, err := func() (tools.Toolset, error) {
-			_, span := instrumentation.Tracer.Start(
-				ctx,
-				"toolbox/server/toolset/init",
-				trace.WithAttributes(attribute.String("toolset.name", name)),
-			)
-			defer span.End()
-			t, err := tc.Initialize(cfg.Version, toolsMap)
-			if err != nil {
-				return tools.Toolset{}, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
-			}
-			return t, err
-		}()
-		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
-		}
-		toolsetsMap[name] = t
-	}
-	toolsetNames := make([]string, 0, len(toolsetsMap))
-	for name := range toolsetsMap {
-		if name == "" {
-			toolsetNames = append(toolsetNames, "default")
-		} else {
-			toolsetNames = append(toolsetNames, name)
-		}
-	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets: %s", len(toolsetsMap), strings.Join(toolsetNames, ", ")))
 
 	// initialize and validate the prompts from configs
 	promptsMap := make(map[string]prompts.Prompt)
@@ -326,6 +265,127 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
+// InitializeOfflineConfigs initializes only tools and toolsets from the config,
+// skipping sources, auth services, and embedding models. It backs flows like
+// skills-generate that need tool metadata without live source connections.
+func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
+	map[string]tools.Tool,
+	map[string]tools.Toolset,
+	error,
+) {
+	instrumentation, err := util.InstrumentationFromContext(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
+	}
+
+	l, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
+	}
+
+	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	toolsetsMap, err := initializeToolsets(ctx, cfg, toolsMap, instrumentation, l)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return toolsMap, toolsetsMap, nil
+}
+
+// initializeTools initializes and validates the tools from the config.
+func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
+	toolsMap := make(map[string]tools.Tool)
+	for name, tc := range cfg.ToolConfigs {
+		t, err := func() (tools.Tool, error) {
+			_, span := instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/tool/init",
+				trace.WithAttributes(attribute.String("tool_type", tc.ToolConfigType())),
+				trace.WithAttributes(attribute.String("tool_name", name)),
+			)
+			defer span.End()
+			t, err := tc.Initialize(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
+			}
+			return t, nil
+		}()
+		if err != nil {
+			return nil, err
+		}
+		toolsMap[name] = t
+	}
+	toolNames := make([]string, 0, len(toolsMap))
+	for name := range toolsMap {
+		toolNames = append(toolNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
+	return toolsMap, nil
+}
+
+// initializeToolsets seeds a default toolset containing all tools, then
+// initializes and validates the toolsets from the config.
+func initializeToolsets(ctx context.Context, cfg ServerConfig, toolsMap map[string]tools.Tool, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Toolset, error) {
+	// create a default toolset that contains all tools
+	allToolNames := make([]string, 0, len(toolsMap))
+	for name := range toolsMap {
+		allToolNames = append(allToolNames, name)
+	}
+	if cfg.ToolsetConfigs == nil {
+		cfg.ToolsetConfigs = make(ToolsetConfigs)
+	}
+	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
+
+	toolsetsMap := make(map[string]tools.Toolset)
+	for name, tc := range cfg.ToolsetConfigs {
+		if cfg.IgnoreUnknownTools {
+			filteredToolNames := make([]string, 0, len(tc.ToolNames))
+			for _, tn := range tc.ToolNames {
+				if _, ok := toolsMap[tn]; ok {
+					filteredToolNames = append(filteredToolNames, tn)
+				} else {
+					l.WarnContext(ctx, fmt.Sprintf("Skipping missing tool %q in toolset %q", tn, name))
+				}
+			}
+			tc.ToolNames = filteredToolNames
+			cfg.ToolsetConfigs[name] = tc
+		}
+
+		t, err := func() (tools.Toolset, error) {
+			_, span := instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/toolset/init",
+				trace.WithAttributes(attribute.String("toolset.name", name)),
+			)
+			defer span.End()
+			t, err := tc.Initialize(cfg.Version, toolsMap)
+			if err != nil {
+				return tools.Toolset{}, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
+			}
+			return t, err
+		}()
+		if err != nil {
+			return nil, err
+		}
+		toolsetsMap[name] = t
+	}
+	toolsetNames := make([]string, 0, len(toolsetsMap))
+	for name := range toolsetsMap {
+		if name == "" {
+			toolsetNames = append(toolsetNames, "default")
+		} else {
+			toolsetNames = append(toolsetNames, name)
+		}
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets: %s", len(toolsetsMap), strings.Join(toolsetNames, ", ")))
+
+	return toolsetsMap, nil
+}
+
 func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -390,7 +450,12 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	primitiveManager := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+
+	limit := cfg.HttpMaxRequestBytes
+	if limit <= 0 {
+		limit = DefaultHTTPMaxRequestBytes
+	}
 
 	s := &Server{
 		version:             cfg.Version,
@@ -400,9 +465,15 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		logger:              l,
 		instrumentation:     instrumentation,
 		sseManager:          sseManager,
-		ResourceMgr:         resourceManager,
+		PrimitiveMgr:        primitiveManager,
 		toolboxUrl:          cfg.ToolboxUrl,
 		mcpPrmFile:          cfg.McpPrmFile,
+		httpMaxRequestBytes: limit,
+		enableDraftSpecs:    cfg.EnableDraftSpecs,
+	}
+
+	if s.enableDraftSpecs {
+		s.logger.WarnContext(ctx, "Flag --enable-draft-specs is active. Please note that draft specs are subject to breaking changes and will be completely removed (not redirected) once stable MCP specifications are released. Do not use this configuration in production.")
 	}
 
 	// cors
@@ -434,7 +505,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// Host OAuth Protected Resource Metadata endpoint
 	mcpAuthEnabled := false
-	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+	for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
 		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 			mcpAuthEnabled = true
 			break
@@ -512,7 +583,7 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Find McpEnabled auth service
 			var mcpSvc auth.MCPAuthService
-			for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+			for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
 				if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 					mcpSvc = mSvc
 					break

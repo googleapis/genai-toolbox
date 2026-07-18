@@ -357,6 +357,18 @@ and data.
   [internal/prebuiltconfigs/prebuiltconfigs_test.go](internal/prebuiltconfigs/prebuiltconfigs_test.go)
   and [cmd/root_test.go](cmd/root_test.go).
 
+### Deprecating an Existing Primitive
+
+A primitive (e.g., sources, tools, auth services) will only be removed after it
+has been marked as deprecated for at least one major version, or four minor
+versions (approximately two months, given our biweekly release cadence).
+
+To mark a primitive as deprecated, you must add our deprecation helper function
+to the initialization of the primitive.
+
+During the next major version release, any primitive that meets these
+deprecation timeframe requirements will be permanently removed.
+
 ## Testing
 
 ### Infrastructure
@@ -890,7 +902,39 @@ Trigger pull request tests for external contributors by:
 
 ### How-to Release the npm Package
 
-MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.npmjs.com/package/@toolbox-sdk/server). To release a new version, follow these steps:
+MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.npmjs.com/package/@toolbox-sdk/server).
+
+> [!NOTE]
+> npm releases are automated through the **OSS Exit Gate** via the
+> `publish-npm-to-ar` and `trigger-exit-gate` steps in
+> [.ci/versioned.release.cloudbuild.yaml](.ci/versioned.release.cloudbuild.yaml).
+> The versioned release pipeline pushes all six packages to the Exit Gate
+> Artifact Registry (`us-npm.pkg.dev/oss-exit-gate-prod/mcp-toolbox--npm`) and
+> uploads a `publish_all: true` manifest to
+> `gs://oss-exit-gate-prod-projects-bucket/mcp-toolbox/npm/manifests/`, which
+> triggers Exit Gate to publish externally to npmjs.org.
+>
+> If the npm portion fails after the Go binaries are already in GCS, retry
+> just the npm steps without rebuilding binaries via
+> [.ci/npm_retry.cloudbuild.yaml](.ci/npm_retry.cloudbuild.yaml) (invocation
+> instructions are in the file header). The retry is idempotent — already-
+> published packages are skipped.
+>
+> **PyPI releases** are automated through the same Exit Gate via the
+> `publish-pypi-to-ar` and `trigger-exit-gate-pypi` steps. Each release
+> builds five platform-tagged wheels (one per OS/arch) via
+> [pypi/setup.py](pypi/setup.py) with `TOOLBOX_PLATFORM` set per wheel,
+> uploads them all to `us-python.pkg.dev/oss-exit-gate-prod/mcp-toolbox--pypi`,
+> then drops a manifest at
+> `gs://oss-exit-gate-prod-projects-bucket/mcp-toolbox/pypi/manifests/` so
+> Exit Gate publishes them to pypi.org via trusted publishing. PyPI-only
+> retries: [.ci/pypi_retry.cloudbuild.yaml](.ci/pypi_retry.cloudbuild.yaml).
+> Idempotency is handled by `twine upload --skip-existing`.
+>
+> The manual procedure below is retained as a fallback for when the automation
+> is broken.
+
+To release a new version manually, follow these steps:
 
 **Pre-requisites**
 
@@ -916,8 +960,8 @@ _Repeat the following steps for each of the 5 combinations listed above._
    cd npm/server-<os>-<arch>
    ```
 2. **Verify versioning:**
-   - Verify that the `version.txt` file reflects the version of the toolbox binary to be released.
-   - Open `package.json` and verify that the `"version"` field reflects the target version.
+   - The toolbox binary version is sourced from `cmd/version.txt` at the repo root (the release-please `versionFile`); `downloadBinary.js` reads it from there during `prepack`. Verify it reflects the version to be released.
+   - Open `package.json` and verify that the `"version"` field matches `cmd/version.txt`.
 3. **Sync Lockfile:**
    ```bash
    npm install --force

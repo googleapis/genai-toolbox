@@ -50,6 +50,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Helper function to create temporary self-signed certs for the test
@@ -267,37 +268,37 @@ func TestUpdateServer(t *testing.T) {
 			Prompts: []*prompts.Prompt{},
 		},
 	}
-	s.ResourceMgr.SetResources(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
 
-	gotSource, _ := s.ResourceMgr.GetSource("example-source")
+	gotSource, _ := s.PrimitiveMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
 	}
 
-	gotAuthService, _ := s.ResourceMgr.GetAuthService("example-auth")
+	gotAuthService, _ := s.PrimitiveMgr.GetAuthService("example-auth")
 	if diff := cmp.Diff(gotAuthService, newAuth["example-auth"]); diff != "" {
 		t.Errorf("error updating server, authServices (-want +got):\n%s", diff)
 	}
 
-	gotTool, _ := s.ResourceMgr.GetTool("example-tool")
+	gotTool, _ := s.PrimitiveMgr.GetTool("example-tool")
 	if diff := cmp.Diff(gotTool, newTools["example-tool"]); diff != "" {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
-	gotToolset, _ := s.ResourceMgr.GetToolset("example-toolset")
+	gotToolset, _ := s.PrimitiveMgr.GetToolset("example-toolset")
 	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"], cmp.AllowUnexported(tools.Toolset{})); diff != "" {
 		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 
-	gotPrompt, _ := s.ResourceMgr.GetPrompt("example-prompt")
+	gotPrompt, _ := s.PrimitiveMgr.GetPrompt("example-prompt")
 	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"]); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
 	}
 
-	gotPromptset, _ := s.ResourceMgr.GetPromptset("example-promptset")
+	gotPromptset, _ := s.PrimitiveMgr.GetPromptset("example-promptset")
 	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"], cmp.AllowUnexported(prompts.Promptset{})); diff != "" {
 		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
@@ -1236,9 +1237,9 @@ mcpEnabled: true
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
 		})
 	}
@@ -1328,10 +1329,123 @@ scopesRequired:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
 		})
+	}
+}
+
+type offlineSourceConfig struct {
+	initialized *bool
+}
+
+func (c offlineSourceConfig) SourceConfigType() string { return "offline-test-source" }
+
+func (c offlineSourceConfig) Initialize(context.Context, trace.Tracer) (sources.Source, error) {
+	*c.initialized = true
+	return nil, fmt.Errorf("source Initialize should not be called during offline init")
+}
+
+type offlineToolConfig struct {
+	name string
+}
+
+func (c offlineToolConfig) ToolConfigType() string { return "offline-test-tool" }
+
+func (c offlineToolConfig) Initialize(context.Context) (tools.Tool, error) {
+	return testutils.NewMockTool(c.name, "offline tool", nil, false, false), nil
+}
+
+func TestInitializeOfflineConfigs(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	sourceInitialized := false
+	cfg := server.ServerConfig{
+		Version: "0.0.0",
+		SourceConfigs: server.SourceConfigs{
+			"my-source": offlineSourceConfig{initialized: &sourceInitialized},
+		},
+		ToolConfigs: server.ToolConfigs{
+			"my-tool": offlineToolConfig{name: "my-tool"},
+		},
+	}
+
+	toolsMap, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
+	if err != nil {
+		t.Fatalf("InitializeOfflineConfigs returned error: %s", err)
+	}
+	if sourceInitialized {
+		t.Error("source Initialize was called during offline init")
+	}
+	if _, ok := toolsMap["my-tool"]; !ok {
+		t.Errorf("expected tool %q in toolsMap, got %v", "my-tool", toolsMap)
+	}
+	// The implicit default ("") toolset should always be present.
+	if _, ok := toolsetsMap[""]; !ok {
+		t.Error("expected default toolset to be present")
+	}
+}
+
+type mockClashAuthConfig struct{}
+
+var _ auth.AuthServiceConfig = mockClashAuthConfig{}
+var _ auth.MCPAuthService = mockClashAuthService{}
+
+func (c mockClashAuthConfig) AuthServiceConfigType() string { return "mock-clash" }
+func (c mockClashAuthConfig) IsMCPEnabled() bool            { return true }
+func (c mockClashAuthConfig) Initialize() (auth.AuthService, error) {
+	return mockClashAuthService{}, nil
+}
+
+type mockClashAuthService struct{}
+
+func (s mockClashAuthService) AuthServiceType() string { return "mock-clash" }
+func (s mockClashAuthService) GetName() string         { return "mock-clash" }
+func (s mockClashAuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (map[string]any, error) {
+	return nil, nil
+}
+func (s mockClashAuthService) ToConfig() auth.AuthServiceConfig { return mockClashAuthConfig{} }
+func (s mockClashAuthService) IsMCPEnabled() bool               { return true }
+func (s mockClashAuthService) GetScopesRequired() []string      { return nil }
+func (s mockClashAuthService) GetAuthorizationServer() string   { return "mock-auth-server" }
+func (s mockClashAuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[string]any, error) {
+	return nil, nil
+}
+
+func TestMCPAuthEnableAPIClash(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	cfg := server.ServerConfig{
+		Version:   "0.0.0",
+		EnableAPI: true,
+		AuthServiceConfigs: map[string]auth.AuthServiceConfig{
+			"mock-clash": mockClashAuthConfig{},
+		},
+	}
+
+	_, err = server.NewServer(ctx, cfg)
+	if err == nil {
+		t.Fatal("expected error when starting server with MCP Auth and EnableAPI both enabled, got nil")
+	}
+	if !strings.Contains(err.Error(), "MCP Auth cannot be enabled together with the legacy HTTP API") {
+		t.Errorf("unexpected error message: %v", err)
 	}
 }

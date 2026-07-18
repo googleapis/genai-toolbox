@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -107,13 +106,13 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: a text to filter results by schema name. The input is used within a LIKE clause."),
-		parameters.NewStringParameterWithDefault("table_name", "", "Optional: a text to filter results by table name. The input is used within a LIKE clause."),
-		parameters.NewStringParameterWithDefault("index_name", "", "Optional: a text to filter results by index name. The input is used within a LIKE clause."),
-		parameters.NewBooleanParameterWithDefault("only_unused", false, "Optional: If true, only returns indexes that have never been used."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return. Default is 50"),
+		parameters.NewStringParameter("schema_name", "Optional: a text to filter results by schema name. The input is used within a LIKE clause.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("table_name", "Optional: a text to filter results by table name. The input is used within a LIKE clause.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("index_name", "Optional: a text to filter results by index name. The input is used within a LIKE clause.", parameters.WithStringDefault("")),
+		parameters.NewBooleanParameter("only_unused", "Optional: If true, only returns indexes that have never been used.", parameters.WithBooleanDefault(false)),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return. Default is 50", parameters.WithIntDefault(50)),
 	}
 
 	if cfg.Description == "" {
@@ -136,8 +135,8 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
