@@ -23,6 +23,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 	_ "modernc.org/sqlite" // Pure Go SQLite driver
@@ -138,7 +139,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 			// Handle JSON data
 			if jsonString, ok := val.(string); ok {
 				var unmarshaledData any
-				if json.Unmarshal([]byte(jsonString), &unmarshaledData) == nil {
+				if util.IsProbablyJSON(jsonString) && json.Unmarshal([]byte(jsonString), &unmarshaledData) == nil {
 					row.Add(name, unmarshaledData)
 					continue
 				}

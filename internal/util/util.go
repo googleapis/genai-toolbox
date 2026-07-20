@@ -32,7 +32,6 @@ import (
 // GDAClientID is the client ID for Gemini Data Analytics
 const GDAClientID = "GENAI_TOOLBOX"
 
-// DecodeJSON decodes a given reader into an interface using the json decoder.
 func DecodeJSON(r io.Reader, v interface{}) error {
 	defer io.Copy(io.Discard, r) //nolint:errcheck
 	d := json.NewDecoder(r)
@@ -40,6 +39,36 @@ func DecodeJSON(r io.Reader, v interface{}) error {
 	// This prevents loss between floats/ints.
 	d.UseNumber()
 	return d.Decode(v)
+}
+
+// IsProbablyJSON provides a fast path to check if a string might be JSON
+// to avoid the expensive json.Unmarshal call on regular string data.
+func IsProbablyJSON(s string) bool {
+	s = strings.TrimSpace(s)
+	if len(s) < 2 {
+		return len(s) == 1 && s[0] >= '0' && s[0] <= '9'
+	}
+	first := s[0]
+	last := s[len(s)-1]
+	if (first == '{' && last == '}') || (first == '[' && last == ']') {
+		return true
+	}
+	if first == '"' && last == '"' {
+		return true
+	}
+	if s == "true" || s == "false" || s == "null" {
+		return true
+	}
+	if (first >= '0' && first <= '9') || first == '-' {
+		for i := 1; i < len(s); i++ {
+			c := s[i]
+			if (c < '0' || c > '9') && c != '.' && c != 'e' && c != 'E' && c != '+' && c != '-' {
+				return false
+			}
+		}
+		return true
+	}
+	return false
 }
 
 // ConvertNumbers traverses an interface and converts all json.Number

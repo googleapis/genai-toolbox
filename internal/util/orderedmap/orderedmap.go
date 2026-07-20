@@ -38,25 +38,25 @@ func (r *Row) Add(name string, value any) {
 // It marshals the row into a JSON object, preserving the order of the columns.
 func (r Row) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
-	buf.WriteString("{")
+	buf.WriteByte('{')
+	enc := json.NewEncoder(&buf)
 	for i, col := range r.Columns {
 		if i > 0 {
-			buf.WriteString(",")
+			buf.WriteByte(',')
 		}
-		// Marshal the key
-		key, err := json.Marshal(col.Name)
-		if err != nil {
+		// Marshal the key. We use Encode to safely escape the string.
+		if err := enc.Encode(col.Name); err != nil {
 			return nil, err
 		}
-		buf.Write(key)
-		buf.WriteString(":")
+		// Encode adds a newline, strip it to keep JSON compact
+		buf.Truncate(buf.Len() - 1)
+		buf.WriteByte(':')
 		// Marshal the value
-		val, err := json.Marshal(col.Value)
-		if err != nil {
+		if err := enc.Encode(col.Value); err != nil {
 			return nil, err
 		}
-		buf.Write(val)
+		buf.Truncate(buf.Len() - 1)
 	}
-	buf.WriteString("}")
+	buf.WriteByte('}')
 	return buf.Bytes(), nil
 }
