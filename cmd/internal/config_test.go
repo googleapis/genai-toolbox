@@ -2486,6 +2486,14 @@ description: the default group
 			wantErr: false,
 		},
 		{
+			description: "group with quoted numeric name is accepted",
+			in: `
+kind: group
+name: "123"
+`,
+			wantErr: false,
+		},
+		{
 			description: "non-group resource with integer name is rejected",
 			in: `
 kind: tool
