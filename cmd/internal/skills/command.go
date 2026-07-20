@@ -106,9 +106,9 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	opts.Logger.InfoContext(ctx, "Generating skillagent skills...")
 
 	// Collect the tools and description for each skill to generate.
-	skillsToContents, err := cmd.collectTools(ctx, opts)
+	skillsToContents, err := cmd.collectContents(ctx, opts)
 	if err != nil {
-		errMsg := fmt.Errorf("error collecting skill tools: %w", err)
+		errMsg := fmt.Errorf("error collecting skill contents: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
@@ -235,7 +235,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	return nil
 }
 
-func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOptions) (map[string]skillContent, error) {
+func (c *skillsCmd) collectContents(ctx context.Context, opts *internal.ToolboxOptions) (map[string]skillContent, error) {
 	// Initialize tools and groups only; skills generation does not need live
 	// sources, auth services, or embedding models.
 	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, opts.Cfg)
