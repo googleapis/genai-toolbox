@@ -194,11 +194,11 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	// Attempt initial metadata fetch at startup; if unauthenticated (e.g. user OAuth token required), lazy-load on first request.
 	if err := source.fetchMetadata(ctx, ""); err != nil {
-		logger, err := util.LoggerFromContext(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		logger, logErr := util.LoggerFromContext(ctx)
+		if logErr != nil {
+			return nil, fmt.Errorf("unable to get logger from ctx: %w", logErr)
 		}
-		noticeMsg := fmt.Sprintf("Notice: SAP OData metadata will be lazily fetched on first user request: %v\n", err)
+		noticeMsg := fmt.Sprintf("Notice: SAP OData metadata will be lazily fetched on first user request: %v", err)
 		logger.InfoContext(ctx, noticeMsg)
 	}
 
