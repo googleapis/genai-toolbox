@@ -236,6 +236,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			if sourceConfigs == nil {
 				sourceConfigs = make(SourceConfigs)
 			}
+			if _, exists := sourceConfigs[name]; exists {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("source %q declared more than once", name)
+			}
 			sourceConfigs[name] = c
 		case "authService":
 			c, err := UnmarshalYAMLAuthServiceConfig(ctx, name, resource)
@@ -247,6 +250,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			}
 			if authServiceConfigs == nil {
 				authServiceConfigs = make(AuthServiceConfigs)
+			}
+			if _, exists := authServiceConfigs[name]; exists {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("authService %q declared more than once", name)
 			}
 			authServiceConfigs[name] = c
 		case "tool":
@@ -263,6 +269,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			if toolConfigs == nil {
 				toolConfigs = make(ToolConfigs)
 			}
+			if _, exists := toolConfigs[name]; exists {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("tool %q declared more than once", name)
+			}
 			toolConfigs[name] = c
 		case "toolset":
 			c, err := UnmarshalYAMLToolsetConfig(ctx, name, resource)
@@ -274,6 +283,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			}
 			if toolsetGroups == nil {
 				toolsetGroups = make(map[string]group.GroupConfig)
+			}
+			if _, exists := toolsetGroups[name]; exists {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("toolset %q declared more than once", name)
 			}
 			toolsetGroups[name] = group.GroupConfig{Name: name, ToolNames: c.ToolNames}
 		case "embeddingModel":
@@ -287,6 +299,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			if embeddingModelConfigs == nil {
 				embeddingModelConfigs = make(EmbeddingModelConfigs)
 			}
+			if _, exists := embeddingModelConfigs[name]; exists {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("embeddingModel %q declared more than once", name)
+			}
 			embeddingModelConfigs[name] = c
 		case "prompt":
 			c, err := UnmarshalYAMLPromptConfig(ctx, name, resource)
@@ -298,6 +313,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			}
 			if promptConfigs == nil {
 				promptConfigs = make(PromptConfigs)
+			}
+			if _, exists := promptConfigs[name]; exists {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("prompt %q declared more than once", name)
 			}
 			promptConfigs[name] = c
 		case "group":
