@@ -133,7 +133,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	ua, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		fmt.Printf("Error in User Agent retrieval: %s", err)
+		warnMsg := fmt.Sprintf("Error in User Agent retrieval: %s", err)
+		logger.WarnContext(ctx, warnMsg)
 	}
 	if r.DefaultHeaders == nil {
 		r.DefaultHeaders = make(map[string]string)
