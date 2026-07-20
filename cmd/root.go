@@ -115,7 +115,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	// setup flags that are common across all commands
 	internal.PersistentFlags(cmd, opts)
 	flags := cmd.Flags()
-	internal.ConfigFileFlags(flags, opts)
+	internal.ConfigFileFlags(cmd, flags, opts)
 	internal.ServeFlags(flags, opts)
 	flags.BoolVar(&opts.Cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&opts.Cfg.IgnoreUnknownTools, "ignore-unknown-tools", false, "Log warnings and skip unknown/unsupported tool types instead of failing to start.")
@@ -145,7 +145,7 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	s.PrimitiveMgr.SetPrimitives(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	return nil
 }

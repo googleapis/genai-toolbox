@@ -60,10 +60,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	resourcePath := parameters.NewStringParameter("resourcePath", "The fully-qualified BigQuery resource path of the dataset or table to analyze. Format: //bigquery.googleapis.com/projects/{project}/datasets/{dataset} or //bigquery.googleapis.com/projects/{project}/datasets/{dataset}/tables/{table}.")
 	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1'). This should match the location of the BigQuery resource or the published location of the asset in the catalog.")
-	publish := parameters.NewBooleanParameterWithDefault("publish", false, "Optional. If true, automatically publishes the results to the Knowledge Catalog upon successful completion. False by default.")
+	publish := parameters.NewBooleanParameter("publish", "Optional. If true, automatically publishes the results to the Knowledge Catalog upon successful completion. False by default.", parameters.WithBooleanDefault(false))
 
 	allParameters := parameters.Parameters{resourcePath, location, publish}
 
@@ -87,8 +87,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}

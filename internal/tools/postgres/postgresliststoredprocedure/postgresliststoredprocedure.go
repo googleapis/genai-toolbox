@@ -88,11 +88,11 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("role_name", "Optional: The owner name to filter the stored procedures by. Defaults to NULL.", false),
-		parameters.NewStringParameterWithRequired("schema_name", "Optional: The schema name to filter the stored procedures by. Defaults to NULL.", false),
-		parameters.NewIntParameterWithDefault("limit", 20, "Optional: The maximum number of stored procedures to return. Defaults to 20."),
+		parameters.NewStringParameter("role_name", "Optional: The owner name to filter the stored procedures by. Defaults to NULL.", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("schema_name", "Optional: The schema name to filter the stored procedures by. Defaults to NULL.", parameters.WithStringRequired(false)),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of stored procedures to return. Defaults to 20.", parameters.WithIntDefault(20)),
 	}
 
 	if cfg.Description == "" {
@@ -115,8 +115,8 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}

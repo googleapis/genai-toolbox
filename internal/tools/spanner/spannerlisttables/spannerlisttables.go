@@ -63,19 +63,15 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	// Define parameters for the tool
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault(
+		parameters.NewStringParameter(
 			"table_names",
-			"",
-			"Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed.",
-		),
-		parameters.NewStringParameterWithDefault(
+			"Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter(
 			"output_format",
-			"detailed",
-			"Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema.",
-		),
+			"Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema.", parameters.WithStringDefault("detailed")),
 	}
 
 	if cfg.Description == "" {
@@ -111,8 +107,8 @@ func getStatement(dialect string) string {
 	}
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}

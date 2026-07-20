@@ -61,12 +61,12 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
-	filter := parameters.NewStringParameterWithDefault("filter", "", "Optional. Filter string to search/filter data quality scans. E.g. \"display_name = \\\"my-scan\\\"\"")
-	dataScanID := parameters.NewStringParameterWithDefault("dataScanId", "", "Optional. The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.")
-	resourcePath := parameters.NewStringParameterWithDefault("resourcePath", "", "Optional. The resource path of the table or storage bucket to filter by. Maps to data.entity in the filter string. E.g. \"//bigquery.googleapis.com/projects/P/datasets/D/tables/T\"")
-	pageSize := parameters.NewIntParameterWithDefault("pageSize", 10, "Number of returned data quality scans in the page.")
-	orderBy := parameters.NewStringParameterWithDefault("orderBy", "", "Specifies the ordering of results.")
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	filter := parameters.NewStringParameter("filter", "Optional. Filter string to search/filter data quality scans. E.g. \"display_name = \\\"my-scan\\\"\"", parameters.WithStringDefault(""))
+	dataScanID := parameters.NewStringParameter("dataScanId", "Optional. The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.", parameters.WithStringDefault(""))
+	resourcePath := parameters.NewStringParameter("resourcePath", "Optional. The resource path of the table or storage bucket to filter by. Maps to data.entity in the filter string. E.g. \"//bigquery.googleapis.com/projects/P/datasets/D/tables/T\"", parameters.WithStringDefault(""))
+	pageSize := parameters.NewIntParameter("pageSize", "Number of returned data quality scans in the page.", parameters.WithIntDefault(10))
+	orderBy := parameters.NewStringParameter("orderBy", "Specifies the ordering of results.", parameters.WithStringDefault(""))
 	allParameters := parameters.Parameters{filter, dataScanID, resourcePath, pageSize, orderBy}
 
 	return Tool{
@@ -90,8 +90,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}

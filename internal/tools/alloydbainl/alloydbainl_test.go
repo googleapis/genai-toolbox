@@ -65,8 +65,8 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 					Source:   "my-alloydb-instance",
 					NLConfig: "my_nl_config",
 					NLConfigParameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("user_id", "user_id to use",
-							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
+						parameters.NewStringParameter("user_id", "user_id to use", parameters.WithStringAuth(
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}})),
 					},
 				},
 			},
@@ -108,10 +108,11 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 					Source:   "my-alloydb-instance",
 					NLConfig: "complex_nl_config",
 					NLConfigParameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("user_id", "user_id to use",
-							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
-						parameters.NewStringParameterWithAuth("user_email", "user_email to use",
-							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_email"}}),
+						parameters.NewStringParameter("user_id", "user_id to use", parameters.WithStringAuth(
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}})),
+
+						parameters.NewStringParameter("user_email", "user_email to use", parameters.WithStringAuth(
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_email"}})),
 					},
 				},
 			},
@@ -120,7 +121,7 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

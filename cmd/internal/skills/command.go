@@ -25,7 +25,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 
 	"github.com/spf13/cobra"
@@ -57,7 +57,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	internal.ConfigFileFlags(flags, opts)
+	internal.ConfigFileFlags(cmd.Command, flags, opts)
 	flags.StringVar(&cmd.name, "name", "", "Name of the generated skill.")
 	flags.StringVar(&cmd.description, "description", "", "Description of the generated skill")
 	flags.StringVar(&cmd.toolset, "toolset", "", "Name of the toolset to convert into a skill. If not provided, all tools will be included.")
@@ -236,7 +236,7 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 		return nil, fmt.Errorf("failed to initialize resources: %w", err)
 	}
 
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsetsMap, nil, nil)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsetsMap, nil, nil)
 
 	skillsToTools := make(map[string]map[string]tools.Tool)
 
@@ -252,7 +252,7 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 	}
 
 	if c.toolset != "" {
-		ts, ok := resourceMgr.GetToolset(c.toolset)
+		ts, ok := primitiveMgr.GetToolset(c.toolset)
 		if !ok {
 			return nil, fmt.Errorf("toolset %q not found", c.toolset)
 		}

@@ -15,6 +15,7 @@
 package bigqueryforecast_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -68,7 +69,7 @@ func TestParseFromYamlBigQueryForecast(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -92,7 +93,7 @@ func TestInvoke(t *testing.T) {
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": src,
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -315,7 +316,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": testSrc,
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(ctx)
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

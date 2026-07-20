@@ -83,7 +83,8 @@ func TestCloudStorageToolEndpoints(t *testing.T) {
 	teardown := setupCloudStorageTestData(t, ctx, client, CloudStorageProject, bucketName)
 	defer teardown(t)
 
-	toolsFile := getCloudStorageToolsConfig(sourceConfig)
+	configuredDownloadDir := t.TempDir()
+	toolsFile := getCloudStorageToolsConfig(sourceConfig, bucketName, configuredDownloadDir)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, "--enable-api")
 	if err != nil {
@@ -235,6 +236,14 @@ func TestCloudStorageToolEndpoints(t *testing.T) {
 						"name":         "bucket",
 						"required":     true,
 						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Project ID to create the bucket in. When empty, the source's configured project is used.",
+						"name":         "project",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
 					},
 					map[string]any{
 						"authServices": []any{},
@@ -541,10 +550,297 @@ func TestCloudStorageToolEndpoints(t *testing.T) {
 		},
 	)
 
+	// Tools with parameters baked into their config drop those parameters from
+	// the schema exposed to the LLM. The assertions below confirm each
+	// configured parameter is absent from the manifest.
+	tests.RunToolGetTestByName(t, "my_list_objects_configured",
+		map[string]any{
+			"my_list_objects_configured": map[string]any{
+				"description":  "List objects in a configured Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Maximum number of objects to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.",
+						"name":         "max_results",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(0),
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "A previously-returned page token for retrieving the next page of results.",
+						"name":         "page_token",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_list_buckets_configured",
+		map[string]any{
+			"my_list_buckets_configured": map[string]any{
+				"description":  "List Cloud Storage buckets in a configured project.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Maximum number of buckets to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.",
+						"name":         "max_results",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(0),
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "A previously-returned page token for retrieving the next page of results.",
+						"name":         "page_token",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_read_object_configured",
+		map[string]any{
+			"my_read_object_configured": map[string]any{
+				"description":  "Read an object from a configured Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.",
+						"name":         "object",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional HTTP byte range, e.g. 'bytes=0-999' (first 1000 bytes), 'bytes=-500' (last 500 bytes), or 'bytes=500-' (from byte 500 to end). Empty reads the full object.",
+						"name":         "range",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_get_object_metadata_configured",
+		map[string]any{
+			"my_get_object_metadata_configured": map[string]any{
+				"description":  "Get object metadata from a configured Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.",
+						"name":         "object",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_get_bucket_metadata_configured",
+		map[string]any{
+			"my_get_bucket_metadata_configured": map[string]any{
+				"description":  "Get metadata for a configured Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters":   []any{},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_get_bucket_iam_policy_configured",
+		map[string]any{
+			"my_get_bucket_iam_policy_configured": map[string]any{
+				"description":  "Get the IAM policy for a configured Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters":   []any{},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_create_bucket_configured",
+		map[string]any{
+			"my_create_bucket_configured": map[string]any{
+				"description":  "Create a Cloud Storage bucket with configured settings.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Name of the Cloud Storage bucket to create.",
+						"name":         "bucket",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_download_object_configured",
+		map[string]any{
+			"my_download_object_configured": map[string]any{
+				"description":  "Download a Cloud Storage object with configured storage settings.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.",
+						"name":         "object",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Relative path under the configured destination_dir where the object will be written. Absolute paths and paths that escape destination_dir are rejected.",
+						"name":         "destination",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_upload_object_configured",
+		map[string]any{
+			"my_upload_object_configured": map[string]any{
+				"description":  "Upload a local file to a configured Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.",
+						"name":         "object",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Absolute local filesystem path of the file to upload. Relative paths and paths containing '..' are rejected.",
+						"name":         "source",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "MIME type to record on the uploaded object. When empty, it is inferred from the source file's extension; if that fails, Cloud Storage auto-detects from the first 512 bytes of content.",
+						"name":         "content_type",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_write_object_configured",
+		map[string]any{
+			"my_write_object_configured": map[string]any{
+				"description":  "Write text content to a configured Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.",
+						"name":         "object",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Text content to write to the Cloud Storage object.",
+						"name":         "content",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "MIME type to record on the written object. When empty, Cloud Storage auto-detects from the first 512 bytes of content.",
+						"name":         "content_type",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_copy_object_configured",
+		map[string]any{
+			"my_copy_object_configured": map[string]any{
+				"description":  "Copy a Cloud Storage object between configured buckets.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Full source object name (path) within the source bucket, e.g. 'path/to/file.txt'.",
+						"name":         "source_object",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Full destination object name (path) within the destination bucket, e.g. 'path/to/file.txt'.",
+						"name":         "destination_object",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_move_object_configured",
+		map[string]any{
+			"my_move_object_configured": map[string]any{
+				"description":  "Move a Cloud Storage object within a configured bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Full source object name (path) within the bucket, e.g. 'path/to/file.txt'.",
+						"name":         "source_object",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Full destination object name (path) within the same bucket, e.g. 'path/to/file.txt'.",
+						"name":         "destination_object",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_delete_object_configured",
+		map[string]any{
+			"my_delete_object_configured": map[string]any{
+				"description":  "Delete an object from a configured Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.",
+						"name":         "object",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+
 	runCloudStorageListObjectsTest(t, bucketName)
 	runCloudStorageReadObjectTest(t, bucketName)
 	runCloudStorageListBucketsTest(t, bucketName)
 	runCloudStorageGetObjectMetadataTest(t, bucketName)
+	runCloudStorageConfiguredParamsTest(ctx, t, client, bucketName, configuredDownloadDir)
 	bucketToolName := "toolbox-it-bucket-" + strings.ReplaceAll(uuid.New().String(), "-", "")[:17]
 	defer cleanupGCSBucket(ctx, t, client, bucketToolName)
 	runCloudStorageCreateBucketTest(ctx, t, client, bucketToolName)
@@ -559,7 +855,7 @@ func TestCloudStorageToolEndpoints(t *testing.T) {
 	runCloudStorageDeleteObjectTest(ctx, t, client, bucketName)
 }
 
-func getCloudStorageToolsConfig(sourceConfig map[string]any) map[string]any {
+func getCloudStorageToolsConfig(sourceConfig map[string]any, bucketName, configuredDownloadDir string) map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my_instance": sourceConfig,
@@ -634,6 +930,95 @@ func getCloudStorageToolsConfig(sourceConfig map[string]any) map[string]any {
 				"type":        "cloud-storage-delete-object",
 				"source":      "my_instance",
 				"description": "Delete a Cloud Storage object.",
+			},
+			// Configured variants bake static parameter values into the tool
+			// config so those parameters are removed from the schema and the
+			// configured values are used at invocation time.
+			"my_list_objects_configured": map[string]any{
+				"type":        "cloud-storage-list-objects",
+				"source":      "my_instance",
+				"description": "List objects in a configured Cloud Storage bucket.",
+				"bucket":      bucketName,
+				"prefix":      "seed/",
+				"delimiter":   "",
+			},
+			"my_list_buckets_configured": map[string]any{
+				"type":        "cloud-storage-list-buckets",
+				"source":      "my_instance",
+				"description": "List Cloud Storage buckets in a configured project.",
+				"project":     CloudStorageProject,
+				"prefix":      "toolbox-it-",
+			},
+			"my_read_object_configured": map[string]any{
+				"type":        "cloud-storage-read-object",
+				"source":      "my_instance",
+				"description": "Read an object from a configured Cloud Storage bucket.",
+				"bucket":      bucketName,
+			},
+			"my_get_object_metadata_configured": map[string]any{
+				"type":        "cloud-storage-get-object-metadata",
+				"source":      "my_instance",
+				"description": "Get object metadata from a configured Cloud Storage bucket.",
+				"bucket":      bucketName,
+			},
+			"my_get_bucket_metadata_configured": map[string]any{
+				"type":        "cloud-storage-get-bucket-metadata",
+				"source":      "my_instance",
+				"description": "Get metadata for a configured Cloud Storage bucket.",
+				"bucket":      bucketName,
+			},
+			"my_get_bucket_iam_policy_configured": map[string]any{
+				"type":        "cloud-storage-get-bucket-iam-policy",
+				"source":      "my_instance",
+				"description": "Get the IAM policy for a configured Cloud Storage bucket.",
+				"bucket":      bucketName,
+			},
+			"my_create_bucket_configured": map[string]any{
+				"type":                        "cloud-storage-create-bucket",
+				"source":                      "my_instance",
+				"description":                 "Create a Cloud Storage bucket with configured settings.",
+				"project":                     CloudStorageProject,
+				"location":                    "US",
+				"uniform_bucket_level_access": true,
+			},
+			"my_download_object_configured": map[string]any{
+				"type":            "cloud-storage-download-object",
+				"source":          "my_instance",
+				"description":     "Download a Cloud Storage object with configured storage settings.",
+				"bucket":          bucketName,
+				"destination_dir": configuredDownloadDir,
+				"overwrite":       true,
+			},
+			"my_upload_object_configured": map[string]any{
+				"type":        "cloud-storage-upload-object",
+				"source":      "my_instance",
+				"description": "Upload a local file to a configured Cloud Storage bucket.",
+				"bucket":      bucketName,
+			},
+			"my_write_object_configured": map[string]any{
+				"type":        "cloud-storage-write-object",
+				"source":      "my_instance",
+				"description": "Write text content to a configured Cloud Storage bucket.",
+				"bucket":      bucketName,
+			},
+			"my_copy_object_configured": map[string]any{
+				"type":               "cloud-storage-copy-object",
+				"source":             "my_instance",
+				"description":        "Copy a Cloud Storage object between configured buckets.",
+				"source_bucket":      bucketName,
+				"destination_bucket": bucketName,
+			},
+			"my_move_object_configured": map[string]any{
+				"type":        "cloud-storage-move-object",
+				"source":      "my_instance",
+				"description": "Move a Cloud Storage object within a configured bucket.",
+				"bucket":      bucketName,
+			},
+			"my_delete_object_configured": map[string]any{
+				"type":        "cloud-storage-delete-object",
+				"source":      "my_instance",
+				"description": "Delete an object from a configured Cloud Storage bucket.",
+				"bucket":      bucketName,
 			},
 		},
 	}
@@ -1180,6 +1565,213 @@ func runCloudStorageGetObjectMetadataTest(t *testing.T, bucket string) {
 			}
 		})
 	}
+}
+
+// runCloudStorageConfiguredParamsTest exercises the tool variants that bake
+// parameter values into their config. Each invocation omits the configured
+// parameters (they are absent from the schema) and relies on the configured
+// values instead. The seeded `bucket` is the configured bucket for the
+// bucket-scoped tools.
+func runCloudStorageConfiguredParamsTest(ctx context.Context, t *testing.T, client *storage.Client, bucket, configuredDownloadDir string) {
+	t.Run("list_objects uses configured bucket and prefix", func(t *testing.T) {
+		result, status := invokeTool(t, "my_list_objects_configured", `{}`)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		for _, want := range []string{helloObject, jsonObject} {
+			if !strings.Contains(result, want) {
+				t.Errorf("expected result to contain %q, got %s", want, result)
+			}
+		}
+	})
+
+	t.Run("list_buckets uses configured project and prefix", func(t *testing.T) {
+		result, status := invokeTool(t, "my_list_buckets_configured", `{}`)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		if !strings.Contains(result, bucket) {
+			t.Errorf("expected result to contain configured bucket %q, got %s", bucket, result)
+		}
+	})
+
+	t.Run("read_object uses configured bucket", func(t *testing.T) {
+		body := fmt.Sprintf(`{"object": %q}`, helloObject)
+		result, status := invokeTool(t, "my_read_object_configured", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		if !strings.Contains(result, helloBody) {
+			t.Errorf("expected result to contain %q, got %s", helloBody, result)
+		}
+	})
+
+	t.Run("get_object_metadata uses configured bucket", func(t *testing.T) {
+		body := fmt.Sprintf(`{"object": %q}`, helloObject)
+		result, status := invokeTool(t, "my_get_object_metadata_configured", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		if !strings.Contains(result, `"ContentType":"text/plain"`) {
+			t.Errorf("expected result to contain content type, got %s", result)
+		}
+	})
+
+	t.Run("get_bucket_metadata uses configured bucket", func(t *testing.T) {
+		result, status := invokeTool(t, "my_get_bucket_metadata_configured", `{}`)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		if !strings.Contains(result, `"Name":"`+bucket+`"`) {
+			t.Errorf("expected result to contain bucket name %q, got %s", bucket, result)
+		}
+	})
+
+	t.Run("get_bucket_iam_policy uses configured bucket", func(t *testing.T) {
+		result, status := invokeTool(t, "my_get_bucket_iam_policy_configured", `{}`)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		for _, want := range []string{`"bucket":"` + bucket + `"`, `"bindings"`} {
+			if !strings.Contains(result, want) {
+				t.Errorf("expected result to contain %q, got %s", want, result)
+			}
+		}
+	})
+
+	t.Run("create_bucket uses configured project, location and uniform access", func(t *testing.T) {
+		newBucket := "toolbox-it-cfg-" + strings.ReplaceAll(uuid.New().String(), "-", "")[:17]
+		defer cleanupGCSBucket(ctx, t, client, newBucket)
+
+		body := fmt.Sprintf(`{"bucket": %q}`, newBucket)
+		result, status := invokeTool(t, "my_create_bucket_configured", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		for _, want := range []string{newBucket, `"created":true`} {
+			if !strings.Contains(result, want) {
+				t.Errorf("expected result to contain %q, got %s", want, result)
+			}
+		}
+		attrs, err := client.Bucket(newBucket).Attrs(ctx)
+		if err != nil {
+			t.Fatalf("expected created bucket to exist: %v", err)
+		}
+		if attrs.Location != "US" {
+			t.Errorf("bucket location = %q, want US", attrs.Location)
+		}
+		if !attrs.UniformBucketLevelAccess.Enabled {
+			t.Errorf("expected uniform bucket-level access to be enabled")
+		}
+	})
+
+	t.Run("download_object uses configured bucket destination_dir and overwrite", func(t *testing.T) {
+		relDest := filepath.Join("configured", "downloaded.txt")
+		dest := filepath.Join(configuredDownloadDir, relDest)
+		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+			t.Fatalf("setup: %v", err)
+		}
+		if err := os.WriteFile(dest, []byte("pre-existing"), 0o644); err != nil {
+			t.Fatalf("setup: %v", err)
+		}
+		body := fmt.Sprintf(`{"object": %q, "destination": %q}`, downloadObject, relDest)
+		result, status := invokeTool(t, "my_download_object_configured", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		got, err := os.ReadFile(dest)
+		if err != nil {
+			t.Fatalf("failed to read downloaded file: %v", err)
+		}
+		if string(got) != downloadBody {
+			t.Errorf("downloaded content = %q, want %q (raw %s)", string(got), downloadBody, result)
+		}
+	})
+
+	t.Run("upload_object uses configured bucket", func(t *testing.T) {
+		srcPath := filepath.Join(t.TempDir(), "configured-upload.txt")
+		content := "configured upload"
+		if err := os.WriteFile(srcPath, []byte(content), 0o644); err != nil {
+			t.Fatalf("setup: %v", err)
+		}
+		obj := "configured/upload.txt"
+		body := fmt.Sprintf(`{"object": %q, "source": %q, "content_type": "text/plain"}`, obj, srcPath)
+		result, status := invokeTool(t, "my_upload_object_configured", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		got, attrs := readGCSObject(t, ctx, client, bucket, obj)
+		if got != content {
+			t.Errorf("uploaded content = %q, want %q", got, content)
+		}
+		if attrs.ContentType != "text/plain" {
+			t.Errorf("GCS ContentType = %q, want text/plain (raw %s)", attrs.ContentType, result)
+		}
+	})
+
+	t.Run("write_object uses configured bucket", func(t *testing.T) {
+		obj := "configured/write.txt"
+		content := "configured write"
+		body := fmt.Sprintf(`{"object": %q, "content": %q, "content_type": "text/plain"}`, obj, content)
+		result, status := invokeTool(t, "my_write_object_configured", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		got, attrs := readGCSObject(t, ctx, client, bucket, obj)
+		if got != content {
+			t.Errorf("written content = %q, want %q", got, content)
+		}
+		if attrs.ContentType != "text/plain" {
+			t.Errorf("GCS ContentType = %q, want text/plain (raw %s)", attrs.ContentType, result)
+		}
+	})
+
+	t.Run("copy_object uses configured buckets", func(t *testing.T) {
+		dest := "configured/copied.txt"
+		body := fmt.Sprintf(`{"source_object": %q, "destination_object": %q}`, helloObject, dest)
+		result, status := invokeTool(t, "my_copy_object_configured", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		got, _ := readGCSObject(t, ctx, client, bucket, dest)
+		if got != helloBody {
+			t.Errorf("copied content = %q, want %q (raw %s)", got, helloBody, result)
+		}
+	})
+
+	t.Run("move_object uses configured bucket", func(t *testing.T) {
+		src := "configured/move-source.txt"
+		dest := "configured/move-destination.txt"
+		writeGCSObject(t, ctx, client, bucket, src, "text/plain", "configured move")
+		body := fmt.Sprintf(`{"source_object": %q, "destination_object": %q}`, src, dest)
+		result, status := invokeTool(t, "my_move_object_configured", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		got, _ := readGCSObject(t, ctx, client, bucket, dest)
+		if got != "configured move" {
+			t.Errorf("moved content = %q, want configured move (raw %s)", got, result)
+		}
+		if gcsObjectExists(t, ctx, client, bucket, src) {
+			t.Errorf("expected source object %q to be gone after move", src)
+		}
+	})
+
+	t.Run("delete_object uses configured bucket", func(t *testing.T) {
+		obj := "configured/delete.txt"
+		writeGCSObject(t, ctx, client, bucket, obj, "text/plain", "configured delete")
+		body := fmt.Sprintf(`{"object": %q}`, obj)
+		result, status := invokeTool(t, "my_delete_object_configured", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		if !strings.Contains(result, `"deleted":true`) {
+			t.Errorf("expected deleted confirmation, got %s", result)
+		}
+		if gcsObjectExists(t, ctx, client, bucket, obj) {
+			t.Errorf("expected object %q to be deleted", obj)
+		}
+	})
 }
 
 func runCloudStorageDownloadObjectTest(t *testing.T, bucket string) {

@@ -68,7 +68,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -101,8 +101,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -151,8 +151,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return data, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) RequiresClientAuthorization(primitiveMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}
@@ -178,6 +178,34 @@ func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSet
 		}
 		if element.BodyText != nil {
 			data["body_text"] = *element.BodyText
+		}
+
+		// Check for SQL query
+		var sqlQueryId string
+		if element.ResultMaker != nil && element.ResultMaker.SqlQueryId != nil && *element.ResultMaker.SqlQueryId != "" {
+			sqlQueryId = *element.ResultMaker.SqlQueryId
+		}
+
+		if sqlQueryId != "" {
+			data["element_type"] = "sql_query"
+			queryResult, err := sdk.RunSqlQuery(sqlQueryId, "json", "", options)
+			if err != nil {
+				data["query_status"] = fmt.Sprintf("error running SQL query %s: %s", sqlQueryId, err)
+				out <- data
+				return
+			}
+
+			var resp []any
+			if err := json.Unmarshal([]byte(queryResult), &resp); err != nil {
+				data["query_status"] = fmt.Sprintf("error unmarshaling SQL query %s result: %s", sqlQueryId, err)
+				out <- data
+				return
+			}
+
+			data["query_status"] = "success"
+			data["query_result"] = resp
+			out <- data
+			return
 		}
 
 		var q v4.Query
@@ -248,8 +276,8 @@ func merge(channels ...<-chan map[string]any) <-chan map[string]any {
 	return out
 }
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) GetAuthTokenHeaderName(primitiveMgr tools.SourceProvider) (string, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return "", err
 	}

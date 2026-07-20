@@ -57,6 +57,7 @@ type Config struct {
 	Type             string                 `yaml:"type" validate:"required"`
 	Source           string                 `yaml:"source" validate:"required"`
 	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Bucket           *string                `yaml:"bucket,omitempty"`
 }
 
 // validate interface
@@ -66,14 +67,20 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
+	if cfg.Bucket != nil && *cfg.Bucket == "" {
+		return nil, fmt.Errorf("bucket cannot be empty for tool %q", cfg.Name)
+	}
 
-	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket containing the object.")
 	objectParam := parameters.NewStringParameter(objectKey, "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.")
-	allParameters := parameters.Parameters{bucketParam, objectParam}
+	allParameters := parameters.Parameters{}
+	if cfg.Bucket == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket containing the object."))
+	}
+	allParameters = append(allParameters, objectParam)
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -96,15 +103,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
-	bucket, ok := mapParams[bucketKey].(string)
-	if !ok || bucket == "" {
+	bucket := cloudstoragecommon.ResolveString(t.Cfg.Bucket, mapParams, bucketKey)
+	if bucket == "" {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", bucketKey), nil)
 	}
 	object, ok := mapParams[objectKey].(string)
