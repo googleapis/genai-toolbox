@@ -105,8 +105,8 @@ func TestLogAdminToolEndpoints(t *testing.T) {
 	logName := fmt.Sprintf("toolbox-integration-test-%s", testUUID)
 
 	// set up test logs and wait for logs to be ingested.
-	setupTestLogs(t, loggingClient, logName)
 	defer teardownTestLogs(t, ctx, adminClient, logName)
+	setupTestLogs(t, loggingClient, logName)
 
 	waitCtx, waitCancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer waitCancel()
