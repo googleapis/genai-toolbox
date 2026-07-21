@@ -141,7 +141,7 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		SessionLength:    &sessionLength,
 		ForceLogoutLogin: &forceLogoutLogin,
 	}
-	logger.ErrorContext(ctx, "Making request %v", req)
+	logger.DebugContext(ctx, "Making request %v", req)
 	resp, err := sdk.CreateEmbedUrlAsMe(req, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "status=401") {
@@ -149,7 +149,7 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		}
 		return nil, util.ProcessGeneralError(err)
 	}
-	logger.ErrorContext(ctx, "Got response %v", resp)
+	logger.DebugContext(ctx, "Got response %v", resp)
 
 	return resp, nil
 }
