@@ -15,7 +15,7 @@ For usage guides, quickstarts, and framework-specific examples, see
 
 | Language | API Reference | Source |
 | :--- | :--- | :--- |
-| Python | [py.mcp-toolbox.dev](https://py.mcp-toolbox.dev) | [mcp-toolbox-sdk-python](https://github.com/googleapis/mcp-toolbox-sdk-python) |
-| JavaScript / TypeScript | [js.mcp-toolbox.dev](https://js.mcp-toolbox.dev) | [mcp-toolbox-sdk-js](https://github.com/googleapis/mcp-toolbox-sdk-js) |
-| Go | [go.mcp-toolbox.dev](https://go.mcp-toolbox.dev) | [mcp-toolbox-sdk-go](https://github.com/googleapis/mcp-toolbox-sdk-go) |
-| Java | _No dedicated site yet_ | [mcp-toolbox-sdk-java](https://github.com/googleapis/mcp-toolbox-sdk-java) |
+| <i class="fa-brands fa-python"></i> Python | [py.mcp-toolbox.dev](https://py.mcp-toolbox.dev) | [mcp-toolbox-sdk-python](https://github.com/googleapis/mcp-toolbox-sdk-python) |
+| <i class="fa-brands fa-js"></i> JavaScript / TypeScript | [js.mcp-toolbox.dev](https://js.mcp-toolbox.dev) | [mcp-toolbox-sdk-js](https://github.com/googleapis/mcp-toolbox-sdk-js) |
+| <i class="fa-brands fa-golang"></i> Go | [go.mcp-toolbox.dev](https://go.mcp-toolbox.dev) | [mcp-toolbox-sdk-go](https://github.com/googleapis/mcp-toolbox-sdk-go) |
+| <i class="fa-brands fa-java"></i> Java | _No dedicated site yet_ | [mcp-toolbox-sdk-java](https://github.com/googleapis/mcp-toolbox-sdk-java) |

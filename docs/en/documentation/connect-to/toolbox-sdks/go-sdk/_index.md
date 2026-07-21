@@ -21,6 +21,8 @@ The Go SDK act as clients for that service. They handle the communication needed
 By using the SDK, you can easily leverage your Toolbox-managed tools directly
 within your Go applications or AI orchestration frameworks.
 
+<a class="btn btn-primary" href="https://go.mcp-toolbox.dev" role="button"><i class="fa-brands fa-golang"></i> Go API Reference</a>
+
 ## Which Package Should I Use?
 
 Choosing the right package depends on how you are building your application:
@@ -70,5 +72,3 @@ To get started using Toolbox tools with an application, follow these general ste
 {{< notice note >}}
 Source code for [Go-sdk](https://github.com/googleapis/mcp-toolbox-sdk-go)
 {{< /notice >}}
-
-## Explore the Go SDKs
