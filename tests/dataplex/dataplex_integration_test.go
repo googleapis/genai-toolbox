@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 	"sync"
@@ -34,6 +35,7 @@ import (
 	longrunningpb "cloud.google.com/go/longrunning/autogen/longrunningpb"
 	storageapi "cloud.google.com/go/storage"
 	"github.com/google/uuid"
+	"github.com/googleapis/gax-go/v2"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
@@ -111,6 +113,42 @@ func initDataplexConnection(ctx context.Context) (*dataplex.CatalogClient, error
 	return client, nil
 }
 
+type pollableDeleteOperation interface {
+	Poll(ctx context.Context, opts ...gax.CallOption) error
+	Done() bool
+}
+
+// waitSlowlyForDeletion blocks and polls the deletion operation status using
+// an exponential backoff, polling for the first time after 3s, doubling up to
+// a maximum of 60s.
+// We use our own function for polling LROs during the aspect type and data
+// product cleanup since the default op.Wait(ctx) method polls too quickly,
+// hitting rate limits (sending ~3 poll requests per call).
+func waitSlowlyForDeletion(ctx context.Context, op pollableDeleteOperation) error {
+	backoff := 3 * time.Second
+	const maxBackoff = 60 * time.Second
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(backoff):
+		}
+
+		if err := op.Poll(ctx); err != nil {
+			return err
+		}
+		if op.Done() {
+			return nil
+		}
+
+		backoff *= 2
+		if backoff > maxBackoff {
+			backoff = maxBackoff
+		}
+	}
+}
+
 // cleanupOldAspectTypes Deletes AspectTypes older than the specified duration.
 func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.CatalogClient, oldThreshold time.Duration) {
 	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
@@ -134,10 +172,10 @@ func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.C
 			t.Logf("Warning: Failed to list aspect types during cleanup: %v", err)
 			return
 		}
-		// Perform time-based filtering in memory
+		// Perform time-based filtering in memory and restrict to test suite created resources
 		if aspectType.CreateTime != nil {
 			createTime := aspectType.CreateTime.AsTime()
-			if createTime.Before(olderThanTime) {
+			if createTime.Before(olderThanTime) && strings.HasPrefix(path.Base(aspectType.GetName()), "param-aspect-type-") {
 				aspectTypesToDelete = append(aspectTypesToDelete, aspectType.GetName())
 			}
 		} else {
@@ -157,10 +195,87 @@ func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.C
 			continue // Skip to the next item if initiation fails
 		}
 
-		if err := op.Wait(ctx); err != nil {
+		if err := waitSlowlyForDeletion(ctx, op); err != nil {
 			t.Logf("Warning: Failed to delete aspect type %s, operation error: %v", aspectTypeName, err)
 		} else {
 			t.Logf("cleanupOldAspectTypes: Successfully deleted %s", aspectTypeName)
+		}
+	}
+}
+
+// cleanupOldDataProducts Deletes DataProducts and their DataAssets older than the specified duration.
+func cleanupOldDataProducts(t *testing.T, ctx context.Context, client *dataplex.DataProductClient, oldThreshold time.Duration) {
+	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
+	olderThanTime := time.Now().Add(-oldThreshold)
+
+	listReq := &dataplexpb.ListDataProductsRequest{
+		Parent:   parent,
+		PageSize: 200, // Max Data Products per project per region.
+		Filter:   fmt.Sprintf("name:projects/%s/locations/us/dataProducts/param-data-product", DataplexProject),
+	}
+
+	const maxDeletes = 10
+	it := client.ListDataProducts(ctx, listReq)
+	var dataProductsToDelete []string
+	for len(dataProductsToDelete) < maxDeletes {
+		dp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			t.Logf("Warning: Failed to list data products during cleanup: %v", err)
+			return
+		}
+		if dp.CreateTime != nil && strings.HasPrefix(path.Base(dp.GetName()), "param-data-product-") {
+			createTime := dp.CreateTime.AsTime()
+			if createTime.Before(olderThanTime) {
+				dataProductsToDelete = append(dataProductsToDelete, dp.GetName())
+			}
+		} else if dp.CreateTime == nil {
+			t.Logf("Warning: DataProduct %s has no CreateTime", dp.GetName())
+		}
+	}
+	if len(dataProductsToDelete) == 0 {
+		t.Logf("cleanupOldDataProducts: No data products found older than %s to delete.", oldThreshold.String())
+		return
+	}
+
+	for _, dpName := range dataProductsToDelete {
+		// Must delete child data assets before we can delete the data product.
+		assetIt := client.ListDataAssets(ctx, &dataplexpb.ListDataAssetsRequest{
+			Parent:   dpName,
+			PageSize: 50, // Max Data Assets per Data Product.
+		})
+		for {
+			asset, err := assetIt.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				t.Logf("Warning: Failed to list data assets for %s: %v", dpName, err)
+				break
+			}
+			op, err := client.DeleteDataAsset(ctx, &dataplexpb.DeleteDataAssetRequest{Name: asset.GetName()})
+			if err != nil {
+				t.Logf("Warning: Failed to initiate DeleteDataAsset for %s: %v", asset.GetName(), err)
+				continue
+			}
+			if err := waitSlowlyForDeletion(ctx, op); err != nil {
+				t.Logf("Warning: Failed to wait for DeleteDataAsset %s: %v", asset.GetName(), err)
+			} else {
+				t.Logf("cleanupOldDataProducts: Successfully deleted asset %s", asset.GetName())
+			}
+		}
+
+		op, err := client.DeleteDataProduct(ctx, &dataplexpb.DeleteDataProductRequest{Name: dpName})
+		if err != nil {
+			t.Logf("Warning: Failed to initiate DeleteDataProduct for %s: %v", dpName, err)
+			continue
+		}
+		if err := waitSlowlyForDeletion(ctx, op); err != nil {
+			t.Logf("Warning: Failed to wait for DeleteDataProduct %s: %v", dpName, err)
+		} else {
+			t.Logf("cleanupOldDataProducts: Successfully deleted data product %s", dpName)
 		}
 	}
 }
@@ -273,8 +388,9 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		t.Fatalf("unable to create Dataplex DataProduct connection: %s", err)
 	}
 
-	// Cleanup older aspecttypes
+	// Cleanup older aspect types and data products that may have leaked due to aborted tests
 	cleanupOldAspectTypes(t, ctx, dataplexClient, 1*time.Hour)
+	cleanupOldDataProducts(t, ctx, dataplexDataProductClient, 1*time.Hour)
 
 	datasetName1 := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	datasetName2 := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
@@ -324,8 +440,10 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		teardownBucket,
 	}
 
-	time.Sleep(1 * time.Minute) // wait for table and aspect type to be ingested
-	// Execute teardowns concurrently using a WaitGroup to minimize overall test cleanup duration
+	// Wait for table and aspect type to be ingested.
+	// Also clears the Data Products API quota so calls made in cleanupOldDataProducts don't push the actual integration test calls over the quota limit.
+	time.Sleep(1 * time.Minute)
+	// Execute teardowns concurrently using a WaitGroup to minimize overall test cleanup duration.
 	defer func() {
 		var wg sync.WaitGroup
 		for _, fn := range teardowns {

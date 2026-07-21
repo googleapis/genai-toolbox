@@ -78,7 +78,6 @@ type DataAgentContext struct {
 }
 
 type CAPayload struct {
-	Project          string           `json:"project"`
 	Messages         []Message        `json:"messages"`
 	DataAgentContext DataAgentContext `json:"dataAgentContext"`
 	ClientIdEnum     string           `json:"clientIdEnum"`
@@ -196,7 +195,7 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 
 	// Construct URL, headers, and payload
 	projectID := source.GetProjectID()
-	caURL := fmt.Sprintf("%s/v1beta/projects/%s/locations/%s:chat", util.GetGDAEndpoint(), projectID, t.Cfg.Location)
+	caURL := fmt.Sprintf("%s/v1/projects/%s/locations/%s:chat", util.GetGDAEndpoint(), projectID, t.Cfg.Location)
 
 	headers := map[string]string{
 		"Content-Type":      "application/json",
@@ -206,7 +205,6 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 	dataAgentName := fmt.Sprintf("projects/%s/locations/%s/dataAgents/%s", projectID, t.Cfg.Location, dataAgentId)
 
 	payload := CAPayload{
-		Project:  fmt.Sprintf("projects/%s", projectID),
 		Messages: []Message{{UserMessage: UserMessage{Text: userQuery}}},
 		DataAgentContext: DataAgentContext{
 			DataAgent: dataAgentName,

@@ -88,6 +88,7 @@ type Config struct {
 	WriteMode                 string              `yaml:"writeMode"`
 	AllowedDatasets           StringOrStringSlice `yaml:"allowedDatasets"`
 	UseClientOAuth            string              `yaml:"useClientOAuth"`
+	QuotaProject              string              `yaml:"quotaProject"`
 	ImpersonateServiceAccount string              `yaml:"impersonateServiceAccount"`
 	Scopes                    StringOrStringSlice `yaml:"scopes"`
 	MaxQueryResultRows        int                 `yaml:"maxQueryResultRows"`
@@ -166,7 +167,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	if strings.ToLower(r.UseClientOAuth) == "false" || r.UseClientOAuth == "" {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount, r.Scopes)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.QuotaProject, r.ImpersonateServiceAccount, r.Scopes)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -183,7 +184,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			s.AuthTokenHeaderName = r.UseClientOAuth
 		}
 		// use client OAuth
-		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
+		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.QuotaProject, r.Name)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
@@ -446,6 +447,10 @@ func (s *Source) BigQueryLocation() string {
 	return s.Location
 }
 
+func (s *Source) BigQueryQuotaProject() string {
+	return s.QuotaProject
+}
+
 func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
 	return s.TokenSource
 }
@@ -690,6 +695,7 @@ func initBigQueryConnection(
 	name string,
 	project string,
 	location string,
+	quotaProject string,
 	impersonateServiceAccount string,
 	scopes []string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
@@ -741,6 +747,10 @@ func initBigQueryConnection(
 		}
 	}
 
+	if quotaProject != "" {
+		opts = append(opts, option.WithQuotaProject(quotaProject))
+	}
+
 	// Initialize the high-level BigQuery client
 	client, err := bigqueryapi.NewClient(ctx, project, opts...)
 	if err != nil {
@@ -764,6 +774,7 @@ func initBigQueryConnectionWithOAuthToken(
 	tracer trace.Tracer,
 	project string,
 	location string,
+	quotaProject string,
 	name string,
 	userAgent string,
 	tokenString string,
@@ -777,8 +788,16 @@ func initBigQueryConnectionWithOAuthToken(
 	}
 	ts := oauth2.StaticTokenSource(token)
 
+	opts := []option.ClientOption{
+		option.WithUserAgent(userAgent),
+		option.WithTokenSource(ts),
+	}
+	if quotaProject != "" {
+		opts = append(opts, option.WithQuotaProject(quotaProject))
+	}
+
 	// Initialize the BigQuery client with tokenSource
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+	client, err := bigqueryapi.NewClient(ctx, project, opts...)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
@@ -786,7 +805,7 @@ func initBigQueryConnectionWithOAuthToken(
 
 	if wantRestService {
 		// Initialize the low-level BigQuery REST service using the same credentials
-		restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+		restService, err := bigqueryrestapi.NewService(ctx, opts...)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 		}
@@ -804,6 +823,7 @@ func newBigQueryClientCreator(
 	tracer trace.Tracer,
 	project string,
 	location string,
+	quotaProject string,
 	name string,
 ) (func(string, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
@@ -812,7 +832,7 @@ func newBigQueryClientCreator(
 	}
 
 	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
+		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, quotaProject, name, userAgent, tokenString, wantRestService)
 	}, nil
 }
 
