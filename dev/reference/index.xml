@@ -195,7 +195,42 @@ docker images&lt;/a&gt; (but you can always compile yourself as well!).&lt;/p&gt
 &lt;h2 id="do-i-need-a-google-cloud-accountproject-to-get-started-with-toolbox"&gt;Do I need a Google Cloud account/project to get started with Toolbox?&lt;/h2&gt;
 &lt;p&gt;Nope! While some of the sources Toolbox connects to may require GCP credentials,
 Toolbox doesn&amp;rsquo;t require them and can connect to a bunch of different resources
-that don&amp;rsquo;t.&lt;/p&gt;</description></item><item><title>Style Guide</title><link>https://mcp-toolbox.dev/dev/reference/style-guide/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/reference/style-guide/</guid><description>&lt;p&gt;This document provides style guidelines and best practices for developers building MCP tools using &lt;strong&gt;MCP Toolbox&lt;/strong&gt;. Following these standards ensures that agents can reason effectively, security is maintained, and user intent is met with high precision.&lt;/p&gt;
+that don&amp;rsquo;t.&lt;/p&gt;</description></item><item><title>Toolbox Client SDK API Reference</title><link>https://mcp-toolbox.dev/dev/reference/sdk-api-reference/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/reference/sdk-api-reference/</guid><description>&lt;p&gt;Each MCP Toolbox client SDK publishes an auto-generated API reference site
+documenting its public classes, functions, and types. Use these when you need the
+exact signatures and symbol-level details for a package.&lt;/p&gt;
+&lt;p&gt;For usage guides, quickstarts, and framework-specific examples, see
+&lt;a href="https://mcp-toolbox.dev/dev/documentation/connect-to/toolbox-sdks/"&gt;Toolbox SDKs&lt;/a&gt;.&lt;/p&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;Language&lt;/th&gt;
+					&lt;th style="text-align: left"&gt;API Reference&lt;/th&gt;
+					&lt;th style="text-align: left"&gt;Source&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;i class="fa-brands fa-python"&gt;&lt;/i&gt; Python&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://py.mcp-toolbox.dev"&gt;py.mcp-toolbox.dev&lt;/a&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://github.com/googleapis/mcp-toolbox-sdk-python"&gt;mcp-toolbox-sdk-python&lt;/a&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;i class="fa-brands fa-js"&gt;&lt;/i&gt; JavaScript / TypeScript&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://js.mcp-toolbox.dev"&gt;js.mcp-toolbox.dev&lt;/a&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://github.com/googleapis/mcp-toolbox-sdk-js"&gt;mcp-toolbox-sdk-js&lt;/a&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;i class="fa-brands fa-golang"&gt;&lt;/i&gt; Go&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://go.mcp-toolbox.dev"&gt;go.mcp-toolbox.dev&lt;/a&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://github.com/googleapis/mcp-toolbox-sdk-go"&gt;mcp-toolbox-sdk-go&lt;/a&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;i class="fa-brands fa-java"&gt;&lt;/i&gt; Java&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;em&gt;No dedicated site yet&lt;/em&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://github.com/googleapis/mcp-toolbox-sdk-java"&gt;mcp-toolbox-sdk-java&lt;/a&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>Style Guide</title><link>https://mcp-toolbox.dev/dev/reference/style-guide/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/reference/style-guide/</guid><description>&lt;p&gt;This document provides style guidelines and best practices for developers building MCP tools using &lt;strong&gt;MCP Toolbox&lt;/strong&gt;. Following these standards ensures that agents can reason effectively, security is maintained, and user intent is met with high precision.&lt;/p&gt;
 &lt;h2 id="combatting-context-rot-and-tool-limits"&gt;Combatting &amp;ldquo;Context Rot&amp;rdquo; and Tool Limits&lt;/h2&gt;
 &lt;p&gt;Excessive or irrelevant tool definitions lead to &lt;strong&gt;&amp;ldquo;Context Rot&amp;rdquo;&lt;/strong&gt;, where the model&amp;rsquo;s attention is diluted by &amp;ldquo;distractor&amp;rdquo; tokens, causing reasoning accuracy to collapse.&lt;/p&gt;
 &lt;ul&gt;

@@ -8434,7 +8434,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode185s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode347s0hbhb"&gt;
 
 
 
@@ -16903,7 +16903,42 @@ through &lt;a href="https://opentelemetry.io/"&gt;OpenTelemetry&lt;/a&gt;. Addit
 passed to Toolbox to enable different logging behavior, or to export metrics
 through a specific &lt;a href="https://mcp-toolbox.dev/dev/documentation/monitoring/telemetry/#exporter"&gt;exporter&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 id="logging"&gt;Logging&lt;/h2&gt;
-&lt;p&gt;The following flags can be used to customize Toolbox logging:&lt;/p&gt;</description></item><item><title>clickhouse-list-databases</title><link>https://mcp-toolbox.dev/dev/integrations/clickhouse/tools/clickhouse-list-databases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/clickhouse/tools/clickhouse-list-databases/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The following flags can be used to customize Toolbox logging:&lt;/p&gt;</description></item><item><title>Toolbox Client SDK API Reference</title><link>https://mcp-toolbox.dev/dev/reference/sdk-api-reference/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/reference/sdk-api-reference/</guid><description>&lt;p&gt;Each MCP Toolbox client SDK publishes an auto-generated API reference site
+documenting its public classes, functions, and types. Use these when you need the
+exact signatures and symbol-level details for a package.&lt;/p&gt;
+&lt;p&gt;For usage guides, quickstarts, and framework-specific examples, see
+&lt;a href="https://mcp-toolbox.dev/dev/documentation/connect-to/toolbox-sdks/"&gt;Toolbox SDKs&lt;/a&gt;.&lt;/p&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;Language&lt;/th&gt;
+					&lt;th style="text-align: left"&gt;API Reference&lt;/th&gt;
+					&lt;th style="text-align: left"&gt;Source&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;i class="fa-brands fa-python"&gt;&lt;/i&gt; Python&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://py.mcp-toolbox.dev"&gt;py.mcp-toolbox.dev&lt;/a&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://github.com/googleapis/mcp-toolbox-sdk-python"&gt;mcp-toolbox-sdk-python&lt;/a&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;i class="fa-brands fa-js"&gt;&lt;/i&gt; JavaScript / TypeScript&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://js.mcp-toolbox.dev"&gt;js.mcp-toolbox.dev&lt;/a&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://github.com/googleapis/mcp-toolbox-sdk-js"&gt;mcp-toolbox-sdk-js&lt;/a&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;i class="fa-brands fa-golang"&gt;&lt;/i&gt; Go&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://go.mcp-toolbox.dev"&gt;go.mcp-toolbox.dev&lt;/a&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://github.com/googleapis/mcp-toolbox-sdk-go"&gt;mcp-toolbox-sdk-go&lt;/a&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;i class="fa-brands fa-java"&gt;&lt;/i&gt; Java&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;em&gt;No dedicated site yet&lt;/em&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;a href="https://github.com/googleapis/mcp-toolbox-sdk-java"&gt;mcp-toolbox-sdk-java&lt;/a&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>clickhouse-list-databases</title><link>https://mcp-toolbox.dev/dev/integrations/clickhouse/tools/clickhouse-list-databases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/clickhouse/tools/clickhouse-list-databases/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;clickhouse-list-databases&lt;/code&gt; tool lists all available databases in a ClickHouse
 instance.&lt;/p&gt;
 &lt;p&gt;This tool executes the &lt;code&gt;SHOW DATABASES&lt;/code&gt; command and returns a list of all
