@@ -1485,4 +1485,3 @@ func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
 		t.Errorf("default toolset ToolNames mismatch (-want +got):\n%s", diff)
 	}
 }
-
