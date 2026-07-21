@@ -52,10 +52,6 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, g g
 		return promptsListHandler(ctx, id, primitiveMgr, g, body)
 	case PROMPTS_GET:
 		return promptsGetHandler(ctx, id, g, primitiveMgr, body)
-	case GROUPS_LIST:
-		return groupsListHandler(ctx, id, primitiveMgr, body)
-	case GROUPS_GET:
-		return groupsGetHandler(ctx, id, primitiveMgr, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
