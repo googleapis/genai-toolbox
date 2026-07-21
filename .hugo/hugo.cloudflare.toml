@@ -55,7 +55,6 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
   github_subdir = "docs"
   offlineSearch = false
   version_menu = "Releases"
-  disableMigrationBanner = true
   releases_url = "/releases.releases"
   global_logo_url = "/"
   pagefind = true
@@ -79,6 +78,10 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 
 # Add a new version block here before every release
 # The order of versions in this file is mirrored into the dropdown
+
+[[params.versions]]
+  version = "v1.7.0"
+  url = "https://mcp-toolbox.dev/v1.7.0/"
 
 [[params.versions]]
   version = "v1.6.0"

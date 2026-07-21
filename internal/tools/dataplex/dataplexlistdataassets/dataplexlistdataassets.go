@@ -43,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	ListDataAssets(ctx context.Context, locationId string, dataProductId string, filter string, pageSize int, orderBy string) ([]*dataplex.DataAssetSummary, error)
+	ListDataAssets(ctx context.Context, locationId string, dataProductId string, filter string, pageSize int, orderBy string) ([]*dataplex.DataAsset, error)
 }
 
 type Config struct {
@@ -61,12 +61,12 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
-	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the parent Data Product.")
+	locationId := parameters.NewStringParameter("locationId", "The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "The unique ID of the parent Data Product.")
 	filter := parameters.NewStringParameter(
 		"filter",
 		"Optional. Filter string to list data assets. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching across all fields at once is not yet supported.",
-		parameters.WithStringDefault(""),
+		parameters.WithStringRequired(false),
 	)
 	pageSize := parameters.NewIntParameter(
 		"pageSize",
@@ -76,7 +76,7 @@ func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	orderBy := parameters.NewStringParameter(
 		"orderBy",
 		"Optional. Specifies the ordering of results.",
-		parameters.WithStringDefault(""),
+		parameters.WithStringRequired(false),
 	)
 	params := parameters.Parameters{locationId, dataProductId, filter, pageSize, orderBy}
 
@@ -106,33 +106,25 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 	locationId, ok := paramsMap["locationId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'locationId' parameter: %v", paramsMap["locationId"]), nil)
+	if !ok || locationId == "" {
+		return nil, util.NewAgentError("locationId is required and must be a non-empty string", nil)
 	}
 	dataProductId, ok := paramsMap["dataProductId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'dataProductId' parameter: %v", paramsMap["dataProductId"]), nil)
+	if !ok || dataProductId == "" {
+		return nil, util.NewAgentError("dataProductId is required and must be a non-empty string", nil)
 	}
-	filter, ok := paramsMap["filter"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'filter' parameter: %v", paramsMap["filter"]), nil)
-	}
-	pageSize, ok := paramsMap["pageSize"].(int)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'pageSize' parameter: %v", paramsMap["pageSize"]), nil)
-	}
-	orderBy, ok := paramsMap["orderBy"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'orderBy' parameter: %v", paramsMap["orderBy"]), nil)
-	}
+
+	filter, _ := paramsMap["filter"].(string)
+	pageSize, _ := paramsMap["pageSize"].(int)
+	orderBy, _ := paramsMap["orderBy"].(string)
 
 	resp, err := source.ListDataAssets(ctx, locationId, dataProductId, filter, pageSize, orderBy)
 	if err != nil {

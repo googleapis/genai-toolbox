@@ -125,8 +125,8 @@ func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
 	return t.BaseTool.Manifest(srcs)
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -163,7 +163,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	// Construct URL
 	projectID := source.GetProjectID()
-	caURL := fmt.Sprintf("%s/v1beta/projects/%s/locations/%s/dataAgents/%s", util.GetGDAEndpoint(), projectID, t.Cfg.Location, url.PathEscape(dataAgentId))
+	caURL := fmt.Sprintf("%s/v1/projects/%s/locations/%s/dataAgents/%s", util.GetGDAEndpoint(), projectID, t.Cfg.Location, url.PathEscape(dataAgentId))
 
 	req, err := http.NewRequest("GET", caURL, nil)
 	if err != nil {
@@ -195,8 +195,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return result, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) RequiresClientAuthorization(primitiveMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}
