@@ -163,7 +163,7 @@ type ToolsetConfigs map[string]tools.ToolsetConfig
 type PromptConfigs map[string]prompts.PromptConfig
 type PromptsetConfigs map[string]prompts.PromptsetConfig
 
-func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, error) {
+func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, error) {
 	// prepare configs map
 	var sourceConfigs SourceConfigs
 	var authServiceConfigs AuthServiceConfigs
@@ -384,6 +384,10 @@ func UnmarshalYAMLEmbeddingModelConfig(ctx context.Context, name string, r map[s
 }
 
 func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any) (tools.ToolConfig, error) {
+	err := NameValidation(name)
+	if err != nil {
+		return nil, err
+	}
 	resourceType, ok := r["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")
