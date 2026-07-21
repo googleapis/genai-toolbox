@@ -106,8 +106,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -122,28 +122,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("dataProductId is required and must be a non-empty string", nil)
 	}
 
-	var filter string
-	if val, exists := paramsMap["filter"]; exists && val != nil {
-		var ok bool
-		filter, ok = val.(string)
-		if !ok {
-			return nil, util.NewAgentError("filter must be a string", nil)
-		}
-	}
-
-	pageSize, ok := paramsMap["pageSize"].(int)
-	if !ok {
-		return nil, util.NewAgentError("pageSize must be an integer", nil)
-	}
-
-	var orderBy string
-	if val, exists := paramsMap["orderBy"]; exists && val != nil {
-		var ok bool
-		orderBy, ok = val.(string)
-		if !ok {
-			return nil, util.NewAgentError("orderBy must be a string", nil)
-		}
-	}
+	filter, _ := paramsMap["filter"].(string)
+	pageSize, _ := paramsMap["pageSize"].(int)
+	orderBy, _ := paramsMap["orderBy"].(string)
 
 	resp, err := source.ListDataAssets(ctx, locationId, dataProductId, filter, pageSize, orderBy)
 	if err != nil {
