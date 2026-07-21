@@ -254,6 +254,10 @@ func TestGenerateListToolsResult(t *testing.T) {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
 	want := ListToolsResult{
+		CacheableResult: CacheableResult{
+			TtlMs:      300000,
+			CacheScope: cacheScopePublic,
+		},
 		Tools: []Tool{
 			Tool{
 				BaseMetadata: BaseMetadata{Name: "no_params"},
@@ -367,6 +371,10 @@ func TestGenerateListPromptsResult(t *testing.T) {
 		t.Fatalf("unable to generate list prompt result: %s", err)
 	}
 	want := ListPromptsResult{
+		CacheableResult: CacheableResult{
+			TtlMs:      300000,
+			CacheScope: cacheScopePublic,
+		},
 		Prompts: []Prompt{
 			Prompt{
 				BaseMetadata: BaseMetadata{Name: "prompt1"},

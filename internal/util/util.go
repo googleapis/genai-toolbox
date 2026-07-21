@@ -21,6 +21,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"unicode"
 
 	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
@@ -362,6 +363,18 @@ func UrlParamsFromContext(ctx context.Context) (map[string]string, bool) {
 		return params, true
 	}
 	return nil, false
+}
+
+// SnakeFromCamelCase converts a camelCase string to snake_case.
+func SnakeFromCamelCase(s string) string {
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && unicode.IsUpper(r) {
+			result.WriteRune('_')
+		}
+		result.WriteRune(unicode.ToLower(r))
+	}
+	return result.String()
 }
 
 // enableDraftSpecs is the key to check if the server enabled mcp draft specs
