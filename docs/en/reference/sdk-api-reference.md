@@ -1,5 +1,5 @@
 ---
-title: "SDK API Reference"
+title: "Toolbox Client SDK API Reference"
 type: docs
 weight: 2
 description: >
