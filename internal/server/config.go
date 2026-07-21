@@ -384,6 +384,10 @@ func UnmarshalYAMLEmbeddingModelConfig(ctx context.Context, name string, r map[s
 }
 
 func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any) (tools.ToolConfig, error) {
+	err := NameValidation(name)
+	if err != nil {
+		return nil, err
+	}
 	resourceType, ok := r["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")

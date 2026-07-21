@@ -37,7 +37,7 @@ import (
 const resourceType string = "bigquery-conversational-analytics"
 
 func getGDAURLFormat() string {
-	return util.GetGDAEndpoint() + "/v1beta/projects/%s/locations/%s:chat"
+	return util.GetGDAEndpoint() + "/v1/projects/%s/locations/%s:chat"
 }
 
 const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
@@ -64,6 +64,7 @@ type compatibleSource interface {
 	BigQueryTokenSourceWithScope(ctx context.Context, scopes []string) (oauth2.TokenSource, error)
 	BigQueryProject() string
 	BigQueryLocation() string
+	BigQueryQuotaProject() string
 	GetMaxQueryResultRows() int
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
@@ -101,11 +102,9 @@ type Options struct {
 }
 type InlineContext struct {
 	DatasourceReferences DatasourceReferences `json:"datasourceReferences"`
-	Options              Options              `json:"options"`
 }
 
 type CAPayload struct {
-	Project       string        `json:"project"`
 	Messages      []Message     `json:"messages"`
 	InlineContext InlineContext `json:"inlineContext"`
 	ClientIdEnum  string        `json:"clientIdEnum"`
@@ -218,15 +217,16 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		"Content-Type":      "application/json",
 		"X-Goog-API-Client": util.GDAClientID,
 	}
+	if quotaProject := source.BigQueryQuotaProject(); quotaProject != "" {
+		headers["X-Goog-User-Project"] = quotaProject
+	}
 
 	payload := CAPayload{
-		Project:  fmt.Sprintf("projects/%s", projectID),
 		Messages: []Message{{UserMessage: UserMessage{Text: finalQueryText}}},
 		InlineContext: InlineContext{
 			DatasourceReferences: DatasourceReferences{
 				BQ: BQDatasource{TableReferences: tableRefs},
 			},
-			Options: Options{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
 		},
 		ClientIdEnum: util.GDAClientID,
 	}
