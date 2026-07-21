@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources
+package primitives
 
 import (
 	"sync"
@@ -24,8 +24,8 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
-// ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
-type ResourceManager struct {
+// PrimitiveManager contains available primitives for the server. Should be initialized with NewPrimitiveManager().
+type PrimitiveManager struct {
 	mu              sync.RWMutex
 	sources         map[string]sources.Source
 	authServices    map[string]auth.AuthService
@@ -36,15 +36,15 @@ type ResourceManager struct {
 	promptsets      map[string]prompts.Promptset
 }
 
-func NewResourceManager(
+func NewPrimitiveManager(
 	sourcesMap map[string]sources.Source,
 	authServicesMap map[string]auth.AuthService,
 	embeddingModelsMap map[string]embeddingmodels.EmbeddingModel,
 	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
 	promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset,
 
-) *ResourceManager {
-	resourceMgr := &ResourceManager{
+) *PrimitiveManager {
+	primitiveMgr := &PrimitiveManager{
 		mu:              sync.RWMutex{},
 		sources:         sourcesMap,
 		authServices:    authServicesMap,
@@ -55,59 +55,59 @@ func NewResourceManager(
 		promptsets:      promptsetsMap,
 	}
 
-	return resourceMgr
+	return primitiveMgr
 }
 
-func (r *ResourceManager) GetSource(sourceName string) (sources.Source, bool) {
+func (r *PrimitiveManager) GetSource(sourceName string) (sources.Source, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	source, ok := r.sources[sourceName]
 	return source, ok
 }
 
-func (r *ResourceManager) GetAuthService(authServiceName string) (auth.AuthService, bool) {
+func (r *PrimitiveManager) GetAuthService(authServiceName string) (auth.AuthService, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	authService, ok := r.authServices[authServiceName]
 	return authService, ok
 }
 
-func (r *ResourceManager) GetEmbeddingModel(embeddingModelName string) (embeddingmodels.EmbeddingModel, bool) {
+func (r *PrimitiveManager) GetEmbeddingModel(embeddingModelName string) (embeddingmodels.EmbeddingModel, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	model, ok := r.embeddingModels[embeddingModelName]
 	return model, ok
 }
 
-func (r *ResourceManager) GetTool(toolName string) (tools.Tool, bool) {
+func (r *PrimitiveManager) GetTool(toolName string) (tools.Tool, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	tool, ok := r.tools[toolName]
 	return tool, ok
 }
 
-func (r *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
+func (r *PrimitiveManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	toolset, ok := r.toolsets[toolsetName]
 	return toolset, ok
 }
 
-func (r *ResourceManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
+func (r *PrimitiveManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	prompt, ok := r.prompts[promptName]
 	return prompt, ok
 }
 
-func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {
+func (r *PrimitiveManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	promptset, ok := r.promptsets[promptsetName]
 	return promptset, ok
 }
 
-func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
+func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sources = sourcesMap
@@ -119,7 +119,7 @@ func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, aut
 	r.promptsets = promptsetsMap
 }
 
-func (r *ResourceManager) GetSourcesMap() map[string]sources.Source {
+func (r *PrimitiveManager) GetSourcesMap() map[string]sources.Source {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]sources.Source, len(r.sources))
@@ -129,7 +129,7 @@ func (r *ResourceManager) GetSourcesMap() map[string]sources.Source {
 	return copiedMap
 }
 
-func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
+func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]auth.AuthService, len(r.authServices))
@@ -139,7 +139,7 @@ func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
 	return copiedMap
 }
 
-func (r *ResourceManager) GetEmbeddingModelMap() map[string]embeddingmodels.EmbeddingModel {
+func (r *PrimitiveManager) GetEmbeddingModelMap() map[string]embeddingmodels.EmbeddingModel {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]embeddingmodels.EmbeddingModel, len(r.embeddingModels))
@@ -149,7 +149,7 @@ func (r *ResourceManager) GetEmbeddingModelMap() map[string]embeddingmodels.Embe
 	return copiedMap
 }
 
-func (r *ResourceManager) GetToolsMap() map[string]tools.Tool {
+func (r *PrimitiveManager) GetToolsMap() map[string]tools.Tool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]tools.Tool, len(r.tools))
@@ -159,7 +159,7 @@ func (r *ResourceManager) GetToolsMap() map[string]tools.Tool {
 	return copiedMap
 }
 
-func (r *ResourceManager) GetPromptsMap() map[string]prompts.Prompt {
+func (r *PrimitiveManager) GetPromptsMap() map[string]prompts.Prompt {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]prompts.Prompt, len(r.prompts))
