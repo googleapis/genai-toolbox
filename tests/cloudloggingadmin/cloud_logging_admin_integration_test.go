@@ -89,10 +89,11 @@ func TestLogAdminToolEndpoints(t *testing.T) {
 
 	args := []string{"--enable-api"}
 
-	_, err := initLogAdminConnection(LogAdminProject)
+	adminClient, err := initLogAdminConnection(LogAdminProject)
 	if err != nil {
 		t.Fatalf("unable to connect to logs: %s", err)
 	}
+	defer adminClient.Close()
 
 	loggingClient, err := initLogConnection(LogAdminProject)
 	if err != nil {
@@ -103,13 +104,15 @@ func TestLogAdminToolEndpoints(t *testing.T) {
 	testUUID := strings.ReplaceAll(uuid.New().String(), "-", "")
 	logName := fmt.Sprintf("toolbox-integration-test-%s", testUUID)
 
-	// set up test logs and wait for logs to be injested.
+	// set up test logs and wait for logs to be ingested.
+	defer teardownTestLogs(t, ctx, adminClient, logName)
 	setupTestLogs(t, loggingClient, logName)
-	t.Logf("Waiting 30 seconds for log ingestion...")
-	time.Sleep(30 * time.Second)
 
-	// Delete test logs once test is over
-	defer teardownTestLogs(t, ctx, LogAdminProject, logName)
+	waitCtx, waitCancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer waitCancel()
+	if err := waitForCloudLoggingEntries(waitCtx, adminClient, LogAdminProject, logName); err != nil {
+		t.Fatalf("test log %s was not visible before timeout: %v", logName, err)
+	}
 
 	toolsFile := getCloudLoggingAdminToolsConfig(sourceConfig)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -118,9 +121,9 @@ func TestLogAdminToolEndpoints(t *testing.T) {
 	}
 	defer cleanup()
 
-	waitCtx, waitCancel := context.WithTimeout(ctx, 10*time.Second)
-	defer waitCancel()
-	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	serverWaitCtx, serverWaitCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer serverWaitCancel()
+	out, err := testutils.WaitForString(serverWaitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs:\n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
@@ -155,17 +158,17 @@ func setupTestLogs(t *testing.T, client *logging.Client, logName string) {
 	}
 }
 
-func teardownTestLogs(t *testing.T, ctx context.Context, projectID, logName string) {
-	adminClient, err := logadmin.NewClient(ctx, projectID)
-	if err != nil {
-		t.Errorf("failed to create admin client for cleanup: %v", err)
-		return
-	}
-	defer adminClient.Close()
+func teardownTestLogs(t *testing.T, ctx context.Context, adminClient *logadmin.Client, logName string) {
+	cleanupCtx, cancel := teardownTestLogsContext(ctx)
+	defer cancel()
 
-	if err := adminClient.DeleteLog(ctx, logName); err != nil {
+	if err := adminClient.DeleteLog(cleanupCtx, logName); err != nil {
 		t.Logf("failed to delete test log %s: %v", logName, err)
 	}
+}
+
+func teardownTestLogsContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
 }
 
 func getCloudLoggingAdminToolsConfig(sourceConfig map[string]any) map[string]any {
