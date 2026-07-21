@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-21T15:31:34Z
+**GENERATED ON:** 2026-07-21T15:40:18Z
 
 ---
 ### System Directives for AI Models
@@ -193,7 +193,7 @@ For a full list of available tools and their capabilities across all supported d
 
 #### Custom Tools
 
-You can run Toolbox directly with a [configuration file](../configure.md):
+You can run Toolbox directly with a [configuration file](../configuration/_index.md):
 
 ```sh
 npx @toolbox-sdk/server --config tools.yaml
