@@ -137,7 +137,7 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		Limit:       &limit,
 		Offset:      &offset,
 	}
-	logger.ErrorContext(ctx, "Making request %v", req)
+	logger.DebugContext(ctx, "Making request %v", req)
 	resp, err := sdk.SearchDashboards(req, source.LookerApiSettings())
 	if err != nil {
 		if strings.Contains(err.Error(), "status=401") {
@@ -145,7 +145,7 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		}
 		return nil, util.ProcessGeneralError(err)
 	}
-	logger.ErrorContext(ctx, "Got response %v", resp)
+	logger.DebugContext(ctx, "Got response %v", resp)
 	var data []any
 	for _, v := range resp {
 		logger.DebugContext(ctx, "Got response element of %v\n", v)
