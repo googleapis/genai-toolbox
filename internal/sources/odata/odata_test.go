@@ -37,7 +37,7 @@ func TestParseFromYamlOData(t *testing.T) {
 				kind: source
 				name: my-instance
 				type: odata
-				baseUrl: https://example.com/sap/opu/odata
+				baseUrl: https://example.com/OData/opu/odata
 				timeout: 10s
 				auth:
 				  type: basic
@@ -48,7 +48,7 @@ func TestParseFromYamlOData(t *testing.T) {
 				"my-instance": Config{
 					Name:    "my-instance",
 					Type:    SourceType,
-					BaseURL: "https://example.com/sap/opu/odata",
+					BaseURL: "https://example.com/OData/opu/odata",
 					Timeout: "10s",
 					Auth: AuthConfig{
 						Type:     "basic",
@@ -61,7 +61,7 @@ func TestParseFromYamlOData(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			got, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -84,7 +84,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				kind: source
 				name: my-instance
 				type: odata
-				baseUrl: https://example.com/sap/opu/odata
+				baseUrl: https://example.com/OData/opu/odata
 				foo: bar
 			`,
 			err: "unknown field \"foo\"",
@@ -104,7 +104,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				kind: source
 				name: my-instance
 				type: odata
-				baseUrl: https://example.com/sap/opu/odata
+				baseUrl: https://example.com/OData/opu/odata
 				auth:
 				  type: invalid_auth
 			`,
@@ -113,7 +113,7 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expected error containing %q, got nil", tc.err)
 			}

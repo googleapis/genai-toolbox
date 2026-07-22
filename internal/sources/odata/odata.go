@@ -25,7 +25,10 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
+
+	"log/slog"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -58,7 +61,7 @@ type AuthConfig struct {
 }
 
 type CompatibilityConfig struct {
-	SapUrlQuoting       bool `yaml:"sapUrlQuoting"`       // Double single-quotes in string URL parameters for OData v2
+	UrlQuoting          bool `yaml:"urlQuoting"`          // Double single-quotes in string URL parameters for OData v2
 	UseTunnelingHeaders bool `yaml:"useTunnelingHeaders"` // POST with X-HTTP-Method header for PATCH/MERGE
 }
 
@@ -70,7 +73,7 @@ type Config struct {
 	DefaultHeaders         map[string]string   `yaml:"headers"`
 	QueryParams            map[string]string   `yaml:"queryParams"`
 	DisableSslVerification bool                `yaml:"disableSslVerification"`
-	Auth                   AuthConfig          `yaml:"auth"` // SAP specific auth
+	Auth                   AuthConfig          `yaml:"auth"` // OData specific auth
 	UseClientOauth         string              `yaml:"useClientOauth"`
 	AuthStrategy           string              `yaml:"authStrategy"`
 	Compatibility          CompatibilityConfig `yaml:"compatibility"`
@@ -175,8 +178,8 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	var authStrategy AuthStrategy
-	if c.AuthStrategy == "sap-gateway" {
-		authStrategy = NewSapGatewayStrategy(c.BaseURL, c.DefaultHeaders, primary, dynamic, headerName)
+	if c.AuthStrategy == "gateway" || c.AuthStrategy == "csrf-token" {
+		authStrategy = NewGatewayStrategy(c.BaseURL, c.DefaultHeaders, primary, dynamic, headerName)
 	} else {
 		if dynamic != nil {
 			authStrategy = dynamic
@@ -194,7 +197,12 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	// Attempt initial metadata fetch at startup; if unauthenticated (e.g. user OAuth token required), lazy-load on first request.
 	if err := source.fetchMetadata(ctx, ""); err != nil {
-		fmt.Printf("Notice: SAP OData metadata will be lazily fetched on first user request: %v\n", err)
+		logger, _ := util.LoggerFromContext(ctx)
+		if logger != nil {
+			logger.InfoContext(ctx, "OData metadata will be lazily fetched on first user request", "err", err)
+		} else {
+			slog.InfoContext(ctx, "OData metadata will be lazily fetched on first user request", "err", err)
+		}
 	}
 
 	return source, nil
@@ -202,6 +210,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 type Source struct {
 	Config
+	mu                  sync.RWMutex
 	client              *http.Client
 	metadata            *ODataMetadata
 	authStrategy        AuthStrategy
@@ -234,6 +243,8 @@ func (s *Source) GetAuthTokenHeaderName() string {
 }
 
 func (s *Source) Metadata() *ODataMetadata {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.metadata
 }
 
@@ -284,14 +295,20 @@ func (s *Source) fetchMetadata(ctx context.Context, accessToken tools.AccessToke
 	if err != nil {
 		return fmt.Errorf("failed to parse metadata XML: %v", err)
 	}
+	s.mu.Lock()
 	s.metadata = meta
+	s.mu.Unlock()
 
 	return nil
 }
 
-// RunSAPRequest attaches auth and CSRF headers via AuthStrategy before executing.
-func (s *Source) RunSAPRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
+// RunODataRequest attaches auth and CSRF headers via AuthStrategy before executing.
+func (s *Source) RunODataRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
 	ctx := req.Context()
+
+	if s.Metadata() == nil {
+		_ = s.fetchMetadata(ctx, accessToken)
+	}
 
 	// 1. Pass context token via header so DynamicUserOauthStrategy can read it
 	if accessToken != "" {
@@ -300,7 +317,7 @@ func (s *Source) RunSAPRequest(req *http.Request, accessToken tools.AccessToken)
 
 	// 2. Delegate Authentication and Handshake to Strategy
 	if err := s.authStrategy.Authorize(ctx, req, s.client); err != nil {
-		return nil, fmt.Errorf("sap authorization failed: %w", err)
+		return nil, fmt.Errorf("authorization failed: %w", err)
 	}
 
 	// Inject Default Headers
@@ -312,7 +329,7 @@ func (s *Source) RunSAPRequest(req *http.Request, accessToken tools.AccessToken)
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("sap http execution failed: %v", err)
+		return nil, fmt.Errorf("http execution failed: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -326,7 +343,7 @@ func (s *Source) RunSAPRequest(req *http.Request, accessToken tools.AccessToken)
 		if resp.StatusCode == 403 && req.Method != "GET" && req.Method != "HEAD" {
 			s.authStrategy.Evict(ctx, req)
 		}
-		return nil, fmt.Errorf("sap http error %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("http error %d: %s", resp.StatusCode, string(body))
 	}
 
 	// If 204 No Content, return empty

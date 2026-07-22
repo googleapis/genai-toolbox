@@ -111,8 +111,8 @@ func (c *sessionLRUCache) removeOldest() {
 	}
 }
 
-// SapGatewayStrategy is the decorator strategy that handles CSRF token retrieval and cookie session management.
-type SapGatewayStrategy struct {
+// GatewayStrategy is the decorator strategy that handles CSRF token retrieval and cookie session management.
+type GatewayStrategy struct {
 	BaseURL             string
 	DefaultHeaders      map[string]string
 	Primary             AuthStrategy // Underlying credential strategy (Basic, mTLS, Bearer)
@@ -121,8 +121,8 @@ type SapGatewayStrategy struct {
 	sessionCache        *sessionLRUCache
 }
 
-func NewSapGatewayStrategy(baseURL string, defaultHeaders map[string]string, primary AuthStrategy, dynamicOauth AuthStrategy, authTokenHeaderName string) *SapGatewayStrategy {
-	return &SapGatewayStrategy{
+func NewGatewayStrategy(baseURL string, defaultHeaders map[string]string, primary AuthStrategy, dynamicOauth AuthStrategy, authTokenHeaderName string) *GatewayStrategy {
+	return &GatewayStrategy{
 		BaseURL:             baseURL,
 		DefaultHeaders:      defaultHeaders,
 		Primary:             primary,
@@ -132,7 +132,7 @@ func NewSapGatewayStrategy(baseURL string, defaultHeaders map[string]string, pri
 	}
 }
 
-func (s *SapGatewayStrategy) Authorize(ctx context.Context, req *http.Request, client *http.Client) error {
+func (s *GatewayStrategy) Authorize(ctx context.Context, req *http.Request, client *http.Client) error {
 	// 1. Apply Credentials using Dynamic OAuth or Fallback Primary
 	if s.DynamicOauth != nil && req.Header.Get(s.AuthTokenHeaderName) != "" {
 		if err := s.DynamicOauth.Authorize(ctx, req, client); err != nil {
@@ -153,7 +153,7 @@ func (s *SapGatewayStrategy) Authorize(ctx context.Context, req *http.Request, c
 			var err error
 			session, err = s.fetchUserCsrf(ctx, req, client, sessionKey)
 			if err != nil {
-				return fmt.Errorf("sap gateway csrf pre-flight failed: %w", err)
+				return fmt.Errorf("OData gateway csrf pre-flight failed: %w", err)
 			}
 		}
 		req.Header.Set("X-CSRF-Token", session.CsrfToken)
@@ -170,12 +170,12 @@ func (s *SapGatewayStrategy) Authorize(ctx context.Context, req *http.Request, c
 	return nil
 }
 
-func (s *SapGatewayStrategy) Evict(ctx context.Context, req *http.Request) {
+func (s *GatewayStrategy) Evict(ctx context.Context, req *http.Request) {
 	sessionKey := HashCredentialsWithHeader(req, s.AuthTokenHeaderName)
 	s.sessionCache.Remove(sessionKey)
 }
 
-func (s *SapGatewayStrategy) fetchUserCsrf(ctx context.Context, req *http.Request, client *http.Client, sessionKey string) (*UserSession, error) {
+func (s *GatewayStrategy) fetchUserCsrf(ctx context.Context, req *http.Request, client *http.Client, sessionKey string) (*UserSession, error) {
 	fetchReq, err := http.NewRequestWithContext(ctx, "HEAD", s.BaseURL, nil)
 	if err != nil {
 		return nil, err

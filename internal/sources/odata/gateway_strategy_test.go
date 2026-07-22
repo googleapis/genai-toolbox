@@ -53,7 +53,7 @@ func TestSessionLRUCache(t *testing.T) {
 	}
 }
 
-func TestSapGatewayStrategy_AuthorizeAndEvict(t *testing.T) {
+func TestGatewayStrategy_AuthorizeAndEvict(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-CSRF-Token", "mock-csrf-token")
 		w.WriteHeader(http.StatusOK)
@@ -61,7 +61,7 @@ func TestSapGatewayStrategy_AuthorizeAndEvict(t *testing.T) {
 	defer ts.Close()
 
 	primary := &BearerTokenStrategy{Token: "test-token"}
-	strategy := NewSapGatewayStrategy(ts.URL, nil, primary, nil, "Authorization")
+	strategy := NewGatewayStrategy(ts.URL, nil, primary, nil, "Authorization")
 
 	req, _ := http.NewRequest("POST", ts.URL+"/FlightCollection", nil)
 	client := ts.Client()

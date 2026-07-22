@@ -27,41 +27,41 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-// mockSAPSource simulates an OData source for testing tool initialization
-type mockSAPSource struct {
+// mockODataSource simulates an OData source for testing tool initialization
+type mockODataSource struct {
 	baseURL  string
 	metadata *odata.ODataMetadata
 }
 
-func (m *mockSAPSource) SourceType() string {
+func (m *mockODataSource) SourceType() string {
 	return "odata"
 }
 
-func (m *mockSAPSource) ToConfig() sources.SourceConfig {
+func (m *mockODataSource) ToConfig() sources.SourceConfig {
 	return nil
 }
 
-func (m *mockSAPSource) HttpBaseURL() string {
+func (m *mockODataSource) HttpBaseURL() string {
 	return m.baseURL
 }
 
-func (m *mockSAPSource) RunSAPRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
+func (m *mockODataSource) RunODataRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
 	return map[string]interface{}{"d": map[string]interface{}{"results": []interface{}{}}}, nil
 }
 
-func (m *mockSAPSource) UseClientAuthorization() bool {
+func (m *mockODataSource) UseClientAuthorization() bool {
 	return false
 }
 
-func (m *mockSAPSource) Metadata() *odata.ODataMetadata {
+func (m *mockODataSource) Metadata() *odata.ODataMetadata {
 	return m.metadata
 }
 
-func (m *mockSAPSource) Compatibility() odata.CompatibilityConfig {
+func (m *mockODataSource) Compatibility() odata.CompatibilityConfig {
 	return odata.CompatibilityConfig{}
 }
 
-func (m *mockSAPSource) GetAuthTokenHeaderName() string {
+func (m *mockODataSource) GetAuthTokenHeaderName() string {
 	return "Authorization"
 }
 
@@ -83,19 +83,19 @@ func TestToolInitializationREAD(t *testing.T) {
 		},
 	}
 
-	mockSrc := &mockSAPSource{
-		baseURL:  "https://mock.sap/odata",
+	mockSrc := &mockODataSource{
+		baseURL:  "https://mock.odata.example.com",
 		metadata: metadata,
 	}
 
 	srcs := map[string]sources.Source{
-		"my_mock_sap": mockSrc,
+		"my_mock_odata": mockSrc,
 	}
 
 	yamlDef := []byte(`
 name: read_sales
 type: odata
-source: my_mock_sap
+source: my_mock_odata
 entitySet: A_SalesOrder
 operation: READ
 description: Reads sales orders
@@ -115,13 +115,13 @@ description: Reads sales orders
 		t.Fatalf("Failed to initialize tool: %v", err)
 	}
 
-	sapTool := tool.(Tool)
-	if sapTool.Method != "GET" {
-		t.Errorf("Expected GET for READ operation, got %s", sapTool.Method)
+	odataTool := tool.(Tool)
+	if odataTool.Method != "GET" {
+		t.Errorf("Expected GET for READ operation, got %s", odataTool.Method)
 	}
 
 	// Verify dynamic parameters
-	params, err := sapTool.GetParameters(srcs)
+	params, err := odataTool.GetParameters(srcs)
 	if err != nil {
 		t.Fatalf("Failed to get parameters: %v", err)
 	}
@@ -153,7 +153,7 @@ description: Reads sales orders
 }
 
 func TestApplyODataFormatting(t *testing.T) {
-	compat := odata.CompatibilityConfig{SapUrlQuoting: true}
+	compat := odata.CompatibilityConfig{UrlQuoting: true}
 
 	// Test the heuristic auto-uppercasing
 	if applyODataFormatting("apple", "Currency", "string", "2.0", true, compat) != "'APPLE'" {
@@ -169,27 +169,37 @@ func TestApplyODataFormatting(t *testing.T) {
 	if applyODataFormatting("O'Brien", "LastName", "string", "2.0", true, compat) != "'O''Brien'" {
 		t.Errorf("Expected escaped quotes ''O''''Brien'' for LastName param, got %s", applyODataFormatting("O'Brien", "LastName", "string", "2.0", true, compat))
 	}
+	// Test partial quoting vs full quoting
+	if applyODataFormatting("'partial", "LastName", "string", "2.0", true, compat) != "'''partial'" {
+		t.Errorf("Expected partial leading quote to be escaped and quoted, got %s", applyODataFormatting("'partial", "LastName", "string", "2.0", true, compat))
+	}
+	if applyODataFormatting("partial'", "LastName", "string", "2.0", true, compat) != "'partial'''" {
+		t.Errorf("Expected partial trailing quote to be escaped and quoted, got %s", applyODataFormatting("partial'", "LastName", "string", "2.0", true, compat))
+	}
+	if applyODataFormatting("'fully_quoted'", "LastName", "string", "2.0", true, compat) != "'fully_quoted'" {
+		t.Errorf("Expected fully quoted string to remain unchanged, got %s", applyODataFormatting("'fully_quoted'", "LastName", "string", "2.0", true, compat))
+	}
 }
 
-type mockSAPSourceWithResponse struct {
+type mockODataSourceWithResponse struct {
 	baseURL  string
 	metadata *odata.ODataMetadata
 	response any
 }
 
-func (m *mockSAPSourceWithResponse) SourceType() string             { return "odata" }
-func (m *mockSAPSourceWithResponse) ToConfig() sources.SourceConfig { return nil }
-func (m *mockSAPSourceWithResponse) HttpBaseURL() string            { return m.baseURL }
-func (m *mockSAPSourceWithResponse) RunSAPRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
+func (m *mockODataSourceWithResponse) SourceType() string             { return "odata" }
+func (m *mockODataSourceWithResponse) ToConfig() sources.SourceConfig { return nil }
+func (m *mockODataSourceWithResponse) HttpBaseURL() string            { return m.baseURL }
+func (m *mockODataSourceWithResponse) RunODataRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
 	return m.response, nil
 }
-func (m *mockSAPSourceWithResponse) UseClientAuthorization() bool   { return false }
-func (m *mockSAPSourceWithResponse) Metadata() *odata.ODataMetadata { return m.metadata }
-func (m *mockSAPSourceWithResponse) Compatibility() odata.CompatibilityConfig {
+func (m *mockODataSourceWithResponse) UseClientAuthorization() bool   { return false }
+func (m *mockODataSourceWithResponse) Metadata() *odata.ODataMetadata { return m.metadata }
+func (m *mockODataSourceWithResponse) Compatibility() odata.CompatibilityConfig {
 	return odata.CompatibilityConfig{}
 }
 
-func (m *mockSAPSourceWithResponse) GetAuthTokenHeaderName() string {
+func (m *mockODataSourceWithResponse) GetAuthTokenHeaderName() string {
 	return "Authorization"
 }
 
@@ -203,21 +213,21 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 }
 
 func TestToolInvokePaginationV2(t *testing.T) {
-	mockSrc := &mockSAPSourceWithResponse{
-		baseURL: "https://mock.sap/odata",
+	mockSrc := &mockODataSourceWithResponse{
+		baseURL: "https://mock.odata.example.com",
 		response: map[string]interface{}{
 			"d": map[string]interface{}{
 				"results": []interface{}{},
-				"__next":  "https://mock.sap/odata/A_SalesOrder?$skiptoken=123",
+				"__next":  "https://mock.odata.example.com/A_SalesOrder?$skiptoken=123",
 			},
 		},
 	}
 
-	srcs := map[string]sources.Source{"my_mock_sap": mockSrc}
+	srcs := map[string]sources.Source{"my_mock_odata": mockSrc}
 	sp := &mockSourceProvider{sources: srcs}
 
 	cfg := Config{
-		Source:    "my_mock_sap",
+		Source:    "my_mock_odata",
 		EntitySet: "A_SalesOrder",
 		Operation: "READ",
 	}
@@ -243,19 +253,19 @@ func TestToolInvokePaginationV2(t *testing.T) {
 }
 
 func TestToolInvokePaginationV4(t *testing.T) {
-	mockSrc := &mockSAPSourceWithResponse{
-		baseURL: "https://mock.sap/odata",
+	mockSrc := &mockODataSourceWithResponse{
+		baseURL: "https://mock.odata.example.com",
 		response: map[string]interface{}{
 			"value":           []interface{}{},
-			"@odata.nextLink": "https://mock.sap/odata/A_SalesOrder?$skiptoken=123",
+			"@odata.nextLink": "https://mock.odata.example.com/A_SalesOrder?$skiptoken=123",
 		},
 	}
 
-	srcs := map[string]sources.Source{"my_mock_sap": mockSrc}
+	srcs := map[string]sources.Source{"my_mock_odata": mockSrc}
 	sp := &mockSourceProvider{sources: srcs}
 
 	cfg := Config{
-		Source:    "my_mock_sap",
+		Source:    "my_mock_odata",
 		EntitySet: "A_SalesOrder",
 		Operation: "READ",
 	}
@@ -280,5 +290,62 @@ func TestToolInvokePaginationV4(t *testing.T) {
 	}
 }
 
+type mockTunnelingSource struct {
+	baseURL   string
+	lastReq   *http.Request
+	useTunnel bool
+}
+
+func (m *mockTunnelingSource) SourceType() string             { return "odata" }
+func (m *mockTunnelingSource) ToConfig() sources.SourceConfig { return nil }
+func (m *mockTunnelingSource) HttpBaseURL() string            { return m.baseURL }
+func (m *mockTunnelingSource) RunODataRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
+	m.lastReq = req
+	return map[string]interface{}{"status": "ok"}, nil
+}
+func (m *mockTunnelingSource) UseClientAuthorization() bool   { return false }
+func (m *mockTunnelingSource) Metadata() *odata.ODataMetadata { return nil }
+func (m *mockTunnelingSource) Compatibility() odata.CompatibilityConfig {
+	return odata.CompatibilityConfig{UseTunnelingHeaders: m.useTunnel}
+}
+func (m *mockTunnelingSource) GetAuthTokenHeaderName() string { return "Authorization" }
+
+func TestUseTunnelingHeaders(t *testing.T) {
+	mockSrc := &mockTunnelingSource{
+		baseURL:   "https://mock.odata.example.com",
+		useTunnel: true,
+	}
+	srcs := map[string]sources.Source{"my_mock_odata": mockSrc}
+	sp := &mockSourceProvider{sources: srcs}
+
+	cfg := Config{
+		Source:    "my_mock_odata",
+		EntitySet: "A_SalesOrder",
+		Operation: "UPDATE",
+	}
+	tool := Tool{
+		BaseTool: tools.NewBaseTool(cfg, tools.NewDestructiveAnnotations(), tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired}, cfg.QueryParams),
+		Method:   "PATCH",
+	}
+
+	_, err := tool.Invoke(context.Background(), sp, parameters.ParamValues{}, "")
+	if err != nil {
+		t.Fatalf("Invoke failed: %v", err)
+	}
+
+	if mockSrc.lastReq == nil {
+		t.Fatalf("Expected HTTP request to be executed")
+	}
+	if mockSrc.lastReq.Method != "POST" {
+		t.Errorf("Expected method POST with tunneling enabled, got %s", mockSrc.lastReq.Method)
+	}
+	if got := mockSrc.lastReq.Header.Get("X-HTTP-Method"); got != "PATCH" {
+		t.Errorf("Expected X-HTTP-Method: PATCH header, got %s", got)
+	}
+	if got := mockSrc.lastReq.Header.Get("X-HTTP-Method-Override"); got != "PATCH" {
+		t.Errorf("Expected X-HTTP-Method-Override: PATCH header, got %s", got)
+	}
+}
+
 // Dummy tests to satisfy the interface completely
-var _ sources.Source = &mockSAPSource{}
+var _ sources.Source = &mockODataSource{}
