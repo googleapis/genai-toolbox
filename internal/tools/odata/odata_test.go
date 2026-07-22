@@ -291,9 +291,9 @@ func TestToolInvokePaginationV4(t *testing.T) {
 }
 
 type mockTunnelingSource struct {
-	baseURL    string
-	lastReq    *http.Request
-	useTunnel  bool
+	baseURL   string
+	lastReq   *http.Request
+	useTunnel bool
 }
 
 func (m *mockTunnelingSource) SourceType() string             { return "odata" }

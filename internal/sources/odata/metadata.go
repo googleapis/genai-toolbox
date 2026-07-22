@@ -38,7 +38,7 @@ type Property struct {
 	Type      string
 	Nullable  bool
 	MaxLength string
-	Label  string
+	Label     string
 }
 
 type EntitySet struct {
@@ -87,7 +87,7 @@ type xmlProperty struct {
 	Type      string `xml:"Type,attr"`
 	Nullable  string `xml:"Nullable,attr"`
 	MaxLength string `xml:"MaxLength,attr"`
-	Label     string `xml:"label,attr"` // label
+	Label     string `xml:"label,attr"` // label annotation
 }
 
 type xmlEntityContainer struct {
@@ -134,7 +134,7 @@ func ParseMetadata(data []byte) (*ODataMetadata, error) {
 	} else if root.Version == "4.0" || root.DataServices.DataServiceVersion == "4.0" {
 		meta.Version = "4.0"
 	} else {
-		// Default to 2.0 if ambiguous but usually OData provides it here.
+		// Default to 2.0 if ambiguous but usually OData services provide it here.
 		meta.Version = "2.0"
 	}
 
@@ -156,7 +156,7 @@ func ParseMetadata(data []byte) (*ODataMetadata, error) {
 					Type:      prop.Type,
 					Nullable:  nullable,
 					MaxLength: prop.MaxLength,
-					Label:  prop.Label,
+					Label:     prop.Label,
 				})
 			}
 			meta.EntityTypes[et.Name] = t

@@ -61,7 +61,7 @@ type AuthConfig struct {
 }
 
 type CompatibilityConfig struct {
-	UrlQuoting       bool `yaml:"urlQuoting"`       // Double single-quotes in string URL parameters for OData v2
+	UrlQuoting          bool `yaml:"urlQuoting"`          // Double single-quotes in string URL parameters for OData v2
 	UseTunnelingHeaders bool `yaml:"useTunnelingHeaders"` // POST with X-HTTP-Method header for PATCH/MERGE
 }
 
