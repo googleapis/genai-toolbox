@@ -174,7 +174,7 @@ func TestMockODataMCPEndpoints(t *testing.T) {
 	// 2. MCP Tool Call Success
 	t.Run("MCP Tool Call Success", func(t *testing.T) {
 		headers := map[string]string{
-			"X-OData-Token":     "Bearer mock-oauth-token",
+			"X-OData-Token":  "Bearer mock-oauth-token",
 			"Mcp-Session-Id": sessionID,
 		}
 
