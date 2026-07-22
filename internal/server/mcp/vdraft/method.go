@@ -145,6 +145,9 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 	toolsListChanged := false
 	promptsListChanged := false
 	result := DiscoverResult{
+		Result: Result{
+			ResultType: resultTypeComplete,
+		},
 		SupportedVersions: mcputil.GetSupportedVersions(enableDraft),
 		Capabilities: ServerCapabilities{
 			Tools: &ListChanged{
@@ -416,7 +419,13 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 				return jsonrpc.JSONRPCResponse{
 					Jsonrpc: jsonrpc.JSONRPC_VERSION,
 					Id:      id,
-					Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+					Result: CallToolResult{
+						Result: Result{
+							ResultType: resultTypeComplete,
+						},
+						Content: []TextContent{text},
+						IsError: true,
+					},
 				}, nil
 
 			case util.CategoryServer:
@@ -463,7 +472,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  CallToolResult{Content: content},
+		Result: CallToolResult{
+			Result: Result{
+				ResultType: resultTypeComplete,
+			},
+			Content: content,
+		},
 	}, nil
 }
 
@@ -589,6 +603,9 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, promptset prom
 	}
 
 	result := GetPromptResult{
+		Result: Result{
+			ResultType: resultTypeComplete,
+		},
 		Description: prompt.Manifest().Description,
 		Messages:    promptMessages,
 	}
