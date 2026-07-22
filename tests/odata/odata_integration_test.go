@@ -31,19 +31,19 @@ import (
 )
 
 func TestMockODataNativeEndpoints(t *testing.T) {
-	// Setup mock server simulating SAP Gateway
+	// Setup mock server simulating OData Gateway
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Metadata endpoint
-		if r.URL.Path == "/sap/opu/odata/sap/API_SALES_ORDER_SRV/$metadata" {
+		if r.URL.Path == "/odata/v2/SalesOrderService/$metadata" {
 			w.Header().Set("Content-Type", "application/xml")
 			_, _ = w.Write([]byte(`<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx"><edmx:DataServices m:DataServiceVersion="2.0" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"><Schema Namespace="API_SALES_ORDER_SRV" xmlns="http://schemas.microsoft.com/ado/2008/09/edm"><EntityContainer Name="API_SALES_ORDER_SRV_Entities" m:IsDefaultEntityContainer="true"><EntitySet Name="A_SalesOrder" EntityType="API_SALES_ORDER_SRV.A_SalesOrderType"/></EntityContainer><EntityType Name="A_SalesOrderType"><Key><PropertyRef Name="SalesOrder"/></Key><Property Name="SalesOrder" Type="Edm.String" Nullable="false" MaxLength="10"/><Property Name="SalesOrderType" Type="Edm.String" Nullable="false" MaxLength="4"/><Property Name="SoldToParty" Type="Edm.String" Nullable="false" MaxLength="10"/></EntityType></Schema></edmx:DataServices></edmx:Edmx>`))
 			return
 		}
 		// Entity set read endpoint
-		if r.URL.Path == "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder" {
-			if r.Header.Get("X-SAP-Auth") == "" {
+		if r.URL.Path == "/odata/v2/SalesOrderService/A_SalesOrder" {
+			if r.Header.Get("X-OData-Token") == "" {
 				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = w.Write([]byte(`{"error":"unauthorized: missing X-SAP-Auth"}`))
+				_, _ = w.Write([]byte(`{"error":"unauthorized: missing X-OData-Token"}`))
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -60,17 +60,17 @@ func TestMockODataNativeEndpoints(t *testing.T) {
 
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"mock-sap-source": map[string]any{
+			"mock-odata-source": map[string]any{
 				"type":           "odata",
-				"baseUrl":        ts.URL + "/sap/opu/odata/sap/API_SALES_ORDER_SRV",
-				"authStrategy":   "sap-gateway",
-				"useClientOauth": "X-SAP-Auth",
+				"baseUrl":        ts.URL + "/odata/v2/SalesOrderService",
+				"authStrategy":   "gateway",
+				"useClientOauth": "X-OData-Token",
 			},
 		},
 		"tools": map[string]any{
 			"read-sales-order": map[string]any{
 				"type":        "odata",
-				"source":      "mock-sap-source",
+				"source":      "mock-odata-source",
 				"entitySet":   "A_SalesOrder",
 				"operation":   "READ",
 				"description": "Read Sales Orders",

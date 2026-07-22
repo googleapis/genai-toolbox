@@ -37,7 +37,7 @@ func TestParseFromYamlOData(t *testing.T) {
 				kind: source
 				name: my-instance
 				type: odata
-				baseUrl: https://example.com/sap/opu/odata
+				baseUrl: https://example.com/OData/opu/odata
 				timeout: 10s
 				auth:
 				  type: basic
@@ -48,7 +48,7 @@ func TestParseFromYamlOData(t *testing.T) {
 				"my-instance": Config{
 					Name:    "my-instance",
 					Type:    SourceType,
-					BaseURL: "https://example.com/sap/opu/odata",
+					BaseURL: "https://example.com/OData/opu/odata",
 					Timeout: "10s",
 					Auth: AuthConfig{
 						Type:     "basic",
@@ -84,7 +84,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				kind: source
 				name: my-instance
 				type: odata
-				baseUrl: https://example.com/sap/opu/odata
+				baseUrl: https://example.com/OData/opu/odata
 				foo: bar
 			`,
 			err: "unknown field \"foo\"",
@@ -104,7 +104,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				kind: source
 				name: my-instance
 				type: odata
-				baseUrl: https://example.com/sap/opu/odata
+				baseUrl: https://example.com/OData/opu/odata
 				auth:
 				  type: invalid_auth
 			`,

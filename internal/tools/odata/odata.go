@@ -49,7 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	HttpBaseURL() string
-	RunSAPRequest(*http.Request, tools.AccessToken) (any, error)
+	RunODataRequest(*http.Request, tools.AccessToken) (any, error)
 	Metadata() *odata.ODataMetadata
 	Compatibility() odata.CompatibilityConfig
 	UseClientAuthorization() bool
@@ -107,10 +107,10 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-// applyODataFormatting automatically applies OData syntax transformations to values, incorporating SAP-specific compatibility flags.
+// applyODataFormatting automatically applies OData syntax transformations to values, incorporating OData compatibility flags.
 func applyODataFormatting(value string, paramName string, paramType string, mdVersion string, isUrlParam bool, compat odata.CompatibilityConfig) string {
-	if compat.SapUrlQuoting {
-		// Intelligent Casing Heuristic for SAP
+	if compat.UrlQuoting {
+		// Casing heuristic for OData properties
 		upperNames := []string{"ID", "CODE", "CARRID", "CONNID", "KEY", "NUM", "CITY", "COUNTRY", "PLANT", "COMPANY", "CURRENCY"}
 		upper := strings.ToUpper(paramName)
 		shouldUpper := false
@@ -126,7 +126,8 @@ func applyODataFormatting(value string, paramName string, paramType string, mdVe
 
 		// OData v2 requires string literals in the URL to be single quoted.
 		if isUrlParam && mdVersion == "2.0" && paramType == "string" {
-			if !strings.HasPrefix(value, "'") && !strings.HasSuffix(value, "'") {
+			isFullyQuoted := strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'") && len(value) >= 2
+			if !isFullyQuoted {
 				// Escape single quotes by doubling them for OData v2
 				escapedValue := strings.ReplaceAll(value, "'", "''")
 				value = fmt.Sprintf("'%s'", escapedValue)
@@ -135,7 +136,8 @@ func applyODataFormatting(value string, paramName string, paramType string, mdVe
 	} else {
 		// Standard OData string quoting (single-quoted string literals in URLs)
 		if isUrlParam && paramType == "string" {
-			if !strings.HasPrefix(value, "'") && !strings.HasSuffix(value, "'") {
+			isFullyQuoted := strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'") && len(value) >= 2
+			if !isFullyQuoted {
 				escapedValue := strings.ReplaceAll(value, "'", "''")
 				value = fmt.Sprintf("'%s'", escapedValue)
 			}
@@ -159,8 +161,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// 1. Build URL
-	baseURL := strings.TrimRight(source.HttpBaseURL(), "/")
-	reqURL := fmt.Sprintf("%s/%s", baseURL, t.Cfg.EntitySet)
+	reqURL, err := url.JoinPath(source.HttpBaseURL(), t.Cfg.EntitySet)
+	if err != nil {
+		return nil, util.NewClientServerError("invalid url path", http.StatusInternalServerError, err)
+	}
 
 	parsedURL, err := url.Parse(reqURL)
 	if err != nil {
@@ -213,14 +217,22 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		var marshalErr error
 		bodyBytes, marshalErr = json.Marshal(payloadMap)
 		if marshalErr != nil {
-			return nil, util.NewAgentError("failed to serialize SAP request payload", marshalErr)
+			return nil, util.NewAgentError("failed to serialize OData request payload", marshalErr)
 		}
 	}
 
-	// 4. Execute standard SAP OData execution
-	req, err := http.NewRequestWithContext(ctx, t.Method, parsedURL.String(), bytes.NewReader(bodyBytes))
+	// 4. Execute standard OData execution
+	method := t.Method
+	if source.Compatibility().UseTunnelingHeaders && (method == "PUT" || method == "PATCH" || method == "MERGE" || method == "DELETE") {
+		method = "POST"
+	}
+	req, err := http.NewRequestWithContext(ctx, method, parsedURL.String(), bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, util.NewClientServerError("error creating http request", http.StatusInternalServerError, err)
+	}
+	if source.Compatibility().UseTunnelingHeaders && method == "POST" && method != t.Method {
+		req.Header.Set("X-HTTP-Method", t.Method)
+		req.Header.Set("X-HTTP-Method-Override", t.Method)
 	}
 
 	req.Header.Set("Accept", "application/json")
@@ -232,22 +244,22 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		req.Header.Set("Content-Type", cType)
 	}
 
-	resp, err := source.RunSAPRequest(req, accessToken)
+	resp, err := source.RunODataRequest(req, accessToken)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
 
-	// Handle SAP Server Pagination warning
+	// Handle OData Server Pagination warning
 	if respMap, ok := resp.(map[string]interface{}); ok {
 		// OData v2
 		if d, ok := respMap["d"].(map[string]interface{}); ok {
 			if nextLink, hasNext := d["__next"]; hasNext {
-				respMap["_NOTICE"] = fmt.Sprintf("Results truncated by SAP server pagination. To get the next set, call again with $skiptoken extracted from this URL: %v", nextLink)
+				respMap["_NOTICE"] = fmt.Sprintf("Results truncated by OData Server Pagination. To get the next set, call again with $skiptoken extracted from this URL: %v", nextLink)
 			}
 		}
 		// OData v4
 		if nextLink, hasNext := respMap["@odata.nextLink"]; hasNext {
-			respMap["_NOTICE"] = fmt.Sprintf("Results truncated by SAP server pagination. To get the next set, call again with $skiptoken extracted from this URL: %v", nextLink)
+			respMap["_NOTICE"] = fmt.Sprintf("Results truncated by OData Server Pagination. To get the next set, call again with $skiptoken extracted from this URL: %v", nextLink)
 		}
 	}
 

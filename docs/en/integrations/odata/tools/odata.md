@@ -24,7 +24,7 @@ An example of a `CREATE` tool to create a sales order header:
 kind: tool
 name: create_sales_order_header
 type: odata
-source: sap-sales-order-srv
+source: odata-sales-order-srv
 entitySet: A_SalesOrder
 operation: CREATE
 description: Create a new sales order header entity.
@@ -46,7 +46,7 @@ An example of a `READ` tool to query sales order headers:
 kind: tool
 name: read_sales_order_header
 type: odata
-source: sap-sales-order-srv
+source: odata-sales-order-srv
 entitySet: A_SalesOrder
 operation: READ
 description: Retrieve and query sales order headers.
