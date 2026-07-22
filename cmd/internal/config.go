@@ -55,10 +55,32 @@ type ConfigParser struct {
 	AllowMissingEnvVars bool
 }
 
-// parseEnv replaces environment variables ${ENV_NAME} with their values.
-// also support ${ENV_NAME:default_value}.
+// envPlaceholderRe matches an environment-variable placeholder and its optional
+// modifier. The operator and its argument are captured together so a bare
+// ${VAR} still requires the closing brace immediately after the name (any other
+// trailing content, e.g. LookML's ${view.field}, is left untouched). The
+// modifier alternatives are ordered so the two-character colon forms (":-",
+// ":?") are preferred over the single-character forms.
+//
+//	group 1: variable name (\w+)
+//	group 2: modifier operator (":-", ":?", "-", "?" or ":"); absent for bare ${VAR}
+//	group 3: modifier argument (default value or error message)
+var envPlaceholderRe = regexp.MustCompile(`\$\{(\w+)(?:(:-|:\?|-|\?|:)([^}]*))?\}`)
+
+// parseEnv replaces environment-variable placeholders with their values,
+// supporting Docker-Compose-style modifiers so a config can distinguish an
+// unset variable from one that is set-but-empty:
+//
+//	${VAR}          required; error if VAR is unset. A set-but-empty value is
+//	                used as-is (unchanged, backward-compatible behavior).
+//	${VAR:-default} use default if VAR is unset OR empty.
+//	${VAR-default}  use default only if VAR is unset (empty value used as-is).
+//	${VAR:?message} error with message if VAR is unset OR empty.
+//	${VAR?message}  error with message only if VAR is unset (empty used as-is).
+//	${VAR:default}  legacy default; equivalent to ${VAR-default} (kept for
+//	                backward compatibility).
 func (p *ConfigParser) parseEnv(input string) (string, error) {
-	re := regexp.MustCompile(`\$\{(\w+)(:([^}]*))?\}`)
+	re := envPlaceholderRe
 
 	if p.EnvVars == nil {
 		p.EnvVars = make(map[string]string)
@@ -73,31 +95,56 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		output.WriteString(input[lastIndex:start])
 
 		variableName := input[match[2]:match[3]]
-		defaultValue := ""
-		defaultProvided := match[4] != -1 && match[5] != -1
-		if defaultProvided {
-			defaultValue = input[match[6]:match[7]]
+
+		operator := ""
+		argument := ""
+		if match[4] != -1 {
+			// operator and argument are captured together, so both are present.
+			operator = input[match[4]:match[5]]
+			argument = input[match[6]:match[7]]
 		}
 
-		if defaultProvided {
+		// Classify the placeholder by its modifier operator.
+		//   default forms fall back to argument when the variable is unresolved;
+		//   error forms surface argument as an error message instead.
+		isDefault := operator == ":-" || operator == "-" || operator == ":"
+		isError := operator == ":?" || operator == "?"
+		// The colon forms treat a set-but-empty value the same as unset.
+		emptyAsUnset := operator == ":-" || operator == ":?"
+
+		if isDefault {
 			p.OptionalEnvVars = append(p.OptionalEnvVars, variableName)
 		} else {
 			p.requiredEnvVars = append(p.requiredEnvVars, variableName)
 		}
 
-		if value, found := os.LookupEnv(variableName); found {
+		value, found := os.LookupEnv(variableName)
+		resolved := found && !(emptyAsUnset && value == "")
+
+		switch {
+		case resolved:
 			p.EnvVars[variableName] = value
 			output.WriteString(value)
-		} else if defaultProvided {
-			p.EnvVars[variableName] = defaultValue
-			output.WriteString(defaultValue)
-		} else {
+		case isDefault:
+			p.EnvVars[variableName] = argument
+			output.WriteString(argument)
+		default:
+			// Required placeholder (bare ${VAR} or an error form) whose value
+			// could not be resolved.
 			if p.AllowMissingEnvVars {
 				p.EnvVars[variableName] = variableName
 				output.WriteString(variableName)
 			} else if err == nil {
 				line, column := lineColumnAt(input, start)
-				err = fmt.Errorf("environment variable not found: %q (line %d, column %d)", variableName, line, column)
+				if isError {
+					message := strings.TrimSpace(argument)
+					if message == "" {
+						message = "environment variable is required to be set and non-empty"
+					}
+					err = fmt.Errorf("environment variable %q: %s (line %d, column %d)", variableName, message, line, column)
+				} else {
+					err = fmt.Errorf("environment variable not found: %q (line %d, column %d)", variableName, line, column)
+				}
 			}
 		}
 

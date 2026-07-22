@@ -114,6 +114,103 @@ func TestParseEnv(t *testing.T) {
 			want:         "project_req: my_project, project_opt: my_project",
 			wantOptional: []string{}, // Because it was marked required at least once
 		},
+		// Bare ${VAR}: a set-but-empty value is used as-is (backward-compatible).
+		{
+			desc: "bare required, set empty, uses empty value",
+			in:   "${FOO}",
+			env:  map[string]string{"FOO": ""},
+			want: "",
+		},
+		// ${VAR:-default}: default when unset OR empty.
+		{
+			desc:         "colon-dash default, set non-empty, uses value",
+			in:           "${FOO:-fallback}",
+			env:          map[string]string{"FOO": "bar"},
+			want:         "bar",
+			wantOptional: []string{"FOO"},
+		},
+		{
+			desc:         "colon-dash default, set empty, uses default",
+			in:           "${FOO:-fallback}",
+			env:          map[string]string{"FOO": ""},
+			want:         "fallback",
+			wantOptional: []string{"FOO"},
+		},
+		{
+			desc:         "colon-dash default, unset, uses default",
+			in:           "${FOO:-fallback}",
+			want:         "fallback",
+			wantOptional: []string{"FOO"},
+		},
+		{
+			desc:         "colon-dash default, empty default value",
+			in:           "${FOO:-}",
+			want:         "",
+			wantOptional: []string{"FOO"},
+		},
+		// ${VAR:?message}: error when unset OR empty.
+		{
+			desc: "colon-question error, set non-empty, uses value",
+			in:   "${FOO:?must be set}",
+			env:  map[string]string{"FOO": "bar"},
+			want: "bar",
+		},
+		{
+			desc:      "colon-question error, set empty, errors",
+			in:        "${FOO:?must be set}",
+			env:       map[string]string{"FOO": ""},
+			want:      "",
+			err:       true,
+			errString: `environment variable "FOO": must be set (line 1, column 1)`,
+		},
+		{
+			desc:      "colon-question error, unset, errors",
+			in:        "${FOO:?must be set}",
+			want:      "",
+			err:       true,
+			errString: `environment variable "FOO": must be set (line 1, column 1)`,
+		},
+		{
+			desc:      "colon-question error, empty message, uses default message",
+			in:        "${FOO:?}",
+			want:      "",
+			err:       true,
+			errString: `environment variable "FOO": environment variable is required to be set and non-empty (line 1, column 1)`,
+		},
+		{
+			desc:    "colon-question error, unset, lenient uses placeholder",
+			in:      "${FOO:?must be set}",
+			want:    "FOO",
+			lenient: true,
+		},
+		// ${VAR-default}: default only when strictly unset (empty preserved).
+		{
+			desc:         "dash default, set empty, preserves empty value",
+			in:           "${FOO-fallback}",
+			env:          map[string]string{"FOO": ""},
+			want:         "",
+			wantOptional: []string{"FOO"},
+		},
+		{
+			desc:         "dash default, unset, uses default",
+			in:           "${FOO-fallback}",
+			want:         "fallback",
+			wantOptional: []string{"FOO"},
+		},
+		// ${VAR?message}: error only when strictly unset (empty preserved).
+		{
+			desc: "question error, set empty, preserves empty value without error",
+			in:   "${FOO?must be set}",
+			env:  map[string]string{"FOO": ""},
+			want: "",
+		},
+		{
+			desc:      "question error, unset, errors",
+			in:        "${FOO?must be set}",
+			want:      "",
+			err:       true,
+			errString: `environment variable "FOO": must be set (line 1, column 1)`,
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
