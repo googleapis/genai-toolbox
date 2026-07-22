@@ -52,6 +52,7 @@ type compatibleSource interface {
 	GetAuthTokenHeaderName() string
 	LookerApiSettings() *rtl.ApiSettings
 	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
+	GetHostURL(context.Context, *v4.LookerSDK) (string, error)
 }
 
 type Config struct {
@@ -187,9 +188,9 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
-	setting, err := sdk.GetSetting("host_url", source.LookerApiSettings())
+	hostURL, err := source.GetHostURL(ctx, sdk)
 	if err != nil {
-		logger.ErrorContext(ctx, "error getting settings: %s", err)
+		logger.WarnContext(ctx, "failed to dynamically resolve public host URL, utilizing fallback", "error", err)
 	}
 
 	data := make(map[string]any)
@@ -197,8 +198,8 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		data["id"] = *resp.Id
 	}
 	if resp.ShortUrl != nil {
-		if setting.HostUrl != nil {
-			data["short_url"] = *setting.HostUrl + *resp.ShortUrl
+		if hostURL != "" {
+			data["short_url"] = hostURL + *resp.ShortUrl
 		} else {
 			data["short_url"] = *resp.ShortUrl
 		}
