@@ -50,6 +50,10 @@ type Config struct {
 	EnvironmentConfig *dataprocpb.EnvironmentConfig `yaml:"environmentConfig"`
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config, error) {
 	// Use a temporary struct to decode the YAML, so that we can handle the proto
 	// conversion for RuntimeConfig and EnvironmentConfig.

@@ -59,6 +59,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 // Initialize creates a new Cloud SQL Admin ExecuteSqlMany tool.
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	params := parameters.Parameters{

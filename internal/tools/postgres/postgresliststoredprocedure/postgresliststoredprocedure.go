@@ -88,6 +88,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameter("role_name", "Optional: The owner name to filter the stored procedures by. Defaults to NULL.", parameters.WithStringRequired(false)),

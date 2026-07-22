@@ -64,6 +64,10 @@ func (c Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (c Config) GetSource() string {
+	return c.Source
+}
+
 // Initialize implements tools.ToolConfig.
 func (c Config) Initialize(context.Context) (tools.Tool, error) {
 	if c.Description == "" {

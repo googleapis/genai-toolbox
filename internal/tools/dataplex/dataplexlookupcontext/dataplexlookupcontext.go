@@ -63,6 +63,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	resources := parameters.NewArrayParameter("resources",
 		"A list of up to 10 resource names. Resources may belong to different projects, but all must belong to the same location.",

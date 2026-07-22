@@ -33,6 +33,7 @@ type stubConfig struct {
 	tools.ConfigBase
 }
 
+func (stubConfig) GetSource() string       { return "" }
 func (stubConfig) ToolConfigType() string { return "stub" }
 func (stubConfig) Initialize(context.Context) (tools.Tool, error) {
 	return nil, nil
@@ -51,15 +52,17 @@ func (stubTool) ToConfig() tools.ToolConfig { return stubConfig{} }
 // Compile-time check: embedding BaseTool plus Invoke + ToConfig satisfies Tool.
 var _ tools.Tool = stubTool{}
 
-// Compile-time check: ConfigBase satisfies ToolMeta on its own.
-var _ tools.ToolMeta = tools.ConfigBase{}
+// Compile-time check: stubConfig satisfies ToolMeta.
+var _ tools.ToolMeta = stubConfig{}
 
-func newBaseTool() (tools.BaseTool[tools.ConfigBase], tools.Manifest) {
-	cfg := tools.ConfigBase{
-		Name:           "my-tool",
-		Description:    "my tool description",
-		AuthRequired:   []string{"google"},
-		ScopesRequired: []string{"scope-a", "scope-b"},
+func newBaseTool() (tools.BaseTool[stubConfig], tools.Manifest) {
+	cfg := stubConfig{
+		ConfigBase: tools.ConfigBase{
+			Name:           "my-tool",
+			Description:    "my tool description",
+			AuthRequired:   []string{"google"},
+			ScopesRequired: []string{"scope-a", "scope-b"},
+		},
 	}
 	manifest := tools.Manifest{
 		Description:  "manifest description",
@@ -124,7 +127,7 @@ func TestBaseToolAuthorized(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			b := tools.NewBaseTool(tools.ConfigBase{AuthRequired: tc.authRequired}, nil, tools.Manifest{}, nil)
+			b := tools.NewBaseTool(stubConfig{ConfigBase: tools.ConfigBase{AuthRequired: tc.authRequired}}, nil, tools.Manifest{}, nil)
 			if got := b.Authorized(tc.verified); got != tc.want {
 				t.Errorf("Authorized(%v) = %v, want %v", tc.verified, got, tc.want)
 			}
@@ -133,7 +136,7 @@ func TestBaseToolAuthorized(t *testing.T) {
 }
 
 func TestBaseToolRequiresClientAuthorization(t *testing.T) {
-	b := tools.NewBaseTool(tools.ConfigBase{}, nil, tools.Manifest{}, nil)
+	b := tools.NewBaseTool(stubConfig{}, nil, tools.Manifest{}, nil)
 	got, err := b.RequiresClientAuthorization(nil)
 	if err != nil {
 		t.Fatalf("RequiresClientAuthorization() error = %v", err)
@@ -144,7 +147,7 @@ func TestBaseToolRequiresClientAuthorization(t *testing.T) {
 }
 
 func TestBaseToolGetAuthTokenHeaderName(t *testing.T) {
-	b := tools.NewBaseTool(tools.ConfigBase{}, nil, tools.Manifest{}, nil)
+	b := tools.NewBaseTool(stubConfig{}, nil, tools.Manifest{}, nil)
 	got, err := b.GetAuthTokenHeaderName(nil)
 	if err != nil {
 		t.Fatalf("GetAuthTokenHeaderName() error = %v", err)
@@ -156,7 +159,7 @@ func TestBaseToolGetAuthTokenHeaderName(t *testing.T) {
 
 func TestBaseToolEmbedParamsPassthrough(t *testing.T) {
 	b := tools.NewBaseTool(
-		tools.ConfigBase{},
+		stubConfig{},
 		nil,
 		tools.Manifest{},
 		parameters.Parameters{parameters.NewStringParameter("p1", "first")},
@@ -168,5 +171,39 @@ func TestBaseToolEmbedParamsPassthrough(t *testing.T) {
 	}
 	if diff := cmp.Diff(values, got); diff != "" {
 		t.Errorf("EmbedParams() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+type sampleConfigWithSource struct {
+	tools.ConfigBase
+	Source string
+}
+
+func (s sampleConfigWithSource) GetSource() string { return s.Source }
+
+type sampleConfigWithoutSource struct {
+	tools.ConfigBase
+}
+
+func (s sampleConfigWithoutSource) GetSource() string { return "" }
+
+func TestBaseToolGetSource(t *testing.T) {
+	// Tool config with Source field
+	cfgWithSource := sampleConfigWithSource{
+		ConfigBase: tools.ConfigBase{Name: "sourced-tool"},
+		Source:     "my-db-source",
+	}
+	b1 := tools.NewBaseTool(cfgWithSource, nil, tools.Manifest{}, nil)
+	if got, want := b1.GetSource(), "my-db-source"; got != want {
+		t.Errorf("b1.GetSource() = %q, want %q", got, want)
+	}
+
+	// Tool config without Source field
+	cfgWithoutSource := sampleConfigWithoutSource{
+		ConfigBase: tools.ConfigBase{Name: "sourceless-tool"},
+	}
+	b2 := tools.NewBaseTool(cfgWithoutSource, nil, tools.Manifest{}, nil)
+	if got, want := b2.GetSource(), ""; got != want {
+		t.Errorf("b2.GetSource() = %q, want %q", got, want)
 	}
 }

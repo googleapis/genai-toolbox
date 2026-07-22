@@ -326,7 +326,6 @@ func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *tel
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
 	return toolsMap, nil
 }
-
 // initializeToolsets seeds a default toolset containing all tools, then
 // initializes and validates the toolsets from the config.
 func initializeToolsets(ctx context.Context, cfg ServerConfig, toolsMap map[string]tools.Tool, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Toolset, error) {

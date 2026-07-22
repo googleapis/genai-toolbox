@@ -60,6 +60,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	query := parameters.NewStringParameter("query", "The query against which aspect type should be matched.")
 	pageSize := parameters.NewIntParameter("pageSize", "Optional. Number of returned aspect types in the search page.", parameters.WithIntDefault(5))

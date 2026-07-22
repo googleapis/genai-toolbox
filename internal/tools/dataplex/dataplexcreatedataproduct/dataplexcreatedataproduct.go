@@ -67,6 +67,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	locationId := parameters.NewStringParameter("locationId", "The location ID (e.g. 'us', 'us-central1') where the Data Product should be created.")
 	dataProductId := parameters.NewStringParameter(

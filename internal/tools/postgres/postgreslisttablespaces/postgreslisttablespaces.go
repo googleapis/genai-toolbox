@@ -86,6 +86,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameter("tablespace_name", "Optional: a text to filter results by tablespace name. The input is used within a LIKE clause.", parameters.WithStringDefault("")),

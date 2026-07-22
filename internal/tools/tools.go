@@ -127,6 +127,7 @@ type Tool interface {
 	GetDescription() string
 	GetAuthRequired() []string
 	GetAnnotations() *ToolAnnotations
+	GetSource() string
 	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
 	Manifest(map[string]sources.Source) (Manifest, error)
@@ -204,6 +205,7 @@ type ToolMeta interface {
 	GetDescription() string
 	GetAuthRequired() []string
 	GetScopesRequired() []string
+	GetSource() string
 }
 
 // ConfigBase owns the YAML fields that every tool's Config shares and that
@@ -249,6 +251,7 @@ func (b BaseTool[T]) GetName() string                  { return b.Cfg.GetName() 
 func (b BaseTool[T]) GetDescription() string           { return b.Cfg.GetDescription() }
 func (b BaseTool[T]) GetAuthRequired() []string        { return b.Cfg.GetAuthRequired() }
 func (b BaseTool[T]) GetScopesRequired() []string      { return b.Cfg.GetScopesRequired() }
+func (b BaseTool[T]) GetSource() string                 { return b.Cfg.GetSource() }
 func (b BaseTool[T]) GetAnnotations() *ToolAnnotations { return b.annotations }
 
 // Manifest returns the precomputed metadata. It and GetParameters stay trivial

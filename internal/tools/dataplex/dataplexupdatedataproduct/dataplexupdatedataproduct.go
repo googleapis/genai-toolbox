@@ -68,6 +68,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	locationId := parameters.NewStringParameter("locationId", "The location to update the data product in.")
 	dataProductId := parameters.NewStringParameter("dataProductId", "The data product ID.")

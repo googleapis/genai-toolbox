@@ -60,6 +60,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	filter := parameters.NewStringParameter(
 		"filter",

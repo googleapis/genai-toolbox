@@ -58,6 +58,10 @@ func (cfg Config) ToolConfigType() string {
 	return kind
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 // Initialize creates a new Tool instance.
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	desc := cfg.Description

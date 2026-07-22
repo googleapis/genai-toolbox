@@ -65,6 +65,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	// parameters are marked required/ optional based on the vector assist function defintions
 	allParameters := parameters.Parameters{

@@ -88,6 +88,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
+func (cfg Config) GetSource() string {
+	return cfg.Source
+}
+
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameter("min_duration", "Optional: Only show transactions running at least this long (e.g., '1 minute', '15 minutes', '30 seconds').", parameters.WithStringDefault("5 minutes")),

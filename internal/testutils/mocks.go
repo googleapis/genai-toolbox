@@ -30,6 +30,7 @@ import (
 type MockTool struct {
 	Name                       string
 	Description                string
+	Source                     string
 	Params                     []parameters.Parameter
 	manifest                   tools.Manifest
 	unauthorized               bool
@@ -122,6 +123,10 @@ func (t MockTool) GetAuthTokenHeaderName(tools.SourceProvider) (string, error) {
 	return "Authorization", nil
 }
 
+func (t MockTool) GetSource() string {
+	return t.Source
+}
+
 func (t MockTool) GetScopesRequired() []string {
 	return nil
 }
@@ -191,3 +196,4 @@ func NewMockPrompt(name, desc string, args prompts.Arguments) MockPrompt {
 		manifest:    manifest,
 	}
 }
+
