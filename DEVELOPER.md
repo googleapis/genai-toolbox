@@ -900,6 +900,19 @@ Trigger pull request tests for external contributors by:
 * .github/release-please.yml - Creates GitHub releases
 * .github/ISSUE_TEMPLATE - templates for GitHub issues
 
+### Running Renovate Locally
+
+To run and test Renovate configuration updates locally, execute the following command from the repository root:
+
+```bash
+LOG_LEVEL=debug npx renovate --platform=local --repository-cache=reset
+```
+
+> [!NOTE]
+> * `LOG_LEVEL=debug` enables detailed logging to help diagnose any issues with config rules.
+> * `--platform=local` runs Renovate directly on the local repository rather than calling out to GitHub APIs.
+> * `--repository-cache=reset` forces Renovate to reset and recreate its local cache.
+
 ### How-to Release the npm Package
 
 MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.npmjs.com/package/@toolbox-sdk/server).
