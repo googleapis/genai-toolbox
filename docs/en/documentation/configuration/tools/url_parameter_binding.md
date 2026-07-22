@@ -88,6 +88,27 @@ The client calls the tool without providing `project` in the body:
 
 The server automatically injects `project: "my-project"` and executes the tool.
 
+## Using with MCP Toolbox Client SDKs
+
+When using the MCP Toolbox Client SDKs, you can pass URL parameters directly in the server connection string. The SDK will automatically retain these parameters when communicating with the server.
+
+### Python
+
+```python
+from toolbox_core import ToolboxClient
+
+# Initialize the client with the full scoped connection string
+# The `project` parameter will be sent with all MCP requests
+client = ToolboxClient("http://localhost:5000?project=my-project")
+
+# When loading tools, the 'project' parameter is automatically omitted 
+# from the required schema by the server
+tool = await client.load_tool("my_tool")
+
+# The server will automatically inject `project: "my-project"` upon execution
+result = await tool(other_param="value")
+```
+
 ## Safety Warning
 
 > [!WARNING]

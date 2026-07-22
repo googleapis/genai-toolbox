@@ -118,7 +118,7 @@ type DiscoverRequest struct {
 
 // The result returned by the server for a {@link DiscoverRequest | server/discover} request.
 type DiscoverResult struct {
-	jsonrpc.Result
+	Result
 	/**
 	 * MCP Protocol Versions this server supports. The client should choose a
 	 * version from this list for use in subsequent requests.
@@ -179,7 +179,7 @@ type ListChanged struct {
 /* Empty result */
 
 // EmptyResult represents a response that indicates success but carries no data.
-type EmptyResult jsonrpc.Result
+type EmptyResult Result
 
 /* Pagination */
 
@@ -242,6 +242,27 @@ type CacheableResult struct {
 	CacheScope cacheScope `json:"cacheScope"`
 }
 
+type resultType string
+
+const (
+	resultTypeComplete      resultType = "complete"       // the request completed successfully and the result contains the final content.
+	resultTypeInputRequired resultType = "input_required" // the request is incomplete and the result contains an {@link InputRequiredResult} object
+)
+
+type Result struct {
+	jsonrpc.Result
+	/**
+	* Indicates the type of the result, which allows the client to determine
+	* how to parse the result object.
+	*
+	* Servers implementing this protocol version MUST include this field.
+	* For backward compatibility, when a client receives a result from a
+	* server implementing an earlier protocol version (which does not include
+	* `resultType`), the client MUST treat the absent field as `"complete"`.
+	 */
+	ResultType resultType `json:"resultType"`
+}
+
 /* Tools */
 
 // Sent from the client to request a list of tools the server has.
@@ -251,7 +272,7 @@ type ListToolsRequest struct {
 
 // The server's response to a tools/list request from the client.
 type ListToolsResult struct {
-	jsonrpc.Result
+	Result
 	PaginatedResult
 	CacheableResult
 	Tools []Tool `json:"tools"`
@@ -346,7 +367,7 @@ type TextContent struct {
 // server does not support tool calls, or any other exceptional conditions,
 // should be reported as an MCP error response.
 type CallToolResult struct {
-	jsonrpc.Result
+	Result
 	// Could be either a TextContent, ImageContent, or EmbeddedResources
 	// For Toolbox, we will only be sending TextContent
 	Content []TextContent `json:"content"`
@@ -407,7 +428,7 @@ type ListPromptsRequest struct {
 
 // The server's response to a prompts/list request from the client.
 type ListPromptsResult struct {
-	jsonrpc.Result
+	Result
 	PaginatedResult
 	CacheableResult
 	Prompts []Prompt `json:"prompts"`
@@ -428,7 +449,7 @@ type GetPromptRequestParams struct {
 
 // The server's response to a prompts/get request from the client.
 type GetPromptResult struct {
-	jsonrpc.Result
+	Result
 	Description string          `json:"description,omitempty"`
 	Messages    []PromptMessage `json:"messages"`
 }

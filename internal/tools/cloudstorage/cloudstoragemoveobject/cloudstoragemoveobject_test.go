@@ -109,7 +109,7 @@ func TestParseFromYamlCloudStorageMoveObject(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -256,13 +256,13 @@ func TestInvokeValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 			params := parameters.ParamValues{
 				{Name: "bucket", Value: tc.bucket},
 				{Name: "source_object", Value: tc.sourceObject},
 				{Name: "destination_object", Value: tc.destinationObject},
 			}
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")

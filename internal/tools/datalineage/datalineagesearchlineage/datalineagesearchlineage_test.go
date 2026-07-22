@@ -65,7 +65,7 @@ func TestParseFromYamlDatalineageSearchLineage(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -321,7 +321,7 @@ func TestInvoke(t *testing.T) {
 				retUnreachable: tc.retUnreachable,
 				retErr:         tc.retErr,
 			}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 
 			params := parameters.ParamValues{
 				{Name: "locations", Value: tc.locations},
@@ -341,7 +341,7 @@ func TestInvoke(t *testing.T) {
 				params = append(params, parameters.ParamValue{Name: "request_process_details", Value: tc.requestProcessDetails})
 			}
 
-			gotResp, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			gotResp, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")
