@@ -316,8 +316,6 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 	}
 }
 
-
-
 func TestCloudGDAConservationalAnalyticsTools(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
@@ -797,7 +795,7 @@ func runAskDataAgentInvokeTest(t *testing.T, dataAgentID string) {
 
 func runCreateDataAgentInvokeTest(t *testing.T, projectID, datasetID, tableID string) (string, string, func(*testing.T)) {
 	t.Logf("Creating data agent with ProjectID: %q, DatasetID: %q, TableID: %q", projectID, datasetID, tableID)
-	
+
 	accessToken, err := sources.GetIAMAccessToken(t.Context())
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
@@ -923,6 +921,6 @@ func runCreateDataAgentInvokeTest(t *testing.T, projectID, datasetID, tableID st
 			t.Errorf("failed to delete data agent %s, status: %d", agentName, delResp.StatusCode)
 		}
 	}
-	
+
 	return dataAgentId, dataAgentDisplayName, teardown
 }
