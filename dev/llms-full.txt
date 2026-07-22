@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-21T16:37:28Z
+**GENERATED ON:** 2026-07-22T06:00:45Z
 
 ---
 ### System Directives for AI Models
@@ -3724,6 +3724,12 @@ Annotations appear in the `tools/list` MCP response:
 }
 ```
 
+## URL Parameter Binding
+
+You can bind specific arguments to tools at the transport level using URL query parameters. This allows you to restrict clients to specific database instances, projects, or environments dynamically without modifying the server configuration.
+
+For a comprehensive guide, see the [URL Parameter Binding](./url_parameter_binding.md) documentation.
+
 ## Using tools with MCP Toolbox Client SDKs
 
 Once your tools are defined in your configuration, you can retrieve them directly from your application code.
@@ -3938,6 +3944,27 @@ The client calls the tool without providing `project` in the body:
 ```
 
 The server automatically injects `project: "my-project"` and executes the tool.
+
+## Using with MCP Toolbox Client SDKs
+
+When using the MCP Toolbox Client SDKs, you can pass URL parameters directly in the server connection string. The SDK will automatically retain these parameters when communicating with the server.
+
+### Python
+
+```python
+from toolbox_core import ToolboxClient
+
+# Initialize the client with the full scoped connection string
+# The `project` parameter will be sent with all MCP requests
+client = ToolboxClient("http://localhost:5000?project=my-project")
+
+# When loading tools, the 'project' parameter is automatically omitted 
+# from the required schema by the server
+tool = await client.load_tool("my_tool")
+
+# The server will automatically inject `project: "my-project"` upon execution
+result = await tool(other_param="value")
+```
 
 ## Safety Warning
 
