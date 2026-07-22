@@ -254,6 +254,9 @@ func TestGenerateListToolsResult(t *testing.T) {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
 	want := ListToolsResult{
+		Result: Result{
+			ResultType: resultTypeComplete,
+		},
 		CacheableResult: CacheableResult{
 			TtlMs:      300000,
 			CacheScope: cacheScopePublic,
@@ -371,6 +374,9 @@ func TestGenerateListPromptsResult(t *testing.T) {
 		t.Fatalf("unable to generate list prompt result: %s", err)
 	}
 	want := ListPromptsResult{
+		Result: Result{
+			ResultType: resultTypeComplete,
+		},
 		CacheableResult: CacheableResult{
 			TtlMs:      300000,
 			CacheScope: cacheScopePublic,
