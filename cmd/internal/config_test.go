@@ -2209,7 +2209,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"conversational_analytics_tools": tools.ToolsetConfig{
 					Name:      "conversational_analytics_tools",
-					ToolNames: []string{"list_accessible_data_agents", "get_data_agent_info", "ask_data_agent"},
+					ToolNames: []string{"list_accessible_data_agents", "get_data_agent_info", "ask_data_agent", "create_data_agent"},
 				},
 			},
 		},
