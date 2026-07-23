@@ -19,7 +19,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
-	"strings"
 
 	falkordb "github.com/FalkorDB/falkordb-go/v2"
 	"github.com/goccy/go-yaml"
@@ -141,11 +140,14 @@ func (s *Source) RunQuery(ctx context.Context, graphName, cypherStr string, para
 	graph := s.Client.SelectGraph(graphName)
 
 	if dryRun {
-		plan, err := graph.ExecutionPlan(cypherStr)
+		// GRAPH.EXPLAIN replies with an array of plan lines, which
+		// falkordb-go's ExecutionPlan does not handle; issue the command
+		// directly instead.
+		plan, err := s.Client.Conn.Do(ctx, "GRAPH.EXPLAIN", graphName, cypherStr).StringSlice()
 		if err != nil {
 			return nil, fmt.Errorf("unable to explain query: %w", err)
 		}
-		return map[string]any{"plan": strings.Split(plan, "\n")}, nil
+		return map[string]any{"plan": plan}, nil
 	}
 
 	var opts *falkordb.QueryOptions
