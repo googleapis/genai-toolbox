@@ -30,6 +30,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
+	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 )
@@ -63,6 +64,8 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
 	LookerApiSettings() *rtl.ApiSettings
+	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
+	GetHostURL(context.Context, *v4.LookerSDK) (string, error)
 }
 
 // Structs for building the JSON payload
@@ -216,6 +219,11 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
+	}
+
 	if source.GoogleCloudProject() == "" {
 		return nil, util.NewClientServerError(fmt.Sprintf("project must be defined for source to use with %q tool", resourceType), http.StatusInternalServerError, nil)
 	}
@@ -232,7 +240,17 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 	userQuery, _ := mapParams["user_query_with_context"].(string)
 	exploreReferences, _ := mapParams["explore_references"].([]any)
 
-	ler, lerErr := parseExploreReferences(exploreReferences, source.LookerApiSettings().BaseUrl)
+	sdk, err := source.GetLookerSDK(ctx, string(accessToken))
+	if err != nil {
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
+	}
+
+	hostURL, err := source.GetHostURL(ctx, sdk)
+	if err != nil {
+		logger.WarnContext(ctx, "failed to dynamically resolve public host URL, utilizing fallback", "error", err)
+	}
+
+	ler, lerErr := parseExploreReferences(exploreReferences, hostURL)
 	if lerErr != nil {
 		return nil, lerErr
 	}
