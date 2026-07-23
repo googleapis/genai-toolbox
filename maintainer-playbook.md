@@ -69,7 +69,7 @@ Once you have identified a bug, assess it and provide it with an **initial ackno
 
 * [ ] **Check for Duplicates:** Is this a known issue? If so, link to the original, thank the user, and close as duplicate referencing the other issue.
 * [ ] **Verify Reproducibility:** Can we reproduce the reported bug with the information provided? If not, request more information.
-* [ ] **Apply Labels:** Add the **`Priority <>`** & **`Type <>`** & **Product \<\>** (if applicable) label on the GitHub Issue / PR as deemed appropriate. SLOs are based on the "Priority" label. Add the **Status \<\>** label if applicable.
+* [ ] **Apply Labels:** Add the `Priority <>`, `Type <>`, and `Product <>` (if applicable) labels on the GitHub Issue / PR as deemed appropriate. SLOs are based on the "Priority" label. Add the `Status <>` label if applicable.
 * [ ] **Assign/Unassign Owner:** Assign a team member to investigate further if necessary. If you are planning to work on the issue, keep yourself assigned and pull it into your sprint. If you are not planning to work on the issue, unassign yourself so that contributors are aware that the issue is not assigned.
 
 #### **Labels**
