@@ -108,6 +108,11 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"get_field_value_suggestions": map[string]any{
+				"type":        "looker-get-field-value-suggestions",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 			"get_measures": map[string]any{
 				"type":        "looker-get-measures",
 				"source":      "my-instance",
@@ -405,6 +410,53 @@ func TestLooker(t *testing.T) {
 						"name":         "explore",
 						"required":     true,
 						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_field_value_suggestions",
+		map[string]any{
+			"get_field_value_suggestions": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The explore containing the fields.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The name of the field to get suggestions for.",
+						"name":         "field",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional search term pattern.",
+						"name":         "term",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authServices":         []any{},
+						"default":              map[string]any{},
+						"description":          "Optional filters to enable conditional suggestions (restricting suggestions based on other field values).",
+						"name":                 "filters",
+						"required":             false,
+						"type":                 "object",
 					},
 				},
 			},
@@ -2033,6 +2085,22 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "{\"description\":\"Number of times this content has been viewed via the Looker API\",\"label\":\"Content Usage API Count\",\"label_short\":\"API Count\",\"name\":\"content_usage.api_count\",\"type\":\"number\"}"
 	tests.RunToolInvokeParametersTest(t, "get_dimensions", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
+
+	// Verify the suggestions output structure is wrapped in a JSON Object
+	wantResult = `{"suggestions":`
+	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source"}`), wantResult)
+
+	// Verify that the suggestions list contains the expected value
+	wantResult = `"query"`
+	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source"}`), wantResult)
+
+	// Verify that search term filtering works
+	wantResult = `"api"`
+	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "term": "ap"}`), wantResult)
+
+	// Verify that conditional filtering based on other fields works
+	wantResult = `"query"`
+	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "filters": {"history.status": "complete"}}`), wantResult)
 
 	wantResult = "{\"description\":\"The total number of views via the Looker API\",\"label\":\"Content Usage API Total\",\"label_short\":\"API Total\",\"name\":\"content_usage.api_total\",\"type\":\"sum\"}"
 	tests.RunToolInvokeParametersTest(t, "get_measures", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
