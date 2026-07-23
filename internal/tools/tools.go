@@ -127,22 +127,22 @@ type Tool interface {
 	GetDescription() string
 	GetAuthRequired() []string
 	GetAnnotations() *ToolAnnotations
-	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
+	Invoke(context.Context, SourceManager, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
 	Manifest(map[string]sources.Source) (Manifest, error)
 	StaticManifest() Manifest
 	Authorized([]string) bool
-	RequiresClientAuthorization(SourceProvider) (bool, error)
+	RequiresClientAuthorization(SourceManager) (bool, error)
 	ToConfig() ToolConfig
-	GetAuthTokenHeaderName(SourceProvider) (string, error)
+	GetAuthTokenHeaderName(SourceManager) (string, error)
 	GetParameters(map[string]sources.Source) (parameters.Parameters, error)
 	GetScopesRequired() []string
 }
 
-// SourceProvider defines the minimal view of the primitives.PrimitiveManager
+// SourceManager defines the minimal view of the primitives.PrimitiveManager
 // that the Tool package needs.
 // This is implemented to prevent import cycles.
-type SourceProvider interface {
+type SourceManager interface {
 	GetSource(sourceName string) (sources.Source, bool)
 }
 

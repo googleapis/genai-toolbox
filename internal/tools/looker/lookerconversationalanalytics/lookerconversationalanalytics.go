@@ -184,6 +184,18 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
+func (t Tool) ValidateSource(srcMgr tools.SourceManager) error {
+	source, ok := srcMgr.GetSource(t.Cfg.Name)
+	if !ok {
+		return fmt.Errorf("unable to retrieve source %q for tool %q", t.Cfg.Source, t.Cfg.Name)
+	}
+	_, ok = source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return nil
+}
+
 // parseExploreReferences converts the raw explore_references parameter into typed
 // references. The parameter is declared as an array of free-form maps, so the values
 // the model supplies are not schema-validated; guard every field access instead of

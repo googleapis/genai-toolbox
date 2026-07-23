@@ -114,6 +114,18 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
+func (t Tool) ValidateSource(srcMgr tools.SourceManager) error {
+	source, ok := srcMgr.GetSource(t.Cfg.Name)
+	if !ok {
+		return fmt.Errorf("unable to retrieve source %q for tool %q", t.Cfg.Source, t.Cfg.Name)
+	}
+	_, ok = source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return nil
+}
+
 func getOptions(ctx context.Context, sortParameters parameters.Parameters, projectPayload string, limit int64, paramsMap map[string]any) (*options.FindOptionsBuilder, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
