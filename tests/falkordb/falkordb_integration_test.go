@@ -91,9 +91,13 @@ func TestFalkorDBToolEndpoints(t *testing.T) {
 
 	args := []string{"--enable-api"}
 
+	emptyGraphSourceConfig := getFalkorDBVars(t)
+	emptyGraphSourceConfig["graph"] = "toolbox_nonexistent_graph"
+
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-instance": sourceConfig,
+			"my-instance":       sourceConfig,
+			"my-empty-instance": emptyGraphSourceConfig,
 		},
 		"tools": map[string]any{
 			"my-simple-cypher-tool": map[string]any{
@@ -136,6 +140,11 @@ func TestFalkorDBToolEndpoints(t *testing.T) {
 				"type":        "falkordb-schema",
 				"source":      "my-instance",
 				"description": "A tool to get the FalkorDB graph schema.",
+			},
+			"my-empty-graph-schema-tool": map[string]any{
+				"type":        "falkordb-schema",
+				"source":      "my-empty-instance",
+				"description": "A schema tool pointed at a graph that does not exist yet.",
 			},
 			"my-list-graphs-tool": map[string]any{
 				"type":        "falkordb-list-graphs",
@@ -396,6 +405,28 @@ func TestFalkorDBToolEndpoints(t *testing.T) {
 				}
 				if !found {
 					t.Errorf("expected graph %q in list, got: %v", FalkorDBGraph, graphs)
+				}
+			},
+		},
+		{
+			name:        "invoke schema tool on nonexistent graph",
+			api:         "http://127.0.0.1:5000/api/tool/my-empty-graph-schema-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				var schema map[string]any
+				if err := json.Unmarshal([]byte(body), &schema); err != nil {
+					t.Fatalf("failed to unmarshal schema json: %v\nResponse body: %s", err, body)
+				}
+				graphInfo, ok := schema["graphInfo"].(map[string]any)
+				if !ok {
+					t.Fatalf("expected graphInfo in empty schema response, got: %s", body)
+				}
+				if graphInfo["name"] != "toolbox_nonexistent_graph" {
+					t.Errorf("expected graphInfo.name 'toolbox_nonexistent_graph', got %v", graphInfo["name"])
+				}
+				if nodeCount, ok := graphInfo["nodeCount"].(float64); !ok || nodeCount != 0 {
+					t.Errorf("expected nodeCount 0 for empty graph, got %v", graphInfo["nodeCount"])
 				}
 			},
 		},

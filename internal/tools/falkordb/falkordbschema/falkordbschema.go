@@ -153,6 +153,17 @@ func (t Tool) extractSchema(ctx context.Context, source compatibleSource) (*type
 			RelationshipsByType: make(map[string]int64),
 		},
 	}
+
+	// FalkorDB creates graph keys lazily, so a graph nothing has written to
+	// yet does not exist and every query on it fails. Report it as an empty
+	// schema instead.
+	if _, err := runReadQuery(ctx, source, "RETURN 1"); err != nil {
+		if strings.Contains(err.Error(), "empty key") {
+			return schema, nil
+		}
+		return nil, fmt.Errorf("failed to reach graph %q: %w", source.DefaultGraph(), err)
+	}
+
 	var mu sync.Mutex
 
 	tasks := []struct {
