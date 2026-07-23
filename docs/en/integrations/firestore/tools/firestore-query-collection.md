@@ -24,6 +24,8 @@ with filters, ordering, and limit capabilities.
 | `orderBy`        |    string    |     false    |      -      | JSON string specifying field and direction to order results           |
 | `limit`          |    integer   |     false    |     100     | Maximum number of documents to return                                 |
 | `analyzeQuery`   |    boolean   |     false    |    false    | If true, returns query explain metrics including execution statistics |
+| `vectorFields`   |    list      |     false    |      -      | Configuration for vector similarity search.                           |
+
 
 ## Example
 
@@ -149,6 +151,32 @@ Direction values:
   "analyzeQuery": true
 }
 ```
+
+### Vector Search
+
+You can perform semantic searches on a collection by configuring `vectorFields`.
+
+```yaml
+kind: tool
+name: find_similar_profiles
+type: firestore-query-collection
+source: my-firestore
+vectorFields:
+  - name: search_query
+    fieldPath: profile_embedding
+    embeddedBy: text-embedding-model
+    distanceMeasure: COSINE
+```
+
+Usage:
+
+```json
+{
+  "collectionPath": "users",
+  "search_query": "AI researcher with experience in Python"
+}
+```
+
 
 ## Output Format
 

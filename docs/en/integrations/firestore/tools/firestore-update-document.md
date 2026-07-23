@@ -26,6 +26,8 @@ deleted from the document, following Firestore's native behavior.
 | `documentData` | map     | Yes      | The data to update in the document. Must use [Firestore's native JSON format](https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value) with typed values                                                                  |
 | `updateMask`   | array   | No       | The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated. Fields referenced in the mask but not present in documentData will be deleted from the document |
 | `returnData`   | boolean | No       | If set to true, the output will include the data of the updated document. Defaults to false to help avoid overloading the context                                                                                                                      |
+| `vectorFields` | list    | No       | Configuration for automatic vector embedding. See [Vector Embedding Support](#vector-embedding-support)                                                                                                                                               |
+
 
 ### Data Type Format
 
@@ -278,6 +280,36 @@ In this example:
   "returnData": true
 }
 ```
+
+### With Vector Embedding
+
+Automatically update embeddings when document text changes.
+
+```yaml
+kind: tool
+name: update-embedded-doc
+type: firestore-update-document
+source: my-firestore
+vectorFields:
+  - name: bio
+    fieldPath: bio_embedding
+    embeddedBy: my-text-embedding-model
+```
+
+Usage:
+
+```json
+{
+  "documentPath": "users/user123",
+  "documentData": {
+    "bio": { "stringValue": "AI Engineer specializing in vector databases and MCP." }
+  },
+  "updateMask": ["bio"]
+}
+```
+
+The tool will automatically re-embed the updated `bio` text and store the new vector in the `bio_embedding` field.
+
 
 ## Output Format
 

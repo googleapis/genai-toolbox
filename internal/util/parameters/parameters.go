@@ -139,7 +139,20 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 		sourceParamName := p.GetValueFromParam()
 		if sourceParamName != "" {
 			v = data[sourceParamName]
-
+			if v == nil && strings.Contains(sourceParamName, ".") {
+				// Fallback to dot notation lookup
+				parts := strings.Split(sourceParamName, ".")
+				var current any = data
+				for _, part := range parts {
+					if currentMap, ok := current.(map[string]any); ok {
+						current = currentMap[part]
+					} else {
+						current = nil
+						break
+					}
+				}
+				v = current
+			}
 		} else if len(paramAuthServices) == 0 {
 			// parse non auth-required parameter
 			var ok bool

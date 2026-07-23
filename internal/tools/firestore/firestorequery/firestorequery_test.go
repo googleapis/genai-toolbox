@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorequery"
+	fsUtil "github.com/googleapis/mcp-toolbox/internal/tools/firestore/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -310,6 +311,58 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 						parameters.NewFloatParameter("minGdp", "Minimum GDP value", parameters.WithFloatRequired(true)),
 						parameters.NewBooleanParameter("isActive", "Filter by active status", parameters.WithBooleanRequired(true)),
 						parameters.NewStringParameter("startDate", "Start date in RFC3339 format", parameters.WithStringRequired(true)),
+					},
+				},
+			},
+		},
+		{
+			desc: "with vector query configuration",
+			in: `
+            kind: tool
+            name: query_with_vector
+            type: firestore-query
+            source: vec-firestore
+            description: Query with vector search
+            collectionPath: "documents"
+            limit: 25
+            vectorQuery:
+                name: search_prompt
+                description: Natural language description
+                fieldPath: embedding
+                embeddedBy: gemini-model
+                distanceMeasure: COSINE
+                distanceResultField: distance
+                distanceThreshold: 0.5
+                required: false
+            parameters:
+                - name: base
+                  type: string
+                  description: Base filter
+                  required: true
+			`,
+			want: server.ToolConfigs{
+				"query_with_vector": firestorequery.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "query_with_vector",
+						Description:  "Query with vector search",
+						AuthRequired: []string{},
+					},
+					Type:           "firestore-query",
+					Source:         "vec-firestore",
+					CollectionPath: "documents",
+					Limit:          "25",
+					VectorQuery: &fsUtil.VectorQueryConfig{
+						Name:                "search_prompt",
+						Description:         "Natural language description",
+						FieldPath:           "embedding",
+						EmbeddedBy:          "gemini-model",
+						DistanceMeasure:     "COSINE",
+						DistanceResultField: "distance",
+						DistanceThreshold:   func() *float64 { v := 0.5; return &v }(),
+						Required:            false,
+					},
+					Parameters: parameters.Parameters{
+						parameters.NewStringParameterWithRequired("base", "Base filter", true),
 					},
 				},
 			},

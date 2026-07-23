@@ -24,6 +24,8 @@ import (
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
+
+	firestoreSource "github.com/googleapis/mcp-toolbox/internal/sources/firestore"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	fsUtil "github.com/googleapis/mcp-toolbox/internal/tools/firestore/util"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -54,7 +56,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
 	BuildQuery(string, firestoreapi.EntityFilter, []string, string, firestoreapi.Direction, int, bool) (*firestoreapi.Query, error)
-	ExecuteQuery(context.Context, *firestoreapi.Query, bool) (any, error)
+	ExecuteQuery(context.Context, firestoreSource.DocumentQuery, bool) (any, error)
 }
 
 // Config represents the configuration for the Firestore query tool
@@ -64,12 +66,13 @@ type Config struct {
 	Source           string `yaml:"source" validate:"required"`
 
 	// Template fields
-	CollectionPath string         `yaml:"collectionPath" validate:"required"`
-	Filters        string         `yaml:"filters"`      // JSON string template
-	Select         []string       `yaml:"select"`       // Fields to select
-	OrderBy        map[string]any `yaml:"orderBy"`      // Order by configuration
-	Limit          string         `yaml:"limit"`        // Limit template (can be a number or template)
-	AnalyzeQuery   bool           `yaml:"analyzeQuery"` // Analyze query (boolean, not parameterizable)
+	CollectionPath string                    `yaml:"collectionPath" validate:"required"`
+	Filters        string                    `yaml:"filters"`      // JSON string template
+	Select         []string                  `yaml:"select"`       // Fields to select
+	OrderBy        map[string]any            `yaml:"orderBy"`      // Order by configuration
+	Limit          string                    `yaml:"limit"`        // Limit template (can be a number or template)
+	AnalyzeQuery   bool                      `yaml:"analyzeQuery"` // Analyze query (boolean, not parameterizable)
+	VectorQuery    *fsUtil.VectorQueryConfig `yaml:"vectorQuery"`
 
 	// Parameters for template substitution
 	Parameters  parameters.Parameters  `yaml:"parameters"`
@@ -95,6 +98,18 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		cfg.Limit = fmt.Sprintf("%d", defaultLimit)
 	}
 
+	var vectorQueryRuntime *fsUtil.VectorQueryRuntime
+	if cfg.VectorQuery != nil {
+		param, runtime, err := fsUtil.BuildVectorQueryRuntime(cfg.VectorQuery)
+		if err != nil {
+			return nil, err
+		}
+		if param != nil {
+			cfg.Parameters = append(cfg.Parameters, param)
+		}
+		vectorQueryRuntime = runtime
+	}
+
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
@@ -102,6 +117,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 			tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			cfg.Parameters,
 		),
+		vectorQuery: vectorQueryRuntime,
 	}, nil
 }
 
@@ -111,6 +127,7 @@ var _ tools.Tool = Tool{}
 // Tool represents the Firestore query tool
 type Tool struct {
 	tools.BaseTool[Config]
+	vectorQuery *fsUtil.VectorQueryRuntime
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -209,11 +226,32 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		orderByDirection = orderBy.GetDirection()
 	}
 
+	if t.vectorQuery != nil {
+		vectorValues, ok, extractErr := fsUtil.ExtractVectorQueryValue(paramsMap, t.vectorQuery)
+		if extractErr != nil {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid vector query: %v", extractErr), extractErr)
+		}
+		if ok {
+			// Build the query WITHOUT limit for vector search
+			query, err := source.BuildQuery(collectionPath, filter, selectFields, orderByField, orderByDirection, 0, t.Cfg.AnalyzeQuery)
+			if err != nil {
+				return nil, util.ProcessGcpError(err)
+			}
+			nearestQuery := query.FindNearest(t.vectorQuery.FieldPath, firestoreapi.Vector64(vectorValues), limit, t.vectorQuery.Measure, fsUtil.BuildFindNearestOptions(t.vectorQuery))
+			resp, err := source.ExecuteQuery(ctx, nearestQuery, t.Cfg.AnalyzeQuery)
+			if err != nil {
+				return nil, util.ProcessGcpError(err)
+			}
+			return resp, nil
+		}
+	}
+
 	// Build the query
 	query, err := source.BuildQuery(collectionPath, filter, selectFields, orderByField, orderByDirection, limit, t.Cfg.AnalyzeQuery)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
+
 	// Execute the query and return results
 	resp, err := source.ExecuteQuery(ctx, query, t.Cfg.AnalyzeQuery)
 	if err != nil {

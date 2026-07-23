@@ -19,12 +19,14 @@ import (
 	"strings"
 	"testing"
 
+	firestoreapi "cloud.google.com/go/firestore"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	firestoreds "github.com/googleapis/mcp-toolbox/internal/sources/firestore"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	fsUtil "github.com/googleapis/mcp-toolbox/internal/tools/firestore/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -440,5 +442,172 @@ func TestGetFieldValue(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+type mockFirestoreSource struct {
+	sources.Source
+	lastDocumentPath string
+	lastUpdates      []firestoreapi.Update
+	lastDocumentData any
+	lastReturnData   bool
+}
+
+func (m *mockFirestoreSource) SourceType() string {
+	return "firestore"
+}
+
+func (m *mockFirestoreSource) ToConfig() sources.SourceConfig {
+	return nil
+}
+
+func (m *mockFirestoreSource) FirestoreClient() *firestoreapi.Client {
+	return nil
+}
+
+func (m *mockFirestoreSource) UpdateDocument(_ context.Context, documentPath string, updates []firestoreapi.Update, documentData any, returnData bool) (map[string]any, error) {
+	m.lastDocumentPath = documentPath
+	m.lastUpdates = updates
+	m.lastDocumentData = documentData
+	m.lastReturnData = returnData
+	return map[string]any{"status": "ok"}, nil
+}
+
+type mockSourceProvider struct {
+	sourceName string
+	source     sources.Source
+}
+
+func (m mockSourceProvider) GetSource(name string) (sources.Source, bool) {
+	if name == m.sourceName {
+		return m.source, true
+	}
+	return nil, false
+}
+
+func TestToolInvoke_AppliesVectorFieldsWithoutMask(t *testing.T) {
+	cfg := Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "update-docs",
+			Description: "Update doc",
+		},
+		Type:        resourceType,
+		Source:      "firestore-source",
+		VectorFields: []fsUtil.VectorFieldConfig{
+			{
+				Name:        "content_to_embed",
+				Description: "text",
+				FieldPath:   "embedding",
+				EmbeddedBy:  "gemini",
+			},
+		},
+	}
+
+	toolIface, err := cfg.Initialize(nil)
+	if err != nil {
+		t.Fatalf("Initialize() error = %v", err)
+	}
+	tool := toolIface.(Tool)
+
+	firestoreSource := &mockFirestoreSource{}
+	provider := mockSourceProvider{sourceName: cfg.Source, source: firestoreSource}
+
+	params := parameters.ParamValues{
+		{Name: documentPathKey, Value: "users/user1"},
+		{Name: documentDataKey, Value: map[string]any{
+			"mapValue": map[string]any{
+				"fields": map[string]any{
+					"title": map[string]any{"stringValue": "hello"},
+				},
+			},
+		}},
+		{Name: returnDocumentDataKey, Value: false},
+		{Name: cfg.VectorFields[0].Name, Value: []float32{0.25, -0.25}},
+	}
+
+	if _, err := tool.Invoke(context.Background(), provider, params, ""); err != nil {
+		t.Fatalf("Invoke() error = %v", err)
+	}
+
+	dataMap, ok := firestoreSource.lastDocumentData.(map[string]any)
+	if !ok {
+		t.Fatalf("expected document data map, got %T", firestoreSource.lastDocumentData)
+	}
+	vector, ok := dataMap["embedding"].([]float64)
+	if !ok {
+		t.Fatalf("expected embedding field to be present")
+	}
+	if diff := cmp.Diff([]float64{0.25, -0.25}, vector); diff != "" {
+		t.Fatalf("embedding mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestToolInvoke_AppliesVectorFieldsWithUpdateMask(t *testing.T) {
+	cfg := Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "update-docs",
+			Description: "Update doc",
+		},
+		Type:        resourceType,
+		Source:      "firestore-source",
+		VectorFields: []fsUtil.VectorFieldConfig{
+			{
+				Name:        "content_to_embed",
+				Description: "text",
+				FieldPath:   "embedding",
+				EmbeddedBy:  "gemini",
+			},
+		},
+	}
+
+	toolIface, err := cfg.Initialize(nil)
+	if err != nil {
+		t.Fatalf("Initialize() error = %v", err)
+	}
+	tool := toolIface.(Tool)
+
+	firestoreSource := &mockFirestoreSource{}
+	provider := mockSourceProvider{sourceName: cfg.Source, source: firestoreSource}
+
+	params := parameters.ParamValues{
+		{Name: documentPathKey, Value: "users/user1"},
+		{Name: documentDataKey, Value: map[string]any{
+			"mapValue": map[string]any{
+				"fields": map[string]any{
+					"title": map[string]any{"stringValue": "hello"},
+				},
+			},
+		}},
+		{Name: updateMaskKey, Value: []any{"title"}},
+		{Name: returnDocumentDataKey, Value: false},
+		{Name: cfg.VectorFields[0].Name, Value: []float64{0.5, 0.75}},
+	}
+
+	if _, err := tool.Invoke(context.Background(), provider, params, ""); err != nil {
+		t.Fatalf("Invoke() error = %v", err)
+	}
+
+	if firestoreSource.lastDocumentData != nil {
+		t.Fatalf("expected document data to be nil for masked update")
+	}
+	if len(firestoreSource.lastUpdates) != 2 {
+		t.Fatalf("expected two updates (scalar + vector), got %d", len(firestoreSource.lastUpdates))
+	}
+
+	foundVector := false
+	for _, update := range firestoreSource.lastUpdates {
+		if update.Path == "embedding" {
+			vector, ok := update.Value.([]float64)
+			if !ok {
+				t.Fatalf("vector update has unexpected type %T", update.Value)
+			}
+			if diff := cmp.Diff([]float64{0.5, 0.75}, vector); diff != "" {
+				t.Fatalf("vector update mismatch (-want +got):\n%s", diff)
+			}
+			foundVector = true
+		}
+	}
+	if !foundVector {
+		t.Fatalf("expected embedding field to be added to update mask")
 	}
 }

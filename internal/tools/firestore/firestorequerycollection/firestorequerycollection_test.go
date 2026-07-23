@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorequerycollection"
+	fsUtil "github.com/googleapis/mcp-toolbox/internal/tools/firestore/util"
 )
 
 func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
@@ -76,6 +77,46 @@ func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
 					},
 					Type:   "firestore-query-collection",
 					Source: "prod-firestore",
+				},
+			},
+		},
+		{
+			desc: "with vector query config",
+			in: `
+            kind: tool
+            name: query_vector
+            type: firestore-query-collection
+            source: vec-firestore
+            description: Query with vector search
+            vectorQuery:
+                name: search_prompt
+                description: Search prompt
+                fieldPath: embedding
+                embeddedBy: gemini-model
+                distanceMeasure: COSINE
+                distanceResultField: distance
+                distanceThreshold: 0.6
+                required: false
+			`,
+			want: server.ToolConfigs{
+				"query_vector": firestorequerycollection.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "query_vector",
+						Description:  "Query with vector search",
+						AuthRequired: []string{},
+					},
+					Type:         "firestore-query-collection",
+					Source:       "vec-firestore",
+					VectorQuery: &fsUtil.VectorQueryConfig{
+						Name:                "search_prompt",
+						Description:         "Search prompt",
+						FieldPath:           "embedding",
+						EmbeddedBy:          "gemini-model",
+						DistanceMeasure:     "COSINE",
+						DistanceResultField: "distance",
+						DistanceThreshold:   func() *float64 { v := 0.6; return &v }(),
+						Required:            false,
+					},
 				},
 			},
 		},

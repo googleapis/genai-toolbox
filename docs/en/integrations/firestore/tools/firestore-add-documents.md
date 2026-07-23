@@ -23,6 +23,8 @@ each new document.
 | `collectionPath` | string  | Yes      | The path of the collection where the document will be added                                                                                                                                                   |
 | `documentData`   | map     | Yes      | The data to be added as a document to the given collection. Must use [Firestore's native JSON format](https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value) with typed values |
 | `returnData`     | boolean | No       | If set to true, the output will include the data of the created document. Defaults to false to help avoid overloading the context                                                                             |
+| `vectorFields`   | list    | No       | Configuration for automatic vector embedding. See [Vector Embedding Support](#vector-embedding-support)                                                                                                       |
+
 
 ### Data Type Format
 
@@ -232,6 +234,36 @@ Usage:
   }
 }
 ```
+
+### With Vector Embedding
+
+Automatically generate embeddings for a text field and store them in the document.
+
+```yaml
+kind: tool
+name: add-embedded-doc
+type: firestore-add-documents
+source: my-firestore
+vectorFields:
+  - name: description
+    fieldPath: description_embedding
+    embeddedBy: my-text-embedding-model
+```
+
+Usage:
+
+```json
+{
+  "collectionPath": "products",
+  "documentData": {
+    "title": { "stringValue": "Wireless Headphones" },
+    "description": { "stringValue": "High-quality noise-cancelling wireless headphones with 30-hour battery life." }
+  }
+}
+```
+
+The tool will automatically call `my-text-embedding-model` with the value of the `description` field and store the resulting vector in the `description_embedding` field of the document.
+
 
 ## Output Format
 

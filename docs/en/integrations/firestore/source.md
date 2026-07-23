@@ -82,3 +82,27 @@ project: "my-project-id"
 | type      |  string  |     true     | Must be "firestore".                                                                                     |
 | project   |  string  |     true     | Id of the GCP project that contains the Firestore database (e.g. "my-project-id").                       |
 | database  |  string  |     false    | Name of the Firestore database to connect to. Defaults to "(default)" if not specified.                  |
+
+## Advanced Usage
+
+### Vector Embedding Support
+
+Firestore source supports native vector embeddings when used with the `vectorFields` configuration in supported tools. This enables automatic ingestion of embeddings and native vector similarity search.
+
+#### Automatic Ingestion
+When adding or updating documents, you can configure `vectorFields` to automatically generate embeddings for text fields using an `embeddingModel`. The resulting vectors are stored as native Firestore arrays of doubles.
+
+#### Vector Similarity Search
+You can perform semantic searches using natural language prompts. The system automatically embeds the search prompt and executes a Firestore native `findNearest` query.
+
+#### Requirements
+To use vector search, you must create a **Vector Index** for the specific field in your Firestore database.
+
+```bash
+gcloud firestore indexes composite create \
+  --project=PROJECT_ID \
+  --collection-group=COLLECTION_GROUP \
+  --query-scope=COLLECTION \
+  --field-config=vector-config='{"dimension":"DIMENSIONS","flat": "{}"}',field-path=FIELD_PATH
+```
+

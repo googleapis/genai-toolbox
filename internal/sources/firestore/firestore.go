@@ -168,7 +168,9 @@ func (s *Source) BuildQuery(collectionPath string, filter firestore.EntityFilter
 	if field != "" {
 		query = query.OrderBy(field, direction)
 	}
-	query = query.Limit(limit)
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
 
 	// Apply analyze options if enabled
 	if analyzeQuery {
@@ -196,9 +198,17 @@ type QueryResponse struct {
 	ExplainMetrics map[string]any `json:"explainMetrics,omitempty"`
 }
 
+// DocumentQuery is an interface for queries that can return documents
+type DocumentQuery interface {
+	Documents(ctx context.Context) *firestore.DocumentIterator
+}
+
 // ExecuteQuery runs the query and formats the results
-func (s *Source) ExecuteQuery(ctx context.Context, query *firestore.Query, analyzeQuery bool) (any, error) {
-	docIterator := query.Documents(ctx)
+func (s *Source) ExecuteQuery(ctx context.Context, query DocumentQuery, analyzeQuery bool) (any, error) {
+	return s.executeIterator(query.Documents(ctx), analyzeQuery)
+}
+
+func (s *Source) executeIterator(docIterator *firestore.DocumentIterator, analyzeQuery bool) (any, error) {
 	docs, err := docIterator.GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)

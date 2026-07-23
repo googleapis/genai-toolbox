@@ -50,7 +50,9 @@ developers can use to create custom tools with specific query patterns.
 | `orderBy`        | object  | No       | Ordering configuration with `field` and `direction`(supports templates for the value of field or direction) |
 | `limit`          | integer | No       | Maximum number of documents to return (default: 100) (supports templates)                                   |
 | `analyzeQuery`   | boolean | No       | Whether to analyze query performance (default: false)                                                       |
+| `vectorFields`   | list    | No       | Configuration for vector similarity search. See [Vector Search](#vector-search)                             |
 | `parameters`     | array   | Yes      | Parameter definitions for template substitution                                                             |
+
 
 ### Runtime Parameters
 
@@ -352,6 +354,54 @@ parameters:
     description: End time in RFC3339 format
     required: true
 ```
+
+## Vector Search
+
+The `firestore-query` tool supports native Firestore vector similarity search using the `findNearest` operation. This allows you to perform semantic searches using natural language prompts.
+
+### Configuration
+
+To enable vector search, add the `vectorFields` configuration to your tool:
+
+```yaml
+vectorFields:
+  - name: search_query
+    fieldPath: description_embedding
+    embeddedBy: my-text-embedding-model
+    distanceMeasure: COSINE
+```
+
+| Field             | Type   | Description                                                                 |
+|-------------------|--------|-----------------------------------------------------------------------------|
+| `name`            | string | The name of the runtime parameter that will hold the search prompt.         |
+| `fieldPath`       | string | The path to the vector field in your Firestore documents.                   |
+| `embeddedBy`      | string | The name of the `embeddingModel` to use for embedding the search prompt.    |
+| `distanceMeasure` | string | The distance metric to use: `EUCLIDEAN`, `COSINE`, or `DOT_PRODUCT`.        |
+
+### Example: Semantic Product Search
+
+```yaml
+kind: tool
+name: search_products
+type: firestore-query
+source: my-firestore
+description: Search for products using natural language
+collectionPath: "products"
+vectorFields:
+  - name: query
+    fieldPath: description_embedding
+    embeddedBy: my-text-embedding-model
+    distanceMeasure: COSINE
+parameters:
+  - name: query
+    type: string
+    description: Semantic search query (e.g. "portable audio gear")
+    required: true
+```
+
+### Technical Note on Limits
+When performing a vector search, Firestore uses the `limit` parameter to determine the number of nearest neighbors to return. Standard query filters can still be applied, but they act as a pre-filter for the vector search.
+
 
 ## Advanced Usage
 
