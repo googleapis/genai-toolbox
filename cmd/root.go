@@ -132,13 +132,13 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	return cmd
 }
 
-func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *server.Server) error {
+func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *server.Server, emulatorMode bool, emulatorMocksFile string) error {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := validateReloadEdits(ctx, toolsFile, emulatorMode, emulatorMocksFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
@@ -152,7 +152,7 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 
 // validateReloadEdits checks that the reloaded config configs can initialized without failing
 func validateReloadEdits(
-	ctx context.Context, toolsFile internal.Config,
+	ctx context.Context, toolsFile internal.Config, emulatorMode bool, emulatorMocksFile string,
 ) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
@@ -178,6 +178,8 @@ func validateReloadEdits(
 		ToolConfigs:           toolsFile.Tools,
 		ToolsetConfigs:        toolsFile.Toolsets,
 		PromptConfigs:         toolsFile.Prompts,
+		EmulatorMode:          emulatorMode,
+		EmulatorMocksFile:     emulatorMocksFile,
 		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
@@ -234,7 +236,7 @@ func scanWatchedFiles(watchingFolder bool, folderToWatch string, watchedFiles ma
 }
 
 // watchChanges checks for changes in the provided yaml config(s) or folder.
-func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server, pollTickerSecond int) {
+func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server, pollTickerSecond int, emulatorMode bool, emulatorMocksFile string) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -380,7 +382,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 				continue
 			}
 
-			err = handleDynamicReload(ctx, reloadedConfig, s)
+			err = handleDynamicReload(ctx, reloadedConfig, s, emulatorMode, emulatorMocksFile)
 			if err != nil {
 				errMsg := fmt.Errorf("unable to parse reloaded config at %q: %w", reloadedConfig, err)
 				logger.WarnContext(ctx, errMsg.Error())
@@ -463,6 +465,12 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		}
 	}
 
+	if opts.Cfg.EmulatorMode && opts.Cfg.EmulatorMocksFile == "" {
+		errMsg := fmt.Errorf("--emulator-mocks-file is required when --emulator-mode is enabled")
+		opts.Logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
+	}
+
 	if mcpAuthEnabled {
 		if opts.Cfg.EnableAPI {
 			errMsg := fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (--enable-api)")
@@ -527,7 +535,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	if isCustomConfigured && !opts.Cfg.DisableReload {
 		watchDirs, watchedFiles := resolveWatcherInputs(opts.Config, opts.Configs, opts.ConfigFolder)
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
-		go watchChanges(ctx, watchDirs, watchedFiles, s, opts.Cfg.PollInterval)
+		go watchChanges(ctx, watchDirs, watchedFiles, s, opts.Cfg.PollInterval, opts.Cfg.EmulatorMode, opts.Cfg.EmulatorMocksFile)
 	}
 
 	// wait for either the server to error out or the command's context to be canceled

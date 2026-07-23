@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/spf13/cobra"
 )
@@ -34,6 +35,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 		Long:  "Deploy the toolbox server",
 	}
 	flags := cmd.Flags()
+	internal.ConfigFileFlags(flags, opts)
 	internal.ServeFlags(flags, opts)
 	cmd.RunE = func(*cobra.Command, []string) error { return runServe(cmd, opts) }
 	return cmd
@@ -70,6 +72,32 @@ func runServe(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	defer func() {
 		_ = shutdown(ctx)
 	}()
+
+	_, err = opts.LoadConfig(ctx, &internal.ConfigParser{})
+	if err != nil {
+		return err
+	}
+
+	// Validate ToolboxUrl if MCP Auth is enabled
+	for _, authSvc := range opts.Cfg.AuthServiceConfigs {
+		if genCfg, ok := authSvc.(generic.Config); ok && genCfg.McpEnabled {
+			if opts.Cfg.ToolboxUrl == "" {
+				opts.Cfg.ToolboxUrl = os.Getenv("TOOLBOX_URL")
+			}
+			if opts.Cfg.ToolboxUrl == "" {
+				errMsg := fmt.Errorf("MCP Auth is enabled but Toolbox URL is missing. Please provide it via --toolbox-url flag or TOOLBOX_URL environment variable")
+				opts.Logger.ErrorContext(ctx, errMsg.Error())
+				return errMsg
+			}
+			break
+		}
+	}
+
+	if opts.Cfg.EmulatorMode && opts.Cfg.EmulatorMocksFile == "" {
+		errMsg := fmt.Errorf("--emulator-mocks-file is required when --emulator-mode is enabled")
+		opts.Logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
+	}
 
 	// start server
 	s, err := server.NewServer(ctx, opts.Cfg)

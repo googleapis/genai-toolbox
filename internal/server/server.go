@@ -188,6 +188,15 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		return nil, nil, nil, nil, nil, nil, nil, err
 	}
 
+	if cfg.EmulatorMode {
+		mocksByTool, err := loadEmulatorMocks(cfg.EmulatorMocksFile)
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, err
+		}
+		toolsMap = wrapToolsForEmulator(toolsMap, mocksByTool)
+		l.InfoContext(ctx, fmt.Sprintf("Emulator mode enabled with mocks file: %s", cfg.EmulatorMocksFile))
+	}
+
 	toolsetsMap, err := initializeToolsets(ctx, cfg, toolsMap, instrumentation, l)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, err

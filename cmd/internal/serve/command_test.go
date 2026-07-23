@@ -43,11 +43,12 @@ func serveCommand(ctx context.Context, args []string) (string, error) {
 }
 
 func TestServe(t *testing.T) {
+	t.Setenv("SQLITE_DATABASE", "test.db")
 	// context will automatically shutdown in 1 second.
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
-	args := []string{"serve", "--port", "0"}
+	args := []string{"serve", "--prebuilt", "sqlite", "--port", "0"}
 	output, err := serveCommand(ctx, args)
 	if err != nil {
 		t.Fatalf("expected graceful shutdown without error, got: %v", err)
