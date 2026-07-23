@@ -258,8 +258,7 @@ func TestUpdateServer(t *testing.T) {
 	newTools := map[string]tools.Tool{"example-tool": nil}
 	newPrompts := map[string]prompts.Prompt{"example-prompt": testutils.NewMockPrompt("example-prompt", "", prompts.Arguments{})}
 	newGroups := map[string]group.Group{
-		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
-		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}}),
+		"example-toolset": group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 	}
 	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	if err != nil {
@@ -306,23 +305,6 @@ func TestUpdateServer(t *testing.T) {
 	gotPrompt, _ := s.PrimitiveMgr.GetPrompt("example-prompt")
 	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
-	}
-
-	examplePrompt := newPrompts["example-prompt"]
-	wantPromptset := prompts.Promptset{
-		PromptsetConfig: prompts.PromptsetConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}},
-		Prompts:         []*prompts.Prompt{&examplePrompt},
-		Manifest: prompts.PromptsetManifest{
-			PromptsManifest: map[string]prompts.Manifest{"example-prompt": examplePrompt.Manifest()},
-		},
-		PromptNameSet: map[string]struct{}{"example-prompt": {}},
-	}
-	gotPromptset, ok := s.PrimitiveMgr.GetPromptset("example-promptset")
-	if !ok {
-		t.Fatal("expected promptset \"example-promptset\" to exist")
-	}
-	if diff := cmp.Diff(wantPromptset, gotPromptset, cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
-		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 }
 

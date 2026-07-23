@@ -26,8 +26,8 @@ import (
 )
 
 // PrimitiveManager contains available resources for the server. Should be initialized with NewPrimitiveManager().
-// groups is the source of truth for named collections; the toolset and promptset
-// views are derived from it (see GetToolset and GetPromptset).
+// groups is the source of truth for named collections; the toolset view is
+// derived from it (see GetToolset).
 type PrimitiveManager struct {
 	mu              sync.RWMutex
 	sources         map[string]sources.Source
@@ -112,23 +112,6 @@ func (r *PrimitiveManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	defer r.mu.RUnlock()
 	prompt, ok := r.prompts[promptName]
 	return prompt, ok
-}
-
-// GetPromptset returns the promptset view derived from the group of the same
-// name. The group is the source of truth; the promptset is materialized on
-// demand from the group's prompt names.
-func (r *PrimitiveManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	g, ok := r.groups[promptsetName]
-	if !ok {
-		return prompts.Promptset{}, false
-	}
-	promptset, err := prompts.PromptsetConfig{Name: g.Name, PromptNames: g.PromptNames}.Initialize("", r.prompts)
-	if err != nil {
-		return prompts.Promptset{}, false
-	}
-	return promptset, true
 }
 
 // GetGroup returns the group of the given name.
