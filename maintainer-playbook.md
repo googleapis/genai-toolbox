@@ -181,7 +181,7 @@ for security reasons, so a maintainer must deploy the preview:
 1. **Deploy Preview:** Apply the `docs: deploy-preview` label to the PR to
    deploy a documentation preview.
 
-### Releases
+### Release Communication & Tracking
 
 > For release mechanics — release types, the version-cut steps, supported binaries, and npm/PyPI publishing — see [Releasing](#releasing).
 
