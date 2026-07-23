@@ -139,7 +139,14 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 				if isError {
 					message := strings.TrimSpace(argument)
 					if message == "" {
-						message = "environment variable is required to be set and non-empty"
+						// Default message mirrors the modifier's actual rule:
+						// the colon form (${VAR:?}) rejects an empty value too,
+						// while ${VAR?} only requires the variable to be set.
+						if emptyAsUnset {
+							message = "environment variable is required to be set and non-empty"
+						} else {
+							message = "environment variable is required to be set"
+						}
 					}
 					err = fmt.Errorf("environment variable %q: %s (line %d, column %d)", variableName, message, line, column)
 				} else {

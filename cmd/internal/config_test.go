@@ -211,6 +211,31 @@ func TestParseEnv(t *testing.T) {
 			err:       true,
 			errString: `environment variable "FOO": must be set (line 1, column 1)`,
 		},
+		// Default (omitted) messages must match the modifier's actual rule:
+		// ${VAR?} only requires the variable to be set (empty is allowed),
+		// whereas ${VAR:?} additionally rejects an empty value.
+		{
+			desc:      "question error, empty message, unset, default says only set",
+			in:        "${FOO?}",
+			want:      "",
+			err:       true,
+			errString: `environment variable "FOO": environment variable is required to be set (line 1, column 1)`,
+		},
+		{
+			desc:      "colon question error, empty message, unset, default says set and non-empty",
+			in:        "${FOO:?}",
+			want:      "",
+			err:       true,
+			errString: `environment variable "FOO": environment variable is required to be set and non-empty (line 1, column 1)`,
+		},
+		{
+			desc:      "colon question error, empty message, set empty, default says set and non-empty",
+			in:        "${FOO:?}",
+			env:       map[string]string{"FOO": ""},
+			want:      "",
+			err:       true,
+			errString: `environment variable "FOO": environment variable is required to be set and non-empty (line 1, column 1)`,
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
