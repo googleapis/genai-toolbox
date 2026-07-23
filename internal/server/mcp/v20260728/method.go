@@ -230,8 +230,8 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	supportsSecureParams := supportsSecureParams(req.Params.Meta)
-	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams, supportsSecureParams)
+	hasSecureParamsSupport := supportsSecureParams(req.Params.Meta)
+	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams, hasSecureParamsSupport)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -789,8 +789,8 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	supportsSecureParams := supportsSecureParams(req.Params.Meta)
-	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams, supportsSecureParams)
+	hasSecureParamsSupport := supportsSecureParams(req.Params.Meta)
+	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams, hasSecureParamsSupport)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}

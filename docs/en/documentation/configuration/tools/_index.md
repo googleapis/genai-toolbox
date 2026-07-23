@@ -78,7 +78,7 @@ parameters:
 ```
 
 | **field**      |    **type**    | **required** | **description**                                                                                                                                                                                                                        |
-|----------------|:--------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | :------------: | :----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | name           |     string     |     true     | Name of the parameter.                                                                                                                                                                                                                 |
 | type           |     string     |     true     | Must be one of "string", "integer", "float", "boolean" "array"                                                                                                                                                                         |
 | description    |     string     |     true     | Natural language description of the parameter to describe it to the agent.                                                                                                                                                             |
@@ -110,7 +110,7 @@ statement: |
 ```
 
 | **field**      |     **type**     | **required** | **description**                                                            |
-|----------------|:----------------:|:------------:|----------------------------------------------------------------------------|
+| -------------- | :--------------: | :----------: | -------------------------------------------------------------------------- |
 | name           |      string      |     true     | Name of the parameter.                                                     |
 | type           |      string      |     true     | Must be "array"                                                            |
 | description    |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
@@ -160,7 +160,6 @@ parameters:
     valueType: integer # This enforces the value type for all entries.
 ```
 
-
 ### Secure Parameters
 
 Secure parameters are designed for sensitive runtime context (such as an end-user `customer_id`, tenant identifier, or session token) that **AI agents (LLMs) should not control or see** and that should not be transmitted in plain text through prompt completion requests, model context windows, or standard server logs.
@@ -183,25 +182,25 @@ parameters:
     secure: true
 ```
 
-#### Protocol Constraints & Extension Negotiation
+When a parameter is marked as `secure: true`, it will not be presented to the agent as a configurable parameter. Instead, it relies on the application to set the parameter. If an application fails to set the parameter before the tool is called, execution is blocked and returns an `invalid_params` error.
 
-Enabling secure parameters requires both the **MCP Toolbox Server** (running protocol version `DRAFT-2026-v1`) and a compatible **client SDK** that supports the `com.google.cloud/secure-params` extension.
+> **Note:** A parameter cannot have both `secure: true` and `authServices` specified.
 
-Clients declare support by enabling `com.google.cloud/secure-params: true` in their client capabilities (`io.modelcontextprotocol/clientCapabilities.experimental`) or per-request metadata (`_meta`).
+Here is how you set a secure parameter with the Toolbox Python SDK:
 
-When a parameter is marked as `secure: true`, the following strict rules are enforced:
+```python
+# Pass secure_args when loading or calling a tool via the Python SDK
+auth_tool = await toolbox.load_tool(
+    "search_secure_data",
+    secure_args={"customer_id": "cust_12345"}
+)
+result = await auth_tool()
+```
 
-1. **Capability Requirement**: If a tool has one or more secure parameters, the client **must** negotiate protocol version `"DRAFT-2026-v1"` and declare support for the `com.google.cloud/secure-params` capability.
-2. **Mutual Exclusion (Configuration)**: A parameter **cannot** have both `secure: true` and `authServices` specified. An error will be thrown during configuration loading.
-3. **Mutual Exclusion (Arguments)**:
-   - Parameters marked as `secure: true` **must** be passed in the request's `secureArguments` map, and **must not** be passed in the standard `arguments` map.
-   - Parameters marked as `secure: false` **must** be passed in the standard `arguments` map, and **must not** be passed in the `secureArguments` map.
-   - Because `arguments` and `secureArguments` are strictly disjoint, agent-generated arguments cannot override or collide with host-provided secure arguments. Any violation of these rules returns a `jsonrpc.INVALID_PARAMS` error and blocks execution.
-
-#### Client Compatibility & Unsupported Extension Behavior
+#### Unsupported Extension Behavior
 
 - **Automatic Tool Filtering (`tools/list`)**: If a client does not declare support for the `com.google.cloud/secure-params` extension, any tool configured with secure parameters is automatically filtered out from `tools/list` responses so AI agents cannot discover or attempt to call tools they cannot invoke securely.
-- **Invocation Rejection (`tools/call`)**: If a client attempts to call a tool requiring secure parameters without supporting the extension, the server blocks execution and returns a `jsonrpc.INVALID_PARAMS` error:
+- **Invocation Rejection (`tools/call`)**: If a client attempts to call a tool requiring secure parameters without supporting the extension, the server blocks execution and returns an error:
   ```
   tool "<name>" requires com.google.cloud/secure-params extension which is not supported by the client
   ```
@@ -235,11 +234,10 @@ parameters:
         field: sub
 ```
 
-| **field** | **type** | **required** | **description**                                                                  |
-|-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
+| **field** | **type** | **required** | **description**                                                                             |
+| --------- | :------: | :----------: | ------------------------------------------------------------------------------------------- |
 | name      |  string  |     true     | Name of the [authServices](../authentication/_index.md) used to verify the OIDC auth token. |
-| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.    |
-
+| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.               |
 
 ### Template Parameters
 
@@ -302,7 +300,7 @@ templateParameters:
 ```
 
 | **field**      |     **type**     |  **required**   | **description**                                                                     |
-|----------------|:----------------:|:---------------:|-------------------------------------------------------------------------------------|
+| -------------- | :--------------: | :-------------: | ----------------------------------------------------------------------------------- |
 | name           |      string      |      true       | Name of the template parameter.                                                     |
 | type           |      string      |      true       | Must be one of "string", "integer", "float", "boolean", "array"                     |
 | description    |      string      |      true       | Natural language description of the template parameter to describe it to the agent. |
@@ -345,12 +343,12 @@ and provide appropriate user experiences.
 
 ### Available Annotations
 
-| **annotation**     |  **type**   | **default** | **description**                                                        |
-|--------------------|:-----------:|:-----------:|------------------------------------------------------------------------|
-| readOnlyHint       |    bool     |    false    | Tool only reads data, no modifications to the environment.             |
-| destructiveHint    |    bool     |    true     | Tool may create, update, or delete data.                               |
-| idempotentHint     |    bool     |    false    | Repeated calls with same arguments have no additional effect.          |
-| openWorldHint      |    bool     |    true     | Tool interacts with external entities beyond its local environment.    |
+| **annotation**  | **type** | **default** | **description**                                                     |
+| --------------- | :------: | :---------: | ------------------------------------------------------------------- |
+| readOnlyHint    |   bool   |    false    | Tool only reads data, no modifications to the environment.          |
+| destructiveHint |   bool   |    true     | Tool may create, update, or delete data.                            |
+| idempotentHint  |   bool   |    false    | Repeated calls with same arguments have no additional effect.       |
+| openWorldHint   |   bool   |    true     | Tool interacts with external entities beyond its local environment. |
 
 ### Specifying Annotations
 
@@ -417,10 +415,10 @@ result = await tool("foo", bar="baz")
 
 ```javascript
 // Loading a single tool
-const tool = await client.loadTool("my-tool")
+const tool = await client.loadTool("my-tool");
 
 // Invoke the tool
-const result = await tool({a: 5, b: 2})
+const result = await tool({ a: 5, b: 2 });
 ```
 
 ### Go
@@ -433,6 +431,5 @@ tool, err = client.LoadTool("my-tool", ctx)
 inputs := map[string]any{"location": "London"}
 result, err := tool.Invoke(ctx, inputs)
 ```
-
 
 To see all supported sources and the specific tools they unlock, explore the full list of our [Integrations](../../../integrations/_index.md).
