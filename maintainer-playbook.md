@@ -240,16 +240,13 @@ Cloud project, `database-toolbox`.
       `hugo.cloudflare.toml`, and delete that version's directory in the
       `cloudflare-pages` branch. This is required because Cloudflare only allows
       20,000 files per deployment.
-
-   (These manual steps can be removed once the workflow in
-   [#3492](https://github.com/googleapis/mcp-toolbox/pull/3492) automates them.)
 1. Approve and merge the PR with the title “[chore(main): release
    x.x.x](https://github.com/googleapis/mcp-toolbox/pull/16)”
 1. The
-   [trigger](https://console.cloud.google.com/cloud-build/triggers;region=us-central1/edit/27bd0d21-264a-4446-b2d7-0df4e9915fb3?project=database-toolbox)
+   [trigger](https://pantheon.corp.google.com/cloud-build/triggers;region=us-central1/edit/27bd0d21-264a-4446-b2d7-0df4e9915fb3?project=database-toolbox)
    should automatically run when a new tag is pushed. You can view [triggered
    builds here to check the
-   status](https://console.cloud.google.com/cloud-build/builds;region=us-central1?query=trigger_id%3D%2227bd0d21-264a-4446-b2d7-0df4e9915fb3%22&project=database-toolbox)
+   status](https://pantheon.corp.google.com/cloud-build/builds;region=us-central1?query=trigger_id%3D%2227bd0d21-264a-4446-b2d7-0df4e9915fb3%22&project=database-toolbox)
 1. Update the Github release notes to include the following table:
     1. Run the following command (from the root directory):
 
