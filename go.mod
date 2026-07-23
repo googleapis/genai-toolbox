@@ -21,6 +21,7 @@ require (
 	cloud.google.com/go/spanner v1.92.0
 	cloud.google.com/go/storage v1.62.3
 	github.com/ClickHouse/clickhouse-go/v2 v2.46.0
+	github.com/FalkorDB/falkordb-go/v2 v2.1.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.57.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.33.0
 	github.com/MicahParks/jwkset v0.11.0
@@ -118,7 +119,6 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
-	github.com/FalkorDB/falkordb-go/v2 v2.1.0 // indirect
 	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.6.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.31.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.57.0 // indirect
