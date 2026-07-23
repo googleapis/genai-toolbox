@@ -13,21 +13,20 @@ description: >-
 
 # Triage Issues (mcp-toolbox)
 
-Triage here is mostly **labeling** (manual). The `product:` label auto-assigns the owning team
-via `.github/blunderbuss.yml`. This skill produces a *proposal* for the maintainer to apply; it
-never mutates the issue. When a call genuinely isn't obvious, ask rather than guess.
+Triage here is mostly manual **labeling**. The `product:` label auto-routes to the owning team
+via `.github/blunderbuss.yml`. Propose only, never mutating the issue; when a call isn't obvious,
+ask rather than guess.
 
 ## Goal
 
-Given an issue number (or several), deliver a triage a maintainer can apply in seconds: labels
+Given an issue number (or several), deliver a triage the maintainer can apply in seconds: labels
 across the four axes (each with a one-line *why*), likely duplicates, missing bug info, and a
 draft comment when one adds value.
 
 ## Prerequisites
 
 - `gh` authenticated for `googleapis/mcp-toolbox`, plus the issue number(s). A GitHub MCP server
-  works as a substitute if `gh` isn't available: the `gh` commands below map to its equivalent
-  read/list tools.
+  substitutes for `gh` if it isn't available: the `gh` commands below map to its read/list tools.
 
 ## Guidance
 
@@ -67,7 +66,7 @@ bot author) just need `periodic-failure`, so skip the rest of the workflow.
     **p1**: significant improvement targeted for the next release (e.g. new auth support). **p2**:
     nice-to-have (tool tweaks, clearer error messages, less verbose output). **p3**: open for
     community contribution.
-  State the reason; the maintainer overrides with context.
+  The maintainer overrides with context.
 - **`status:`** (optional): `waiting for response` when a bug lacks info to act (reviewer awaiting
   the author); `feedback wanted` when waiting on community/author input; `help wanted` for
   unplanned work open to community contribution. Author silence >60 days is grounds to close.
@@ -81,15 +80,15 @@ assignee only when an external contributor volunteers (assign them, to avoid dup
 maintainer is picking it up; otherwise leave it unassigned so contributors know it's open.
 
 **Duplicates.** `gh issue list --repo googleapis/mcp-toolbox --state all --search "<key terms>" --limit 20`
-with distinctive terms (tool name, error string). If it's a known issue, propose the `duplicate`
-label + close: apply `duplicate`, link and reference the original, and thank the reporter (template below).
+with distinctive terms (tool name, error string). If it's a known issue, propose `duplicate` +
+close: link and reference the original, and thank the reporter (template below).
 
 **Completeness (bugs).** Compare against `bug_report.yml` required fields (version, env, expected
 vs. current, repro) and list exactly what's missing. This feeds the `waiting for response` label
 and the draft comment.
 
 **Draft comment.** Prefer the canonical templates below over inventing wording; fill in the
-specifics (name the exact missing fields). Present as draft; don't post.
+specifics (name the exact missing fields).
 
 Needs more information (missing repro/details):
 ```text
