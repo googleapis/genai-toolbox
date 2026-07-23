@@ -588,21 +588,10 @@ tools:
 	}
 }
 
-type mockResourceConfig struct {
-	resources.BaseConfig `yaml:",inline"`
-}
-
-func (m mockResourceConfig) ResourceConfigType() string {
-	return "mock"
-}
-
-func (m mockResourceConfig) Initialize(ctx context.Context) (resources.Resource, error) {
-	return nil, nil
-}
 
 func TestParseConfig(t *testing.T) {
 	resources.Register("mock", func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
-		var cfg mockResourceConfig
+		var cfg testutils.MockResourceConfig
 		cfg.Name = name
 		cfg.Type = "mock"
 		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
@@ -746,6 +735,11 @@ func TestParseConfig(t *testing.T) {
       arguments:
       - name: code
         description: the code to review
+---
+      kind: resource
+      name: my-resource
+      type: mock
+      uri: mock://test
 			`,
 			wantConfig: Config{
 				Sources: server.SourceConfigs{
@@ -818,6 +812,15 @@ func TestParseConfig(t *testing.T) {
 						},
 					},
 				},
+				Resources: server.ResourceConfigs{
+					"my-resource": testutils.MockResourceConfig{
+						BaseConfig: resources.BaseConfig{
+							Name: "my-resource",
+							Type: "mock",
+							URI:  "mock://test",
+						},
+					},
+				},
 			},
 		},
 		{
@@ -852,7 +855,7 @@ func TestParseConfig(t *testing.T) {
 			},
 		},
 		{
-			description: "resource example config",
+			description: "only resource",
 			in: `
             kind: resource
             name: my-resource
@@ -866,7 +869,7 @@ func TestParseConfig(t *testing.T) {
 				Toolsets:     nil,
 				Prompts:      nil,
 				Resources: server.ResourceConfigs{
-					"my-resource": mockResourceConfig{
+					"my-resource": testutils.MockResourceConfig{
 						BaseConfig: resources.BaseConfig{
 							Name: "my-resource",
 							Type: "mock",
@@ -2261,23 +2264,23 @@ func TestMergeConfigs(t *testing.T) {
 		Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}},
 		Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
 		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
-		Resources:       server.ResourceConfigs{"res1": mockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1", URI: "mock://res1"}}},
+		Resources:       server.ResourceConfigs{"res1": testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1", URI: "mock://res1"}}},
 	}
 	file2 := Config{
 		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
 		Tools:        server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 		Toolsets:     server.ToolsetConfigs{"set2": tools.ToolsetConfig{Name: "set2"}},
-		Resources:    server.ResourceConfigs{"res2": mockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res2", URI: "mock://res2"}}},
+		Resources:    server.ResourceConfigs{"res2": testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res2", URI: "mock://res2"}}},
 	}
 	fileWithConflicts := Config{
 		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 		Tools:   server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 	}
 	fileWithResourceNameConflict := Config{
-		Resources: server.ResourceConfigs{"res1": mockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1", URI: "mock://different"}}},
+		Resources: server.ResourceConfigs{"res1": testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1", URI: "mock://different"}}},
 	}
 	fileWithResourceURIConflict := Config{
-		Resources: server.ResourceConfigs{"res3": mockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res3", URI: "mock://res1"}}},
+		Resources: server.ResourceConfigs{"res3": testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res3", URI: "mock://res1"}}},
 	}
 	fileMcp1 := Config{
 		AuthServices: server.AuthServiceConfigs{"generic1": generic.Config{Name: "generic1", McpEnabled: true}},
@@ -2303,7 +2306,7 @@ func TestMergeConfigs(t *testing.T) {
 				Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
 				Prompts:         server.PromptConfigs{},
 				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
-				Resources:       server.ResourceConfigs{"res1": mockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1", URI: "mock://res1"}}, "res2": mockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res2", URI: "mock://res2"}}},
+				Resources:       server.ResourceConfigs{"res1": testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1", URI: "mock://res1"}}, "res2": testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res2", URI: "mock://res2"}}},
 			},
 			wantErr: false,
 		},

@@ -21,6 +21,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
@@ -56,7 +57,8 @@ func TestUpdateServer(t *testing.T) {
 			Prompts: []*prompts.Prompt{},
 		},
 	}
-	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets, nil)
+	newResources := map[string]resources.Resource{"example-resource": nil}
+	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets, newResources)
 
 	gotSource, _ := primMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
@@ -66,6 +68,11 @@ func TestUpdateServer(t *testing.T) {
 	gotAuthService, _ := primMgr.GetAuthService("example-auth")
 	if diff := cmp.Diff(gotAuthService, newAuth["example-auth"]); diff != "" {
 		t.Errorf("error updating server, authServices (-want +got):\n%s", diff)
+	}
+
+	gotResource, _ := primMgr.GetResource("example-resource")
+	if diff := cmp.Diff(gotResource, newResources["example-resource"]); diff != "" {
+		t.Errorf("error updating server, resources (-want +got):\n%s", diff)
 	}
 
 	gotTool, _ := primMgr.GetTool("example-tool")

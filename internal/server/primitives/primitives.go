@@ -103,16 +103,7 @@ func (r *PrimitiveManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	return prompt, ok
 }
 
-// GetResourcesMap returns a copy of the resources map.
-func (r *PrimitiveManager) GetResourcesMap() map[string]resources.Resource {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	resourcesMap := make(map[string]resources.Resource, len(r.resources))
-	for k, v := range r.resources {
-		resourcesMap[k] = v
-	}
-	return resourcesMap
-}
+
 
 // GetResource returns a specific resource by name.
 func (r *PrimitiveManager) GetResource(name string) (resources.Resource, bool) {
@@ -187,6 +178,17 @@ func (r *PrimitiveManager) GetPromptsMap() map[string]prompts.Prompt {
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]prompts.Prompt, len(r.prompts))
 	for k, v := range r.prompts {
+		copiedMap[k] = v
+	}
+	return copiedMap
+}
+
+// GetResourcesMap returns a copy of the resources map.
+func (r *PrimitiveManager) GetResourcesMap() map[string]resources.Resource {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	copiedMap := make(map[string]resources.Resource, len(r.resources))
+	for k, v := range r.resources {
 		copiedMap[k] = v
 	}
 	return copiedMap
