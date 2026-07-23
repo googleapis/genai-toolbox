@@ -770,6 +770,7 @@ Toolbox is fully compatible with the Model Context Protocol (MCP) and maintains 
 ### Stable Releases
 The following official MCP specification versions are currently supported for production use:
 
+* `2026-07-28`
 * `2025-11-25`
 * `2025-06-18`
 * `2025-03-26`
@@ -788,7 +789,7 @@ test these forthcoming revisions before their official release using the
 
 To test these draft specifications, enable the startup flag and use this version
 string during negotiation:
-* `DRAFT-2026-v1`
+* No supported draft right now
 
 Description: Enables experimental support for upcoming draft MCP specifications,
 allowing you to test new schema standards and transport adjustments before they

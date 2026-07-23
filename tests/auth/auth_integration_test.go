@@ -307,7 +307,7 @@ func TestMcpAuth(t *testing.T) {
 			}
 
 			if method == http.MethodPost {
-				versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"}
+				versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
 				for _, v := range versions {
 					t.Run("version_"+v, func(t *testing.T) {
 						runTest(t, v)
