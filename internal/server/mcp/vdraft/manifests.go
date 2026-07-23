@@ -116,6 +116,9 @@ func GenerateListToolsResult(srcs map[string]sources.Source, g group.Group, tool
 	}
 	res := ListToolsResult{
 		Tools: mcpManifest,
+		Result: Result{
+			ResultType: resultTypeComplete,
+		},
 		CacheableResult: CacheableResult{
 			TtlMs:      300000, // 5 minutes
 			CacheScope: cacheScopePublic,
@@ -155,6 +158,9 @@ func GenerateListPromptsResult(g group.Group, promptsMap map[string]prompts.Prom
 	}
 	res := ListPromptsResult{
 		Prompts: mcpManifest,
+		Result: Result{
+			ResultType: resultTypeComplete,
+		},
 		CacheableResult: CacheableResult{
 			TtlMs:      300000, // 5 minutes
 			CacheScope: cacheScopePublic,

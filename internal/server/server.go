@@ -306,10 +306,12 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 	for name := range toolsMap {
 		allToolNames = append(allToolNames, name)
 	}
+	slices.Sort(allToolNames)
 	allPromptNames := make([]string, 0, len(promptsMap))
 	for name := range promptsMap {
 		allPromptNames = append(allPromptNames, name)
 	}
+	slices.Sort(allPromptNames)
 
 	// Legacy `kind: toolset` configs are already folded into cfg.GroupConfigs at
 	// unmarshal. Copy them over, then seed the default nameless group with all tools

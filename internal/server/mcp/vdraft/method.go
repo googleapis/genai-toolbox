@@ -118,14 +118,51 @@ func validateHeader(id jsonrpc.RequestId, header http.Header, method, name strin
 	return nil, nil
 }
 
-func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byte, header http.Header) (any, error) {
+// getResultMetadata append the resultMetaObject on existing metadata
+func getResultMetadata(ctx context.Context, curMeta map[string]any) (map[string]any, error) {
 	v, err := util.ToolboxVersionFromContext(ctx)
 	if err != nil {
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		return nil, err
 	}
+
+	resMetaObj := ResultMetaObject{
+		ServerInfo: Implementation{
+			BaseMetadata: BaseMetadata{
+				Name: SERVER_NAME,
+			},
+			Version: v,
+		},
+	}
+	jsonData, err := json.Marshal(resMetaObj)
+	if err != nil {
+		return nil, err
+	}
+	resMeta := make(map[string]any)
+	if err := json.Unmarshal(jsonData, &resMeta); err != nil {
+		return nil, err
+	}
+	// if there are no existing metadata field, we can just return the
+	// ResultMetaObject
+	if curMeta == nil {
+		return resMeta, nil
+	}
+
+	newMeta := make(map[string]any)
+	// copy current Metadata into the new meta obj
+	for k, v := range curMeta {
+		newMeta[k] = v
+	}
+	// copy the ResultMetaObject items over
+	for k, v := range resMeta {
+		newMeta[k] = v
+	}
+	return newMeta, nil
+}
+
+func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byte, header http.Header) (any, error) {
 	enableDraft, ok := util.EnableDraftSpecsFromContext(ctx)
 	if !ok {
-		err = fmt.Errorf("unable to retrieve enableDraftSpecs from context")
+		err := fmt.Errorf("unable to retrieve enableDraftSpecs from context")
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
@@ -145,7 +182,17 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 
 	toolsListChanged := false
 	promptsListChanged := false
+	meta, err := getResultMetadata(ctx, nil)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
 	result := DiscoverResult{
+		Result: Result{
+			ResultType: resultTypeComplete,
+			Result: jsonrpc.Result{
+				Meta: meta,
+			},
+		},
 		SupportedVersions: mcputil.GetSupportedVersions(enableDraft),
 		Capabilities: ServerCapabilities{
 			Tools: &ListChanged{
@@ -154,12 +201,6 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 			Prompts: &ListChanged{
 				ListChanged: &promptsListChanged,
 			},
-		},
-		ServerInfo: Implementation{
-			BaseMetadata: BaseMetadata{
-				Name: SERVER_NAME,
-			},
-			Version: v,
 		},
 	}
 	res := jsonrpc.JSONRPCResponse{
@@ -192,6 +233,11 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
+	meta, err := getResultMetadata(ctx, listToolsResult.Meta)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	listToolsResult.Meta = meta
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
@@ -205,6 +251,10 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	meta, err := getResultMetadata(ctx, nil)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
@@ -417,7 +467,16 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 				return jsonrpc.JSONRPCResponse{
 					Jsonrpc: jsonrpc.JSONRPC_VERSION,
 					Id:      id,
-					Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+					Result: CallToolResult{
+						Result: Result{
+							ResultType: resultTypeComplete,
+							Result: jsonrpc.Result{
+								Meta: meta,
+							},
+						},
+						Content: []TextContent{text},
+						IsError: true,
+					},
 				}, nil
 
 			case util.CategoryServer:
@@ -464,7 +523,15 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  CallToolResult{Content: content},
+		Result: CallToolResult{
+			Result: Result{
+				ResultType: resultTypeComplete,
+				Result: jsonrpc.Result{
+					Meta: meta,
+				},
+			},
+			Content: content,
+		},
 	}, nil
 }
 
@@ -498,6 +565,11 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr 
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("returning %d prompts", len(listPromptsResult.Prompts)))
+	meta, err := getResultMetadata(ctx, listPromptsResult.Meta)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	listPromptsResult.Meta = meta
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
@@ -588,12 +660,20 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group,
 			},
 		}
 	}
-
+	meta, err := getResultMetadata(ctx, nil)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
 	result := GetPromptResult{
+		Result: Result{
+			ResultType: resultTypeComplete,
+			Result: jsonrpc.Result{
+				Meta: meta,
+			},
+		},
 		Description: prompt.Manifest().Description,
 		Messages:    promptMessages,
 	}
-
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
