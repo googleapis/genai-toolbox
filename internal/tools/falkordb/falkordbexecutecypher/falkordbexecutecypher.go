@@ -125,10 +125,7 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		return nil, util.NewAgentError("parameter 'cypher' must be a non-empty string", nil)
 	}
 
-	dryRun, ok := paramsMap["dry_run"].(bool)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("unable to cast dry_run parameter %s", paramsMap["dry_run"]), nil)
-	}
+	dryRun, _ := paramsMap["dry_run"].(bool)
 
 	graphName := ""
 	if t.Cfg.AllowGraphOverride {

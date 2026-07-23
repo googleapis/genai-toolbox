@@ -220,6 +220,10 @@ func ConvertValue(value any) any {
 	switch v := value.(type) {
 	case nil:
 		return nil
+	case falkordb.Node:
+		return ConvertValue(&v)
+	case falkordb.Edge:
+		return ConvertValue(&v)
 	case *falkordb.Node:
 		return map[string]any{
 			"id":         v.ID,
