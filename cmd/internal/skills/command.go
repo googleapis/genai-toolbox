@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -229,51 +230,50 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 }
 
 func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOptions) (map[string]map[string]tools.Tool, error) {
-	// Initialize tools and toolsets only; skills generation does not need live
+	// Initialize tools and groups only; skills generation does not need live
 	// sources, auth services, or embedding models.
-	toolsMap, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, opts.Cfg)
+	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, opts.Cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize resources: %w", err)
 	}
 
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsetsMap, nil, nil)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, groupsMap)
 
 	skillsToTools := make(map[string]map[string]tools.Tool)
 
-	getToolsFromToolset := func(ts tools.Toolset) map[string]tools.Tool {
-		toolsetTools := make(map[string]tools.Tool)
-		for _, t := range ts.Tools {
-			if t != nil {
-				tool := *t
-				toolsetTools[tool.GetName()] = tool
+	getToolsFromGroup := func(g group.Group) map[string]tools.Tool {
+		groupTools := make(map[string]tools.Tool)
+		for _, name := range g.ToolNames {
+			if tool, ok := toolsMap[name]; ok {
+				groupTools[name] = tool
 			}
 		}
-		return toolsetTools
+		return groupTools
 	}
 
 	if c.toolset != "" {
-		ts, ok := primitiveMgr.GetToolset(c.toolset)
+		g, ok := primitiveMgr.GetGroup(c.toolset)
 		if !ok {
 			return nil, fmt.Errorf("toolset %q not found", c.toolset)
 		}
 
-		skillsToTools[c.name] = getToolsFromToolset(ts)
+		skillsToTools[c.name] = getToolsFromGroup(g)
 		return skillsToTools, nil
 	}
 
-	if len(toolsetsMap) <= 1 {
-		// Default to all tools if no toolset found
+	if len(groupsMap) <= 1 {
+		// Default to all tools if no named group found
 		skillsToTools[c.name] = toolsMap
 		return skillsToTools, nil
 	}
 
-	// One skill per toolset
-	for tsName, ts := range toolsetsMap {
-		if tsName == "" {
+	// One skill per group
+	for gName, g := range groupsMap {
+		if gName == "" {
 			continue
 		}
-		skillName := fmt.Sprintf("%s-%s", c.name, tsName)
-		skillsToTools[skillName] = getToolsFromToolset(ts)
+		skillName := fmt.Sprintf("%s-%s", c.name, gName)
+		skillsToTools[skillName] = getToolsFromGroup(g)
 	}
 
 	return skillsToTools, nil

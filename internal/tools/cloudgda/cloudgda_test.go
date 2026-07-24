@@ -268,12 +268,12 @@ func TestInvoke(t *testing.T) {
 		{Name: "query", Value: query},
 	}
 
-	primMgr := primitives.NewPrimitiveManager(srcs, nil, nil, nil, nil, nil, nil)
+	primitiveMgr := primitives.NewPrimitiveManager(srcs, nil, nil, nil, nil, nil)
 
 	ctx := testutils.ContextWithUserAgent(context.Background(), "test-user-agent")
 
 	// Invoke the tool
-	result, err := tool.Invoke(ctx, primMgr, params, "")
+	result, err := tool.Invoke(ctx, primitiveMgr, params, "")
 	if err != nil {
 		t.Fatalf("tool invocation failed: %v", err)
 	}
