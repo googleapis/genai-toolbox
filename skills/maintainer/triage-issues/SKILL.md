@@ -31,7 +31,7 @@ draft comment when one adds value.
 ## Guidance
 
 **Read source-of-truth live, not from memory** (labels/routing drift):
-- `gh label list --limit 200`: the only valid label names. Never propose one not listed.
+- `gh label list --repo googleapis/mcp-toolbox --limit 200`: the only valid label names. Never propose one not listed.
 - `.github/blunderbuss.yml`: which `product:` labels route to which team.
 - `.github/ISSUE_TEMPLATE/bug_report.yml`: required bug fields (for the completeness check).
 - [references/maintainer-playbook.md](references/maintainer-playbook.md): the **authoritative**
