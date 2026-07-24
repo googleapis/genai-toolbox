@@ -4,6 +4,8 @@
 
 # MCP Toolbox for Databases
 
+[![MCP Toplist](https://mcptoplist.com/badge/pulsemcp%2Fgenai-toolbox.svg)](https://mcptoplist.com/server/pulsemcp%2Fgenai-toolbox)
+
 <a href="https://trendshift.io/repositories/25495" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25495" alt="googleapis%2Fmcp-toolbox | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/mcp-toolbox)](https://goreportcard.com/report/github.com/googleapis/mcp-toolbox)
