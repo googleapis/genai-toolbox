@@ -66,3 +66,11 @@ At startup, Toolbox validates groups:
 ## Relationship to toolsets
 
 Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations continue to work unchanged — they are treated as groups with tools and no other primitives, so no migration is required. That said, we recommend migrating to a `kind: group` even for tools-only collections: a group lets you attach a `description` and scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.
+
+To convert existing toolsets to groups automatically, run the [`migrate`](../../../reference/cli.md) command. It rewrites both nested `toolsets:` blocks and already-flat `kind: toolset` documents to `kind: group`:
+
+```bash
+toolbox migrate --config tools.yaml
+```
+
+Use `--dry-run` to preview the changes without writing them.
