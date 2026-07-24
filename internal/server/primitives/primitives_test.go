@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources_test
+package primitives_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -56,34 +56,34 @@ func TestUpdateServer(t *testing.T) {
 			Prompts: []*prompts.Prompt{},
 		},
 	}
-	resMgr := resources.NewResourceManager(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
 
-	gotSource, _ := resMgr.GetSource("example-source")
+	gotSource, _ := primMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
 	}
 
-	gotAuthService, _ := resMgr.GetAuthService("example-auth")
+	gotAuthService, _ := primMgr.GetAuthService("example-auth")
 	if diff := cmp.Diff(gotAuthService, newAuth["example-auth"]); diff != "" {
 		t.Errorf("error updating server, authServices (-want +got):\n%s", diff)
 	}
 
-	gotTool, _ := resMgr.GetTool("example-tool")
+	gotTool, _ := primMgr.GetTool("example-tool")
 	if diff := cmp.Diff(gotTool, newTools["example-tool"]); diff != "" {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
-	gotToolset, _ := resMgr.GetToolset("example-toolset")
+	gotToolset, _ := primMgr.GetToolset("example-toolset")
 	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"], cmp.AllowUnexported(tools.Toolset{})); diff != "" {
 		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 
-	gotPrompt, _ := resMgr.GetPrompt("example-prompt")
+	gotPrompt, _ := primMgr.GetPrompt("example-prompt")
 	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"]); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
 	}
 
-	gotPromptset, _ := resMgr.GetPromptset("example-promptset")
+	gotPromptset, _ := primMgr.GetPromptset("example-promptset")
 	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"], cmp.AllowUnexported(prompts.Promptset{})); diff != "" {
 		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
@@ -97,8 +97,8 @@ func TestUpdateServer(t *testing.T) {
 		},
 	}
 
-	resMgr.SetResources(updateSource, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
-	gotSource, _ = resMgr.GetSource("example-source2")
+	primMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	gotSource, _ = primMgr.GetSource("example-source2")
 	if diff := cmp.Diff(gotSource, updateSource["example-source2"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
 	}

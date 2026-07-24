@@ -30,7 +30,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel"
@@ -477,8 +477,11 @@ func TestMcpEndpoint(t *testing.T) {
 		meta                      map[string]any
 		wantToolsList             map[string]any
 		wantPromptsList           map[string]any
+		wantPromptsGet            map[string]any
 		wantToolsListOnTool1      map[string]any
+		wantToolsCallOnTool1      map[string]any
 		wantToolsListWithURLParam map[string]any
+		wantToolsCallWithURLParam map[string]any
 	}{
 		{
 			name:     "version 2024-11-05",
@@ -573,6 +576,7 @@ func TestMcpEndpoint(t *testing.T) {
 				"jsonrpc": "2.0",
 				"id":      "tools-list",
 				"result": map[string]any{
+					"resultType": "complete",
 					"tools": []any{
 						map[string]any{
 							"name":        "no_params",
@@ -603,12 +607,16 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 			wantPromptsList: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "prompts-list",
 				"result": map[string]any{
+					"resultType": "complete",
 					"prompts": []any{
 						map[string]any{
 							"name": "prompt1",
@@ -620,12 +628,35 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantPromptsGet: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "prompts-get-prompt2",
+				"result": map[string]any{
+					"resultType": "complete",
+					"messages": []any{
+						map[string]any{
+							"role": "user",
+							"content": map[string]any{
+								"type": "text",
+								"text": "substituted prompt2",
+							},
+						},
+					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 			wantToolsListOnTool1: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "tools-list-tool1",
 				"result": map[string]any{
+					"resultType": "complete",
 					"tools": []any{
 						map[string]any{
 							"name":        "no_params",
@@ -634,12 +665,32 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantToolsCallOnTool1: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-tool1",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `"no_params"`,
+						},
+					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 			wantToolsListWithURLParam: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "tools-list-url-binding",
 				"result": map[string]any{
+					"resultType": "complete",
 					"tools": []any{
 						map[string]any{
 							"name":        "no_params",
@@ -674,8 +725,55 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+				},
+			},
+			wantToolsCallWithURLParam: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-url-binding",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `"url_binding_tool"`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `"bound-string"`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `42`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `true`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `3.14`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `"unbound-value"`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `["a","b"]`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `{"k":"v"}`,
+						},
+					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 		},
@@ -743,12 +841,15 @@ func TestMcpEndpoint(t *testing.T) {
 						"jsonrpc": "2.0",
 						"id":      "server-discover",
 						"result": map[string]any{
+							"resultType":        "complete",
 							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "DRAFT-2026-v1"},
 							"capabilities": map[string]any{
 								"tools":   map[string]any{"listChanged": false},
 								"prompts": map[string]any{"listChanged": false},
 							},
-							"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+							"_meta": map[string]any{
+								"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+							},
 						},
 					},
 				},
@@ -862,6 +963,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					wantOverwrite: vtc.wantPromptsGet,
 				},
 				{
 					name: "tools/list on tool1_only",
@@ -1032,6 +1134,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					wantOverwrite: vtc.wantToolsCallOnTool1,
 				},
 				{
 					name: "call tool4 unauthorized tool",
@@ -1193,6 +1296,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					wantOverwrite: vtc.wantToolsCallWithURLParam,
 				},
 			}
 			for i := range testCases {
@@ -1661,14 +1765,14 @@ func TestStdioSession(t *testing.T) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 
 	server := &Server{
 		version:         testutils.MockVersionString,
 		logger:          testLogger,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-		ResourceMgr:     resourceManager,
+		PrimitiveMgr:    primitiveManager,
 	}
 
 	in := bufio.NewReader(pr)

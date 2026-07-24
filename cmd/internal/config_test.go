@@ -853,6 +853,75 @@ func TestParseConfig(t *testing.T) {
 	}
 }
 
+func TestParseConfigFailure(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		description string
+		in          string
+		wantError   string
+	}{
+		{
+			description: "invalid special character in tool name",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+---
+			kind: tool
+			name: invalid_toolname_?
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: SELECT *;
+			`,
+			wantError: "invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed",
+		},
+		{
+			description: "invalid comma in tool name",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+---
+			kind: tool
+			name: invalid_toolname,
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: SELECT *;
+			`,
+			wantError: "invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			parser := ConfigParser{}
+			_, err := parser.ParseConfig(ctx, testutils.FormatYaml(tc.in))
+			if err == nil {
+				t.Fatalf("expected error containing %s, got nil", tc.wantError)
+			}
+			if !strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("want error: %s, got error: %s", tc.wantError, err.Error())
+			}
+		})
+	}
+}
+
 func TestParseConfigWithAuth(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
