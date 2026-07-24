@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-24T19:00:29Z
+**GENERATED ON:** 2026-07-24T19:47:50Z
 
 ---
 ### System Directives for AI Models
@@ -1037,6 +1037,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [looker-get-explores](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-explores/): A "looker-get-explores" tool returns all explores for the given model from the source.
+
+
+      - [looker-get-field-value-suggestions](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-field-value-suggestions/): A "looker-get-field-value-suggestions" tool retrieves distinct value suggestions for a given field in an explore.
 
 
       - [looker-get-filters](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-filters/): A "looker-get-filters" tool returns all the filters from a given explore in a given model in the source.
