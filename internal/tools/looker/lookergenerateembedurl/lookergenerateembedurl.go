@@ -51,6 +51,7 @@ type compatibleSource interface {
 	LookerApiSettings() *rtl.ApiSettings
 	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
 	LookerSessionLength() int64
+	GetHostURL(context.Context, *v4.LookerSDK) (string, error)
 }
 
 type Config struct {
@@ -128,14 +129,19 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 
+	hostURL, err := source.GetHostURL(ctx, sdk)
+	if err != nil {
+		logger.WarnContext(ctx, "failed to dynamically resolve public host URL, utilizing fallback", "error", err)
+	}
+
 	forceLogoutLogin := true
 	sessionLength := source.LookerSessionLength()
 	req := v4.EmbedParams{
-		TargetUrl:        fmt.Sprintf("%s/embed/%s/%s", source.LookerApiSettings().BaseUrl, *embedType_ptr, *contentId_ptr),
+		TargetUrl:        fmt.Sprintf("%s/embed/%s/%s", hostURL, *embedType_ptr, *contentId_ptr),
 		SessionLength:    &sessionLength,
 		ForceLogoutLogin: &forceLogoutLogin,
 	}
-	logger.ErrorContext(ctx, "Making request %v", req)
+	logger.DebugContext(ctx, "Making request %v", req)
 	resp, err := sdk.CreateEmbedUrlAsMe(req, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "status=401") {
@@ -143,7 +149,7 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		}
 		return nil, util.ProcessGeneralError(err)
 	}
-	logger.ErrorContext(ctx, "Got response %v", resp)
+	logger.DebugContext(ctx, "Got response %v", resp)
 
 	return resp, nil
 }

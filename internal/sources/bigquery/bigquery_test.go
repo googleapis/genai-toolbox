@@ -155,6 +155,28 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			},
 		},
 		{
+			desc: "quota project with client auth example",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			useClientOAuth: true
+			quotaProject: billing-project
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Type:           bigquery.SourceType,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: "true",
+					QuotaProject:   "billing-project",
+				},
+			},
+		},
+		{
 			desc: "with allowed datasets example",
 			in: `
 			kind: source

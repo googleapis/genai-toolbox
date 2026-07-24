@@ -52,10 +52,6 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, g g
 		return promptsListHandler(ctx, id, primitiveMgr, g, body)
 	case PROMPTS_GET:
 		return promptsGetHandler(ctx, id, g, primitiveMgr, body)
-	case GROUPS_LIST:
-		return groupsListHandler(ctx, id, primitiveMgr, body)
-	case GROUPS_GET:
-		return groupsGetHandler(ctx, id, primitiveMgr, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -454,6 +450,12 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group,
 	span.SetName(fmt.Sprintf("%s %s", PROMPTS_GET, promptName))
 	span.SetAttributes(attribute.String("gen_ai.prompt.name", promptName))
 
+	// Populate gen_ai attributes for operation duration metric
+	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
+		genAIAttrs.OperationName = "get_prompt"
+		genAIAttrs.PromptName = promptName
+	}
+
 	// Verify prompt belongs to the current group before resolving globally.
 	if !g.ContainsPrompt(promptName) {
 		err := fmt.Errorf("prompt with name %q does not exist", promptName)
@@ -464,12 +466,6 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group,
 	if !ok {
 		err := fmt.Errorf("prompt with name %q does not exist", promptName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
-	}
-
-	// Populate gen_ai attributes for operation duration metric
-	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
-		genAIAttrs.OperationName = "get_prompt"
-		genAIAttrs.PromptName = promptName
 	}
 
 	// Parse the arguments provided in the request.
@@ -562,6 +558,18 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 
 	groupName := req.Params.Name
 	logger.DebugContext(ctx, fmt.Sprintf("group name: %s", groupName))
+
+	// Update span name and set gen_ai attributes
+	span := trace.SpanFromContext(ctx)
+	span.SetName(fmt.Sprintf("%s %s", GROUPS_GET, groupName))
+	span.SetAttributes(attribute.String("gen_ai.group.name", groupName))
+
+	// Populate gen_ai attributes for operation duration metric
+	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
+		genAIAttrs.OperationName = "get_group"
+		genAIAttrs.GroupName = groupName
+	}
+
 	g, ok := primitiveMgr.GetGroup(groupName)
 	if !ok {
 		err := fmt.Errorf("invalid group name: group with name %q does not exist", groupName)
