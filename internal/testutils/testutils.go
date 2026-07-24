@@ -207,22 +207,5 @@ func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 		groups[name] = group.NewGroup(gc)
 	}
 
-	// Build the authoritative groups map from the union of toolset and promptset
-	// names so the derived toolset/promptset views match the legacy maps.
-	groupNames := make(map[string]struct{})
-	for name := range toolsets {
-		groupNames[name] = struct{}{}
-	}
-	for name := range promptsets {
-		groupNames[name] = struct{}{}
-	}
-	groups := make(map[string]group.Group)
-	for name := range groupNames {
-		ts := toolsets[name]
-		ps := promptsets[name]
-		gc := group.GroupConfig{Name: name, ToolNames: ts.ToolNames, PromptNames: ps.PromptNames}
-		groups[name] = group.NewGroup(gc)
-	}
-
 	return toolsMap, promptsMap, groups
 }
