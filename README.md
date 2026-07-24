@@ -1,5 +1,3 @@
-[![mcpindex](https://mcpindex.ai/api/v1/badge/io-github-googleapis-mcp-toolbox)](https://mcpindex.ai/server/io-github-googleapis-mcp-toolbox)
-
 <div align="center">
 
 ![logo](./logo.png)
@@ -14,6 +12,7 @@
 [![Docs](https://img.shields.io/badge/Docs-MCP_Toolbox-blue)](https://mcp-toolbox.dev/)
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=flat&logo=discord&logoColor=white)](https://discord.gg/Dmm69peqjh)
 [![Medium](https://img.shields.io/badge/Medium-12100E?style=flat&logo=medium&logoColor=white)](https://medium.com/@mcp_toolbox)
+[![mcpindex](https://mcpindex.ai/api/v1/badge/io-github-googleapis-mcp-toolbox)](https://mcpindex.ai/server/io-github-googleapis-mcp-toolbox)
 
 [![Python SDK](https://img.shields.io/pypi/v/toolbox-core?logo=python&logoColor=white&label=Python%20SDK)](https://pypi.org/project/toolbox-core/)
 [![JS/TS SDK](https://img.shields.io/npm/v/@toolbox-sdk/core?logo=javascript&logoColor=white&label=JS%20SDK)](https://www.npmjs.com/package/@toolbox-sdk/core)
