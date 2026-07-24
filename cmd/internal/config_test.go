@@ -150,11 +150,12 @@ func TestParseEnv(t *testing.T) {
 
 func TestConvertConfig(t *testing.T) {
 	tcs := []struct {
-		desc   string
-		in     string
-		want   string
-		isErr  bool
-		errStr string
+		desc           string
+		in             string
+		want           string
+		migrateToolset bool
+		isErr          bool
+		errStr         string
 	}{
 		{
 			desc: "basic convert",
@@ -582,10 +583,101 @@ tools:
 			isErr:  true,
 			errStr: `doc 1: invalid config format at key "toolsets": expected nested format keys and type map`,
 		},
+		{
+			desc:           "migrate nested toolset to group",
+			migrateToolset: true,
+			in: `
+            toolsets:
+                example_toolset:
+                    - example_tool`,
+			want: `
+kind: group
+name: example_toolset
+tools:
+- example_tool
+`,
+		},
+		{
+			desc:           "migrate flat toolset to group",
+			migrateToolset: true,
+			in: `
+kind: toolset
+name: example_toolset
+tools:
+- example_tool`,
+			want: `
+kind: group
+name: example_toolset
+tools:
+- example_tool
+`,
+		},
+		{
+			desc:           "migrate flat toolset to group with kind not first",
+			migrateToolset: true,
+			in: `
+tools:
+- example_tool
+kind: toolset
+name: example_toolset`,
+			want: `
+tools:
+- example_tool
+kind: group
+name: example_toolset
+`,
+		},
+		{
+			desc:           "migrate leaves other kinds untouched",
+			migrateToolset: true,
+			in: `
+            sources:
+                my-pg-instance:
+                    kind: cloud-sql-postgres
+                    project: my-project
+            tools:
+                example_tool:
+                    kind: postgres-sql
+                    source: my-pg-instance
+                    description: some description
+                    statement: SELECT 1;
+            toolsets:
+                example_toolset:
+                    - example_tool
+            prompts:
+                code_review:
+                    description: ask llm to analyze code quality
+                    messages:
+                      - content: "review: {{.code}}"`,
+			want: `
+kind: source
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+---
+kind: tool
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT 1;
+---
+kind: group
+name: example_toolset
+tools:
+- example_tool
+---
+kind: prompt
+name: code_review
+description: ask llm to analyze code quality
+messages:
+- content: "review: {{.code}}"
+`,
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			output, err := ConvertConfig([]byte(tc.in))
+			output, err := ConvertConfig([]byte(tc.in), tc.migrateToolset)
 			if tc.isErr {
 				if err == nil {
 					t.Fatalf("expected error")

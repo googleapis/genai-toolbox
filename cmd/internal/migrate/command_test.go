@@ -125,6 +125,50 @@ parameters:
 			t.Fatalf("file content mismatch!\nExpected: %q\nGot: %q", toolsFileContentNew, actualContent)
 		}
 	})
+	t.Run("migrate toolset to group", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		// A file with both a nested toolset and an already-flat toolset.
+		toolsetFileContent := `
+toolsets:
+  nested_toolset:
+    - example_tool
+---
+kind: toolset
+name: flat_toolset
+tools:
+- example_tool`
+		toolsetFileContentNew := `
+kind: group
+name: nested_toolset
+tools:
+- example_tool
+---
+kind: group
+name: flat_toolset
+tools:
+- example_tool
+`
+
+		toolsFilePath := filepath.Join(tmpDir, "toolsets.yaml")
+		if err := os.WriteFile(toolsFilePath, []byte(toolsetFileContent), 0644); err != nil {
+			t.Fatalf("failed to write tools file: %v", err)
+		}
+
+		args := []string{"migrate", "--tools-file", toolsFilePath}
+		got, err := invokeCommand(args)
+		if err != nil {
+			t.Fatalf("command failed: %v\nOutput: %s", err, got)
+		}
+
+		actualContent, err := os.ReadFile(toolsFilePath)
+		if err != nil {
+			t.Fatalf("failed to read migrated file: %v", err)
+		}
+		if !bytes.Equal(actualContent, []byte(toolsetFileContentNew)) {
+			t.Fatalf("file content mismatch!\nExpected: %q\nGot: %q", toolsetFileContentNew, actualContent)
+		}
+	})
 	t.Run("migrate tools files", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
