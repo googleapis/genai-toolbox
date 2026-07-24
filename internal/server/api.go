@@ -108,7 +108,7 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
-	srcName := tool.GetSource()
+	srcName := tool.GetSourceName()
 	var src sources.Source
 	if srcName != "" {
 		src, ok = s.PrimitiveMgr.GetSource(srcName)
@@ -162,7 +162,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	srcName := tool.GetSource()
+	srcName := tool.GetSourceName()
 	var src sources.Source
 	if srcName != "" {
 		src, ok = s.PrimitiveMgr.GetSource(srcName)

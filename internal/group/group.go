@@ -117,7 +117,7 @@ func (g Group) ToolsetManifest(serverVersion string, mgr GroupManager) (tools.To
 		if !ok {
 			return tools.ToolsetManifest{}, fmt.Errorf("tool does not exist: %s", name)
 		}
-		srcName := tool.GetSource()
+		srcName := tool.GetSourceName()
 		var src sources.Source
 		if srcName != "" {
 			src, ok = mgr.GetSource(srcName)

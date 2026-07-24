@@ -123,7 +123,7 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 	return parameters.EmbedParams(ctx, t.StaticParameters, paramValues, embeddingModelsMap, embeddingmodels.FormatVectorForPgvector)
 }
 
-func (t Tool) GetSource() string {
+func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 

@@ -107,7 +107,7 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
-		srcName := tool.GetSource()
+		srcName := tool.GetSourceName()
 		var src sources.Source
 		if srcName != "" {
 			src, ok = pMgr.GetSource(srcName)

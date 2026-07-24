@@ -124,7 +124,7 @@ func (token AccessToken) ParseBearerToken() (string, error) {
 
 type Tool interface {
 	GetName() string
-	GetSource() string
+	GetSourceName() string
 	GetDescription() string
 	GetAuthRequired() []string
 	GetAnnotations() *ToolAnnotations

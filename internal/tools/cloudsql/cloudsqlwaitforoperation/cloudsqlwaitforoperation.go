@@ -181,7 +181,7 @@ type Tool struct {
 	MaxRetries int
 }
 
-func (t Tool) GetSource() string {
+func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 

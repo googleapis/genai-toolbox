@@ -129,7 +129,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}, nil
 }
 
-func (t Tool) GetSource() string {
+func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 

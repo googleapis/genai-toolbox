@@ -67,7 +67,7 @@ func (t MockTool) Invoke(ctx context.Context, s sources.Source, params parameter
 	return mock, nil
 }
 
-func (t MockTool) GetSource() string {
+func (t MockTool) GetSourceName() string {
 	return ""
 }
 

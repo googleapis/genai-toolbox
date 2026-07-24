@@ -94,7 +94,7 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
-func (t Tool) GetSource() string {
+func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 

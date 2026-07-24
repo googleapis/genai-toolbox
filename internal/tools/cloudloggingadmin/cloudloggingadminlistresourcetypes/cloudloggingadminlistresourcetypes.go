@@ -115,7 +115,7 @@ func (t Tool) RequiresClientAuthorization(source sources.Source) (bool, error) {
 	return s.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetSource() string {
+func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 

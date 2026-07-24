@@ -83,7 +83,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		return errMsg
 	}
 
-	srcName := tool.GetSource()
+	srcName := tool.GetSourceName()
 	var src sources.Source
 	if srcName != "" {
 		src, ok = primitiveMgr.GetSource(srcName)

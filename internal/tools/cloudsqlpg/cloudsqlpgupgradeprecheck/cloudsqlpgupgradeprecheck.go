@@ -122,7 +122,7 @@ func convertResults(items []*sqladmin.PreCheckResponse) []PreCheckResultItem {
 	return results
 }
 
-func (t Tool) GetSource() string {
+func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 

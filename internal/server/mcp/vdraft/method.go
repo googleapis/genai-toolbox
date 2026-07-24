@@ -297,7 +297,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
-	srcName := tool.GetSource()
+	srcName := tool.GetSourceName()
 	var src sources.Source
 	if srcName != "" {
 		src, ok = primitiveMgr.GetSource(srcName)

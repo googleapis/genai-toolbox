@@ -112,7 +112,7 @@ type Tool struct {
 	cache *cache.Cache
 }
 
-func (t Tool) GetSource() string {
+func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 

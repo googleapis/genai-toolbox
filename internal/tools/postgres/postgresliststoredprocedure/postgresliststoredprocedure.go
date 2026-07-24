@@ -153,7 +153,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	return out, nil
 }
 
-func (t Tool) GetSource() string {
+func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 

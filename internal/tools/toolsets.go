@@ -63,13 +63,13 @@ type ToolsetManifest struct {
 func (t Toolset) BuildManifest(srcMgr SourceManager) (ToolsetManifest, error) {
 	toolsManifest := make(map[string]Manifest, len(t.Tools))
 	for _, tool := range t.Tools {
-		srcName := (*tool).GetSource()
+		srcName := (*tool).GetSourceName()
 		var src sources.Source
 		var ok bool
 		if srcName != "" {
-			src, ok = srcMgr.GetSource((*tool).GetSource())
+			src, ok = srcMgr.GetSource((*tool).GetSourceName())
 			if !ok {
-				return ToolsetManifest{}, fmt.Errorf("unable to retrieve %s source for tool %q", (*tool).GetSource(), (*tool).GetName())
+				return ToolsetManifest{}, fmt.Errorf("unable to retrieve %s source for tool %q", (*tool).GetSourceName(), (*tool).GetName())
 			}
 		}
 		m, err := (*tool).Manifest(src)

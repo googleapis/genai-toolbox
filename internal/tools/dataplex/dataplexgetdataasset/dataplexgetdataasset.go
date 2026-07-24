@@ -87,7 +87,7 @@ type Tool struct {
 
 var _ tools.Tool = Tool{}
 
-func (t Tool) GetSource() string {
+func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 

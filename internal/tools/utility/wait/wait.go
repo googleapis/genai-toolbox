@@ -102,7 +102,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
-func (t Tool) GetSource() string {
+func (t Tool) GetSourceName() string {
 	return ""
 }
 
