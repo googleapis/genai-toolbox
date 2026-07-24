@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -400,6 +401,9 @@ func TestServerDiscoverHandler(t *testing.T) {
 }
 
 func TestToolsListHandler(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ctx = util.WithToolboxVersionKey(ctx, "v0.0.0")
 	// Initialize tools using provided testutils mock instances
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
@@ -510,7 +514,7 @@ func TestToolsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsListHandler(context.Background(), dummyID, primitiveMgr, tt.toolset, body, tt.header)
+			got, err := toolsListHandler(ctx, dummyID, primitiveMgr, tt.toolset, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -534,6 +538,7 @@ func TestToolsListHandler(t *testing.T) {
 func TestToolsCallHandler(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	ctx = util.WithToolboxVersionKey(ctx, "v0.0.0")
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
 	if err != nil {
 		t.Fatalf("unable to initialize logger: %s", err)
@@ -700,6 +705,7 @@ func TestToolsCallHandler(t *testing.T) {
 func TestPromptsListHandler(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	ctx = util.WithToolboxVersionKey(ctx, "v0.0.0")
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
 	if err != nil {
 		t.Fatalf("unable to initialize logger: %s", err)
@@ -784,6 +790,7 @@ func TestPromptsListHandler(t *testing.T) {
 func TestPromptsGetHandler(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	ctx = util.WithToolboxVersionKey(ctx, "v0.0.0")
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
 	if err != nil {
 		t.Fatalf("unable to initialize logger: %s", err)
@@ -909,6 +916,95 @@ func TestPromptsGetHandler(t *testing.T) {
 				if got == nil {
 					t.Errorf("expected valid response, got nil")
 				}
+			}
+		})
+	}
+}
+
+func TestGetResultMetadata(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ctxWithVersion := util.WithToolboxVersionKey(ctx, "v0.0.0")
+	server_name := "Toolbox"
+	// Define the table structure for our test cases
+	tests := []struct {
+		name       string
+		ctx        context.Context
+		curMeta    map[string]any
+		want       map[string]any
+		wantErr    bool
+		errMessage string // Optional: check for specific error messages
+	}{
+		{
+			name: "Success - Merge with existing metadata",
+			ctx:  ctxWithVersion,
+			curMeta: map[string]any{
+				"existing_key": "existing_value",
+				"another_key":  123,
+			},
+			want: map[string]any{
+				"existing_key": "existing_value",
+				"another_key":  123,
+				"io.modelcontextprotocol/serverInfo": map[string]any{
+					"name":    server_name,
+					"version": "v0.0.0",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "Success - Nil current metadata",
+			ctx:     ctxWithVersion,
+			curMeta: nil,
+			want: map[string]any{
+				"io.modelcontextprotocol/serverInfo": map[string]any{
+					"name":    server_name,
+					"version": "v0.0.0",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Success - Overwrites duplicate keys in metadata",
+			ctx:  ctxWithVersion,
+			curMeta: map[string]any{
+				"io.modelcontextprotocol/serverInfo": "old_data",
+				"other_key":                          true,
+			},
+			want: map[string]any{
+				"other_key": true,
+				"io.modelcontextprotocol/serverInfo": map[string]any{
+					"name":    server_name,
+					"version": "v0.0.0",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Failure - Context error (version retrieval fails)",
+			ctx:  context.Background(),
+			curMeta: map[string]any{
+				"some_data": "value",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := tt.ctx
+			got, err := getResultMetadata(ctx, tt.curMeta)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("getResultMetadata() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if tt.wantErr {
+				return
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getResultMetadata() got =\n%v\nwant =\n%v", got, tt.want)
 			}
 		})
 	}

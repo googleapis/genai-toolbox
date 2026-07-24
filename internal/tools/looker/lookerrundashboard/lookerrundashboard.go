@@ -181,12 +181,8 @@ func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSet
 		}
 
 		// Check for SQL query
-		var sqlQueryId string
 		if element.ResultMaker != nil && element.ResultMaker.SqlQueryId != nil && *element.ResultMaker.SqlQueryId != "" {
-			sqlQueryId = *element.ResultMaker.SqlQueryId
-		}
-
-		if sqlQueryId != "" {
+			sqlQueryId := *element.ResultMaker.SqlQueryId
 			data["element_type"] = "sql_query"
 			queryResult, err := sdk.RunSqlQuery(sqlQueryId, "json", "", options)
 			if err != nil {
@@ -208,8 +204,53 @@ func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSet
 			return
 		}
 
+		// Check for Merge query
+		if element.ResultMaker != nil && element.ResultMaker.MergeResultId != nil && *element.ResultMaker.MergeResultId != "" {
+			data["element_type"] = "merge_result"
+			mergeQuery, err := sdk.MergeQuery(*element.ResultMaker.MergeResultId, "", options)
+			if err != nil {
+				data["query_status"] = fmt.Sprintf("error getting merge query %s: %s", *element.ResultMaker.MergeResultId, err)
+				out <- data
+				return
+			}
+			data["parts"] = make([]any, 0)
+
+			for i, sourceQuery := range *mergeQuery.SourceQueries {
+				partData := make(map[string]any)
+				partData["index"] = i
+				if sourceQuery.Name != nil {
+					partData["name"] = *sourceQuery.Name
+				}
+				if sourceQuery.MergeFields != nil {
+					mar, err := json.Marshal(*sourceQuery.MergeFields)
+					if err == nil {
+						mergeFields := make([]any, 0)
+						if err := json.Unmarshal(mar, &mergeFields); err == nil {
+							partData["merge_fields"] = mergeFields
+						} else {
+							partData["merge_fields"] = fmt.Sprintf("error marshaling merge fields: %s", err)
+						}
+					} else {
+						partData["merge_fields"] = fmt.Sprintf("error unmarshaling merge fields: %s", err)
+					}
+				}
+				q, err := sdk.QueryForSlug(*sourceQuery.QuerySlug, "", options)
+				if err != nil {
+					partData["query_status"] = fmt.Sprintf("error getting query for slug %s: %s", *sourceQuery.QuerySlug, err)
+				} else {
+					runQuery(ctx, sdk, q, options, partData)
+				}
+				data["parts"] = append(data["parts"].([]any), partData)
+			}
+			out <- data
+			return
+		}
+
 		var q v4.Query
-		if element.Query != nil {
+		if element.ResultMaker != nil && element.ResultMaker.Query != nil {
+			data["element_type"] = "query"
+			q = *element.ResultMaker.Query
+		} else if element.Query != nil {
 			data["element_type"] = "query"
 			q = *element.Query
 		} else if element.Look != nil {
@@ -222,34 +263,36 @@ func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSet
 			return
 		}
 
-		wq := v4.WriteQuery{
-			Model:         q.Model,
-			View:          q.View,
-			Fields:        q.Fields,
-			Pivots:        q.Pivots,
-			Filters:       q.Filters,
-			Sorts:         q.Sorts,
-			QueryTimezone: q.QueryTimezone,
-			Limit:         q.Limit,
-		}
-		query_result, err := lookercommon.RunInlineQuery(ctx, sdk, &wq, "json", options)
-		if err != nil {
-			data["query_status"] = "error running query"
-			out <- data
-			return
-		}
-		var resp []any
-		e := json.Unmarshal([]byte(query_result), &resp)
-		if e != nil {
-			data["query_status"] = "error parsing query result"
-			out <- data
-			return
-		}
-		data["query_status"] = "success"
-		data["query_result"] = resp
+		runQuery(ctx, sdk, q, options, data)
 		out <- data
 	}()
 	return out
+}
+
+func runQuery(ctx context.Context, sdk *v4.LookerSDK, q v4.Query, options *rtl.ApiSettings, data map[string]any) {
+	wq := v4.WriteQuery{
+		Model:         q.Model,
+		View:          q.View,
+		Fields:        q.Fields,
+		Pivots:        q.Pivots,
+		Filters:       q.Filters,
+		Sorts:         q.Sorts,
+		QueryTimezone: q.QueryTimezone,
+		Limit:         q.Limit,
+	}
+	query_result, err := lookercommon.RunInlineQuery(ctx, sdk, &wq, "json", options)
+	if err != nil {
+		data["query_status"] = fmt.Sprintf("error running query: %s", err)
+		return
+	}
+	var resp []any
+	e := json.Unmarshal([]byte(query_result), &resp)
+	if e != nil {
+		data["query_status"] = fmt.Sprintf("error parsing query result: %s", e)
+		return
+	}
+	data["query_status"] = "success"
+	data["query_result"] = resp
 }
 
 func merge(channels ...<-chan map[string]any) <-chan map[string]any {
