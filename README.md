@@ -1,3 +1,5 @@
+[![mcpindex](https://mcpindex.ai/api/v1/badge/io-github-googleapis-mcp-toolbox)](https://mcpindex.ai/server/io-github-googleapis-mcp-toolbox)
+
 <div align="center">
 
 ![logo](./logo.png)
