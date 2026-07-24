@@ -17,7 +17,7 @@ This tool takes 2 optional input parameters:
 
 - `min_duration_secs` (optional): Only show queries running for at least this
   long in seconds, default `0`.
-- `limit` (optional):  max number of queries to return, default `10`.
+- `limit` (optional):  max number of queries to return, default `100`.
 
 ## Compatible Sources
 
@@ -30,7 +30,7 @@ kind: tool
 name: list_active_queries
 type: mysql-list-active-queries
 source: my-mysql-instance
-description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
+description: Lists top N (default 100) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
 ```
 
 The response is a json array with the following fields:
