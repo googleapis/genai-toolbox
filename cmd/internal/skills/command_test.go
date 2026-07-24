@@ -18,11 +18,14 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/sqlite"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/sqlite/sqlitesql"
 	"github.com/spf13/cobra"
 )
@@ -350,10 +353,6 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 			name: "missing name",
 			args: []string{"skills-generate", "--config", toolsFilePath, "--description", "test"},
 		},
-		{
-			name: "missing description",
-			args: []string{"skills-generate", "--config", toolsFilePath, "--name", "test"},
-		},
 	}
 
 	for _, tt := range tests {
@@ -361,6 +360,80 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 			got, err := invokeCommand(tt.args)
 			if err == nil {
 				t.Fatalf("expected command to fail due to missing arguments, but it succeeded\nOutput: %s", got)
+			}
+		})
+	}
+}
+
+func TestBuildSkillContents(t *testing.T) {
+	tests := []struct {
+		name      string
+		cmd       *skillsCmd
+		toolsMap  map[string]tools.Tool
+		groupsMap map[string]group.Group
+		want      map[string]skillContent
+	}{
+		{
+			// len(groupsMap) > 1 (default group plus named groups) triggers group mode.
+			name: "group mode: group description takes precedence over flag, flag is fallback",
+			cmd:  &skillsCmd{name: "my-skill", description: "flag fallback"},
+			groupsMap: map[string]group.Group{
+				"": group.NewGroup(group.GroupConfig{Name: ""}),
+				"with-desc": group.NewGroup(
+					group.GroupConfig{Name: "with-desc", Description: "group's own description"}),
+				"no-desc": group.NewGroup(
+					group.GroupConfig{Name: "no-desc"}),
+			},
+			// The default nameless group is skipped, so it produces no skill.
+			want: map[string]skillContent{
+				"my-skill-with-desc": {tools: map[string]tools.Tool{}, description: "group's own description"},
+				"my-skill-no-desc":   {tools: map[string]tools.Tool{}, description: "flag fallback"},
+			},
+		},
+		{
+			name: "toolset mode: uses flag description, ignores group description",
+			cmd:  &skillsCmd{name: "my-skill", description: "flag desc", toolset: "my-toolset"},
+			groupsMap: map[string]group.Group{
+				"": group.NewGroup(group.GroupConfig{Name: ""}),
+				"my-toolset": group.NewGroup(
+					group.GroupConfig{Name: "my-toolset", Description: "ignored in toolset mode"}),
+			},
+			want: map[string]skillContent{
+				"my-skill": {tools: map[string]tools.Tool{}, description: "flag desc"},
+			},
+		},
+		{
+			name:     "all-tools mode: falls back to flag when default group has no description",
+			cmd:      &skillsCmd{name: "my-skill", description: "flag desc"},
+			toolsMap: map[string]tools.Tool{},
+			groupsMap: map[string]group.Group{
+				"": group.NewGroup(group.GroupConfig{Name: ""}),
+			},
+			want: map[string]skillContent{
+				"my-skill": {tools: map[string]tools.Tool{}, description: "flag desc"},
+			},
+		},
+		{
+			name:     "all-tools mode: default group description takes precedence over flag",
+			cmd:      &skillsCmd{name: "my-skill", description: "flag desc"},
+			toolsMap: map[string]tools.Tool{},
+			groupsMap: map[string]group.Group{
+				"": group.NewGroup(group.GroupConfig{Name: "", Description: "default group description"}),
+			},
+			want: map[string]skillContent{
+				"my-skill": {tools: map[string]tools.Tool{}, description: "default group description"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.cmd.buildSkillContents(tt.toolsMap, tt.groupsMap)
+			if err != nil {
+				t.Fatalf("buildSkillContents failed: %v", err)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("buildSkillContents() = %#v, want %#v", got, tt.want)
 			}
 		})
 	}
