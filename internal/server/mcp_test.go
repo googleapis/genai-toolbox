@@ -607,6 +607,9 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 			wantPromptsList: map[string]any{
@@ -625,6 +628,9 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 			wantPromptsGet: map[string]any{
@@ -641,6 +647,9 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 			wantToolsListOnTool1: map[string]any{
@@ -656,6 +665,9 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 			wantToolsCallOnTool1: map[string]any{
@@ -668,6 +680,9 @@ func TestMcpEndpoint(t *testing.T) {
 							"type": "text",
 							"text": `"no_params"`,
 						},
+					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 					},
 				},
 			},
@@ -709,6 +724,9 @@ func TestMcpEndpoint(t *testing.T) {
 								"required": []any{"param5"},
 							},
 						},
+					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
@@ -752,6 +770,9 @@ func TestMcpEndpoint(t *testing.T) {
 							"type": "text",
 							"text": `{"k":"v"}`,
 						},
+					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 					},
 				},
 			},
@@ -826,7 +847,9 @@ func TestMcpEndpoint(t *testing.T) {
 								"tools":   map[string]any{"listChanged": false},
 								"prompts": map[string]any{"listChanged": false},
 							},
-							"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+							"_meta": map[string]any{
+								"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+							},
 						},
 					},
 				},
