@@ -571,7 +571,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`. To retrieve valid filter values for a suggestible field, use the 'get_field_value_suggestions' tool.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -686,7 +686,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`. To retrieve valid filter values for a suggestible field, use the 'get_field_value_suggestions' tool.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -801,7 +801,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`. To retrieve valid filter values for a suggestible field, use the 'get_field_value_suggestions' tool.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -1076,7 +1076,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`. To retrieve valid filter values for a suggestible field, use the 'get_field_value_suggestions' tool.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -1398,7 +1398,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`. To retrieve valid filter values for a suggestible field, use the 'get_field_value_suggestions' tool.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -2083,7 +2083,7 @@ func TestLooker(t *testing.T) {
 	wantResult = "{\"description\":\"Data about Look and dashboard usage, including frequency of views, favoriting, scheduling, embedding, and access via the API. Also includes details about individual Looks and dashboards.\",\"group_label\":\"System Activity\",\"label\":\"Content Usage\",\"name\":\"content_usage\"}"
 	tests.RunToolInvokeParametersTest(t, "get_explores", []byte(`{"model": "system__activity"}`), wantResult)
 
-	wantResult = "{\"description\":\"Number of times this content has been viewed via the Looker API\",\"label\":\"Content Usage API Count\",\"label_short\":\"API Count\",\"name\":\"content_usage.api_count\",\"type\":\"number\"}"
+	wantResult = "{\"description\":\"\",\"label\":\" Dashboard Linked Looks  ID\",\"label_short\":\" ID\",\"name\":\"_dashboard_linked_looks._id\",\"suggest_dimension\":\"_dashboard_linked_looks._id\",\"suggest_explore\":\"content_usage\",\"suggestable\":true,\"type\":\"string\"}"
 	tests.RunToolInvokeParametersTest(t, "get_dimensions", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
 	// Verify the suggestions output structure is wrapped in a JSON Object
@@ -2091,18 +2091,18 @@ func TestLooker(t *testing.T) {
 	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source"}`), wantResult)
 
 	// Verify that the suggestions list contains the expected value
-	wantResult = `"query"`
+	wantResult = "{\"suggestions\":[\"api4\",\"dashboard\",\"explore\",\"merge_query\",\"regenerator\",\"sqlrunner\",\"suggest\"]}"
 	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source"}`), wantResult)
 
 	// Verify that search term filtering works
-	wantResult = `"api"`
+	wantResult = "{\"suggestions\":[\"api4\"]}"
 	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "term": "ap"}`), wantResult)
 
 	// Verify that conditional filtering based on other fields works
-	wantResult = `"query"`
+	wantResult = "{\"suggestions\":[\"api4\",\"dashboard\",\"explore\",\"merge_query\",\"regenerator\",\"sqlrunner\",\"suggest\"]}"
 	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "filters": {"history.status": "complete"}}`), wantResult)
 
-	wantResult = "{\"description\":\"The total number of views via the Looker API\",\"label\":\"Content Usage API Total\",\"label_short\":\"API Total\",\"name\":\"content_usage.api_total\",\"type\":\"sum\"}"
+	wantResult = "{\"description\":\"\",\"label\":\"API Usage\",\"label_short\":\"API Usage\",\"name\":\"turtle::api_usage\",\"suggestable\":false,\"type\":\"turtle_look\"}"
 	tests.RunToolInvokeParametersTest(t, "get_measures", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
 	wantResult = "[]"
