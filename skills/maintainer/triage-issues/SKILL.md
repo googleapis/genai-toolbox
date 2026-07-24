@@ -74,9 +74,19 @@ maintainer is picking it up; otherwise leave it unassigned so contributors know 
 with distinctive terms (tool name, error string). If it's a known issue, propose `duplicate` +
 close: link and reference the original, and thank the reporter (template below).
 
-**Completeness (bugs).** Compare against `bug_report.yml` required fields (version, env, expected
-vs. current, repro) and list exactly what's missing. This feeds the `waiting for response` label
-and the draft comment.
+**Investigate before deferring (bugs).** Before proposing `waiting for response`, try to reproduce
+by tracing the code, and check `git log`/`git blame` for a fix that already landed silently. If
+it's already fixed, propose `duplicate` + close referencing the commit rather than asking for info.
+If you can root-cause it, include the `file:line` — it sharpens the priority call. Only fall back to
+`waiting for response` when reproduction genuinely isn't possible, and then ask *specific*,
+actionable questions, not "please provide more info". Compare against `bug_report.yml` required
+fields (version, env, expected vs. current, repro) to list exactly what's missing; this feeds the
+label and the draft comment.
+
+**Feature requests & questions.** For a feature request, search the codebase for an existing or
+partial implementation before drafting the acknowledgment — it may already be possible (answer and
+close) or a duplicate. For a `type: question`, answer directly from the code with references rather
+than only labeling it.
 
 **Draft comment.** Use the playbook's canonical templates verbatim ("Needs More Information" for a
 bug missing repro/details, "Acknowledging a Feature Request" for an FR), filling in specifics like
@@ -91,7 +101,9 @@ Thanks for reporting this! This is a duplicate of #<original>, so I'm closing th
 - **Propose only.** Never run `gh issue edit/comment/close` or assign. Deliver in chat.
 - **Only real labels**: every proposed label must appear in `gh label list`.
 - **When type/product is a genuine toss-up, ask.** A confident wrong `product:` mis-routes.
-- **Cite what backs a claim** (e.g. "routes to `toolbox-looker-team` per `blunderbuss.yml`").
+- **Cite what backs a claim.** Routing/label claims cite the config (e.g. "routes to
+  `toolbox-looker-team` per `blunderbuss.yml`"); codebase claims (root cause, "already fixed",
+  "already implemented") cite `file:line` or a commit SHA, or are marked `[UNVERIFIED]`.
 
 ## Output format
 
