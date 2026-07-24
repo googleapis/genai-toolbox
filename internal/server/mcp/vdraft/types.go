@@ -91,6 +91,26 @@ type RequestMetaObject struct {
 	MetaClientCapabilities *ClientCapabilities `json:"io.modelcontextprotocol/clientCapabilities"`
 }
 
+/**
+ * Extends {@link MetaObject} with additional result-specific fields. All key naming rules from `MetaObject` apply.
+ */
+type ResultMetaObject struct {
+	/**
+	 * Identifies the server software producing the response. Servers SHOULD
+	 * include this field on every response unless specifically configured not
+	 * to do so.
+	 *
+	 * The {@link Implementation} schema requires `name` and `version`; other
+	 * fields are optional.
+	 *
+	 * The value is self-reported by the server and is not verified by the
+	 * protocol. It is intended for display, logging, and debugging. Clients
+	 * SHOULD NOT use it to change their behavior, and SHOULD NOT rely on it for
+	 * security decisions.
+	 */
+	ServerInfo Implementation `json:"io.modelcontextprotocol/serverInfo,omitempty"`
+}
+
 // ClientCapabilities represents capabilities a client may support. Known
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // client can define its own, additional capabilities.
@@ -128,10 +148,6 @@ type DiscoverResult struct {
 	 * The capabilities of the server.
 	 */
 	Capabilities ServerCapabilities `json:"capabilities"`
-	/**
-	 * Information about the server software implementation.
-	 */
-	ServerInfo Implementation `json:"serverInfo"`
 	/**
 	 * Natural-language guidance describing the server and its features.
 	 *
