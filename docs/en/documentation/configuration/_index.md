@@ -88,6 +88,23 @@ tools:
   - my_third_tool
 ```
 
+### Groups
+
+The `group` kind scopes MCP primitives such as **tools** and **prompts**
+together under one name, with a `description` used as group metadata. A toolset
+is a tools-only group, so existing `kind: toolset` configs keep working
+unchanged. See [Groups](./groups/_index.md) for details.
+
+```yaml
+kind: group
+name: my_group
+description: Tools and prompts for a specific task.
+tools:
+  - my_first_tool
+prompts:
+  - my_first_prompt
+```
+
 ### Prompts
 
 The `prompt` kind of your `tools.yaml` defines the templates containing

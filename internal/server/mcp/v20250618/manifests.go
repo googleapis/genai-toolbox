@@ -16,8 +16,11 @@ package v20250618
 
 import (
 	"fmt"
+	"sort"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -98,14 +101,22 @@ func generateParamManifest(ps parameters.Parameters, urlParams map[string]string
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(srcs map[string]sources.Source, t tools.Toolset, toolsMap map[string]tools.Tool, urlParams map[string]string) (ListToolsResult, error) {
-	mcpManifest := make([]Tool, 0, len(t.ToolNames))
-	for _, toolName := range t.ToolNames {
-		tool, ok := toolsMap[toolName]
+func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (ListToolsResult, error) {
+	mcpManifest := make([]Tool, 0, len(g.ToolNames))
+	for _, toolName := range g.ToolNames {
+		tool, ok := pMgr.GetTool(toolName)
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
-		params, err := tool.GetParameters(srcs)
+		srcName := tool.GetSourceName()
+		var src sources.Source
+		if srcName != "" {
+			src, ok = pMgr.GetSource(srcName)
+			if !ok {
+				return ListToolsResult{}, fmt.Errorf("unable to retrieve %s source for tool %q", srcName, tool.GetName())
+			}
+		}
+		params, err := tool.GetParameters(src)
 		if err != nil {
 			return ListToolsResult{}, fmt.Errorf("error getting parameters for tool %q: %w", toolName, err)
 		}
@@ -134,9 +145,9 @@ func generatePromptManifest(name, desc string, args prompts.Arguments) Prompt {
 }
 
 // GenerateListPromptsResult generates the list/prompts result
-func GenerateListPromptsResult(p prompts.Promptset, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
-	mcpManifest := make([]Prompt, 0, len(p.PromptNames))
-	for _, promptName := range p.PromptNames {
+func GenerateListPromptsResult(g group.Group, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
+	mcpManifest := make([]Prompt, 0, len(g.PromptNames))
+	for _, promptName := range g.PromptNames {
 		prompt, ok := promptsMap[promptName]
 		if !ok {
 			return ListPromptsResult{}, fmt.Errorf("prompt does not exist: %s", promptName)
@@ -145,4 +156,42 @@ func GenerateListPromptsResult(p prompts.Promptset, promptsMap map[string]prompt
 		mcpManifest = append(mcpManifest, promptManifest)
 	}
 	return ListPromptsResult{Prompts: mcpManifest}, nil
+}
+
+// GenerateListGroupsResult generates the groups/list result. It omits the
+// default nameless group and returns the remaining groups sorted by name.
+func GenerateListGroupsResult(groupsMap map[string]group.Group) ListGroupsResult {
+	names := make([]string, 0, len(groupsMap))
+	for name := range groupsMap {
+		if name == "" {
+			continue
+		}
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	groupsList := make([]Group, 0, len(names))
+	for _, name := range names {
+		g := groupsMap[name]
+		groupsList = append(groupsList, Group{Name: g.Name, Description: g.Description})
+	}
+	return ListGroupsResult{Groups: groupsList}
+}
+
+// GenerateGetGroupResult generates the groups/get result for a single group's
+// tools and prompts.
+func GenerateGetGroupResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (GetGroupResult, error) {
+	listToolsResult, err := GenerateListToolsResult(pMgr, g, urlParams)
+	if err != nil {
+		return GetGroupResult{}, fmt.Errorf("error generating tools manifest: %w", err)
+	}
+	listPromptsResult, err := GenerateListPromptsResult(g, pMgr.GetPromptsMap())
+	if err != nil {
+		return GetGroupResult{}, fmt.Errorf("error generating prompts manifest: %w", err)
+	}
+	return GetGroupResult{
+		Name:    g.Name,
+		Tools:   listToolsResult.Tools,
+		Prompts: listPromptsResult.Prompts,
+	}, nil
 }
