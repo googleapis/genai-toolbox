@@ -183,7 +183,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d embeddingModels: %s", len(embeddingModelsMap), strings.Join(embeddingModelNames, ", ")))
 
-	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, instrumentation, l)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
 	}
@@ -242,7 +242,7 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 		return nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
-	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	toolsMap, err := initializeTools(ctx, cfg, map[string]sources.Source{}, instrumentation, l)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -266,7 +266,7 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 }
 
 // initializeTools initializes and validates the tools from the config.
-func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
+func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[string]sources.Source, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
 		t, err := func() (tools.Tool, error) {
@@ -280,6 +280,21 @@ func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *tel
 			t, err := tc.Initialize(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
+			}
+			if !cfg.SkipSourceValidation {
+				srcName := t.GetSourceName()
+				var src sources.Source
+				var ok bool
+				if srcName != "" {
+					src, ok = sourcesMap[srcName]
+					if !ok {
+						return nil, fmt.Errorf("unable to retrieve source %s for tool %s", srcName, name)
+					}
+				}
+				err = t.ValidateSource(src)
+				if err != nil {
+					return nil, err
+				}
 			}
 			return t, nil
 		}()

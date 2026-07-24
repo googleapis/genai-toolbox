@@ -1842,6 +1842,7 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 		ToolConfigs: server.ToolConfigs{
 			"my-tool": offlineToolConfig{name: "my-tool"},
 		},
+		SkipSourceValidation: true,
 	}
 
 	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
@@ -1932,6 +1933,7 @@ func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
 			"apple":  offlineToolConfig{name: "apple"},
 			"banana": offlineToolConfig{name: "banana"},
 		},
+		SkipSourceValidation: true,
 	}
 
 	_, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
