@@ -21,6 +21,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -158,8 +159,9 @@ func TestGroup_ToolsetManifest(t *testing.T) {
 		Name:      "mygroup",
 		ToolNames: []string{"tool1", "tool2"},
 	})
+	mgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
 
-	manifest, err := g.ToolsetManifest("v1.2.3", toolsMap, nil)
+	manifest, err := g.ToolsetManifest("v1.2.3", mgr)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -181,7 +183,7 @@ func TestGroup_ToolsetManifest(t *testing.T) {
 
 	// Missing tool error path.
 	missing := group.NewGroup(group.GroupConfig{Name: "g", ToolNames: []string{"nope"}})
-	if _, err := missing.ToolsetManifest("v1", toolsMap, nil); err == nil {
+	if _, err := missing.ToolsetManifest("v1", mgr); err == nil {
 		t.Fatal("expected error for missing tool, got nil")
 	} else if !strings.Contains(err.Error(), "tool does not exist: nope") {
 		t.Errorf("error = %q, want it to contain %q", err.Error(), "tool does not exist: nope")

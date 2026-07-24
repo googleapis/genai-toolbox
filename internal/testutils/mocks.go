@@ -57,7 +57,7 @@ func NewMockTool(name, desc string, params []parameters.Parameter, unauthorized,
 	}
 }
 
-func (t MockTool) Invoke(ctx context.Context, s tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
+func (t MockTool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
 	mock := []any{t.Name}
 	if t.ReturnParamsInInvoke && len(params) > 0 {
 		for _, p := range params {
@@ -67,7 +67,15 @@ func (t MockTool) Invoke(ctx context.Context, s tools.SourceProvider, params par
 	return mock, nil
 }
 
+func (t MockTool) GetSourceName() string {
+	return ""
+}
+
 func (t MockTool) ToConfig() tools.ToolConfig {
+	return nil
+}
+
+func (t MockTool) ValidateSource(sources.Source) error {
 	return nil
 }
 
@@ -80,7 +88,7 @@ func (t MockTool) EmbedParams(ctx context.Context, paramValues parameters.ParamV
 	return parameters.EmbedParams(ctx, t.Params, paramValues, embeddingModelsMap, nil)
 }
 
-func (t MockTool) Manifest(map[string]sources.Source) (tools.Manifest, error) {
+func (t MockTool) Manifest(sources.Source) (tools.Manifest, error) {
 	return t.manifest, nil
 }
 
@@ -93,12 +101,12 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return !t.unauthorized
 }
 
-func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error) {
+func (t MockTool) RequiresClientAuthorization(sources.Source) (bool, error) {
 	// defaulted to false
 	return t.requireClientAuthorization, nil
 }
 
-func (t MockTool) GetParameters(map[string]sources.Source) (parameters.Parameters, error) {
+func (t MockTool) GetParameters(sources.Source) (parameters.Parameters, error) {
 	return t.Params, nil
 }
 
@@ -118,7 +126,7 @@ func (t MockTool) GetAnnotations() *tools.ToolAnnotations {
 	return nil
 }
 
-func (t MockTool) GetAuthTokenHeaderName(tools.SourceProvider) (string, error) {
+func (t MockTool) GetAuthTokenHeaderName(sources.Source) (string, error) {
 	return "Authorization", nil
 }
 
