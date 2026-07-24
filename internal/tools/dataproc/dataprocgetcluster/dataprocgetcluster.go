@@ -87,12 +87,16 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSource() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
 func (t Tool) ValidateSource(srcMgr tools.SourceManager) error {
-	source, ok := srcMgr.GetSource(t.Cfg.Name)
+	source, ok := srcMgr.GetSource(t.Cfg.Source)
 	if !ok {
 		return fmt.Errorf("unable to retrieve source %q for tool %q", t.Cfg.Source, t.Cfg.Name)
 	}
@@ -103,36 +107,33 @@ func (t Tool) ValidateSource(srcMgr tools.SourceManager) error {
 	return nil
 }
 
-func (t Tool) validate(srcs map[string]sources.Source) error {
-	_, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	return err
+func (t Tool) GetParameters(source sources.Source) (parameters.Parameters, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return t.BaseTool.GetParameters(s)
 }
 
-func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	if err := t.validate(srcs); err != nil {
-		return nil, err
+func (t Tool) Manifest(source sources.Source) (tools.Manifest, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return tools.Manifest{}, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return t.BaseTool.GetParameters(srcs)
-}
-
-func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
-	if err := t.validate(srcs); err != nil {
-		return tools.Manifest{}, err
-	}
-	return t.BaseTool.Manifest(srcs)
+	return t.BaseTool.Manifest(s)
 }
 
 type compatibleSource interface {
+	sources.Source
 	GetCluster(context.Context, string) (any, error)
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, kind)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
-
 	paramMap := params.AsMap()
 	name, ok := paramMap["clusterName"].(string)
 	if !ok {

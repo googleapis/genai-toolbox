@@ -20,6 +20,7 @@ import (
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -79,7 +80,7 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
-func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	paramsMap := params.AsMap()
 
 	durationStr, ok := paramsMap["duration"].(string)
@@ -101,18 +102,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
+func (t Tool) GetSource() string {
+	return ""
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
 func (t Tool) ValidateSource(srcMgr tools.SourceManager) error {
-	source, ok := srcMgr.GetSource(t.Cfg.Name)
-	if !ok {
-		return fmt.Errorf("unable to retrieve source %q for tool %q", t.Cfg.Source, t.Cfg.Name)
-	}
-	_, ok = source.(compatibleSource)
-	if !ok {
-		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
-	}
 	return nil
 }

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jschema/cache"
 	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jschema/helpers"
@@ -54,6 +55,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 // compatibleSource defines the interface a data source must implement to be used by this tool.
 // It ensures that the source can provide a Neo4j driver and database name.
 type compatibleSource interface {
+	sources.Source
 	Neo4jDriver() neo4j.Driver
 	Neo4jDatabase() string
 }
@@ -111,12 +113,16 @@ type Tool struct {
 	cache *cache.Cache
 }
 
+func (t Tool) GetSource() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
 func (t Tool) ValidateSource(srcMgr tools.SourceManager) error {
-	source, ok := srcMgr.GetSource(t.Cfg.Name)
+	source, ok := srcMgr.GetSource(t.Cfg.Source)
 	if !ok {
 		return fmt.Errorf("unable to retrieve source %q for tool %q", t.Cfg.Source, t.Cfg.Name)
 	}
@@ -129,12 +135,11 @@ func (t Tool) ValidateSource(srcMgr tools.SourceManager) error {
 
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
 // It first checks the cache for a valid schema before extracting it from the database.
-func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
-
 	// Check if a valid schema is already in the cache.
 	if cachedSchema, ok := t.cache.Get("schema"); ok {
 		if schema, ok := cachedSchema.(*types.SchemaInfo); ok {

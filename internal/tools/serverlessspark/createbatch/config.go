@@ -21,6 +21,7 @@ import (
 
 	dataprocpb "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -36,6 +37,7 @@ func unmarshalProto(data any, m proto.Message) error {
 }
 
 type compatibleSource interface {
+	sources.Source
 	CreateBatch(context.Context, *dataprocpb.Batch) (map[string]any, error)
 }
 

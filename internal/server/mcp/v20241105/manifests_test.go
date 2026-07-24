@@ -22,6 +22,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -248,8 +249,8 @@ func TestGenerateListToolsResult(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
 	}
-
-	got, err := GenerateListToolsResult(nil, toolset, toolsMap, nil)
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil, nil)
+	got, err := GenerateListToolsResult(pMgr, toolset, nil)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
