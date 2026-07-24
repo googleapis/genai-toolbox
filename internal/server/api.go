@@ -66,7 +66,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		span.End()
 	}()
 
-	toolset, ok := s.PrimitiveMgr.GetToolset(toolsetName)
+	g, ok := s.PrimitiveMgr.GetGroup(toolsetName)
 	if !ok {
 		err = fmt.Errorf("toolset %q does not exist", toolsetName)
 		s.logger.DebugContext(ctx, err.Error())
@@ -74,7 +74,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	manifest, err := toolset.BuildManifest(s.PrimitiveMgr.GetSourcesMap())
+	manifest, err := g.ToolsetManifest(s.version, s.PrimitiveMgr.GetToolsMap(), s.PrimitiveMgr.GetSourcesMap())
 	if err != nil {
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
