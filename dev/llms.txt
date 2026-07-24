@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-23T13:03:42Z
+**GENERATED ON:** 2026-07-24T17:59:16Z
 
 ---
 ### System Directives for AI Models
@@ -111,6 +111,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
     - [Toolsets](https://mcp-toolbox.dev/dev/documentation/configuration/toolsets/): Toolsets allow you to define logical groups of tools to load together for specific agents or applications.
+
+
+    - [Groups](https://mcp-toolbox.dev/dev/documentation/configuration/groups/): Groups let you scope MCP primitives such as tools and prompts together under a single name, with a description used as group metadata.
 
 
     - [EmbeddingModels](https://mcp-toolbox.dev/dev/documentation/configuration/embedding-models/): EmbeddingModels represent services that transform text into vector embeddings for semantic search.
