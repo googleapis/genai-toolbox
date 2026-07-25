@@ -876,18 +876,18 @@ tools:
 				if len(cfg.ToolConfigs) != 2 {
 					return fmt.Errorf("expected exactly 2 tools, got %d", len(cfg.ToolConfigs))
 				}
-				if _, ok := cfg.ToolsetConfigs["sqlite_database_tools"]; !ok {
-					return fmt.Errorf("expected toolset 'sqlite_database_tools' not found")
+				if _, ok := cfg.GroupConfigs["sqlite_database_tools"]; !ok {
+					return fmt.Errorf("expected group 'sqlite_database_tools' not found")
 				}
-				if len(cfg.ToolsetConfigs) != 2 {
+				// Legacy toolsets are folded into groups, and the default nameless
+				// collection is seeded later as a derived group, so only the named
+				// group remains in the parsed config.
+				if len(cfg.GroupConfigs) != 1 {
 					var names []string
-					for k := range cfg.ToolsetConfigs {
+					for k := range cfg.GroupConfigs {
 						names = append(names, k)
 					}
-					return fmt.Errorf("expected exactly 2 toolsets (including default), got %d: %v", len(cfg.ToolsetConfigs), names)
-				}
-				if _, ok := cfg.ToolsetConfigs[""]; !ok {
-					return fmt.Errorf("expected default toolset '' not found")
+					return fmt.Errorf("expected exactly 1 group, got %d: %v", len(cfg.GroupConfigs), names)
 				}
 				return nil
 			},

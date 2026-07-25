@@ -41,14 +41,18 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	_ "github.com/googleapis/mcp-toolbox/internal/embeddingmodels/gemini"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/http"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -251,24 +255,11 @@ func TestUpdateServer(t *testing.T) {
 	newAuth := map[string]auth.AuthService{"example-auth": nil}
 	newEmbeddingModels := map[string]embeddingmodels.EmbeddingModel{"example-model": nil}
 	newTools := map[string]tools.Tool{"example-tool": nil}
-	newToolsets := map[string]tools.Toolset{
-		"example-toolset": {
-			ToolsetConfig: tools.ToolsetConfig{
-				Name: "example-toolset",
-			},
-			Tools: []*tools.Tool{},
-		},
+	newPrompts := map[string]prompts.Prompt{"example-prompt": testutils.NewMockPrompt("example-prompt", "", prompts.Arguments{})}
+	newGroups := map[string]group.Group{
+		"example-toolset": group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 	}
-	newPrompts := map[string]prompts.Prompt{"example-prompt": nil}
-	newPromptsets := map[string]prompts.Promptset{
-		"example-promptset": {
-			PromptsetConfig: prompts.PromptsetConfig{
-				Name: "example-promptset",
-			},
-			Prompts: []*prompts.Prompt{},
-		},
-	}
-	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
@@ -288,19 +279,18 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
-	gotToolset, _ := s.PrimitiveMgr.GetToolset("example-toolset")
-	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"], cmp.AllowUnexported(tools.Toolset{})); diff != "" {
-		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
+	wantGroup := newGroups["example-toolset"]
+	gotGroup, ok := s.PrimitiveMgr.GetGroup("example-toolset")
+	if !ok {
+		t.Fatal("expected group \"example-toolset\" to exist")
+	}
+	if diff := cmp.Diff(wantGroup, gotGroup, cmp.AllowUnexported(group.Group{})); diff != "" {
+		t.Errorf("error updating server, group (-want +got):\n%s", diff)
 	}
 
 	gotPrompt, _ := s.PrimitiveMgr.GetPrompt("example-prompt")
-	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"]); diff != "" {
+	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
-	}
-
-	gotPromptset, _ := s.PrimitiveMgr.GetPromptset("example-promptset")
-	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"], cmp.AllowUnexported(prompts.Promptset{})); diff != "" {
-		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 }
 
@@ -1337,6 +1327,317 @@ scopesRequired:
 	}
 }
 
+func TestDuplicateResourceConfig(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name string
+		yaml string
+	}{
+		{
+			name: "duplicate source",
+			yaml: `
+kind: source
+name: my_source
+type: alloydb-postgres
+project: my-project
+region: us-central1
+cluster: my-cluster
+instance: my-instance
+database: my-db
+---
+kind: source
+name: my_source
+type: alloydb-postgres
+project: my-project
+region: us-central1
+cluster: my-cluster
+instance: my-instance
+database: my-db
+`,
+		},
+		{
+			name: "duplicate authService",
+			yaml: `
+kind: authService
+name: my_auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+---
+kind: authService
+name: my_auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+`,
+		},
+		{
+			name: "duplicate tool",
+			yaml: `
+kind: tool
+name: my_tool
+type: http
+source: my_source
+path: /a
+method: GET
+---
+kind: tool
+name: my_tool
+type: http
+source: my_source
+path: /b
+method: GET
+`,
+		},
+		{
+			name: "duplicate toolset",
+			yaml: `
+kind: toolset
+name: my_toolset
+tools:
+  - tool_a
+---
+kind: toolset
+name: my_toolset
+tools:
+  - tool_b
+`,
+		},
+		{
+			name: "duplicate embeddingModel",
+			yaml: `
+kind: embeddingModel
+name: my_model
+type: gemini
+model: text-embedding-005
+---
+kind: embeddingModel
+name: my_model
+type: gemini
+model: text-embedding-005
+`,
+		},
+		{
+			name: "duplicate prompt",
+			yaml: `
+kind: prompt
+name: my_prompt
+messages:
+  - role: user
+    content: hello
+---
+kind: prompt
+name: my_prompt
+messages:
+  - role: user
+    content: world
+`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			if err == nil {
+				t.Fatalf("UnmarshalPrimitiveConfig() expected a duplicate error, got nil")
+			}
+			if !strings.Contains(err.Error(), "declared more than once") {
+				t.Fatalf("UnmarshalPrimitiveConfig() error = %v, want it to mention 'declared more than once'", err)
+			}
+		})
+	}
+}
+
+func TestGroupConfigParsing(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		yaml      string
+		want      group.GroupConfig
+		wantError bool
+	}{
+		{
+			name: "valid named group",
+			yaml: `
+kind: group
+name: my_group
+description: a group of tools and prompts
+tools:
+  - tool_a
+  - tool_b
+prompts:
+  - prompt_a
+`,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "a group of tools and prompts",
+				ToolNames:   []string{"tool_a", "tool_b"},
+				PromptNames: []string{"prompt_a"},
+			},
+		},
+		{
+			name: "named group with only description",
+			yaml: `
+kind: group
+name: my_group
+description: just a description
+`,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "just a description",
+			},
+		},
+		{
+			name: "default group with only description",
+			yaml: `
+kind: group
+name:
+description: default server instruction
+`,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
+		},
+		{
+			name: "default group omitting name field",
+			yaml: `
+kind: group
+description: default server instruction
+`,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
+		},
+		{
+			name: "kind toolset folds into a tools-only group",
+			yaml: `
+kind: toolset
+name: my_toolset
+tools:
+  - tool_a
+  - tool_b
+`,
+			want: group.GroupConfig{
+				Name:      "my_toolset",
+				ToolNames: []string{"tool_a", "tool_b"},
+			},
+		},
+		{
+			name: "default group declaring tools is an error",
+			yaml: `
+kind: group
+name:
+tools:
+  - tool_a
+`,
+			wantError: true,
+		},
+		{
+			name: "default group declaring prompts is an error",
+			yaml: `
+kind: group
+name:
+prompts:
+  - prompt_a
+`,
+			wantError: true,
+		},
+		{
+			name: "unknown field is an error",
+			yaml: `
+kind: group
+name: my_group
+resources:
+  - res_a
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate default group is an error",
+			yaml: `
+kind: group
+name:
+description: first
+---
+kind: group
+name:
+description: second
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate named group is an error",
+			yaml: `
+kind: group
+name: my_group
+tools:
+  - tool_a
+---
+kind: group
+name: my_group
+tools:
+  - tool_b
+`,
+			wantError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+			if tc.wantError {
+				return
+			}
+			gc, ok := groups[tc.want.Name]
+			if !ok {
+				t.Fatalf("expected group %q to be parsed, got: %v", tc.want.Name, groups)
+			}
+			if diff := cmp.Diff(tc.want, gc); diff != "" {
+				t.Errorf("group mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestGroupConfigValues(t *testing.T) {
+	ctx := context.Background()
+	yaml := `
+kind: group
+name: my_group
+description: a group
+tools:
+  - tool_a
+  - tool_b
+prompts:
+  - prompt_a
+`
+	_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(yaml))
+	if err != nil {
+		t.Fatalf("UnmarshalPrimitiveConfig() returned unexpected error: %v", err)
+	}
+	gc, ok := groups["my_group"]
+	if !ok {
+		t.Fatalf("expected group %q to be parsed, got: %v", "my_group", groups)
+	}
+	if gc.Name != "my_group" {
+		t.Errorf("group name: got %q, want %q", gc.Name, "my_group")
+	}
+	if gc.Description != "a group" {
+		t.Errorf("group description: got %q, want %q", gc.Description, "a group")
+	}
+	if diff := cmp.Diff([]string{"tool_a", "tool_b"}, gc.ToolNames); diff != "" {
+		t.Errorf("group tools mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]string{"prompt_a"}, gc.PromptNames); diff != "" {
+		t.Errorf("group prompts mismatch (-want +got):\n%s", diff)
+	}
+}
+
 type offlineSourceConfig struct {
 	initialized *bool
 }
@@ -1380,7 +1681,7 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 		},
 	}
 
-	toolsMap, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
+	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
 	if err != nil {
 		t.Fatalf("InitializeOfflineConfigs returned error: %s", err)
 	}
@@ -1390,9 +1691,9 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 	if _, ok := toolsMap["my-tool"]; !ok {
 		t.Errorf("expected tool %q in toolsMap, got %v", "my-tool", toolsMap)
 	}
-	// The implicit default ("") toolset should always be present.
-	if _, ok := toolsetsMap[""]; !ok {
-		t.Error("expected default toolset to be present")
+	// The implicit default ("") group should always be present.
+	if _, ok := groupsMap[""]; !ok {
+		t.Error("expected default group to be present")
 	}
 }
 
