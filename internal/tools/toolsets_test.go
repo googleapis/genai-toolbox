@@ -28,10 +28,10 @@ import (
 func TestToolsetConfig_Initialize(t *testing.T) {
 	t.Parallel()
 
-	var tool1 = testutils.NewMockTool("tool1", "some description", []parameters.Parameter{}, false, false)
+	var tool1 = testutils.NewMockTool("tool1", "some description", "", nil, false, false)
 	var tool2 = testutils.NewMockTool(
 		"tool2",
-		"some description",
+		"some description", "",
 		parameters.Parameters{
 			parameters.NewIntParameter("param1", "This is the first parameter."),
 			parameters.NewIntParameter("param2", "This is the second parameter."),
