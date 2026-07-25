@@ -124,25 +124,27 @@ func (token AccessToken) ParseBearerToken() (string, error) {
 
 type Tool interface {
 	GetName() string
+	GetSourceName() string
 	GetDescription() string
 	GetAuthRequired() []string
 	GetAnnotations() *ToolAnnotations
-	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
+	Invoke(context.Context, sources.Source, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
-	Manifest(map[string]sources.Source) (Manifest, error)
+	Manifest(sources.Source) (Manifest, error)
 	StaticManifest() Manifest
 	Authorized([]string) bool
-	RequiresClientAuthorization(SourceProvider) (bool, error)
+	RequiresClientAuthorization(sources.Source) (bool, error)
 	ToConfig() ToolConfig
-	GetAuthTokenHeaderName(SourceProvider) (string, error)
-	GetParameters(map[string]sources.Source) (parameters.Parameters, error)
+	GetAuthTokenHeaderName(sources.Source) (string, error)
+	GetParameters(sources.Source) (parameters.Parameters, error)
 	GetScopesRequired() []string
+	ValidateSource(sources.Source) error
 }
 
-// SourceProvider defines the minimal view of the primitives.PrimitiveManager
+// SourceManager defines the minimal view of the primitives.PrimitiveManager
 // that the Tool package needs.
 // This is implemented to prevent import cycles.
-type SourceProvider interface {
+type SourceManager interface {
 	GetSource(sourceName string) (sources.Source, bool)
 }
 
@@ -165,36 +167,6 @@ func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) b
 		}
 	}
 	return false
-}
-
-func GetCompatibleSource[T any](primitiveMgr SourceProvider, sourceName, toolName, toolType string) (T, error) {
-	var zero T
-	s, ok := primitiveMgr.GetSource(sourceName)
-	if !ok {
-		return zero, fmt.Errorf("unable to retrieve source %q for tool %q", sourceName, toolName)
-	}
-	source, ok := s.(T)
-	if !ok {
-		return zero, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", toolType, sourceName)
-	}
-	return source, nil
-}
-
-// GetCompatibleSourceFromMap looks up a source by name from a sources map and
-// asserts it to the requested type. It mirrors GetCompatibleSource for callers
-// that hold the sources map directly (Manifest/GetParameters) rather than a
-// SourceProvider.
-func GetCompatibleSourceFromMap[T any](srcs map[string]sources.Source, sourceName, toolName, toolType string) (T, error) {
-	var zero T
-	s, ok := srcs[sourceName]
-	if !ok {
-		return zero, fmt.Errorf("unable to retrieve source %q for tool %q", sourceName, toolName)
-	}
-	source, ok := s.(T)
-	if !ok {
-		return zero, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", toolType, sourceName)
-	}
-	return source, nil
 }
 
 // ToolMeta is the read-only view BaseTool needs of any tool's Config. Tools
@@ -254,7 +226,7 @@ func (b BaseTool[T]) GetAnnotations() *ToolAnnotations { return b.annotations }
 // Manifest returns the precomputed metadata. It and GetParameters stay trivial
 // and never call each other: embedded methods have no virtual dispatch, so a
 // BaseTool method calling another would miss a concrete tool's override.
-func (b BaseTool[T]) Manifest(_ map[string]sources.Source) (Manifest, error) {
+func (b BaseTool[T]) Manifest(_ sources.Source) (Manifest, error) {
 	return b.metadata, nil
 }
 
@@ -266,7 +238,7 @@ func (b BaseTool[T]) StaticManifest() Manifest {
 	return b.metadata
 }
 
-func (b BaseTool[T]) GetParameters(_ map[string]sources.Source) (parameters.Parameters, error) {
+func (b BaseTool[T]) GetParameters(_ sources.Source) (parameters.Parameters, error) {
 	return b.StaticParameters, nil
 }
 
@@ -274,11 +246,11 @@ func (b BaseTool[T]) Authorized(verifiedAuthServices []string) bool {
 	return IsAuthorized(b.Cfg.GetAuthRequired(), verifiedAuthServices)
 }
 
-func (b BaseTool[T]) RequiresClientAuthorization(_ SourceProvider) (bool, error) {
+func (b BaseTool[T]) RequiresClientAuthorization(_ sources.Source) (bool, error) {
 	return false, nil
 }
 
-func (b BaseTool[T]) GetAuthTokenHeaderName(_ SourceProvider) (string, error) {
+func (b BaseTool[T]) GetAuthTokenHeaderName(_ sources.Source) (string, error) {
 	return "Authorization", nil
 }
 

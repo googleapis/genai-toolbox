@@ -69,6 +69,7 @@ description: |
     that can be used directly as filters for that dimension.
   - If a `suggest_explore` and `suggest_dimension` are provided, you can query
     that specified explore and dimension to retrieve a list of valid filter values.
+  - If a dimension includes `"suggestable": true`, you can retrieve its valid value suggestions by calling the 'get_field_value_suggestions' tool, passing the dimension's 'name' as the 'field' parameter, alongside the explore and model names.
 ---
 kind: tool
 name: get_measures
@@ -123,6 +124,25 @@ description: |
   - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
 ---
 kind: tool
+name: get_field_value_suggestions
+type: looker-get-field-value-suggestions
+source: looker-source
+description: |
+  This tool retrieves distinct value suggestions for a field, facilitating accurate filtering in downstream queries.
+
+  Required Parameters:
+  - model: The name of the LookML model, obtained from `get_models`.
+  - explore: The name of the explore containing the field, obtained from `get_explores`.
+  - field: The name of the field to get suggestions for (obtained from a dimension where 'suggestable' is true in the 'get_dimensions' output).
+
+  Optional Parameters:
+  - term: Optional search term pattern to filter suggestions. Evaluated as `%term%`.
+  - filters: Optional filters to enable conditional suggestions, represented as a map of field names to filter expressions, e.g., `{"users.state": "CA"}`.
+
+  Output:
+  - A JSON object with a "suggestions" key containing an array of string values representing suggestions.
+---
+kind: tool
 name: query
 type: looker-query
 source: looker-source
@@ -140,6 +160,7 @@ description: |
     - Do not quote field names.
     - Use `not null` instead of `-NULL`.
     - If a value contains a comma, enclose it in single quotes (e.g., "'New York, NY'").
+    - To retrieve valid filter values for a suggestible field, use the 'get_field_value_suggestions' tool.
   - filter_expression: A Looker expression filter string (custom filter). This allows complex logic and comparing fields.
     - Reference fields using `${view.field_name}` syntax.
     - Supports logical operators (`AND`, `OR`, `NOT`) and comparison operators.
@@ -840,6 +861,7 @@ tools:
 - get_measures
 - get_filters
 - get_parameters
+- get_field_value_suggestions
 - query
 - query_sql
 - query_url

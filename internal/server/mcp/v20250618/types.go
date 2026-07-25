@@ -34,6 +34,8 @@ const (
 	TOOLS_CALL   = "tools/call"
 	PROMPTS_LIST = "prompts/list"
 	PROMPTS_GET  = "prompts/get"
+	GROUPS_LIST  = "groups/list"
+	GROUPS_GET   = "groups/get"
 )
 
 /* Initialization */
@@ -342,4 +344,42 @@ type PromptArgument struct {
 type PromptMessage struct {
 	Role    string      `json:"role"`
 	Content TextContent `json:"content"`
+}
+
+/* Groups */
+
+// ListGroupsRequest is sent from the client to request the list of groups the
+// server has.
+type ListGroupsRequest struct {
+	PaginatedRequest
+}
+
+// Group is a single entry in a groups/list response.
+type Group struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+}
+
+// ListGroupsResult is the server's response to a groups/list request.
+type ListGroupsResult struct {
+	jsonrpc.Result
+	Groups []Group `json:"groups"`
+}
+
+// GetGroupRequest is sent from the client to request a single group's contents.
+type GetGroupRequest struct {
+	jsonrpc.Request
+	Params struct {
+		Name string `json:"name"`
+	} `json:"params"`
+}
+
+// GetGroupResult is the server's response to a groups/get request: the group's
+// tools and prompts. The description is intentionally omitted; it is exposed only
+// through groups/list.
+type GetGroupResult struct {
+	jsonrpc.Result
+	Name    string   `json:"name"`
+	Tools   []Tool   `json:"tools"`
+	Prompts []Prompt `json:"prompts"`
 }
