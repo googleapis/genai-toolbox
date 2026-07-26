@@ -29,8 +29,8 @@ import (
 
 func TestToolsetEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
-	toolsMap, toolsets, _, _ := testutils.SetUpResources(t, mockTools, nil)
-	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
+	toolsMap, _, groups := testutils.SetUpResources(t, mockTools, nil)
+	r, shutdown := setUpServer(t, "api", toolsMap, nil, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -126,8 +126,8 @@ func TestToolsetEndpoint(t *testing.T) {
 
 func TestToolGetEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
-	toolsMap, toolsets, _, _ := testutils.SetUpResources(t, mockTools, nil)
-	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
+	toolsMap, _, groups := testutils.SetUpResources(t, mockTools, nil)
+	r, shutdown := setUpServer(t, "api", toolsMap, nil, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -214,8 +214,8 @@ func TestToolGetEndpoint(t *testing.T) {
 
 func TestToolInvokeEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool4, testutils.MockTool5}
-	toolsMap, toolsets, _, _ := testutils.SetUpResources(t, mockTools, nil)
-	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
+	toolsMap, _, groups := testutils.SetUpResources(t, mockTools, nil)
+	r, shutdown := setUpServer(t, "api", toolsMap, nil, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -299,8 +299,8 @@ func TestToolInvokeEndpoint(t *testing.T) {
 
 func TestApiRequestBodyLimit(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
-	toolsMap, toolsets, _, _ := testutils.SetUpResources(t, mockTools, nil)
-	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
+	toolsMap, _, groups := testutils.SetUpResources(t, mockTools, nil)
+	r, shutdown := setUpServer(t, "api", toolsMap, nil, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -331,9 +331,9 @@ func TestApiRequestBodyLimit(t *testing.T) {
 
 func TestApiRequestBodyLimitOverride(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
-	toolsMap, toolsets, _, _ := testutils.SetUpResources(t, mockTools, nil)
+	toolsMap, _, groups := testutils.SetUpResources(t, mockTools, nil)
 	customLimit := int64(1 << 20)
-	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil, withHTTPMaxRequestBytes(customLimit))
+	r, shutdown := setUpServer(t, "api", toolsMap, nil, groups, withHTTPMaxRequestBytes(customLimit))
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
