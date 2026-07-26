@@ -72,7 +72,7 @@ pipelineParams:
 | source          | string   | true         | The name of the `mongodb` source to use.                                                                       |
 | description     | string   | true         | A description of the tool that is passed to the LLM.                                                           |
 | database        | string   | true         | The name of the MongoDB database containing the collection.                                                    |
-| collection      | string   | true         | The name of the MongoDB collection to run the aggregation on.                                                  |
+| collection      | string   | false         | The name of the MongoDB collection to run the aggregation on. If omitted, it must be supplied at runtime as a `collection` parameter, which can be restricted using `allowedValues`. |
 | pipelinePayload | string   | true         | A JSON array of aggregation stage documents, provided as a string. Uses `{{json .param_name}}` for templating. |
 | pipelineParams  | list     | true         | A list of parameter objects that define the variables used in the `pipelinePayload`.                           |
 | canonical       | bool     | false        | Determines if the pipeline string is parsed using MongoDB's Canonical or Relaxed Extended JSON format.         |

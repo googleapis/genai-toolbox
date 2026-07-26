@@ -64,7 +64,7 @@ sortParams:
 | source         | string   | true         | The name of the `mongodb` source to use.                                                                                    |
 | description    | string   | true         | A description of the tool that is passed to the LLM.                                                                        |
 | database       | string   | true         | The name of the MongoDB database to query.                                                                                  |
-| collection     | string   | true         | The name of the MongoDB collection to query.                                                                                |
+| collection     | string   | false         | The name of the MongoDB collection to query. If omitted, it must be supplied at runtime as a `collection` parameter, which can be restricted using `allowedValues`. |
 | filterPayload  | string   | true         | The MongoDB query filter document to select which documents to return. Uses `{{json .param_name}}` for templating.          |
 | filterParams   | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                          |
 | projectPayload | string   | false        | An optional MongoDB projection document to specify which fields to include (1) or exclude (0) in the results.               |

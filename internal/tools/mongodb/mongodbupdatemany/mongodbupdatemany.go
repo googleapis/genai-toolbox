@@ -28,6 +28,7 @@ import (
 )
 
 const resourceType string = "mongodb-update-many"
+const collectionKey string = "collection"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -53,7 +54,7 @@ type Config struct {
 	Type             string                 `yaml:"type" validate:"required"`
 	Source           string                 `yaml:"source" validate:"required"`
 	Database         string                 `yaml:"database" validate:"required"`
-	Collection       string                 `yaml:"collection" validate:"required"`
+	Collection       string                 `yaml:"collection"`
 	FilterPayload    string                 `yaml:"filterPayload" validate:"required"`
 	FilterParams     parameters.Parameters  `yaml:"filterParams"`
 	UpdatePayload    string                 `yaml:"updatePayload" validate:"required"`
@@ -76,6 +77,13 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	allParameters := slices.Concat(cfg.FilterParams, cfg.UpdateParams)
+
+	// If no collection is set in the config, expose it as a runtime parameter so
+	// the agent can pick the collection when invoking the tool.
+	if cfg.Collection == "" {
+		collectionParam := parameters.NewStringParameter(collectionKey, "The name of the collection to operate on.", parameters.WithStringRequired(true))
+		allParameters = append(allParameters, collectionParam)
+	}
 
 	if err := parameters.CheckDuplicateParameters(allParameters); err != nil {
 		return nil, err
@@ -125,6 +133,16 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
 	paramsMap := params.AsMap()
+
+	collection := t.Cfg.Collection
+	if collection == "" {
+		c, ok := paramsMap[collectionKey].(string)
+		if !ok || c == "" {
+			return nil, util.NewAgentError("collection must be set in the tool config or provided as a parameter", nil)
+		}
+		collection = c
+	}
+
 	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateManyFilter", t.Cfg.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("error populating filter", err)
@@ -133,7 +151,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	if err != nil {
 		return nil, util.NewAgentError("unable to get update", err)
 	}
-	resp, err := source.UpdateMany(ctx, filterString, t.Cfg.Canonical, updateString, t.Cfg.Database, t.Cfg.Collection, t.Cfg.Upsert)
+	resp, err := source.UpdateMany(ctx, filterString, t.Cfg.Canonical, updateString, t.Cfg.Database, collection, t.Cfg.Upsert)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}

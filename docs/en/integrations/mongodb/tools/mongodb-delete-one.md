@@ -54,6 +54,6 @@ filterParams:
 | source        | string   | true         | The name of the `mongodb` source to use.                                                                           |
 | description   | string   | true         | A description of the tool that is passed to the LLM.                                                               |
 | database      | string   | true         | The name of the MongoDB database containing the collection.                                                        |
-| collection    | string   | true         | The name of the MongoDB collection from which to delete a document.                                                |
+| collection    | string   | false         | The name of the MongoDB collection from which to delete a document. If omitted, it must be supplied at runtime as a `collection` parameter, which can be restricted using `allowedValues`. |
 | filterPayload | string   | true         | The MongoDB query filter document to select the document for deletion. Uses `{{json .param_name}}` for templating. |
 | filterParams  | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                 |

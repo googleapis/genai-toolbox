@@ -47,5 +47,5 @@ An LLM would call this tool by providing the document as a JSON string in the
 | source      | string   | true         | The name of the `mongodb` source to use.                                                                                |
 | description | string   | true         | A description of the tool that is passed to the LLM.                                                                    |
 | database    | string   | true         | The name of the MongoDB database containing the collection.                                                             |
-| collection  | string   | true         | The name of the MongoDB collection into which the document will be inserted.                                            |
+| collection  | string   | false         | The name of the MongoDB collection into which the document will be inserted. If omitted, it must be supplied at runtime as a `collection` parameter, which can be restricted using `allowedValues`. |
 | canonical   | bool     | false        | Determines if the data string is parsed using MongoDB's Canonical or Relaxed Extended JSON format. Defaults to `false`. |

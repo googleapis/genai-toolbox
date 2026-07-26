@@ -298,3 +298,68 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 	}
 
 }
+
+func findCollectionParam(params []parameters.ParameterManifest) *parameters.ParameterManifest {
+	for i := range params {
+		if params[i].Name == "collection" {
+			return &params[i]
+		}
+	}
+	return nil
+}
+
+func TestRuntimeCollectionParam(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	// A config that omits collection should still parse, since it is no longer required.
+	if _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(noCollectionConfig)); err != nil {
+		t.Fatalf("expected config without collection to parse, got: %s", err)
+	}
+
+	// When collection is omitted, it is exposed as a required runtime parameter.
+	runtimeCfg := mongodbupdateone.Config{
+		ConfigBase: tools.ConfigBase{Name: "example_tool", Description: "some description"},
+	}
+	runtimeTool, err := runtimeCfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("unable to initialize tool: %s", err)
+	}
+	if p := findCollectionParam(runtimeTool.StaticManifest().Parameters); p == nil {
+		t.Error("expected a runtime collection parameter when collection is omitted from config")
+	} else if !p.Required {
+		t.Error("expected the runtime collection parameter to be required")
+	}
+
+	// When collection is set in the config, no runtime parameter is exposed.
+	staticCfg := mongodbupdateone.Config{
+		ConfigBase: tools.ConfigBase{Name: "example_tool", Description: "some description"},
+		Collection: "test_coll",
+	}
+	staticTool, err := staticCfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("unable to initialize tool: %s", err)
+	}
+	if p := findCollectionParam(staticTool.StaticManifest().Parameters); p != nil {
+		t.Error("did not expect a collection parameter when collection is set in the config")
+	}
+}
+
+var noCollectionConfig = `
+            kind: tool
+            name: example_tool
+            type: mongodb-update-one
+            source: my-instance
+            description: some description
+            database: test_db
+            filterPayload: |
+                { name: {{json .name}} }
+            updatePayload: |
+                { $set : { item: {{json .item}} } }
+            updateParams:
+                - name: item
+                  type: string
+                  description: small description
+`
