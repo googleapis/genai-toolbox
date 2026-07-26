@@ -874,6 +874,75 @@ func TestParseConfig(t *testing.T) {
 	}
 }
 
+func TestParseConfigFailure(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		description string
+		in          string
+		wantError   string
+	}{
+		{
+			description: "invalid special character in tool name",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+---
+			kind: tool
+			name: invalid_toolname_?
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: SELECT *;
+			`,
+			wantError: "invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed",
+		},
+		{
+			description: "invalid comma in tool name",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+---
+			kind: tool
+			name: invalid_toolname,
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: SELECT *;
+			`,
+			wantError: "invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			parser := ConfigParser{}
+			_, err := parser.ParseConfig(ctx, testutils.FormatYaml(tc.in))
+			if err == nil {
+				t.Fatalf("expected error containing %s, got nil", tc.wantError)
+			}
+			if !strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("want error: %s, got error: %s", tc.wantError, err.Error())
+			}
+		})
+	}
+}
+
 func TestParseConfigWithAuth(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1955,7 +2024,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantGroups: server.GroupConfigs{
 				"looker_tools": group.GroupConfig{
 					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "add_dashboard_filter", "generate_embed_url"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "get_field_value_suggestions", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "add_dashboard_filter", "generate_embed_url"},
 				},
 			},
 		},
@@ -2429,6 +2498,94 @@ tools:
 				}
 				if !strings.Contains(err.Error(), tc.errSubstr) {
 					t.Errorf("error %q does not contain expected substring %q", err.Error(), tc.errSubstr)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestParseConfigGroupNameValidation(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		description string
+		in          string
+		wantErr     bool
+		errContains string
+	}{
+		{
+			description: "group with integer name is rejected",
+			in: `
+kind: group
+name: 123
+`,
+			wantErr:     true,
+			errContains: "missing 'name' field or it is not a string",
+		},
+		{
+			description: "group with boolean name is rejected",
+			in: `
+kind: group
+name: true
+`,
+			wantErr:     true,
+			errContains: "missing 'name' field or it is not a string",
+		},
+		{
+			description: "group with absent name is accepted as default group",
+			in: `
+kind: group
+description: the default group
+`,
+			wantErr: false,
+		},
+		{
+			description: "group with null name is accepted as default group",
+			in: `
+kind: group
+name: ~
+description: the default group
+`,
+			wantErr: false,
+		},
+		{
+			description: "group with quoted numeric name is accepted",
+			in: `
+kind: group
+name: "123"
+`,
+			wantErr: false,
+		},
+		{
+			description: "non-group resource with integer name is rejected",
+			in: `
+kind: tool
+name: 42
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT 1
+`,
+			wantErr:     true,
+			errContains: "missing 'name' field or it is not a string",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			parser := ConfigParser{}
+			_, err := parser.ParseConfig(ctx, testutils.FormatYaml(tc.in))
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				if tc.errContains != "" && !strings.Contains(err.Error(), tc.errContains) {
+					t.Errorf("error %q does not contain %q", err.Error(), tc.errContains)
 				}
 			} else {
 				if err != nil {

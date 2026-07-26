@@ -109,9 +109,9 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	opts.Logger.InfoContext(ctx, "Generating skillagent skills...")
 
 	// Collect the tools and description for each skill to generate.
-	skillsToContents, err := cmd.collectTools(ctx, opts)
+	skillsToContents, err := cmd.collectContents(ctx, opts)
 	if err != nil {
-		errMsg := fmt.Errorf("error collecting skill tools: %w", err)
+		errMsg := fmt.Errorf("error collecting skill contents: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
@@ -238,7 +238,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	return nil
 }
 
-func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOptions) (map[string]skillContent, error) {
+func (c *skillsCmd) collectContents(ctx context.Context, opts *internal.ToolboxOptions) (map[string]skillContent, error) {
 	// Initialize tools and groups only; skills generation does not need live
 	// sources, auth services, or embedding models.
 	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, opts.Cfg)
@@ -255,6 +255,8 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap map[string]group.Group) (map[string]skillContent, error) {
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, groupsMap)
 
+	skillsToContents := make(map[string]skillContent)
+
 	getToolsFromGroup := func(g group.Group) map[string]tools.Tool {
 		groupTools := make(map[string]tools.Tool)
 		for _, name := range g.ToolNames {
@@ -265,17 +267,14 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 		return groupTools
 	}
 
-	// singleSkill builds a one-entry result keyed by the --name flag.
-	singleSkill := func(t map[string]tools.Tool, description string) map[string]skillContent {
-		return map[string]skillContent{c.name: {tools: t, description: description}}
-	}
-
 	if c.group != "" {
 		g, ok := primitiveMgr.GetGroup(c.group)
 		if !ok {
 			return nil, fmt.Errorf("group %q not found", c.group)
 		}
-		return singleSkill(getToolsFromGroup(g), c.descriptionFor(g)), nil
+
+		skillsToContents[c.name] = skillContent{tools: getToolsFromGroup(g), description: c.descriptionFor(g)}
+		return skillsToContents, nil
 	}
 
 	if c.toolset != "" {
@@ -283,17 +282,19 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 		if !ok {
 			return nil, fmt.Errorf("toolset %q not found", c.toolset)
 		}
-		return singleSkill(getToolsFromGroup(g), c.description), nil
+
+		skillsToContents[c.name] = skillContent{tools: getToolsFromGroup(g), description: c.description}
+		return skillsToContents, nil
 	}
 
 	if len(groupsMap) <= 1 {
 		// Default to all tools if no named group found. The default nameless
 		// group's description (if any) takes precedence over the flag.
-		return singleSkill(toolsMap, c.descriptionFor(groupsMap[""])), nil
+		skillsToContents[c.name] = skillContent{tools: toolsMap, description: c.descriptionFor(groupsMap[""])}
+		return skillsToContents, nil
 	}
 
 	// One skill per group
-	skillsToContents := make(map[string]skillContent)
 	for gName, g := range groupsMap {
 		if gName == "" {
 			continue

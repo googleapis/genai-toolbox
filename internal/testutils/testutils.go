@@ -164,8 +164,7 @@ var MockPrompt2 = NewMockPrompt("prompt2", "", prompts.Arguments{
 
 // SetUpResources setups resources to test against. The returned groups map is the
 // source of truth used by PrimitiveManager; assert group membership via
-// groups[name].ContainsTool / ContainsPrompt, or the derived views via
-// PrimitiveManager.GetToolset / GetPromptset.
+// groups[name].ContainsTool / ContainsPrompt.
 func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]prompts.Prompt, map[string]group.Group) {
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
@@ -174,20 +173,11 @@ func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 		allTools = append(allTools, tool.Name)
 	}
 
-	toolsets := make(map[string]tools.Toolset)
+	groupToolNames := make(map[string][]string)
 	if len(allTools) > 0 {
-		for name, l := range map[string][]string{
-			"":           allTools,
-			"tool1_only": {allTools[0]},
-			"tool2_only": {allTools[1]},
-		} {
-			tc := tools.ToolsetConfig{Name: name, ToolNames: l}
-			m, err := tc.Initialize(MockVersionString, toolsMap)
-			if err != nil {
-				t.Fatalf("unable to initialize toolset %q: %s", name, err)
-			}
-			toolsets[name] = m
-		}
+		groupToolNames[""] = allTools
+		groupToolNames["tool1_only"] = []string{allTools[0]}
+		groupToolNames["tool2_only"] = []string{allTools[1]}
 	}
 
 	promptsMap := make(map[string]prompts.Prompt)
@@ -197,30 +187,22 @@ func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 		allPrompts = append(allPrompts, prompt.Name)
 	}
 
-	promptsets := make(map[string]prompts.Promptset)
-	if len(allPrompts) > 0 {
-		psc := prompts.PromptsetConfig{Name: "", PromptNames: allPrompts}
-		ps, err := psc.Initialize(MockVersionString, promptsMap)
-		if err != nil {
-			t.Fatalf("unable to initialize default promptset: %s", err)
-		}
-		promptsets[""] = ps
-	}
-
-	// Build the authoritative groups map from the union of toolset and promptset
-	// names so the derived toolset/promptset views match the legacy maps.
+	// Build the authoritative groups map directly. Each named collection
+	// contributes its tool names; all prompts belong to the default (nameless)
+	// group, matching the legacy default-toolset behavior.
 	groupNames := make(map[string]struct{})
-	for name := range toolsets {
+	for name := range groupToolNames {
 		groupNames[name] = struct{}{}
 	}
-	for name := range promptsets {
-		groupNames[name] = struct{}{}
+	if len(allPrompts) > 0 {
+		groupNames[""] = struct{}{}
 	}
 	groups := make(map[string]group.Group)
 	for name := range groupNames {
-		ts := toolsets[name]
-		ps := promptsets[name]
-		gc := group.GroupConfig{Name: name, ToolNames: ts.ToolNames, PromptNames: ps.PromptNames}
+		gc := group.GroupConfig{Name: name, ToolNames: groupToolNames[name]}
+		if name == "" {
+			gc.PromptNames = allPrompts
+		}
 		groups[name] = group.NewGroup(gc)
 	}
 

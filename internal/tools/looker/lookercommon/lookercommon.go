@@ -80,6 +80,9 @@ func ExtractLookerFieldProperties(ctx context.Context, fields *[]v4.LookmlModelE
 		if v.Synonyms != nil && len(*v.Synonyms) > 0 {
 			vMap["synonyms"] = *v.Synonyms
 		}
+		if v.Suggestable != nil {
+			vMap["suggestable"] = *v.Suggestable
+		}
 		if v.Suggestable != nil && *v.Suggestable {
 			if v.Suggestions != nil && len(*v.Suggestions) > 0 {
 				vMap["suggestions"] = *v.Suggestions
@@ -123,7 +126,9 @@ func GetQueryParameters() parameters.Parameters {
 			"(e.g. \"view.field\") and values are filter expressions or "+
 			"parameter values. Pass values bare — do not wrap them in extra "+
 			"quote characters. For LookML `parameter` fields, use the raw "+
-			"allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
+			"allowed_value (e.g. `first_touch`), not `\"first_touch\"`."+
+			" To retrieve valid filter values for a suggestible field, "+
+			"use the 'get_field_value_suggestions' tool.",
 		"",
 		parameters.WithMapDefault(map[string]any{}),
 	)
