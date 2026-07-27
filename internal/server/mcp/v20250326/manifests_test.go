@@ -356,8 +356,11 @@ func TestGenerateListPromptsResult(t *testing.T) {
 		Name:        "test-promptset",
 		PromptNames: []string{"prompt1", "prompt2"},
 	})
-
-	got, err := GenerateListPromptsResult(g, promptsMap)
+	gMap := map[string]group.Group{
+		g.Name: g,
+	}
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, promptsMap, gMap)
+	got, err := GenerateListPromptsResult(pMgr, g)
 	if err != nil {
 		t.Fatalf("unable to generate list prompt result: %s", err)
 	}
