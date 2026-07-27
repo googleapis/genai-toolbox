@@ -119,10 +119,28 @@ type ResultMetaObject struct {
 type ClientCapabilities struct {
 	// Experimental, non-standard capabilities that the client supports.
 	Experimental map[string]interface{} `json:"experimental,omitempty"`
+	// Standard extensions that the client supports.
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
 	// Present if the client supports listing roots.
 	Roots *ListChanged `json:"roots,omitempty"`
 	// Present if the client supports sampling from an LLM.
 	Sampling struct{} `json:"sampling,omitempty"`
+}
+
+// GetExtensions returns standard extensions advertised by the client.
+func (c *ClientCapabilities) GetExtensions() map[string]any {
+	if c == nil {
+		return nil
+	}
+	return c.Extensions
+}
+
+// GetExperimental returns experimental capabilities advertised by the client.
+func (c *ClientCapabilities) GetExperimental() map[string]any {
+	if c == nil {
+		return nil
+	}
+	return c.Experimental
 }
 
 /* Discovery */

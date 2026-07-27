@@ -18,8 +18,14 @@ import "context"
 
 type extensionsKey struct{}
 
-// ClientExtensions holds the set of experimental extension URIs supported by the client.
+// ClientExtensions holds the set of extension URIs supported by the client.
 type ClientExtensions map[string]bool
+
+// CapabilitiesProvider is implemented by client capabilities structs across all MCP protocol versions.
+type CapabilitiesProvider interface {
+	GetExtensions() map[string]any
+	GetExperimental() map[string]any
+}
 
 // WithClientExtensions attaches the client's supported extensions to the context.
 func WithClientExtensions(ctx context.Context, exts ClientExtensions) context.Context {
@@ -38,16 +44,43 @@ func SupportsExtension(ctx context.Context, uri string) bool {
 	return exts != nil && exts[uri]
 }
 
-// ExtractClientExtensions extracts client experimental extensions from a capabilities map.
-// This is typically called with request metadata such as meta.MetaClientCapabilities.Experimental.
-func ExtractClientExtensions(experimental map[string]any) ClientExtensions {
+// ExtractClientExtensions extracts supported extension URIs from standard extensions
+// and experimental capabilities maps.
+// According to the MCP specification, extensions may be advertised under
+// clientCapabilities.extensions or clientCapabilities.experimental, with values
+// represented either as boolean flags or as settings objects (where an empty
+// object {} indicates default support).
+func ExtractClientExtensions(extensions map[string]any, experimental map[string]any) ClientExtensions {
 	exts := make(ClientExtensions)
-	if experimental != nil {
-		for k, v := range experimental {
-			if enabled, ok := v.(bool); ok && enabled {
-				exts[k] = true
+	extract := func(m map[string]any) {
+		if m == nil {
+			return
+		}
+		for k, v := range m {
+			if v == nil {
+				continue
 			}
+			if b, ok := v.(bool); ok {
+				if b {
+					exts[k] = true
+				}
+				continue
+			}
+			// Any non-nil, non-false setting object (e.g., {}, map, struct) indicates support.
+			exts[k] = true
 		}
 	}
+	extract(extensions)
+	extract(experimental)
 	return exts
+}
+
+// WithClientCapabilities extracts client extensions from standard and experimental
+// capabilities and attaches them to the context. This shared helper can be called
+// by handlers across any protocol version.
+func WithClientCapabilities(ctx context.Context, caps CapabilitiesProvider) context.Context {
+	if caps == nil || (caps.GetExtensions() == nil && caps.GetExperimental() == nil) {
+		return ctx
+	}
+	return WithClientExtensions(ctx, ExtractClientExtensions(caps.GetExtensions(), caps.GetExperimental()))
 }

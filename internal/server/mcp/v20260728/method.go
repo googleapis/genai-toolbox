@@ -96,12 +96,12 @@ func validateMetadata(id jsonrpc.RequestId, params RequestParams, stdio bool) (a
 	return nil, nil
 }
 
-// withClientExtensions attaches client experimental extensions from request metadata to the context.
+// withClientExtensions attaches client extensions from request metadata to the context.
 func withClientExtensions(ctx context.Context, meta *RequestMetaObject) context.Context {
-	if meta == nil || meta.MetaClientCapabilities == nil {
+	if meta == nil {
 		return ctx
 	}
-	return mcputil.WithClientExtensions(ctx, mcputil.ExtractClientExtensions(meta.MetaClientCapabilities.Experimental))
+	return mcputil.WithClientCapabilities(ctx, meta.MetaClientCapabilities)
 }
 
 // validateHeader checks the header of every requests
