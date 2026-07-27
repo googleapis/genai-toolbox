@@ -48,10 +48,10 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 	}
 	metadata := make(map[string]any)
 	if len(authInvoke) > 0 {
-		metadata["toolbox/authInvoke"] = authInvoke
+		metadata["com.google.cloud/authInvoke"] = authInvoke
 	}
 	if len(authParams) > 0 {
-		metadata["toolbox/authParam"] = authParams
+		metadata["com.google.cloud/authParam"] = authParams
 	}
 	if len(metadata) > 0 {
 		mcpManifest.Metadata = metadata
