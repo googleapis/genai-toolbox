@@ -14,7 +14,10 @@
 
 package util
 
-import "context"
+import (
+	"context"
+	"sync"
+)
 
 type extensionsKey struct{}
 
@@ -83,4 +86,52 @@ func WithClientCapabilities(ctx context.Context, caps CapabilitiesProvider) cont
 		return ctx
 	}
 	return WithClientExtensions(ctx, ExtractClientExtensions(caps.GetExtensions(), caps.GetExperimental()))
+}
+
+var (
+	serverExtMu        sync.RWMutex
+	serverExtensions   = make(map[string]interface{})
+	serverExperimental = make(map[string]interface{})
+)
+
+// RegisterServerExtension registers a standard extension to be advertised in server capabilities.
+func RegisterServerExtension(uri string, settings interface{}) {
+	serverExtMu.Lock()
+	defer serverExtMu.Unlock()
+	serverExtensions[uri] = settings
+}
+
+// RegisterServerExperimental registers an experimental extension to be advertised in server capabilities.
+func RegisterServerExperimental(uri string, settings interface{}) {
+	serverExtMu.Lock()
+	defer serverExtMu.Unlock()
+	serverExperimental[uri] = settings
+}
+
+// GetServerExtensions returns standard extensions advertised by this server, or nil if none are registered.
+func GetServerExtensions() map[string]interface{} {
+	serverExtMu.RLock()
+	defer serverExtMu.RUnlock()
+	if len(serverExtensions) == 0 {
+		return nil
+	}
+	res := make(map[string]interface{}, len(serverExtensions))
+	for k, v := range serverExtensions {
+		res[k] = v
+	}
+	return res
+}
+
+// GetServerExperimental returns experimental extensions advertised by this server, or nil if none are registered.
+func GetServerExperimental() map[string]interface{} {
+	serverExtMu.RLock()
+	defer serverExtMu.RUnlock()
+	if len(serverExperimental) == 0 {
+		return nil
+	}
+	res := make(map[string]interface{}, len(serverExperimental))
+	for k, v := range serverExperimental {
+		res[k] = v
+	}
+	return res
 }

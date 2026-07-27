@@ -205,6 +205,8 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 		},
 		SupportedVersions: mcputil.GetSupportedVersions(enableDraft),
 		Capabilities: ServerCapabilities{
+			Experimental: mcputil.GetServerExperimental(),
+			Extensions:   mcputil.GetServerExtensions(),
 			Tools: &ListChanged{
 				ListChanged: &toolsListChanged,
 			},
