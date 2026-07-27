@@ -63,6 +63,7 @@ func TestExtractLookerFieldProperties(t *testing.T) {
 					"label":             "Dimension Label",
 					"label_short":       "Dim Label",
 					"description":       "This is a dimension description",
+					"suggestable":       true,
 					"suggest_explore":   "explore",
 					"suggest_dimension": "dimension",
 					"suggestions":       []string{"foo", "bar", "baz"},
