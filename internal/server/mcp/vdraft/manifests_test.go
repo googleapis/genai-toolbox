@@ -78,7 +78,7 @@ func TestGenerateToolManifest(t *testing.T) {
 			authInvoke:   []string{"auth1", "auth2"},
 			params:       parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
 			annotations:  nil,
-			wantMetadata: map[string]any{"toolbox/authInvoke": []string{"auth1", "auth2"}},
+			wantMetadata: map[string]any{"com.google.cloud/authInvoke": []string{"auth1", "auth2"}},
 		},
 		{
 			desc:        "with auth param metadata",
@@ -88,7 +88,7 @@ func TestGenerateToolManifest(t *testing.T) {
 			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter", parameters.WithStringAuth(authServices))},
 			annotations: nil,
 			wantMetadata: map[string]any{
-				"toolbox/authParam": map[string][]string{
+				"com.google.cloud/authParam": map[string][]string{
 					"string-param": {"my-google-auth-service", "other-auth-service"},
 				},
 			},
@@ -101,8 +101,8 @@ func TestGenerateToolManifest(t *testing.T) {
 			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter", parameters.WithStringAuth(authServices))},
 			annotations: nil,
 			wantMetadata: map[string]any{
-				"toolbox/authInvoke": []string{"auth1", "auth2"},
-				"toolbox/authParam": map[string][]string{
+				"com.google.cloud/authInvoke": []string{"auth1", "auth2"},
+				"com.google.cloud/authParam": map[string][]string{
 					"string-param": {"my-google-auth-service", "other-auth-service"},
 				},
 			},
