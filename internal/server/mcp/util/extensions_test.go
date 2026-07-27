@@ -22,12 +22,12 @@ import (
 func TestClientExtensions(t *testing.T) {
 	ctx := context.Background()
 
-	// 1. Context without extensions attached
+	// Context without extensions attached
 	if SupportsExtension(ctx, ExtSecureParams) {
 		t.Errorf("expected false when no extensions attached")
 	}
 
-	// 2. Attach extensions map
+	// Attach extensions map
 	exts := ClientExtensions{
 		ExtSecureParams: true,
 	}
@@ -46,7 +46,7 @@ func TestExtractClientExtensions(t *testing.T) {
 	tests := []struct {
 		name         string
 		experimental map[string]any
-		expectedUri  ExtensionURI
+		expectedUri  string
 		expectedVal  bool
 	}{
 		{
@@ -58,7 +58,7 @@ func TestExtractClientExtensions(t *testing.T) {
 		{
 			name: "enabled extension",
 			experimental: map[string]any{
-				string(ExtSecureParams): true,
+				ExtSecureParams: true,
 			},
 			expectedUri: ExtSecureParams,
 			expectedVal: true,
@@ -66,7 +66,7 @@ func TestExtractClientExtensions(t *testing.T) {
 		{
 			name: "disabled extension",
 			experimental: map[string]any{
-				string(ExtSecureParams): false,
+				ExtSecureParams: false,
 			},
 			expectedUri: ExtSecureParams,
 			expectedVal: false,
@@ -74,7 +74,7 @@ func TestExtractClientExtensions(t *testing.T) {
 		{
 			name: "non-bool value ignored",
 			experimental: map[string]any{
-				string(ExtSecureParams): "true",
+				ExtSecureParams: "true",
 			},
 			expectedUri: ExtSecureParams,
 			expectedVal: false,

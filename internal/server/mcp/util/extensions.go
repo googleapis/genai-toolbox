@@ -18,16 +18,13 @@ import "context"
 
 type extensionsKey struct{}
 
-// ExtensionURI represents a well-known MCP extension identifier.
-type ExtensionURI string
-
 const (
 	// ExtSecureParams is the extension URI for secure parameter support.
-	ExtSecureParams ExtensionURI = "com.google.cloud/secure-params"
+	ExtSecureParams = "com.google.cloud/secure-params"
 )
 
 // ClientExtensions holds the set of experimental extension URIs supported by the client.
-type ClientExtensions map[ExtensionURI]bool
+type ClientExtensions map[string]bool
 
 // WithClientExtensions attaches the client's supported extensions to the context.
 func WithClientExtensions(ctx context.Context, exts ClientExtensions) context.Context {
@@ -41,7 +38,7 @@ func ClientExtensionsFromContext(ctx context.Context) ClientExtensions {
 }
 
 // SupportsExtension returns true if the client explicitly declared support for the given extension URI.
-func SupportsExtension(ctx context.Context, uri ExtensionURI) bool {
+func SupportsExtension(ctx context.Context, uri string) bool {
 	exts := ClientExtensionsFromContext(ctx)
 	return exts != nil && exts[uri]
 }
@@ -53,7 +50,7 @@ func ExtractClientExtensions(experimental map[string]any) ClientExtensions {
 	if experimental != nil {
 		for k, v := range experimental {
 			if enabled, ok := v.(bool); ok && enabled {
-				exts[ExtensionURI(k)] = true
+				exts[k] = true
 			}
 		}
 	}
