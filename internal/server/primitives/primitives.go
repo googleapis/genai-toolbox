@@ -103,7 +103,6 @@ func (r *PrimitiveManager) GetGroup(groupName string) (group.Group, bool) {
 	return g, ok
 }
 
-
 func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, groupsMap map[string]group.Group) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
