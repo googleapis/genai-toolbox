@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/spf13/cobra"
@@ -82,6 +83,23 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		return errMsg
 	}
 
+	srcName := tool.GetSourceName()
+	var src sources.Source
+	if srcName != "" {
+		src, ok = primitiveMgr.GetSource(srcName)
+		if !ok {
+			errMsg := fmt.Errorf("unable to retrieve source for tool %s", toolName)
+			opts.Logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+	}
+
+	err = tool.ValidateSource(src)
+	if err != nil {
+		opts.Logger.ErrorContext(ctx, err.Error())
+		return err
+	}
+
 	var paramsInput string
 	if len(args) > 1 {
 		paramsInput = args[1]
@@ -96,7 +114,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		}
 	}
 
-	toolParams, err := tool.GetParameters(sourcesMap)
+	toolParams, err := tool.GetParameters(src)
 	if err != nil {
 		errMsg := fmt.Errorf("error getting parameters for tool: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -118,7 +136,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 	}
 
 	// Client Auth not supported for ephemeral CLI call
-	requiresAuth, err := tool.RequiresClientAuthorization(primitiveMgr)
+	requiresAuth, err := tool.RequiresClientAuthorization(src)
 	if err != nil {
 		errMsg := fmt.Errorf("failed to check auth requirements: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -130,7 +148,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		return errMsg
 	}
 
-	result, err := tool.Invoke(ctx, primitiveMgr, parsedParams, "")
+	result, err := tool.Invoke(ctx, src, parsedParams, "")
 	if err != nil {
 		errMsg := fmt.Errorf("tool execution failed: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
