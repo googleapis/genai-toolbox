@@ -134,16 +134,6 @@ func (r *PrimitiveManager) GetEmbeddingModelMap() map[string]embeddingmodels.Emb
 	return copiedMap
 }
 
-func (r *PrimitiveManager) GetPromptsMap() map[string]prompts.Prompt {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]prompts.Prompt, len(r.prompts))
-	for k, v := range r.prompts {
-		copiedMap[k] = v
-	}
-	return copiedMap
-}
-
 func (r *PrimitiveManager) GetGroupsMap() map[string]group.Group {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

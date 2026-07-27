@@ -573,8 +573,7 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr 
 		return validateErr, err
 	}
 
-	promptsMap := primitiveMgr.GetPromptsMap()
-	listPromptsResult, err := GenerateListPromptsResult(g, promptsMap)
+	listPromptsResult, err := GenerateListPromptsResult(primitiveMgr, g)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
