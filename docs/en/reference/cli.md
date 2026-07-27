@@ -74,7 +74,7 @@ toolbox skills-generate --name <name> --description <description> --toolset <too
 
 **Flags:**
 
-- `--name`: (Optional) Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`). If omitted and exactly one `--prebuilt` config is provided, the prebuilt config name is used; any other case requires `--name`.
+- `--name`: (Optional) Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`). When omitted in a single-skill mode, the name defaults, in order, to: the `--group` name, then the `--toolset` name, then the single `--prebuilt` config name; any other case requires `--name`.
 - `--description`: (Optional) Description of the generated skill. When a group defines its own `description`, that takes precedence and `--description` acts as a fallback.
 - `--group`: (Optional) Name of the group to convert into a single skill. Uses the group's `description`, falling back to `--description`. Mutually exclusive with `--toolset`.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, one skill will be generated for every custom toolset defined. If no custom toolsets are defined, it defaults to a single skill containing all tools.

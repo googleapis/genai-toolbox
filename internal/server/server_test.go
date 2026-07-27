@@ -38,19 +38,21 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	_ "github.com/googleapis/mcp-toolbox/internal/embeddingmodels/gemini"
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/http"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -255,8 +257,7 @@ func TestUpdateServer(t *testing.T) {
 	newTools := map[string]tools.Tool{"example-tool": nil}
 	newPrompts := map[string]prompts.Prompt{"example-prompt": testutils.NewMockPrompt("example-prompt", "", prompts.Arguments{})}
 	newGroups := map[string]group.Group{
-		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
-		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}}),
+		"example-toolset": group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 	}
 	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	if err != nil {
@@ -287,39 +288,9 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, group (-want +got):\n%s", diff)
 	}
 
-	var nilTool tools.Tool
-	wantToolset := tools.Toolset{
-		ToolsetConfig: tools.ToolsetConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}},
-		Tools:         []*tools.Tool{&nilTool},
-	}
-	gotToolset, ok := s.PrimitiveMgr.GetToolset("example-toolset")
-	if !ok {
-		t.Fatal("expected toolset \"example-toolset\" to exist")
-	}
-	if diff := cmp.Diff(wantToolset, gotToolset, cmpopts.IgnoreUnexported(tools.Toolset{})); diff != "" {
-		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
-	}
-
 	gotPrompt, _ := s.PrimitiveMgr.GetPrompt("example-prompt")
 	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
-	}
-
-	examplePrompt := newPrompts["example-prompt"]
-	wantPromptset := prompts.Promptset{
-		PromptsetConfig: prompts.PromptsetConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}},
-		Prompts:         []*prompts.Prompt{&examplePrompt},
-		Manifest: prompts.PromptsetManifest{
-			PromptsManifest: map[string]prompts.Manifest{"example-prompt": examplePrompt.Manifest()},
-		},
-		PromptNameSet: map[string]struct{}{"example-prompt": {}},
-	}
-	gotPromptset, ok := s.PrimitiveMgr.GetPromptset("example-promptset")
-	if !ok {
-		t.Fatal("expected promptset \"example-promptset\" to exist")
-	}
-	if diff := cmp.Diff(wantPromptset, gotPromptset, cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
-		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 }
 
@@ -1356,6 +1327,128 @@ scopesRequired:
 	}
 }
 
+func TestDuplicateResourceConfig(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name string
+		yaml string
+	}{
+		{
+			name: "duplicate source",
+			yaml: `
+kind: source
+name: my_source
+type: alloydb-postgres
+project: my-project
+region: us-central1
+cluster: my-cluster
+instance: my-instance
+database: my-db
+---
+kind: source
+name: my_source
+type: alloydb-postgres
+project: my-project
+region: us-central1
+cluster: my-cluster
+instance: my-instance
+database: my-db
+`,
+		},
+		{
+			name: "duplicate authService",
+			yaml: `
+kind: authService
+name: my_auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+---
+kind: authService
+name: my_auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+`,
+		},
+		{
+			name: "duplicate tool",
+			yaml: `
+kind: tool
+name: my_tool
+type: http
+source: my_source
+path: /a
+method: GET
+---
+kind: tool
+name: my_tool
+type: http
+source: my_source
+path: /b
+method: GET
+`,
+		},
+		{
+			name: "duplicate toolset",
+			yaml: `
+kind: toolset
+name: my_toolset
+tools:
+  - tool_a
+---
+kind: toolset
+name: my_toolset
+tools:
+  - tool_b
+`,
+		},
+		{
+			name: "duplicate embeddingModel",
+			yaml: `
+kind: embeddingModel
+name: my_model
+type: gemini
+model: text-embedding-005
+---
+kind: embeddingModel
+name: my_model
+type: gemini
+model: text-embedding-005
+`,
+		},
+		{
+			name: "duplicate prompt",
+			yaml: `
+kind: prompt
+name: my_prompt
+messages:
+  - role: user
+    content: hello
+---
+kind: prompt
+name: my_prompt
+messages:
+  - role: user
+    content: world
+`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			if err == nil {
+				t.Fatalf("UnmarshalPrimitiveConfig() expected a duplicate error, got nil")
+			}
+			if !strings.Contains(err.Error(), "declared more than once") {
+				t.Fatalf("UnmarshalPrimitiveConfig() error = %v, want it to mention 'declared more than once'", err)
+			}
+		})
+	}
+}
+
 func TestGroupConfigParsing(t *testing.T) {
 	ctx := context.Background()
 
@@ -1655,5 +1748,41 @@ func TestMCPAuthEnableAPIClash(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "MCP Auth cannot be enabled together with the legacy HTTP API") {
 		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	cfg := server.ServerConfig{
+		Version: "0.0.0",
+		ToolConfigs: server.ToolConfigs{
+			"zoo":    offlineToolConfig{name: "zoo"},
+			"apple":  offlineToolConfig{name: "apple"},
+			"banana": offlineToolConfig{name: "banana"},
+		},
+	}
+
+	_, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
+	if err != nil {
+		t.Fatalf("InitializeOfflineConfigs returned error: %s", err)
+	}
+
+	defaultToolset, ok := toolsetsMap[""]
+	if !ok {
+		t.Fatal("expected default toolset to be present")
+	}
+
+	expectedOrder := []string{"apple", "banana", "zoo"}
+	if diff := cmp.Diff(expectedOrder, defaultToolset.ToolNames); diff != "" {
+		t.Errorf("default toolset ToolNames mismatch (-want +got):\n%s", diff)
 	}
 }

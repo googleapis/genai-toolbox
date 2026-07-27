@@ -99,7 +99,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		return err
 	}
 
-	name, err := resolveSkillName(cmd.name, opts.PrebuiltConfigs)
+	name, err := resolveSkillName(cmd.name, cmd.group, cmd.toolset, opts.PrebuiltConfigs)
 	if err != nil {
 		opts.Logger.ErrorContext(ctx, err.Error())
 		return err
@@ -115,9 +115,9 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	opts.Logger.InfoContext(ctx, "Generating skillagent skills...")
 
 	// Collect the tools and description for each skill to generate.
-	skillsToContents, err := cmd.collectTools(ctx, opts)
+	skillsToContents, err := cmd.collectContents(ctx, opts)
 	if err != nil {
-		errMsg := fmt.Errorf("error collecting skill tools: %w", err)
+		errMsg := fmt.Errorf("error collecting skill contents: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
@@ -244,20 +244,27 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	return nil
 }
 
-// resolveSkillName returns the explicit --name when set. Otherwise it defaults
-// to the prebuilt config name when exactly one --prebuilt config is given, so
-// prebuilt generation needs no naming flag; any other case requires --name.
-func resolveSkillName(name string, prebuiltConfigs []string) (string, error) {
+// resolveSkillName returns the explicit --name when set. Otherwise, in the
+// single-skill modes it defaults to the --group or --toolset name, and for
+// prebuilt generation it defaults to the config name when exactly one
+// --prebuilt config is given. Any other case requires --name.
+func resolveSkillName(name, group, toolset string, prebuiltConfigs []string) (string, error) {
 	if name != "" {
 		return name, nil
+	}
+	if group != "" {
+		return group, nil
+	}
+	if toolset != "" {
+		return toolset, nil
 	}
 	if len(prebuiltConfigs) == 1 {
 		return strings.ReplaceAll(prebuiltConfigs[0], "/", "-"), nil
 	}
-	return "", fmt.Errorf("--name is required unless exactly one --prebuilt config is provided")
+	return "", fmt.Errorf("--name is required unless --group or --toolset is set, or exactly one --prebuilt config is provided")
 }
 
-func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOptions) (map[string]skillContent, error) {
+func (c *skillsCmd) collectContents(ctx context.Context, opts *internal.ToolboxOptions) (map[string]skillContent, error) {
 	// Initialize tools and groups only; skills generation does not need live
 	// sources, auth services, or embedding models.
 	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, opts.Cfg)
@@ -292,11 +299,7 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 			return nil, fmt.Errorf("group %q not found", c.group)
 		}
 
-		description := c.description
-		if g.Description != "" {
-			description = g.Description
-		}
-		skillsToContents[c.name] = skillContent{tools: getToolsFromGroup(g), description: description}
+		skillsToContents[c.name] = skillContent{tools: getToolsFromGroup(g), description: c.descriptionFor(g)}
 		return skillsToContents, nil
 	}
 
@@ -311,8 +314,9 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 	}
 
 	if len(groupsMap) <= 1 {
-		// Default to all tools if no named group found
-		skillsToContents[c.name] = skillContent{tools: toolsMap, description: c.description}
+		// Default to all tools if no named group found. The default nameless
+		// group's description (if any) takes precedence over the flag.
+		skillsToContents[c.name] = skillContent{tools: toolsMap, description: c.descriptionFor(groupsMap[""])}
 		return skillsToContents, nil
 	}
 
@@ -322,14 +326,19 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 			continue
 		}
 		skillName := fmt.Sprintf("%s-%s", c.name, gName)
-		description := c.description
-		if g.Description != "" {
-			description = g.Description
-		}
-		skillsToContents[skillName] = skillContent{tools: getToolsFromGroup(g), description: description}
+		skillsToContents[skillName] = skillContent{tools: getToolsFromGroup(g), description: c.descriptionFor(g)}
 	}
 
 	return skillsToContents, nil
+}
+
+// descriptionFor returns the group's own description when set, falling back to
+// the --description flag otherwise.
+func (c *skillsCmd) descriptionFor(g group.Group) string {
+	if g.Description != "" {
+		return g.Description
+	}
+	return c.description
 }
 
 func copyFile(src, dst string) error {

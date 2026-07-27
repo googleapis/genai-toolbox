@@ -26,8 +26,8 @@ import (
 )
 
 // PrimitiveManager contains available resources for the server. Should be initialized with NewPrimitiveManager().
-// groups is the source of truth for named collections; the toolset and promptset
-// views are derived from it (see GetToolset and GetPromptset).
+// groups is the source of truth for named collections; toolset views (manifests)
+// are derived from the group on demand by the callers that render them.
 type PrimitiveManager struct {
 	mu              sync.RWMutex
 	sources         map[string]sources.Source
@@ -88,47 +88,11 @@ func (r *PrimitiveManager) GetTool(toolName string) (tools.Tool, bool) {
 	return tool, ok
 }
 
-// GetToolset returns the toolset view derived from the group of the same name.
-// The group is the source of truth; the toolset is materialized on demand from
-// the group's tool names so callers on the legacy REST path keep a tools.Toolset.
-// The manifest's server version is left empty here and set by the caller that
-// renders it.
-func (r *PrimitiveManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	g, ok := r.groups[toolsetName]
-	if !ok {
-		return tools.Toolset{}, false
-	}
-	toolset, err := tools.ToolsetConfig{Name: g.Name, ToolNames: g.ToolNames}.Initialize("", r.tools)
-	if err != nil {
-		return tools.Toolset{}, false
-	}
-	return toolset, true
-}
-
 func (r *PrimitiveManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	prompt, ok := r.prompts[promptName]
 	return prompt, ok
-}
-
-// GetPromptset returns the promptset view derived from the group of the same
-// name. The group is the source of truth; the promptset is materialized on
-// demand from the group's prompt names.
-func (r *PrimitiveManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	g, ok := r.groups[promptsetName]
-	if !ok {
-		return prompts.Promptset{}, false
-	}
-	promptset, err := prompts.PromptsetConfig{Name: g.Name, PromptNames: g.PromptNames}.Initialize("", r.prompts)
-	if err != nil {
-		return prompts.Promptset{}, false
-	}
-	return promptset, true
 }
 
 // GetGroup returns the group of the given name.
@@ -139,6 +103,7 @@ func (r *PrimitiveManager) GetGroup(groupName string) (group.Group, bool) {
 	return g, ok
 }
 
+
 func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, groupsMap map[string]group.Group) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -148,16 +113,6 @@ func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, a
 	r.tools = toolsMap
 	r.prompts = promptsMap
 	r.groups = groupsMap
-}
-
-func (r *PrimitiveManager) GetSourcesMap() map[string]sources.Source {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]sources.Source, len(r.sources))
-	for k, v := range r.sources {
-		copiedMap[k] = v
-	}
-	return copiedMap
 }
 
 func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
@@ -175,16 +130,6 @@ func (r *PrimitiveManager) GetEmbeddingModelMap() map[string]embeddingmodels.Emb
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]embeddingmodels.EmbeddingModel, len(r.embeddingModels))
 	for k, v := range r.embeddingModels {
-		copiedMap[k] = v
-	}
-	return copiedMap
-}
-
-func (r *PrimitiveManager) GetToolsMap() map[string]tools.Tool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]tools.Tool, len(r.tools))
-	for k, v := range r.tools {
 		copiedMap[k] = v
 	}
 	return copiedMap

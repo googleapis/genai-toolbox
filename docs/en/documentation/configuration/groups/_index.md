@@ -8,7 +8,7 @@ description: >
 
 A Group is a single named collection that scopes MCP primitives together — currently **tools** and **prompts**, with more (such as resources) planned. Where a [Toolset](../toolsets/) groups only tools, a group bundles these primitives under one name and one MCP endpoint, and carries a `description` that describes the collection.
 
-Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list methods (such as `tools/list` and `prompts/list`) to that group. Groups are also introspectable over MCP through the `groups/list` and `groups/get` methods.
+Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list methods (such as `tools/list` and `prompts/list`) to that group.
 
 ## Defining Groups
 
@@ -17,7 +17,7 @@ Declare a group as a `kind: group` document in your configuration file. A group 
 | Field         | Required | Description                                                              |
 | ------------- | -------- | ------------------------------------------------------------------------ |
 | `name`        | Yes\*    | Unique name for the group. Used as the endpoint path (`/mcp/{name}`).    |
-| `description` | No       | Human-readable description of the group, surfaced via `groups/list`.     |
+| `description` | No       | Human-readable description of the group.                                |
 | `tools`       | No       | List of tool names to include in the group.                             |
 | `prompts`     | No       | List of prompt names to include in the group.                           |
 
@@ -45,7 +45,7 @@ tools:
 
 ## The default group
 
-A single **default (nameless) group** always exists and contains **all** configured primitives (every tool and prompt). Connecting to the default MCP endpoint returns everything.
+A single **default (nameless) group** always exists and contains **all** configured primitives (every tool and prompt). Connecting to the default MCP endpoint (`/mcp`) returns everything.
 
 You may declare a `kind: group` document with no `name` to set a `description` for the default group. Because the default group always contains everything, it **cannot** declare `tools`, `prompts`, or any other primitive list:
 
@@ -65,50 +65,4 @@ At startup, Toolbox validates groups:
 
 ## Relationship to toolsets
 
-Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations continue to work unchanged — they are treated as groups with tools and no other primitives, so no migration is required. Use a group when you need to scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.
-
-## Introspecting groups over MCP
-
-Two MCP methods let clients discover groups. Both are available across all supported MCP protocol versions.
-
-### `groups/list`
-
-Returns every named group with its `name` and `description`:
-
-```json
-{
-  "groups": [
-    { "name": "data_analyst", "description": "Tools and prompts for exploratory data analysis." },
-    { "name": "admin", "description": "Administrative operations." }
-  ]
-}
-```
-
-### `groups/get`
-
-Takes a group `name` and returns that group's tools and prompts together:
-
-```json
-{
-  "name": "data_analyst",
-  "tools": [
-    {
-      "name": "list_tables",
-      "description": "List tables in the database.",
-      "inputSchema": { "type": "object", "properties": {}, "required": [] }
-    },
-    {
-      "name": "execute_sql",
-      "description": "Run a SQL query.",
-      "inputSchema": {
-        "type": "object",
-        "properties": { "sql": { "type": "string" } },
-        "required": ["sql"]
-      }
-    }
-  ],
-  "prompts": [
-    { "name": "summarize_results", "description": "Summarize query results." }
-  ]
-}
-```
+Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations continue to work unchanged — they are treated as groups with tools and no other primitives, so no migration is required. That said, we recommend migrating to a `kind: group` even for tools-only collections: a group lets you attach a `description` and scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.

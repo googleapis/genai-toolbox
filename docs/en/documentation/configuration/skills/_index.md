@@ -34,7 +34,7 @@ toolbox <tool-source> skills-generate \
 ```
 
 - `<tool-source>`: Can be `--config`, `--configs`, `--config-folder`, and `--prebuilt`. See the [CLI Reference](../../../reference/cli.md) for details.
-- `--name`: (Optional) Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`). If omitted and exactly one `--prebuilt` config is provided, the prebuilt config name is used. Any other case (a custom `--config`, multiple `--prebuilt` configs) requires `--name`.
+- `--name`: (Optional) Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`). When omitted in a single-skill mode, the name defaults, in order, to: the `--group` name, then the `--toolset` name, then the single `--prebuilt` config name. Any other case (a custom `--config`, or multiple `--prebuilt` configs) requires `--name`.
 - `--description`: (Optional) Description of the generated skill. When a [group](../groups/) defines its own `description`, that takes precedence and `--description` acts as a fallback for groups without one.
 - `--group`: (Optional) Name of the [group](../groups/) to convert into a single skill. Uses the group's `description`, falling back to `--description`. Mutually exclusive with `--toolset`.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, one skill will be generated for every custom toolset defined. If no custom toolsets are defined, it defaults to a single skill containing all tools.
@@ -103,10 +103,11 @@ Description resolution follows the group's metadata:
 - If the group defines a `description`, the generated skill uses it — this takes **precedence** over `--description`.
 - If the group has no `description`, the `--description` flag is used as a fallback.
 
+When `--name` is omitted, the skill is named after the group (e.g., `data_analyst`):
+
 ```bash
 toolbox --config tools.yaml skills-generate \
   --group "data_analyst" \
-  --name "data-analyst-skill" \
   --description "Fallback description if the group has none"
 ```
 
