@@ -37,69 +37,61 @@ func PopulateUrlParams(ctx context.Context, data map[string]any, toolParams para
 	logger, _ := util.LoggerFromContext(ctx)
 
 	for name, val := range urlParams {
-		// Only inject if the client didn't supply it explicitly.
-		if _, exists := data[name]; !exists {
-			data[name] = val
+		// If the parameter already exists in data, return an error.
+		if _, exists := data[name]; exists {
+			if logger != nil {
+				logger.WarnContext(ctx, "parameter already specified as a URL parameter", "parameter", name)
+			}
+			return nil, fmt.Errorf("parameter %q is already specified as a URL parameter and must not be passed in arguments", name)
+		}
 
-			// Attempt type conversion for known parameters
-			found := false
-			isSecure := false
-			for _, p := range toolParams {
-				if p.GetName() == name {
-					found = true
-					if p.GetSecure() {
-						isSecure = true
-						break
+		data[name] = val
+
+		// Attempt type conversion for known parameters
+		found := false
+		for _, p := range toolParams {
+			if p.GetName() == name {
+				found = true
+				switch p.GetType() {
+				case "integer":
+					if i, err := strconv.Atoi(val); err == nil {
+						data[name] = i
+					} else if logger != nil {
+						logger.WarnContext(ctx, "failed to convert URL parameter to integer", "parameter", name, "value", val, "error", err)
 					}
-					switch p.GetType() {
-					case "integer":
-						if i, err := strconv.Atoi(val); err == nil {
-							data[name] = i
-						} else if logger != nil {
-							logger.WarnContext(ctx, "failed to convert URL parameter to integer", "parameter", name, "value", val, "error", err)
-						}
-					case "boolean":
-						if b, err := strconv.ParseBool(val); err == nil {
-							data[name] = b
-						} else if logger != nil {
-							logger.WarnContext(ctx, "failed to convert URL parameter to boolean", "parameter", name, "value", val, "error", err)
-						}
-					case "float":
-						if f, err := strconv.ParseFloat(val, 64); err == nil {
-							data[name] = f
-						} else if logger != nil {
-							logger.WarnContext(ctx, "failed to convert URL parameter to float", "parameter", name, "value", val, "error", err)
-						}
-					case "array":
-						var arr []any
-						if err := json.Unmarshal([]byte(val), &arr); err == nil {
-							data[name] = arr
-						} else if logger != nil {
-							logger.WarnContext(ctx, "failed to convert URL parameter to array", "parameter", name, "value", val, "error", err)
-						}
-					case "map":
-						var m map[string]any
-						if err := json.Unmarshal([]byte(val), &m); err == nil {
-							data[name] = m
-						} else if logger != nil {
-							logger.WarnContext(ctx, "failed to convert URL parameter to map", "parameter", name, "value", val, "error", err)
-						}
+				case "boolean":
+					if b, err := strconv.ParseBool(val); err == nil {
+						data[name] = b
+					} else if logger != nil {
+						logger.WarnContext(ctx, "failed to convert URL parameter to boolean", "parameter", name, "value", val, "error", err)
 					}
-					break
+				case "float":
+					if f, err := strconv.ParseFloat(val, 64); err == nil {
+						data[name] = f
+					} else if logger != nil {
+						logger.WarnContext(ctx, "failed to convert URL parameter to float", "parameter", name, "value", val, "error", err)
+					}
+				case "array":
+					var arr []any
+					if err := json.Unmarshal([]byte(val), &arr); err == nil {
+						data[name] = arr
+					} else if logger != nil {
+						logger.WarnContext(ctx, "failed to convert URL parameter to array", "parameter", name, "value", val, "error", err)
+					}
+				case "map":
+					var m map[string]any
+					if err := json.Unmarshal([]byte(val), &m); err == nil {
+						data[name] = m
+					} else if logger != nil {
+						logger.WarnContext(ctx, "failed to convert URL parameter to map", "parameter", name, "value", val, "error", err)
+					}
 				}
+				break
 			}
+		}
 
-			if isSecure {
-				delete(data, name)
-				if logger != nil {
-					logger.WarnContext(ctx, "URL parameter cannot bind to a secure parameter", "parameter", name)
-				}
-				return nil, fmt.Errorf("URL parameter %q cannot bind to a secure parameter", name)
-			}
-
-			if !found && logger != nil {
-				logger.WarnContext(ctx, "URL parameter not defined in tool parameters", "parameter", name)
-			}
+		if !found && logger != nil {
+			logger.WarnContext(ctx, "URL parameter not defined in tool parameters", "parameter", name)
 		}
 	}
 	return data, nil

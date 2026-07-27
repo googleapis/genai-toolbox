@@ -1276,6 +1276,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 
 	tests := []struct {
 		desc        string
+		urlParams   map[string]string
 		body        string // raw JSON-RPC body
 		wantErr     bool
 		errContains string
@@ -1396,11 +1397,79 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 			}`,
 			wantErr: false,
 		},
+		{
+			desc: "Successful invocation with secure parameter bound via URL params",
+			urlParams: map[string]string{
+				"api_key": "secret",
+			},
+			body: `{
+				"jsonrpc": "2.0",
+				"id": 1,
+				"method": "tools/call",
+				"params": {
+					"name": "secure_tool",
+					"arguments": {
+						"query": "hello"
+					},
+					"_meta": {
+						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
+						"io.modelcontextprotocol/clientInfo": {
+							"name": "TestClient",
+							"version": "1.0"
+						},
+						"io.modelcontextprotocol/clientCapabilities": {
+							"experimental": {
+								"com.google.cloud/secure-params": true
+							}
+						}
+					}
+				}
+			}`,
+			wantErr: false,
+		},
+		{
+			desc: "Error when parameter is already specified via URL params and passed in secureArguments",
+			urlParams: map[string]string{
+				"api_key": "secret",
+			},
+			body: `{
+				"jsonrpc": "2.0",
+				"id": 1,
+				"method": "tools/call",
+				"params": {
+					"name": "secure_tool",
+					"arguments": {
+						"query": "hello"
+					},
+					"secureArguments": {
+						"api_key": "secret"
+					},
+					"_meta": {
+						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
+						"io.modelcontextprotocol/clientInfo": {
+							"name": "TestClient",
+							"version": "1.0"
+						},
+						"io.modelcontextprotocol/clientCapabilities": {
+							"experimental": {
+								"com.google.cloud/secure-params": true
+							}
+						}
+					}
+				}
+			}`,
+			wantErr:     true,
+			errContains: "is already specified as a URL parameter and must not be passed in arguments",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, err := toolsCallHandler(ctxLogger, dummyID, g, primitiveMgr, []byte(tt.body), nil)
+			ctx := ctxLogger
+			if tt.urlParams != nil {
+				ctx = util.WithUrlParams(ctx, tt.urlParams)
+			}
+			got, err := toolsCallHandler(ctx, dummyID, g, primitiveMgr, []byte(tt.body), nil)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil")

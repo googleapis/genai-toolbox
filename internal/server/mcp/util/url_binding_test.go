@@ -140,7 +140,7 @@ func TestPopulateUrlParams(t *testing.T) {
 			expectedErr:  false,
 		},
 		{
-			name: "URL params cannot bind to secure parameters",
+			name: "URL params can bind to secure parameters",
 			setupCtx: func(ctx context.Context, logger log.Logger) context.Context {
 				ctx = util.WithLogger(ctx, logger)
 				return util.WithUrlParams(ctx, map[string]string{
@@ -151,20 +151,14 @@ func TestPopulateUrlParams(t *testing.T) {
 			toolParams: parameters.Parameters{
 				mockParameter{name: "secure_param", typ: "string", secure: true},
 			},
-			expected: nil,
-			expectedLogs: []logEntry{
-				{
-					level: "WARN",
-					msg:   "URL parameter cannot bind to a secure parameter",
-					params: []any{
-						"parameter", "secure_param",
-					},
-				},
+			expected: map[string]any{
+				"secure_param": "some_value",
 			},
-			expectedErr: true,
+			expectedLogs: nil,
+			expectedErr:  false,
 		},
 		{
-			name: "URL params present but key already exists in data",
+			name: "URL params present but key already exists in data raises error",
 			setupCtx: func(ctx context.Context, logger log.Logger) context.Context {
 				ctx = util.WithLogger(ctx, logger)
 				return util.WithUrlParams(ctx, map[string]string{
@@ -177,10 +171,43 @@ func TestPopulateUrlParams(t *testing.T) {
 			toolParams: parameters.Parameters{
 				mockParameter{name: "param1", typ: "string"},
 			},
-			expected: map[string]any{
-				"param1": "existingValue",
+			expected: nil,
+			expectedLogs: []logEntry{
+				{
+					level: "WARN",
+					msg:   "parameter already specified as a URL parameter",
+					params: []any{
+						"parameter", "param1",
+					},
+				},
 			},
-			expectedLogs: nil,
+			expectedErr: true,
+		},
+		{
+			name: "secure URL param present but key already exists in data raises error",
+			setupCtx: func(ctx context.Context, logger log.Logger) context.Context {
+				ctx = util.WithLogger(ctx, logger)
+				return util.WithUrlParams(ctx, map[string]string{
+					"secure_param": "newValue",
+				})
+			},
+			initial: map[string]any{
+				"secure_param": "existingValue",
+			},
+			toolParams: parameters.Parameters{
+				mockParameter{name: "secure_param", typ: "string", secure: true},
+			},
+			expected: nil,
+			expectedLogs: []logEntry{
+				{
+					level: "WARN",
+					msg:   "parameter already specified as a URL parameter",
+					params: []any{
+						"parameter", "secure_param",
+					},
+				},
+			},
+			expectedErr: true,
 		},
 		{
 			name: "URL params present and key not in data - string type",
