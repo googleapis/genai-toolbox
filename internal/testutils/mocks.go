@@ -69,7 +69,7 @@ func (m MockToolConfig) ToolConfigType() string {
 func (m MockToolConfig) Initialize(context.Context) (tools.Tool, error) {
 	return MockTool{
 		BaseTool: tools.NewBaseTool(
-			m, tools.GetAnnotationsOrDefault(nil, nil),
+			m, tools.GetAnnotationsOrDefault(&tools.ToolAnnotations{}, nil),
 			tools.Manifest{Description: m.Description, Parameters: m.Parameters.Manifest(), AuthRequired: m.AuthRequired},
 			m.Parameters,
 		),
