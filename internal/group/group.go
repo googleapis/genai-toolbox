@@ -43,6 +43,14 @@ type Group struct {
 	promptNameSet map[string]struct{}
 }
 
+// GroupManager defines the minimal view of the primitives.PrimitiveManager
+// that the Group package needs.
+// This is implemented to prevent import cycles.
+type GroupManager interface {
+	GetSource(string) (sources.Source, bool)
+	GetTool(string) (tools.Tool, bool)
+}
+
 // Initialize validates the group name and checks that every declared tool and
 // prompt exists in the provided maps, building the membership sets used by
 // ContainsTool and ContainsPrompt.
@@ -102,14 +110,22 @@ func (g Group) ContainsPrompt(name string) bool {
 // each declared tool name against toolsMap and generating its manifest from srcs.
 // The group holds tool names rather than tool pointers, so callers pass the
 // resolved tools and sources maps.
-func (g Group) ToolsetManifest(serverVersion string, toolsMap map[string]tools.Tool, srcs map[string]sources.Source) (tools.ToolsetManifest, error) {
+func (g Group) ToolsetManifest(serverVersion string, mgr GroupManager) (tools.ToolsetManifest, error) {
 	toolsManifest := make(map[string]tools.Manifest, len(g.ToolNames))
 	for _, name := range g.ToolNames {
-		tool, ok := toolsMap[name]
+		tool, ok := mgr.GetTool(name)
 		if !ok {
 			return tools.ToolsetManifest{}, fmt.Errorf("tool does not exist: %s", name)
 		}
-		m, err := tool.Manifest(srcs)
+		srcName := tool.GetSourceName()
+		var src sources.Source
+		if srcName != "" {
+			src, ok = mgr.GetSource(srcName)
+			if !ok {
+				return tools.ToolsetManifest{}, fmt.Errorf("unable to retrieve %s source for tool %q", srcName, name)
+			}
+		}
+		m, err := tool.Manifest(src)
 		if err != nil {
 			return tools.ToolsetManifest{}, fmt.Errorf("error generating manifest for tool %q: %w", name, err)
 		}
