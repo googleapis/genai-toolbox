@@ -95,6 +95,7 @@ func initFalkorDBClient(ctx context.Context, tracer trace.Tracer, r Config) (*fa
 	}
 	if r.TLS.Enabled {
 		opts.TLSConfig = &tls.Config{
+			MinVersion:         tls.VersionTLS12,
 			InsecureSkipVerify: r.TLS.InsecureSkipVerify,
 		}
 	}

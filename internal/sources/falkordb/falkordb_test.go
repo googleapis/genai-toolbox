@@ -18,6 +18,7 @@ import (
 	"context"
 	"testing"
 
+	falkordbgo "github.com/FalkorDB/falkordb-go/v2"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -138,6 +139,97 @@ func TestFailParseFromYaml(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestConvertValue(t *testing.T) {
+	// Edges returned by falkordb-go's result parser carry their endpoint IDs
+	// in unexported fields, so tests populate Source/Destination instead;
+	// SourceNodeID/DestNodeID read the exported nodes when they are set.
+	node := &falkordbgo.Node{
+		ID:         1,
+		Labels:     []string{"Person"},
+		Properties: map[string]any{"name": "Ada"},
+	}
+	edge := &falkordbgo.Edge{
+		ID:          7,
+		Relation:    "KNOWS",
+		Source:      &falkordbgo.Node{ID: 1},
+		Destination: &falkordbgo.Node{ID: 2},
+		Properties:  map[string]any{"since": int64(2020)},
+	}
+
+	wantNode := map[string]any{
+		"id":         uint64(1),
+		"labels":     []string{"Person"},
+		"properties": map[string]any{"name": "Ada"},
+	}
+	wantEdge := map[string]any{
+		"id":            uint64(7),
+		"type":          "KNOWS",
+		"sourceId":      uint64(1),
+		"destinationId": uint64(2),
+		"properties":    map[string]any{"since": int64(2020)},
+	}
+
+	tcs := []struct {
+		desc string
+		in   any
+		want any
+	}{
+		{desc: "nil", in: nil, want: nil},
+		{desc: "string passes through", in: "hello", want: "hello"},
+		{desc: "int64 passes through", in: int64(42), want: int64(42)},
+		{desc: "float64 passes through", in: 1.5, want: 1.5},
+		{desc: "bool passes through", in: true, want: true},
+		{desc: "node pointer", in: node, want: wantNode},
+		{desc: "node value", in: *node, want: wantNode},
+		{desc: "edge pointer", in: edge, want: wantEdge},
+		{desc: "edge value", in: *edge, want: wantEdge},
+		{
+			desc: "node without properties yields an empty map",
+			in:   &falkordbgo.Node{ID: 3, Labels: []string{"Empty"}},
+			want: map[string]any{
+				"id":         uint64(3),
+				"labels":     []string{"Empty"},
+				"properties": map[string]any{},
+			},
+		},
+		{
+			desc: "path",
+			in: falkordbgo.Path{
+				Nodes: []*falkordbgo.Node{node},
+				Edges: []*falkordbgo.Edge{edge},
+			},
+			want: map[string]any{
+				"nodes": []any{wantNode},
+				"edges": []any{wantEdge},
+			},
+		},
+		{
+			desc: "list is converted element-wise",
+			in:   []any{int64(1), node},
+			want: []any{int64(1), wantNode},
+		},
+		{
+			desc: "map is converted value-wise",
+			in:   map[string]any{"n": node, "count": int64(2)},
+			want: map[string]any{"n": wantNode, "count": int64(2)},
+		},
+		{
+			desc: "nested list inside map is converted recursively",
+			in:   map[string]any{"rows": []any{map[string]any{"n": node}}},
+			want: map[string]any{"rows": []any{map[string]any{"n": wantNode}}},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := falkordb.ConvertValue(tc.in)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Fatalf("incorrect conversion (-want +got):\n%s", diff)
 			}
 		})
 	}

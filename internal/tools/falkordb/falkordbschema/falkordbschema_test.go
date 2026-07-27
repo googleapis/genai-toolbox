@@ -92,3 +92,48 @@ func TestParseFromYamlFalkorDB(t *testing.T) {
 		})
 	}
 }
+
+func TestEscapeIdentifier(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		want string
+	}{
+		{desc: "plain identifier is unchanged", in: "Person", want: "Person"},
+		{desc: "spaces are preserved", in: "Order Item", want: "Order Item"},
+		{desc: "backtick is doubled, not dropped", in: "we`ird", want: "we``ird"},
+		{desc: "every backtick is doubled", in: "a`b`c", want: "a``b``c"},
+		{desc: "leading and trailing backticks", in: "`x`", want: "``x``"},
+		{desc: "empty identifier", in: "", want: ""},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			if got := escapeIdentifier(tc.in); got != tc.want {
+				t.Fatalf("escapeIdentifier(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestFirstString(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   any
+		want string
+	}{
+		{desc: "first label of a list", in: []any{"Person", "User"}, want: "Person"},
+		{desc: "empty list", in: []any{}, want: ""},
+		{desc: "nil value", in: nil, want: ""},
+		{desc: "non-list value", in: "Person", want: ""},
+		{desc: "non-string first element", in: []any{int64(1)}, want: ""},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			if got := firstString(tc.in); got != tc.want {
+				t.Fatalf("firstString(%v) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
+}

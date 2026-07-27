@@ -28,9 +28,9 @@ const (
 	// DefaultJanitorInterval is the default interval at which the janitor
 	// runs to clean up expired cache items.
 	DefaultJanitorInterval = 1 * time.Minute
-	// DefaultExpiration is the default time-to-live for a cache item.
-	// Note: This constant is defined but not used in the current implementation,
-	// as expiration is set on a per-item basis.
+	// DefaultExpiration is the default time-to-live for a cache item, in
+	// minutes. Callers that do not configure an expiration fall back to it;
+	// Set itself takes an explicit per-item duration.
 	DefaultExpiration = 60
 )
 
