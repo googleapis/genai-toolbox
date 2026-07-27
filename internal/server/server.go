@@ -377,6 +377,14 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Skip host validation for health check probes. Container
+			// orchestrators (Kubernetes, Docker, Cloud Run) typically hit
+			// /healthz via the pod IP or localhost, which would otherwise
+			// trip a strict AllowedHosts setting and break liveness probes.
+			if r.URL.Path == "/healthz" {
+				next.ServeHTTP(w, r)
+				return
+			}
 			_, hasWildcard := allowedHosts["*"]
 			hostname := r.Host
 			if host, _, err := net.SplitHostPort(r.Host); err == nil {
@@ -561,6 +569,14 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	// default endpoint for validating server is running
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
+	})
+
+	// healthz endpoint for container orchestration health checks
+	// (Kubernetes liveness/readiness probes, Docker HEALTHCHECK, etc.).
+	// Returns 200 OK with a small JSON body so probes can rely on both
+	// status code and payload.
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		render.JSON(w, r, map[string]string{"status": "ok"})
 	})
 
 	return s, nil
