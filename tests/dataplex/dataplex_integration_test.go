@@ -48,31 +48,32 @@ import (
 )
 
 var (
-	DataplexSourceType                     = "dataplex"
-	DataplexLookupContextToolType          = "dataplex-lookup-context"
-	DataplexSearchEntriesToolType          = "dataplex-search-entries"
-	DataplexLookupEntryToolType            = "dataplex-lookup-entry"
-	DataplexSearchAspectTypesToolType      = "dataplex-search-aspect-types"
-	DataplexSearchDataQualityScansToolType = "dataplex-search-dq-scans"
-	DataplexListDataProductsToolType       = "dataplex-list-data-products"
-	DataplexGetDataProductToolType         = "dataplex-get-data-product"
-	DataplexListDataAssetsToolType         = "dataplex-list-data-assets"
-	DataplexGetDataAssetToolType           = "dataplex-get-data-asset"
-	DataplexCreateDataProductToolType      = "dataplex-create-data-product"
-	DataplexCreateDataAssetToolType        = "dataplex-create-data-asset"
-	DataplexUpdateDataAssetToolType        = "dataplex-update-data-asset"
-	DataplexUpdateDataProductToolType      = "dataplex-update-data-product"
-	DataplexGenerateDataProfileToolType    = "dataplex-generate-data-profile"
-	DataplexGetDataProfileToolType         = "dataplex-get-data-profile"
-	DataplexGetOperationToolType           = "dataplex-get-operation"
-	DataplexGetRunStatusToolType           = "dataplex-get-run-status"
-	DataplexGenerateDataInsightsToolType   = "dataplex-generate-data-insights"
-	DataplexGetDataInsightsToolType        = "dataplex-get-data-insights"
-	DataplexDiscoverMetadataToolType       = "dataplex-discover-metadata"
-	DataplexGetDiscoveryResultsToolType    = "dataplex-get-discovery-results"
-	DataplexCheckDataQualityToolType       = "dataplex-check-data-quality"
-	DataplexGetDataQualityResultsToolType  = "dataplex-get-data-quality-results"
-	DataplexProject                        = os.Getenv("DATAPLEX_PROJECT")
+	DataplexSourceType                       = "dataplex"
+	DataplexLookupContextToolType            = "dataplex-lookup-context"
+	DataplexSearchEntriesToolType            = "dataplex-search-entries"
+	DataplexLookupEntryToolType              = "dataplex-lookup-entry"
+	DataplexSearchAspectTypesToolType        = "dataplex-search-aspect-types"
+	DataplexSearchDataQualityScansToolType   = "dataplex-search-dq-scans"
+	DataplexListDataProductsToolType         = "dataplex-list-data-products"
+	DataplexGetDataProductToolType           = "dataplex-get-data-product"
+	DataplexListDataAssetsToolType           = "dataplex-list-data-assets"
+	DataplexGetDataAssetToolType             = "dataplex-get-data-asset"
+	DataplexCreateDataProductToolType        = "dataplex-create-data-product"
+	DataplexUpdateDataProductToolType        = "dataplex-update-data-product"
+	DataplexCreateDataAssetToolType          = "dataplex-create-data-asset"
+	DataplexUpdateDataAssetToolType          = "dataplex-update-data-asset"
+	DataplexUpdateDataProductAspectsToolType = "dataplex-update-data-product-aspects"
+	DataplexGenerateDataProfileToolType      = "dataplex-generate-data-profile"
+	DataplexGetDataProfileToolType           = "dataplex-get-data-profile"
+	DataplexGetOperationToolType             = "dataplex-get-operation"
+	DataplexGetRunStatusToolType             = "dataplex-get-run-status"
+	DataplexGenerateDataInsightsToolType     = "dataplex-generate-data-insights"
+	DataplexGetDataInsightsToolType          = "dataplex-get-data-insights"
+	DataplexDiscoverMetadataToolType         = "dataplex-discover-metadata"
+	DataplexGetDiscoveryResultsToolType      = "dataplex-get-discovery-results"
+	DataplexCheckDataQualityToolType         = "dataplex-check-data-quality"
+	DataplexGetDataQualityResultsToolType    = "dataplex-get-data-quality-results"
+	DataplexProject                          = os.Getenv("DATAPLEX_PROJECT")
 )
 
 func getDataplexVars(t *testing.T) map[string]any {
@@ -484,6 +485,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexGetDataAssetToolInvokeTest(t, dataProductId1, dataAssetId1)
 	runDataplexCreateAndUpdateDataProductToolsInvokeTest(t, dataplexDataProductClient, dataProductId3, dataProductId4)
 	runDataplexCreateAndUpdateDataAssetToolsInvokeTest(t, dataplexDataProductClient, dataProductId2, dataAssetId2, dataAssetId3, datasetName1, tableName1, datasetName2, tableName2)
+	runDataplexUpdateDataProductAspectsToolInvokeTest(t, dataProductId1, aspectTypeId)
 	runDataplexEnrichmentToolInvokeTest(t, tableName1, datasetName1, bucketName, dataplexDataScanClient)
 }
 
@@ -710,9 +712,12 @@ func setupDataplexThirdPartyAspectType(t *testing.T, ctx context.Context, client
 			},
 		},
 	}
-	_, err := client.CreateAspectType(ctx, createAspectTypeReq)
+	op, err := client.CreateAspectType(ctx, createAspectTypeReq)
 	if err != nil {
-		t.Fatalf("Failed to create aspect type %s: %v", aspectTypeId, err)
+		t.Fatalf("Failed to initiate CreateAspectType %s: %v", aspectTypeId, err)
+	}
+	if _, err := op.Wait(ctx); err != nil {
+		t.Fatalf("Failed to wait for CreateAspectType %s: %v", aspectTypeId, err)
 	}
 
 	return func(t *testing.T) {
@@ -885,6 +890,17 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 				"description":  "Simple dataplex update data asset tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"my-dataplex-update-data-product-aspects-tool": map[string]any{
+				"type":        DataplexUpdateDataProductAspectsToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex update data product aspects tool to test end to end functionality.",
+			},
+			"my-auth-dataplex-update-data-product-aspects-tool": map[string]any{
+				"type":         DataplexUpdateDataProductAspectsToolType,
+				"source":       "my-dataplex-instance",
+				"description":  "Simple dataplex update data product aspects tool to test end to end functionality.",
+				"authRequired": []string{"my-google-auth"},
+			},
 			"my-dataplex-generate-data-profile-tool": map[string]any{
 				"type":        DataplexGenerateDataProfileToolType,
 				"source":      "my-dataplex-instance",
@@ -1006,6 +1022,11 @@ func runDataplexToolGetTest(t *testing.T) {
 			name:           "get my-dataplex-update-data-asset-tool",
 			toolName:       "my-dataplex-update-data-asset-tool",
 			expectedParams: []string{"locationId", "dataProductId", "dataAssetId", "labels", "accessGroupConfigs", "updateMask"},
+		},
+		{
+			name:           "get my-dataplex-update-data-product-aspects-tool",
+			toolName:       "my-dataplex-update-data-product-aspects-tool",
+			expectedParams: []string{"locationId", "dataProductId", "aspects"},
 		},
 		{
 			name:           "get my-dataplex-generate-data-profile-tool",
@@ -1197,26 +1218,12 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("Response body: %s", string(bodyBytes))
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -1363,27 +1370,13 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("Response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("Error parsing response body: %v", err)
 			}
 
@@ -1492,24 +1485,12 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -1614,23 +1595,7 @@ func runDataplexLookupContextToolInvokeTest(t *testing.T, tableName string, data
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-Type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			bodyBytes, _ := io.ReadAll(resp.Body)
-
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
 				t.Fatalf("Response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
@@ -1748,24 +1713,12 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -1859,27 +1812,15 @@ func runDataplexListDataProductsToolInvokeTest(t *testing.T, dataProductId1 stri
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -1982,27 +1923,15 @@ func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string)
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -2098,27 +2027,15 @@ func runDataplexListDataAssetsToolInvokeTest(t *testing.T, dataProductId string,
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -2232,27 +2149,16 @@ func runDataplexGetDataAssetToolInvokeTest(t *testing.T, dataProductId string, d
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
+
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -2426,28 +2332,15 @@ func runDataplexCreateAndUpdateDataProductToolsInvokeTest(t *testing.T, client *
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
-
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -2638,28 +2531,16 @@ func runDataplexCreateAndUpdateDataAssetToolsInvokeTest(
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 			if !tc.expectResult {
 				return
 			}
 
 			var result map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
 				t.Fatalf("error parsing response body: %s", err)
 			}
 			resultStr, ok := result["result"].(string)
@@ -2949,6 +2830,159 @@ func runDataplexEnrichmentToolInvokeTest(t *testing.T, tableName string, dataset
 			expectedScanName := fmt.Sprintf("projects/%s/locations/us-central1/dataScans/%s", DataplexProject, scanID)
 			if scanData["name"] != expectedScanName {
 				t.Fatalf("expected scan name %s, got: %s", expectedScanName, scanData["name"])
+			}
+		})
+	}
+}
+
+func runDataplexUpdateDataProductAspectsToolInvokeTest(t *testing.T, dataProductId string, aspectTypeId string) {
+	idToken, err := tests.GetGoogleIdToken(t)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	testCases := []struct {
+		name                 string
+		api                  string
+		requestHeader        map[string]string
+		requestBody          io.Reader
+		wantStatusCode       int
+		expectResult         bool
+		expectedAspectTypeId string
+		expectedAspectValue  string
+	}{
+		{
+			name:          "Success - Update Data Product Aspects (Authorized)",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-update-data-product-aspects-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","aspects":[{"projectId":"dataplex-types","locationId":"global","aspectTypeId":"overview","data":{"content":"Auth updated description"}}]}`,
+				dataProductId,
+			))),
+			wantStatusCode:       200,
+			expectResult:         true,
+			expectedAspectTypeId: "overview",
+			expectedAspectValue:  "Auth updated description",
+		},
+		{
+			name:          "Success - Update Data Product Aspects (Un-authorized)",
+			api:           "http://127.0.0.1:5000/api/tool/my-dataplex-update-data-product-aspects-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","aspects":[{"projectId":"%s","locationId":"us","aspectTypeId":"%s","data":{}}]}`,
+				dataProductId, DataplexProject, aspectTypeId,
+			))),
+			wantStatusCode:       200,
+			expectResult:         true,
+			expectedAspectTypeId: aspectTypeId,
+			expectedAspectValue:  "",
+		},
+		{
+			name:          "Failure - Without Authorization Token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-update-data-product-aspects-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","aspects":[{"projectId":"dataplex-types","locationId":"global","aspectTypeId":"overview","data":{"content":"Unauth"}}]}`,
+				dataProductId,
+			))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+		{
+			name:          "Failure - Invalid Authorization Token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-update-data-product-aspects-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "invalid_token"},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","aspects":[{"projectId":"dataplex-types","locationId":"global","aspectTypeId":"overview","data":{"content":"Invalid"}}]}`,
+				dataProductId,
+			))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+			if !tc.expectResult {
+				return
+			}
+
+			var result map[string]interface{}
+			if err := json.Unmarshal(bodyBytes, &result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+			var invokeResp map[string]interface{}
+			if err := json.Unmarshal([]byte(resultStr), &invokeResp); err != nil {
+				t.Fatalf("error unmarshalling result string: %v", err)
+			}
+
+			aspectsList, ok := invokeResp["aspects"].([]interface{})
+			if !ok {
+				t.Fatalf("expected 'aspects' field to be an array, got %T. Full response: %s", invokeResp["aspects"], resultStr)
+			}
+
+			var foundAspect bool
+			for _, rawAspect := range aspectsList {
+				aspect, ok := rawAspect.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				typeId, _ := aspect["aspectTypeId"].(string)
+				if typeId == tc.expectedAspectTypeId {
+					projId, _ := aspect["projectId"].(string)
+					locId, _ := aspect["locationId"].(string)
+					data, _ := aspect["data"].(map[string]interface{})
+
+					if typeId == "overview" {
+						if data != nil {
+							desc, _ := data["content"].(string)
+							if desc == tc.expectedAspectValue {
+								if projId != "dataplex-types" {
+									t.Errorf("expected aspect projectId to be 'dataplex-types', got %q", projId)
+								}
+								if locId != "global" {
+									t.Errorf("expected aspect locationId to be 'global', got %q", locId)
+								}
+								foundAspect = true
+								break
+							}
+						}
+					} else {
+						// Custom aspect type validations
+						if projId != DataplexProject {
+							t.Errorf("expected aspect projectId to be %q, got %q", DataplexProject, projId)
+						}
+						if locId != "us" {
+							t.Errorf("expected aspect locationId to be 'us', got %q", locId)
+						}
+						foundAspect = true
+						break
+					}
+				}
+			}
+
+			if !foundAspect {
+				t.Fatalf("expected aspect %q with value %q in returned aspects, but not found. Response: %v", tc.expectedAspectTypeId, tc.expectedAspectValue, invokeResp)
+			}
+
+			entryType, _ := invokeResp["entryType"].(string)
+			if entryType == "" {
+				t.Errorf("expected non-empty 'entryType' in response. Response: %v", invokeResp)
+			}
+			if !strings.Contains(entryType, "/entryTypes/") {
+				t.Errorf("expected 'entryType' to contain '/entryTypes/', got %q", entryType)
+			}
+
+			if _, ok := invokeResp["entrySource"]; !ok {
+				t.Errorf("expected 'entrySource' key in response. Response: %v", invokeResp)
 			}
 		})
 	}

@@ -1081,6 +1081,8 @@ gemini skills install ./skills/my-skill
 
 For more details, see the [Generate Agent Skills guide](https://mcp-toolbox.dev/documentation/configuration/skills/).
 
+The repository also ships ready-to-use Agent Skills (e.g. maintainer workflows). See [`skills/`](./skills/README.md) for the catalog and install instructions.
+
 ---
 
 ## Versioning

@@ -64,7 +64,7 @@ For more detailed instructions, see [Invoke Tools via CLI](../documentation/conf
 <details>
 <summary><code>skills-generate</code></summary>
 
-Generates a skill package from a specified toolset. Each tool in the toolset will have a corresponding Node.js execution script in the generated skill.
+Generates a skill package from a specified toolset or group. Each tool in the collection will have a corresponding Node.js execution script in the generated skill.
 
 **Syntax:**
 
@@ -74,8 +74,9 @@ toolbox skills-generate --name <name> --description <description> --toolset <too
 
 **Flags:**
 
-- `--name`: Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`).
-- `--description`: Description of the generated skill.
+- `--name`: (Optional) Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`). When omitted in a single-skill mode, the name defaults, in order, to: the `--group` name, then the `--toolset` name, then the single `--prebuilt` config name; any other case requires `--name`.
+- `--description`: (Optional) Description of the generated skill. When a group defines its own `description`, that takes precedence and `--description` acts as a fallback.
+- `--group`: (Optional) Name of the group to convert into a single skill. Uses the group's `description`, falling back to `--description`. Mutually exclusive with `--toolset`.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, one skill will be generated for every custom toolset defined. If no custom toolsets are defined, it defaults to a single skill containing all tools.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
 - `--license-header`: (Optional) Optional license header to prepend to generated node scripts.

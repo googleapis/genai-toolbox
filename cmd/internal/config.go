@@ -37,8 +37,8 @@ type Config struct {
 	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
 	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
 	Tools           server.ToolConfigs           `yaml:"tools"`
-	Toolsets        server.ToolsetConfigs        `yaml:"toolsets"`
 	Prompts         server.PromptConfigs         `yaml:"prompts"`
+	Groups          server.GroupConfigs          `yaml:"groups"`
 }
 
 type ConfigParser struct {
@@ -150,7 +150,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 
 	// Parse contents
-	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, err = server.UnmarshalPrimitiveConfig(ctx, raw)
+	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Prompts, config.Groups, err = server.UnmarshalPrimitiveConfig(ctx, raw)
 	if err != nil {
 		return config, err
 	}
@@ -180,7 +180,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 	encoder := yaml.NewEncoder(&buf, yaml.UseLiteralStyleIfMultiline(true))
 
-	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts", "groups"}
 	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
@@ -217,6 +217,8 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					key = "toolset"
 				case "prompts":
 					key = "prompt"
+				case "groups":
+					key = "group"
 				}
 				transformed, err := transformDocs(key, slice)
 				if err != nil {
@@ -306,16 +308,16 @@ func processValue(v any, isToolset bool) any {
 }
 
 // mergeConfigs merges multiple Config structs into one.
-// Detects and raises errors for resource conflicts in sources, authServices, tools, and toolsets.
-// All resource names (sources, authServices, tools, toolsets) must be unique across all files.
+// Detects and raises errors for resource conflicts in sources, authServices, tools, and groups.
+// All resource names (sources, authServices, tools, groups) must be unique across all files.
 func mergeConfigs(files ...Config) (Config, error) {
 	merged := Config{
 		Sources:         make(server.SourceConfigs),
 		AuthServices:    make(server.AuthServiceConfigs),
 		EmbeddingModels: make(server.EmbeddingModelConfigs),
 		Tools:           make(server.ToolConfigs),
-		Toolsets:        make(server.ToolsetConfigs),
 		Prompts:         make(server.PromptConfigs),
+		Groups:          make(server.GroupConfigs),
 	}
 
 	var conflicts []string
@@ -359,15 +361,6 @@ func mergeConfigs(files ...Config) (Config, error) {
 			}
 		}
 
-		// Check for conflicts and merge toolsets
-		for name, toolset := range file.Toolsets {
-			if _, exists := merged.Toolsets[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("toolset '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				merged.Toolsets[name] = toolset
-			}
-		}
-
 		// Check for conflicts and merge prompts
 		for name, prompt := range file.Prompts {
 			if _, exists := merged.Prompts[name]; exists {
@@ -376,11 +369,20 @@ func mergeConfigs(files ...Config) (Config, error) {
 				merged.Prompts[name] = prompt
 			}
 		}
+
+		// Check for conflicts and merge groups
+		for name, grp := range file.Groups {
+			if _, exists := merged.Groups[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("group '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.Groups[name] = grp
+			}
+		}
 	}
 
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
-		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset and prompt has a unique name across all files", strings.Join(conflicts, "\n  - "))
+		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, prompt and group has a unique name across all files", strings.Join(conflicts, "\n  - "))
 	}
 
 	// Ensure only one authService has mcpEnabled = true
