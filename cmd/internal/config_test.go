@@ -2177,11 +2177,11 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "alloydb_postgres_cloud_monitoring_tools",
 					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
 				},
-				"alloydb_postgres_database_insights_tools": tools.ToolsetConfig{
+				"alloydb_postgres_database_insights_tools": group.GroupConfig{
 					Name:      "alloydb_postgres_database_insights_tools",
 					ToolNames: []string{"get_advanced_aggregated_query_stats", "get_advanced_aggregated_wait_event_stats", "get_advanced_time_series_query_stats", "get_advanced_time_series_wait_event_stats", "get_index_recommendations"},
 				},
-				"alloydb_postgres_observability_tools": tools.ToolsetConfig{
+				"alloydb_postgres_observability_tools": group.GroupConfig{
 					Name:      "alloydb_postgres_observability_tools",
 					ToolNames: []string{"get_system_metrics", "get_query_metrics", "get_advanced_aggregated_query_stats", "get_advanced_aggregated_wait_event_stats", "get_advanced_time_series_query_stats", "get_advanced_time_series_wait_event_stats", "get_index_recommendations"},
 				},
