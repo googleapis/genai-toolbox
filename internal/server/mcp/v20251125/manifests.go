@@ -16,7 +16,6 @@ package v20251125
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
@@ -156,42 +155,4 @@ func GenerateListPromptsResult(g group.Group, promptsMap map[string]prompts.Prom
 		mcpManifest = append(mcpManifest, promptManifest)
 	}
 	return ListPromptsResult{Prompts: mcpManifest}, nil
-}
-
-// GenerateListGroupsResult generates the groups/list result. It omits the
-// default nameless group and returns the remaining groups sorted by name.
-func GenerateListGroupsResult(groupsMap map[string]group.Group) ListGroupsResult {
-	names := make([]string, 0, len(groupsMap))
-	for name := range groupsMap {
-		if name == "" {
-			continue
-		}
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
-	groupsList := make([]Group, 0, len(names))
-	for _, name := range names {
-		g := groupsMap[name]
-		groupsList = append(groupsList, Group{Name: g.Name, Description: g.Description})
-	}
-	return ListGroupsResult{Groups: groupsList}
-}
-
-// GenerateGetGroupResult generates the groups/get result for a single group's
-// tools and prompts.
-func GenerateGetGroupResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (GetGroupResult, error) {
-	listToolsResult, err := GenerateListToolsResult(pMgr, g, urlParams)
-	if err != nil {
-		return GetGroupResult{}, fmt.Errorf("error generating tools manifest: %w", err)
-	}
-	listPromptsResult, err := GenerateListPromptsResult(g, pMgr.GetPromptsMap())
-	if err != nil {
-		return GetGroupResult{}, fmt.Errorf("error generating prompts manifest: %w", err)
-	}
-	return GetGroupResult{
-		Name:    g.Name,
-		Tools:   listToolsResult.Tools,
-		Prompts: listPromptsResult.Prompts,
-	}, nil
 }
