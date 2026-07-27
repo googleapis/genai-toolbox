@@ -403,12 +403,12 @@ func (s *Source) ApplyQueryLimits(sql string) (string, error) {
 			slog.Warn("configured row limit skipped because query already contains a LIMIT clause", "source", s.Name, "maxRowLimit", s.MaxRowLimit)
 		} else {
 			// Add LIMIT clause - trim trailing whitespace and semicolon
-			sql = strings.TrimSpace(sql)
 			trimmedSearchable := strings.TrimRight(searchableSQL, " \t\r\n")
 			if strings.HasSuffix(trimmedSearchable, ";") {
 				semiColonIdx := len(trimmedSearchable) - 1
 				sql = sql[:semiColonIdx] + sql[semiColonIdx+1:]
 			}
+			sql = strings.TrimSpace(sql)
 			separator := " "
 			if trailingLineComment {
 				separator = "\n"
