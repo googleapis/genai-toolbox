@@ -19,22 +19,24 @@ import (
 	"testing"
 )
 
+const testExtURI = "com.google.cloud/test-extension"
+
 func TestClientExtensions(t *testing.T) {
 	ctx := context.Background()
 
 	// Context without extensions attached
-	if SupportsExtension(ctx, ExtSecureParams) {
+	if SupportsExtension(ctx, testExtURI) {
 		t.Errorf("expected false when no extensions attached")
 	}
 
 	// Attach extensions map
 	exts := ClientExtensions{
-		ExtSecureParams: true,
+		testExtURI: true,
 	}
 	ctx = WithClientExtensions(ctx, exts)
 
-	if !SupportsExtension(ctx, ExtSecureParams) {
-		t.Errorf("expected true for ExtSecureParams")
+	if !SupportsExtension(ctx, testExtURI) {
+		t.Errorf("expected true for testExtURI")
 	}
 
 	if SupportsExtension(ctx, "com.google.cloud/unsupported") {
@@ -52,31 +54,31 @@ func TestExtractClientExtensions(t *testing.T) {
 		{
 			name:         "nil experimental map",
 			experimental: nil,
-			expectedUri:  ExtSecureParams,
+			expectedUri:  testExtURI,
 			expectedVal:  false,
 		},
 		{
 			name: "enabled extension",
 			experimental: map[string]any{
-				ExtSecureParams: true,
+				testExtURI: true,
 			},
-			expectedUri: ExtSecureParams,
+			expectedUri: testExtURI,
 			expectedVal: true,
 		},
 		{
 			name: "disabled extension",
 			experimental: map[string]any{
-				ExtSecureParams: false,
+				testExtURI: false,
 			},
-			expectedUri: ExtSecureParams,
+			expectedUri: testExtURI,
 			expectedVal: false,
 		},
 		{
 			name: "non-bool value ignored",
 			experimental: map[string]any{
-				ExtSecureParams: "true",
+				testExtURI: "true",
 			},
-			expectedUri: ExtSecureParams,
+			expectedUri: testExtURI,
 			expectedVal: false,
 		},
 	}

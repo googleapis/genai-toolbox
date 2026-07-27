@@ -18,11 +18,6 @@ import "context"
 
 type extensionsKey struct{}
 
-const (
-	// ExtSecureParams is the extension URI for secure parameter support.
-	ExtSecureParams = "com.google.cloud/secure-params"
-)
-
 // ClientExtensions holds the set of experimental extension URIs supported by the client.
 type ClientExtensions map[string]bool
 
