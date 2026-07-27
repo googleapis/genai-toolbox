@@ -1876,7 +1876,6 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 		ToolConfigs: server.ToolConfigs{
 			"my-tool": testutils.NewMockTool("my-tool", "mock tool for offline config", "non-existance-source", nil, false, false).ToConfig(),
 		},
-		SkipSourceValidation: true,
 	}
 
 	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
@@ -1964,7 +1963,6 @@ func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
 			"apple":  testutils.NewMockTool("apple", "", "", nil, false, false).ToConfig(),
 			"banana": testutils.NewMockTool("banana", "", "", nil, false, false).ToConfig(),
 		},
-		SkipSourceValidation: true,
 	}
 
 	_, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)

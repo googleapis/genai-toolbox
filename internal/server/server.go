@@ -241,7 +241,8 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
-
+	// Automatically skip source validation
+	cfg.SkipSourceValidation = true
 	toolsMap, err := initializeTools(ctx, cfg, map[string]sources.Source{}, instrumentation, l)
 	if err != nil {
 		return nil, nil, err
