@@ -56,6 +56,20 @@ func TestParseEnv(t *testing.T) {
 			errString: `environment variable not found: "FOO" (line 1, column 1)`,
 		},
 		{
+			desc:      "multiple missing required vars reported together",
+			in:        "host: ${HOST}, user: ${USER_NAME}, pass: ${PASSWORD}",
+			want:      "host: , user: , pass: ",
+			err:       true,
+			errString: "environment variables not found:\n  - \"HOST\" (line 1, column 7)\n  - \"USER_NAME\" (line 1, column 22)\n  - \"PASSWORD\" (line 1, column 42)",
+		},
+		{
+			desc:      "repeated missing required var reported once",
+			in:        "a: ${HOST}, b: ${HOST}",
+			want:      "a: , b: ",
+			err:       true,
+			errString: `environment variable not found: "HOST" (line 1, column 4)`,
+		},
+		{
 			desc:    "without default without env, lenient",
 			in:      "${FOO}",
 			want:    "FOO",
