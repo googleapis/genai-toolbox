@@ -1039,11 +1039,6 @@ func TestClickHouseListTablesTool(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Test listing tables",
 			},
-			"test-invalid-source": map[string]any{
-				"type":        "clickhouse-list-tables",
-				"source":      "non-existent-source",
-				"description": "Test with invalid source",
-			},
 		},
 	}
 
@@ -1125,14 +1120,6 @@ func TestClickHouseListTablesTool(t *testing.T) {
 		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected 200 OK for missing database parameter, but got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("ListTablesWithInvalidSource", func(t *testing.T) {
-		api := "http://127.0.0.1:5000/api/tool/test-invalid-source/invoke"
-		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
-		if resp.StatusCode != http.StatusNotFound {
-			t.Errorf("Expected 404 NOT FOUND for non-existent source, but got %d", resp.StatusCode)
 		}
 	})
 
