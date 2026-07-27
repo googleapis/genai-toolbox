@@ -114,16 +114,6 @@ func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, a
 	r.groups = groupsMap
 }
 
-func (r *PrimitiveManager) GetSourcesMap() map[string]sources.Source {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]sources.Source, len(r.sources))
-	for k, v := range r.sources {
-		copiedMap[k] = v
-	}
-	return copiedMap
-}
-
 func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -139,16 +129,6 @@ func (r *PrimitiveManager) GetEmbeddingModelMap() map[string]embeddingmodels.Emb
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]embeddingmodels.EmbeddingModel, len(r.embeddingModels))
 	for k, v := range r.embeddingModels {
-		copiedMap[k] = v
-	}
-	return copiedMap
-}
-
-func (r *PrimitiveManager) GetToolsMap() map[string]tools.Tool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]tools.Tool, len(r.tools))
-	for k, v := range r.tools {
 		copiedMap[k] = v
 	}
 	return copiedMap

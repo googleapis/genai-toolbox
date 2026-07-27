@@ -23,7 +23,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -218,10 +217,6 @@ func TestInvoke(t *testing.T) {
 		response:       expectedResp,
 	}
 
-	srcs := map[string]sources.Source{
-		"mock-gda-source": fake,
-	}
-
 	// Initialize the tool config with context
 	toolCfg := cloudgdatool.Config{
 		ConfigBase: tools.ConfigBase{
@@ -268,12 +263,10 @@ func TestInvoke(t *testing.T) {
 		{Name: "query", Value: query},
 	}
 
-	primitiveMgr := primitives.NewPrimitiveManager(srcs, nil, nil, nil, nil, nil)
-
 	ctx := testutils.ContextWithUserAgent(context.Background(), "test-user-agent")
 
 	// Invoke the tool
-	result, err := tool.Invoke(ctx, primitiveMgr, params, "")
+	result, err := tool.Invoke(ctx, fake, params, "")
 	if err != nil {
 		t.Fatalf("tool invocation failed: %v", err)
 	}

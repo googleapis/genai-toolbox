@@ -20,6 +20,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -100,14 +101,22 @@ func generateParamManifest(ps parameters.Parameters, urlParams map[string]string
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(srcs map[string]sources.Source, g group.Group, toolsMap map[string]tools.Tool, urlParams map[string]string) (ListToolsResult, error) {
+func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (ListToolsResult, error) {
 	mcpManifest := make([]Tool, 0, len(g.ToolNames))
 	for _, toolName := range g.ToolNames {
-		tool, ok := toolsMap[toolName]
+		tool, ok := pMgr.GetTool(toolName)
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
-		params, err := tool.GetParameters(srcs)
+		srcName := tool.GetSourceName()
+		var src sources.Source
+		if srcName != "" {
+			src, ok = pMgr.GetSource(srcName)
+			if !ok {
+				return ListToolsResult{}, fmt.Errorf("unable to retrieve %s source for tool %q", srcName, tool.GetName())
+			}
+		}
+		params, err := tool.GetParameters(src)
 		if err != nil {
 			return ListToolsResult{}, fmt.Errorf("error getting parameters for tool %q: %w", toolName, err)
 		}
@@ -191,12 +200,12 @@ func GenerateListGroupsResult(groupsMap map[string]group.Group) ListGroupsResult
 
 // GenerateGetGroupResult generates the groups/get result for a single group's
 // tools and prompts.
-func GenerateGetGroupResult(srcs map[string]sources.Source, g group.Group, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, urlParams map[string]string) (GetGroupResult, error) {
-	listToolsResult, err := GenerateListToolsResult(srcs, g, toolsMap, urlParams)
+func GenerateGetGroupResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (GetGroupResult, error) {
+	listToolsResult, err := GenerateListToolsResult(pMgr, g, urlParams)
 	if err != nil {
 		return GetGroupResult{}, fmt.Errorf("error generating tools manifest: %w", err)
 	}
-	listPromptsResult, err := GenerateListPromptsResult(g, promptsMap)
+	listPromptsResult, err := GenerateListPromptsResult(g, pMgr.GetPromptsMap())
 	if err != nil {
 		return GetGroupResult{}, fmt.Errorf("error generating prompts manifest: %w", err)
 	}
