@@ -15,6 +15,7 @@
 package v20260728
 
 import (
+	"context"
 	"fmt"
 	"sort"
 
@@ -101,7 +102,7 @@ func generateParamManifest(ps parameters.Parameters, urlParams map[string]string
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (ListToolsResult, error) {
+func GenerateListToolsResult(ctx context.Context, pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (ListToolsResult, error) {
 	mcpManifest := make([]Tool, 0, len(g.ToolNames))
 	for _, toolName := range g.ToolNames {
 		tool, ok := pMgr.GetTool(toolName)
@@ -200,8 +201,8 @@ func GenerateListGroupsResult(groupsMap map[string]group.Group) ListGroupsResult
 
 // GenerateGetGroupResult generates the groups/get result for a single group's
 // tools and prompts.
-func GenerateGetGroupResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (GetGroupResult, error) {
-	listToolsResult, err := GenerateListToolsResult(pMgr, g, urlParams)
+func GenerateGetGroupResult(ctx context.Context, pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (GetGroupResult, error) {
+	listToolsResult, err := GenerateListToolsResult(ctx, pMgr, g, urlParams)
 	if err != nil {
 		return GetGroupResult{}, fmt.Errorf("error generating tools manifest: %w", err)
 	}

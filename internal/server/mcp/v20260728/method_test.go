@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -1220,5 +1221,20 @@ func TestGetResultMetadata(t *testing.T) {
 				t.Errorf("getResultMetadata() got =\n%v\nwant =\n%v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestWithClientExtensions(t *testing.T) {
+	ctx := context.Background()
+	meta := &RequestMetaObject{
+		MetaClientCapabilities: &ClientCapabilities{
+			Experimental: map[string]any{
+				"com.google.cloud/test-ext": true,
+			},
+		},
+	}
+	ctx = withClientExtensions(ctx, meta)
+	if !mcputil.SupportsExtension(ctx, "com.google.cloud/test-ext") {
+		t.Errorf("expected extension com.google.cloud/test-ext to be supported in ctx")
 	}
 }

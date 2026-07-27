@@ -15,6 +15,7 @@
 package v20260728
 
 import (
+	"context"
 	"encoding/json"
 	"reflect"
 	"slices"
@@ -248,7 +249,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 	})
 
 	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
-	got, err := GenerateListToolsResult(pMgr, g, nil)
+	got, err := GenerateListToolsResult(context.Background(), pMgr, g, nil)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
