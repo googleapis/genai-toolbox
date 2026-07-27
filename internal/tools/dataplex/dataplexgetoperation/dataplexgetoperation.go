@@ -61,7 +61,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
-	operationName := parameters.NewStringParameter("operationName", "The fully-qualified resource name of the operation returned by generate_data_insights. Format: projects/{project}/locations/{location}/operations/{operation_id}.")
+	operationName := parameters.NewStringParameter("operationName", "The fully-qualified resource name of the operation returned by generate_data_insights. Format: projects/{projectId}/locations/{locationId}/operations/{operationId}.")
 
 	allParameters := parameters.Parameters{operationName}
 
