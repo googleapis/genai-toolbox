@@ -1850,7 +1850,7 @@ func TestInitializeConfigs(t *testing.T) {
 		if err == nil {
 			t.Fatalf("expected error but got nil")
 		}
-		wantErr := "invalid source for mock-tool tool: source my-source is not a compatible type"
+		wantErr := `invalid source for "mock-tool" tool: source "my-source" is not a compatible type`
 		if err.Error() != wantErr {
 			t.Fatalf("unexpected error: want %s, got %s", wantErr, err.Error())
 		}

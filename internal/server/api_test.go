@@ -228,14 +228,14 @@ func TestToolInvokeEndpoint(t *testing.T) {
 		isErr       bool
 	}{
 		{
-			name:        "tool1",
+			name:        "tool without param",
 			toolName:    testutils.MockTool1.GetName(),
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        "{result:[no_params]}\n",
 			isErr:       false,
 		},
 		{
-			name:        "tool2",
+			name:        "tool with params",
 			toolName:    testutils.MockTool2.GetName(),
 			requestBody: bytes.NewBuffer([]byte(`{"param1": 1, "param2": 2}`)),
 			want:        "{result:[some_params]}\n",
@@ -249,14 +249,14 @@ func TestToolInvokeEndpoint(t *testing.T) {
 			isErr:       true,
 		},
 		{
-			name:        "tool4",
+			name:        "unauthorized tools",
 			toolName:    testutils.MockTool4.GetName(),
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        "",
 			isErr:       true,
 		},
 		{
-			name:        "tool5",
+			name:        "tool requiring client auth",
 			toolName:    testutils.MockTool5.GetName(),
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        "",

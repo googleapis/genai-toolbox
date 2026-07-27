@@ -107,6 +107,11 @@ func NewMockTool(name, desc, source string, params []parameters.Parameter, unaut
 	return mt
 }
 
+func (t MockTool) RequiresClientAuthorization(sources.Source) (bool, error) {
+	// defaulted to false
+	return t.requireClientAuthorization, nil
+}
+
 func (t MockTool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
 	mock := []any{t.Cfg.Name}
 	if t.ReturnParamsInInvoke && len(params) > 0 {
@@ -122,7 +127,7 @@ func (t MockTool) GetSourceName() string {
 }
 
 func (t MockTool) ToConfig() tools.ToolConfig {
-	return nil
+	return t.Cfg
 }
 
 func (t MockTool) Authorized(verifiedAuthServices []string) bool {
@@ -131,7 +136,7 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t MockTool) ValidateSource(src sources.Source) error {
-	if src.SourceType() == "mock-source" {
+	if src == nil || src.SourceType() == "mock-source" {
 		return nil
 	}
 	return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
