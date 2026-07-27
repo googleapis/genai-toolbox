@@ -572,6 +572,89 @@ func TestBuildSkillContents(t *testing.T) {
 	}
 }
 
+func TestResolveSkillName(t *testing.T) {
+	tests := []struct {
+		name            string
+		flagName        string
+		group           string
+		toolset         string
+		prebuiltConfigs []string
+		want            string
+		wantErr         bool
+	}{
+		{
+			name:     "explicit name wins",
+			flagName: "my-skill",
+			want:     "my-skill",
+		},
+		{
+			name:            "explicit name wins over prebuilt",
+			flagName:        "my-skill",
+			prebuiltConfigs: []string{"alloydb-postgres"},
+			want:            "my-skill",
+		},
+		{
+			name:     "explicit name wins over group",
+			flagName: "my-skill",
+			group:    "greeting",
+			want:     "my-skill",
+		},
+		{
+			name:  "defaults to group",
+			group: "greeting",
+			want:  "greeting",
+		},
+		{
+			name:    "defaults to toolset",
+			toolset: "greeting",
+			want:    "greeting",
+		},
+		{
+			name:            "group wins over prebuilt",
+			group:           "greeting",
+			prebuiltConfigs: []string{"alloydb-postgres"},
+			want:            "greeting",
+		},
+		{
+			name:            "defaults to single prebuilt",
+			prebuiltConfigs: []string{"alloydb-postgres"},
+			want:            "alloydb-postgres",
+		},
+		{
+			name:            "sanitizes slashes in single prebuilt",
+			prebuiltConfigs: []string{"alloydb-postgres/some-toolset"},
+			want:            "alloydb-postgres-some-toolset",
+		},
+		{
+			name:    "no name and no prebuilt errors",
+			wantErr: true,
+		},
+		{
+			name:            "no name and multiple prebuilts errors",
+			prebuiltConfigs: []string{"alloydb-postgres", "cloud-sql-postgres"},
+			wantErr:         true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := resolveSkillName(tt.flagName, tt.group, tt.toolset, tt.prebuiltConfigs)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil (got %q)", got)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestGenerateSkill_FlagValidation(t *testing.T) {
 	tests := []struct {
 		name    string
