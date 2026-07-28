@@ -140,7 +140,7 @@ echo -n "$ALLOYDB_POSTGRES_DATABASE" | gcloud secrets create ALLOYDB_POSTGRES_DA
 export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
 
 # 3. Deploy to Cloud Run with prebuilt toolset flag
-gcloud run deploy alloydb-mcp-toolbox \
+gcloud run deploy toolbox \
     --image=$IMAGE \
     --region=us-central1 \
     --service-account toolbox-identity \
@@ -154,7 +154,7 @@ ALLOYDB_POSTGRES_DATABASE=ALLOYDB_POSTGRES_DATABASE:latest" \
     --allow-unauthenticated
 
 # If using a VPC network for private IP database access:
-# gcloud run deploy alloydb-mcp-toolbox \
+# gcloud run deploy toolbox \
 #     --image=$IMAGE \
 #     --region=us-central1 \
 #     --service-account toolbox-identity \
@@ -210,6 +210,25 @@ port. If there is a mismatch, the container will fail to start and the
 deployment will time out.  
 {{< /notice >}}
 
+{{< notice note >}}
+If you are using a VPC network, use the command below. The
+`--network default` and `--subnet default` values are examples for the
+default VPC network and the default subnet in the Cloud Run region. If your
+database uses a different VPC network or subnet, replace these values. To
+find the values for your project, run:
+```bash
+gcloud compute networks list
+gcloud compute networks subnets list --regions=us-central1
+```
+For more information, see [Direct VPC egress with a VPC
+network](https://cloud.google.com/run/docs/configuring/vpc-direct-vpc).
+{{< /notice >}}
+
+{{< notice note >}}
+This guide uses `--allow-unauthenticated` flag to allow public access to the Cloud Run service.
+To enforce the Cloud Run Invoker IAM check, see [Re-enable the Cloud Run Invoker IAM check](https://docs.cloud.google.com/run/docs/authenticating/public#re-enable_invoker)
+{{< /notice >}}
+
 ### Update deployed server to be secure
 
 {{< production-security-warning >}}
@@ -232,7 +251,7 @@ origins permitted to access the server.
     For **Prebuilt Config**:
 
     ```bash
-    gcloud run deploy alloydb-mcp-toolbox \
+    gcloud run deploy toolbox \
         --image=$IMAGE \
         --region=us-central1 \
         --service-account toolbox-identity \
@@ -242,8 +261,7 @@ ALLOYDB_POSTGRES_PROJECT=ALLOYDB_POSTGRES_PROJECT:latest,\
 ALLOYDB_POSTGRES_REGION=ALLOYDB_POSTGRES_REGION:latest,\
 ALLOYDB_POSTGRES_CLUSTER=ALLOYDB_POSTGRES_CLUSTER:latest,\
 ALLOYDB_POSTGRES_INSTANCE=ALLOYDB_POSTGRES_INSTANCE:latest,\
-ALLOYDB_POSTGRES_DATABASE=ALLOYDB_POSTGRES_DATABASE:latest" \
-        --allow-unauthenticated
+ALLOYDB_POSTGRES_DATABASE=ALLOYDB_POSTGRES_DATABASE:latest" 
     ```
 
     For **Custom Config (`tools.yaml`)**:
@@ -254,8 +272,7 @@ ALLOYDB_POSTGRES_DATABASE=ALLOYDB_POSTGRES_DATABASE:latest" \
         --region=us-central1 \
         --service-account toolbox-identity \
         --set-secrets="/app/tools.yaml=tools:latest" \
-        --args="--config=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST" \
-        --allow-unauthenticated
+        --args="--config=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST" 
     ```
 
 ## Connecting with Toolbox Client SDK
@@ -273,7 +290,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 1. Run the following to retrieve a non-deterministic URL for the Cloud Run service:
 
     ```bash
-    gcloud run services describe alloydb-mcp-toolbox --format 'value(status.url)'
+    gcloud run services describe toolbox --format 'value(status.url)'
     ```
 
 1. Import and initialize the toolbox client with the URL retrieved above:
