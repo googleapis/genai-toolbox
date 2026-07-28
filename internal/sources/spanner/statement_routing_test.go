@@ -27,6 +27,9 @@ func TestShouldUseReadOnlyTransaction(t *testing.T) {
 		{name: "update statement", sql: "UPDATE my_table SET value = 1 WHERE id = 1", want: false},
 		{name: "insert statement", sql: "INSERT INTO my_table (id) VALUES (1)", want: false},
 		{name: "leading whitespace", sql: "\n  WITH cte AS (SELECT 1) SELECT * FROM cte", want: true},
+		{name: "leading single-line comment", sql: "-- comment\nSELECT 1", want: true},
+		{name: "leading multi-line comment", sql: "/* comment */ SELECT 1", want: true},
+		{name: "leading parentheses", sql: "(SELECT 1)", want: true},
 	}
 
 	for _, tc := range tcs {
