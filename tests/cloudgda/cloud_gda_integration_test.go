@@ -822,10 +822,10 @@ func runCreateDataAgentInvokeTest(t *testing.T, projectID, datasetID, tableID st
 			},
 		},
 	}
-	payloadBytes, _ := json.Marshal(requestBodyMap)
+	agentConfigBytes, _ := json.Marshal(requestBodyMap)
 
 	api := "http://127.0.0.1:5000/api/tool/my-client-auth-create-data-agent-tool/invoke"
-	requestBody := bytes.NewBuffer([]byte(fmt.Sprintf(`{"data_agent_id": "%s", "payload": %s}`, dataAgentId, string(payloadBytes))))
+	requestBody := bytes.NewBuffer([]byte(fmt.Sprintf(`{"data_agent_id": "%s", "agent_config": %s}`, dataAgentId, string(agentConfigBytes))))
 
 	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, api, requestBody)
 	if err != nil {
@@ -868,8 +868,8 @@ func runCreateDataAgentInvokeTest(t *testing.T, projectID, datasetID, tableID st
 		t.Fatalf("expected created agent name to end with %s, got: %s", dataAgentId, nameVal)
 	}
 	
-	if displayName, ok := createdAgent["displayName"].(string); !ok || displayName != payloadMap["displayName"].(string) {
-		t.Fatalf("expected displayName %s, got: %s", payloadMap["displayName"], displayName)
+	if displayName, ok := createdAgent["displayName"].(string); !ok || displayName != requestBodyMap["displayName"].(string) {
+		t.Fatalf("expected displayName %s, got: %s", requestBodyMap["displayName"], displayName)
 	}
 
 	// Setup client for teardown

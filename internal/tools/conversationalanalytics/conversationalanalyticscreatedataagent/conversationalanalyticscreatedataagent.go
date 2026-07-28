@@ -82,8 +82,24 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	dataAgentIdParameter := parameters.NewStringParameter("data_agent_id", "The ID to use for the new data agent.")
-	payloadParameter := parameters.NewMapParameter("payload", "The JSON representation of the DataAgent resource to create.", "")
-	params := parameters.Parameters{dataAgentIdParameter, payloadParameter}
+	agentConfigParameter := parameters.NewMapParameter("agent_config", `The JSON representation of the DataAgent resource to create. Example:
+{
+  "displayName": "My Support Agent",
+  "dataAnalyticsAgent": {
+    "datasourceReferences": {
+      "bq": {
+        "tableReferences": [
+          {
+            "projectId": "my-project",
+            "datasetId": "support_data",
+            "tableId": "tickets"
+          }
+        ]
+      }
+    }
+  }
+}`, "")
+	params := parameters.Parameters{dataAgentIdParameter, agentConfigParameter}
 
 	// finish tool setup
 	return Tool{
@@ -142,18 +158,18 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 	// Extract parameters from the map
 	mapParams := params.AsMap()
 	dataAgentId, _ := mapParams["data_agent_id"].(string)
-	payloadMap, _ := mapParams["payload"].(map[string]any)
+	agentConfigMap, _ := mapParams["agent_config"].(map[string]any)
 
-	payloadBytes, err := json.Marshal(payloadMap)
+	agentConfigBytes, err := json.Marshal(agentConfigMap)
 	if err != nil {
-		return nil, util.NewClientServerError("invalid payload", http.StatusBadRequest, err)
+		return nil, util.NewClientServerError("invalid agent config", http.StatusBadRequest, err)
 	}
 
 	// Construct URL
 	projectID := source.GetProjectID()
 	caURL := fmt.Sprintf("%s/v1/projects/%s/locations/%s/dataAgents?dataAgentId=%s", util.GetGDAEndpoint(), projectID, t.Cfg.Location, url.QueryEscape(dataAgentId))
 
-	req, err := http.NewRequestWithContext(ctx, "POST", caURL, bytes.NewReader(payloadBytes))
+	req, err := http.NewRequestWithContext(ctx, "POST", caURL, bytes.NewReader(agentConfigBytes))
 	if err != nil {
 		return nil, util.NewClientServerError("failed to create request", http.StatusInternalServerError, err)
 	}

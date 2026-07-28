@@ -22,7 +22,28 @@ a new data agent in Conversational Analytics.
 `conversational-analytics-create-data-agent` accepts the following parameters:
 
 - **`data_agent_id`:** The ID to use for the new data agent.
-- **`payload`:** The JSON representation of the DataAgent resource to create.
+- **`agent_config`:** The JSON representation of the DataAgent resource to create. For the full schema, see the [DataAgent REST resource documentation](https://docs.cloud.google.com/gemini/data-agents/reference/rest/v1/projects.locations.dataAgents#resource:-dataagent).
+
+  Example `agent_config`:
+  ```json
+  {
+    "displayName": "My Support Agent",
+    "description": "An agent that analyzes support tickets.",
+    "dataAnalyticsAgent": {
+      "datasourceReferences": {
+        "bq": {
+          "tableReferences": [
+            {
+              "projectId": "my-project",
+              "datasetId": "support_data",
+              "tableId": "tickets"
+            }
+          ]
+        }
+      }
+    }
+  }
+  ```
 
 ## Example
 
@@ -33,7 +54,7 @@ type: conversational-analytics-create-data-agent
 source: my-conversational-analytics-source
 location: global
 description: |
-  Use this tool to create a new data agent with the specified configuration payload.
+  Use this tool to create a new data agent with the specified configuration.
 ```
 
 ## Output Format
