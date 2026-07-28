@@ -304,4 +304,4 @@ toolset = ToolboxToolset(
 )
 ```
 
-`telemetry_attributes` also accepts a static `TelemetryAttributes` instance or an async callable. See the [toolbox-core telemetry attributes documentation](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#per-call-telemetry-attributes) for field details.
+`telemetry_attributes` also accepts a static `TelemetryAttributes` instance or an async callable. When wrapping a core tool directly, pass the same argument to `ToolboxTool`. See the [toolbox-core telemetry attributes documentation](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#per-call-telemetry-attributes) for field details.
