@@ -15,6 +15,7 @@
 package spannerexecutesql_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -93,4 +94,28 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 		})
 	}
 
+}
+
+func TestInitializeExecuteSqlDqlDescription(t *testing.T) {
+	cfg := spannerexecutesql.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "execute_sql_dql",
+			Description: "Use this tool to execute DQL SQL.",
+		},
+		Type:   "spanner-execute-sql",
+		Source: "my-spanner-instance",
+	}
+
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("Initialize failed: %v", err)
+	}
+
+	want := "[DEPRECATED] Use execute_sql instead. Use this tool to execute DQL SQL."
+	if got := tool.GetDescription(); got != want {
+		t.Fatalf("GetDescription() = %q, want %q", got, want)
+	}
+	if got := tool.StaticManifest().Description; got != want {
+		t.Fatalf("StaticManifest().Description = %q, want %q", got, want)
+	}
 }

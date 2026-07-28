@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/spanner"
@@ -163,10 +164,18 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 	return out, nil
 }
 
+func shouldUseReadOnlyTransaction(statement string) bool {
+	trimmed := strings.TrimSpace(statement)
+	if trimmed == "" {
+		return false
+	}
+
+	firstWord := strings.ToUpper(strings.Fields(trimmed)[0])
+	return firstWord == "SELECT" || firstWord == "WITH"
+}
+
 func (s *Source) RunSQL(ctx context.Context, readOnly bool, statement string, params map[string]any) (any, error) {
-	var results []any
-	var err error
-	var opErr error
+	useReadOnly := shouldUseReadOnlyTransaction(statement)
 	stmt := spanner.Statement{
 		SQL: statement,
 	}
@@ -174,25 +183,29 @@ func (s *Source) RunSQL(ctx context.Context, readOnly bool, statement string, pa
 		stmt.Params = params
 	}
 
-	if readOnly {
+	if useReadOnly {
 		iter := s.SpannerClient().Single().Query(ctx, stmt)
-		results, opErr = processRows(iter)
-	} else {
-		_, opErr = s.SpannerClient().ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-			iter := txn.Query(ctx, stmt)
-			results, err = processRows(iter)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
+		results, err := processRows(iter)
+		if err != nil {
+			return nil, fmt.Errorf("unable to execute client: %w", err)
+		}
+		return results, nil
 	}
 
+	var rowsAffected int64
+	_, opErr := s.SpannerClient().ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+		rowCount, err := txn.Update(ctx, stmt)
+		if err != nil {
+			return err
+		}
+		rowsAffected = rowCount
+		return nil
+	})
 	if opErr != nil {
 		return nil, fmt.Errorf("unable to execute client: %w", opErr)
 	}
 
-	return results, nil
+	return rowsAffected, nil
 }
 
 func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, instance, dbname string) (*spanner.Client, error) {

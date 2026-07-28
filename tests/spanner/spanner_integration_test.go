@@ -618,7 +618,15 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (5, 'test_name')\"}", tableNameParam))),
-			want:          "[]",
+			want:          "1",
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool update entry",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"UPDATE %s SET name = 'updated_name' WHERE id = 5\"}", tableNameParam))),
+			want:          "1",
 			isErr:         false,
 		},
 		{

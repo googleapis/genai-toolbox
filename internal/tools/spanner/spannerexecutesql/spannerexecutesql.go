@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"cloud.google.com/go/spanner"
 	yaml "github.com/goccy/go-yaml"
@@ -69,6 +70,12 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
+	description := cfg.Description
+	if strings.EqualFold(cfg.Name, "execute_sql_dql") && !strings.Contains(strings.ToLower(description), "[deprecated]") {
+		description = fmt.Sprintf("[DEPRECATED] Use execute_sql instead. %s", description)
+	}
+	cfg.Description = description
+
 	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
 	params := parameters.Parameters{sqlParameter}
 
@@ -81,7 +88,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, defaultAnnotations),
-			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			tools.Manifest{Description: description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 			params,
 		),
 	}, nil
