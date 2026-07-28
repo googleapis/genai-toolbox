@@ -166,6 +166,35 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 
 func shouldUseReadOnlyTransaction(statement string) bool {
 	trimmed := strings.TrimSpace(statement)
+	for trimmed != "" {
+		if strings.HasPrefix(trimmed, "(") {
+			trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "("))
+			continue
+		}
+		if strings.HasPrefix(trimmed, "--") {
+			if idx := strings.Index(trimmed, "\n"); idx != -1 {
+				trimmed = strings.TrimSpace(trimmed[idx+1:])
+				continue
+			}
+			return false
+		}
+		if strings.HasPrefix(trimmed, "#") {
+			if idx := strings.Index(trimmed, "\n"); idx != -1 {
+				trimmed = strings.TrimSpace(trimmed[idx+1:])
+				continue
+			}
+			return false
+		}
+		if strings.HasPrefix(trimmed, "/*") {
+			if idx := strings.Index(trimmed, "*/"); idx != -1 {
+				trimmed = strings.TrimSpace(trimmed[idx+2:])
+				continue
+			}
+			return false
+		}
+		break
+	}
+
 	if trimmed == "" {
 		return false
 	}
