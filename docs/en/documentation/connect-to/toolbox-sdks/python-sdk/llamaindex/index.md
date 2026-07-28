@@ -453,3 +453,23 @@ with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
 ```
 
 Configure your OpenTelemetry `TracerProvider` and `MeterProvider` before creating the client. See the [toolbox-core OpenTelemetry documentation](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#opentelemetry) for a full setup example.
+
+### Per-call Telemetry Attributes
+
+Use `TelemetryAttributes` to attach model, user, and agent metadata to tool invocations:
+
+```py
+from toolbox_core import TelemetryAttributes
+from toolbox_llamaindex import ToolboxClient
+
+attrs = TelemetryAttributes(
+    llm_model="gemini-2.5-pro",
+    user_id="user-123",
+    agent_id="agent-abc",
+)
+
+with ToolboxClient("http://127.0.0.1:5000") as toolbox:
+    tools = toolbox.load_toolset("my-toolset", telemetry_attributes=attrs)
+```
+
+You can pass `telemetry_attributes` to `load_tool()` or `load_toolset()`, or call `add_telemetry_attributes()` on a loaded tool. See the [toolbox-core telemetry attributes documentation](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#per-call-telemetry-attributes) for field details.
