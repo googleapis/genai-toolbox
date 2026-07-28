@@ -8,8 +8,8 @@ before running `python -m build`:
      toolbox.exe for Windows wheels). On Unix wheels it must be marked
      executable (chmod +x).
   2. Set TOOLBOX_PLATFORM to the PEP 425 platform tag for the wheel:
-     "manylinux2014_x86_64", "macosx_11_0_arm64", "macosx_10_14_x86_64",
-     "win_amd64", or "win_arm64".
+     "manylinux2014_x86_64", "manylinux2014_aarch64", "macosx_11_0_arm64",
+     "macosx_10_14_x86_64", "win_amd64", or "win_arm64".
 
 The wheel is always tagged py3 / none / <plat> since it ships no Python code
 that depends on a specific interpreter ABI.
@@ -41,7 +41,7 @@ class bdist_wheel(_bdist_wheel):
     def get_tag(self):
         # Override the default "infer the platform tag from the build
         # machine" behavior so one Linux Cloud Build VM can produce wheels
-        # for all 5 platforms by varying TOOLBOX_PLATFORM per invocation.
+        # for all 6 platforms by varying TOOLBOX_PLATFORM per invocation.
         plat = os.environ.get("TOOLBOX_PLATFORM")
         if not plat:
             raise SystemExit(

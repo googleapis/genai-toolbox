@@ -116,6 +116,17 @@ chmod +x toolbox
 ```
 
 {{% /tab %}}
+{{% tab header="Linux (ARM64)" lang="en" %}}
+To install Toolbox as a binary on Linux (ARM64):
+
+```sh
+# see releases page for other versions
+export VERSION=1.8.0
+curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/arm64/toolbox
+chmod +x toolbox
+```
+
+{{% /tab %}}
 {{% tab header="macOS (Apple Silicon)" lang="en" %}}
 To install Toolbox as a binary on macOS (Apple Silicon):
 

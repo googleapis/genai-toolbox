@@ -77,11 +77,12 @@ build_wheel() {
   (cd "${PYPI_DIR}" && TOOLBOX_PLATFORM="${plat}" python -m build --wheel)
 }
 
-build_wheel "toolbox.linux.amd64"   "manylinux2014_x86_64" "toolbox"
-build_wheel "toolbox.darwin.arm64"  "macosx_11_0_arm64"    "toolbox"
-build_wheel "toolbox.darwin.amd64"  "macosx_10_14_x86_64"  "toolbox"
-build_wheel "toolbox.windows.amd64" "win_amd64"            "toolbox.exe"
-build_wheel "toolbox.windows.arm64" "win_arm64"            "toolbox.exe"
+build_wheel "toolbox.linux.amd64"   "manylinux2014_x86_64"  "toolbox"
+build_wheel "toolbox.linux.arm64"   "manylinux2014_aarch64" "toolbox"
+build_wheel "toolbox.darwin.arm64"  "macosx_11_0_arm64"     "toolbox"
+build_wheel "toolbox.darwin.amd64"  "macosx_10_14_x86_64"   "toolbox"
+build_wheel "toolbox.windows.amd64" "win_amd64"             "toolbox.exe"
+build_wheel "toolbox.windows.arm64" "win_arm64"             "toolbox.exe"
 
 twine upload \
   --repository-url "${AR_URL}" \

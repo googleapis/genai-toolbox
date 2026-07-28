@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Publishes the six @toolbox-sdk npm packages (5 platform-specific + 1 wrapper)
+# Publishes the seven @toolbox-sdk npm packages (6 platform-specific + 1 wrapper)
 # to the OSS Exit Gate internal Artifact Registry. The Exit Gate then ships
 # them externally to npmjs.org once trigger_exit_gate.sh uploads the manifest.
 #
@@ -82,6 +82,7 @@ publish_platform() {
 }
 
 publish_platform "server-linux-x64"    "toolbox.linux.amd64"   "toolbox"
+publish_platform "server-linux-arm64"  "toolbox.linux.arm64"   "toolbox"
 publish_platform "server-darwin-arm64" "toolbox.darwin.arm64"  "toolbox"
 publish_platform "server-darwin-x64"   "toolbox.darwin.amd64"  "toolbox"
 publish_platform "server-win32-x64"    "toolbox.windows.amd64" "toolbox.exe"

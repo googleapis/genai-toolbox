@@ -14,7 +14,7 @@
 #
 # Retry-only pipeline for the OSS Exit Gate PyPI publish steps. Use when the
 # PyPI portion of the versioned release fails after Go binaries are already in
-# GCS. The fetch-binaries step downloads the five platform binaries from GCS
+# GCS. The fetch-binaries step downloads the six platform binaries from GCS
 # by version into the workspace, then publish_pypi_to_ar.sh builds and
 # uploads the wheels (twine's --skip-existing makes uploads idempotent).
 #
@@ -36,6 +36,7 @@ steps:
       BUCKET="gs://mcp-toolbox-for-databases/${VERSION}"
 
       gcloud storage cp "${BUCKET}/linux/amd64/toolbox"       toolbox.linux.amd64
+      gcloud storage cp "${BUCKET}/linux/arm64/toolbox"       toolbox.linux.arm64
       gcloud storage cp "${BUCKET}/darwin/arm64/toolbox"      toolbox.darwin.arm64
       gcloud storage cp "${BUCKET}/darwin/amd64/toolbox"      toolbox.darwin.amd64
       gcloud storage cp "${BUCKET}/windows/amd64/toolbox.exe" toolbox.windows.amd64

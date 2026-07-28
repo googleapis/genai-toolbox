@@ -248,6 +248,19 @@ To install Toolbox as a binary:
 >
 > </details>
 > <details>
+> <summary>Linux (ARM64)</summary>
+>
+> To install Toolbox as a binary on Linux (ARM64):
+>
+> ```sh
+> # see releases page for other versions
+> export VERSION=1.8.0
+> curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/arm64/toolbox
+> chmod +x toolbox
+> ```
+>
+> </details>
+> <details>
 > <summary>macOS (Apple Silicon)</summary>
 >
 > To install Toolbox as a binary on macOS (Apple Silicon):

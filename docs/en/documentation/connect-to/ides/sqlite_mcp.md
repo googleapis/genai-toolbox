@@ -46,6 +46,10 @@ to expose your developer assistant tools to a SQLite instance:
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/linux/amd64/toolbox
 {{< /tab >}}
 
+{{< tab header="linux/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/linux/arm64/toolbox
+{{< /tab >}}
+
 {{< tab header="darwin/arm64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/arm64/toolbox
 {{< /tab >}}

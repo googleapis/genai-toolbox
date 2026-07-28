@@ -65,6 +65,11 @@ extraFiles:
     {
       "type": "json",
       "path": "npm/server/package.json",
+      "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-linux-arm64']",
+    },
+    {
+      "type": "json",
+      "path": "npm/server/package.json",
       "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-linux-x64']",
     },
     {
@@ -85,6 +90,11 @@ extraFiles:
     {
       "type": "json",
       "path": "npm/server-darwin-x64/package.json",
+      "jsonpath": "$.version",
+    },
+    {
+      "type": "json",
+      "path": "npm/server-linux-arm64/package.json",
       "jsonpath": "$.version",
     },
     {
