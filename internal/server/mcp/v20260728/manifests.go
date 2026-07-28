@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package vdraft
+package v20260728
 
 import (
 	"fmt"
@@ -155,10 +155,10 @@ func generatePromptManifest(name, desc string, args prompts.Arguments) Prompt {
 }
 
 // GenerateListPromptsResult generates the list/prompts result
-func GenerateListPromptsResult(g group.Group, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
+func GenerateListPromptsResult(pMgr *primitives.PrimitiveManager, g group.Group) (ListPromptsResult, error) {
 	mcpManifest := make([]Prompt, 0, len(g.PromptNames))
 	for _, promptName := range g.PromptNames {
-		prompt, ok := promptsMap[promptName]
+		prompt, ok := pMgr.GetPrompt(promptName)
 		if !ok {
 			return ListPromptsResult{}, fmt.Errorf("prompt does not exist: %s", promptName)
 		}
@@ -205,7 +205,7 @@ func GenerateGetGroupResult(pMgr *primitives.PrimitiveManager, g group.Group, ur
 	if err != nil {
 		return GetGroupResult{}, fmt.Errorf("error generating tools manifest: %w", err)
 	}
-	listPromptsResult, err := GenerateListPromptsResult(g, pMgr.GetPromptsMap())
+	listPromptsResult, err := GenerateListPromptsResult(pMgr, g)
 	if err != nil {
 		return GetGroupResult{}, fmt.Errorf("error generating prompts manifest: %w", err)
 	}
