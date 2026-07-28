@@ -15,17 +15,16 @@
 package conversationalanalyticscreatedataagent
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	cloudgdads "github.com/googleapis/mcp-toolbox/internal/sources/cloudgda"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -83,14 +82,14 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	dataAgentIdParameter := parameters.NewStringParameter("data_agent_id", "The ID to use for the new data agent.")
-	payloadParameter := parameters.NewStringParameter("payload", "The JSON string representation of the DataAgent resource to create.")
+	payloadParameter := parameters.NewMapParameter("payload", "The JSON representation of the DataAgent resource to create.", "")
 	params := parameters.Parameters{dataAgentIdParameter, payloadParameter}
 
 	// finish tool setup
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
-			nil,
+			tools.NewWriteAnnotations(),
 			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 			params,
 		),
@@ -106,25 +105,6 @@ type Tool struct {
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
-}
-
-func (t Tool) validate(srcs map[string]sources.Source) error {
-	_, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	return err
-}
-
-func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	if err := t.validate(srcs); err != nil {
-		return nil, err
-	}
-	return t.BaseTool.GetParameters(srcs)
-}
-
-func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
-	if err := t.validate(srcs); err != nil {
-		return tools.Manifest{}, err
-	}
-	return t.BaseTool.Manifest(srcs)
 }
 
 func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
@@ -162,13 +142,18 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 	// Extract parameters from the map
 	mapParams := params.AsMap()
 	dataAgentId, _ := mapParams["data_agent_id"].(string)
-	payloadStr, _ := mapParams["payload"].(string)
+	payloadMap, _ := mapParams["payload"].(map[string]any)
+
+	payloadBytes, err := json.Marshal(payloadMap)
+	if err != nil {
+		return nil, util.NewClientServerError("invalid payload", http.StatusBadRequest, err)
+	}
 
 	// Construct URL
 	projectID := source.GetProjectID()
 	caURL := fmt.Sprintf("%s/v1/projects/%s/locations/%s/dataAgents?dataAgentId=%s", util.GetGDAEndpoint(), projectID, t.Cfg.Location, url.QueryEscape(dataAgentId))
 
-	req, err := http.NewRequest("POST", caURL, strings.NewReader(payloadStr))
+	req, err := http.NewRequestWithContext(ctx, "POST", caURL, bytes.NewReader(payloadBytes))
 	if err != nil {
 		return nil, util.NewClientServerError("failed to create request", http.StatusInternalServerError, err)
 	}
@@ -196,7 +181,85 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 		return nil, util.NewClientServerError("failed to decode response", http.StatusInternalServerError, err)
 	}
 
-	return result, nil
+	opName, ok := result["name"].(string)
+	if !ok {
+		return nil, util.NewClientServerError("operation response missing name", http.StatusInternalServerError, nil)
+	}
+
+	if val, done, err := extractResult(result); done {
+		if err != nil {
+			return nil, err.(util.ToolboxError)
+		}
+		return val, nil
+	}
+
+	const pollInterval = 2 * time.Second
+	const pollTimeout = 60 * time.Second
+
+	ticker := time.NewTicker(pollInterval)
+	defer ticker.Stop()
+	timeout := time.After(pollTimeout)
+
+	var lastStatus string
+
+	for {
+		select {
+		case <-ctx.Done():
+			errMsg := fmt.Sprintf("context cancelled while waiting for data agent creation (op: %s): %v", opName, ctx.Err())
+			if lastStatus != "" {
+				errMsg += fmt.Sprintf(". Last status: %s", lastStatus)
+			}
+			return nil, util.NewClientServerError(errMsg, http.StatusInternalServerError, nil)
+		case <-timeout:
+			errMsg := fmt.Sprintf("timed out waiting for data agent creation (op: %s)", opName)
+			if lastStatus != "" {
+				errMsg += fmt.Sprintf(". Last status: %s", lastStatus)
+			}
+			return nil, util.NewClientServerError(errMsg, http.StatusGatewayTimeout, nil)
+		case <-ticker.C:
+			opUrl := fmt.Sprintf("%s/v1/%s", util.GetGDAEndpoint(), opName)
+			opReq, err := http.NewRequestWithContext(ctx, http.MethodGet, opUrl, nil)
+			if err != nil {
+				lastStatus = fmt.Sprintf("request creation error: %v", err)
+				continue
+			}
+			opReq.Header.Set("X-Goog-API-Client", util.GDAClientID)
+
+			opResp, err := client.Do(opReq)
+			if err != nil {
+				lastStatus = fmt.Sprintf("network error: %v", err)
+				continue
+			}
+
+			if opResp.StatusCode == 400 || opResp.StatusCode == 401 || opResp.StatusCode == 403 {
+				body, _ := io.ReadAll(opResp.Body)
+				opResp.Body.Close()
+				return nil, util.NewClientServerError(fmt.Sprintf("polling failed with %d: %s", opResp.StatusCode, string(body)), opResp.StatusCode, nil)
+			}
+
+			if opResp.StatusCode != 200 {
+				lastStatus = fmt.Sprintf("HTTP status %d", opResp.StatusCode)
+				opResp.Body.Close()
+				continue
+			}
+
+			opRespBody, _ := io.ReadAll(opResp.Body)
+			opResp.Body.Close()
+
+			var pollOp map[string]any
+			if err := json.Unmarshal(opRespBody, &pollOp); err != nil {
+				lastStatus = fmt.Sprintf("unmarshal error: %v", err)
+				continue
+			}
+
+			if val, done, err := extractResult(pollOp); done {
+				if err != nil {
+					return nil, err.(util.ToolboxError)
+				}
+				return val, nil
+			}
+		}
+	}
 }
 
 func (t Tool) RequiresClientAuthorization(primitiveMgr tools.SourceProvider) (bool, error) {
@@ -205,4 +268,17 @@ func (t Tool) RequiresClientAuthorization(primitiveMgr tools.SourceProvider) (bo
 		return false, err
 	}
 	return source.UseClientAuthorization(), nil
+}
+
+func extractResult(result map[string]any) (any, bool, error) {
+	if d, ok := result["done"].(bool); ok && d {
+		if errVal, ok := result["error"]; ok && errVal != nil {
+			return nil, true, util.NewClientServerError(fmt.Sprintf("data agent creation failed: %v", errVal), http.StatusInternalServerError, nil)
+		}
+		if responseVal, ok := result["response"].(map[string]any); ok {
+			return responseVal, true, nil
+		}
+		return result, true, nil
+	}
+	return nil, false, nil
 }

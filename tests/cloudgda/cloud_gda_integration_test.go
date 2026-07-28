@@ -825,9 +825,9 @@ func runCreateDataAgentInvokeTest(t *testing.T, projectID, datasetID, tableID st
 	payloadBytes, _ := json.Marshal(requestBodyMap)
 
 	api := "http://127.0.0.1:5000/api/tool/my-client-auth-create-data-agent-tool/invoke"
-	requestBody := bytes.NewBuffer([]byte(fmt.Sprintf(`{"data_agent_id": "%s", "payload": %q}`, dataAgentId, string(payloadBytes))))
+	requestBody := bytes.NewBuffer([]byte(fmt.Sprintf(`{"data_agent_id": "%s", "payload": %s}`, dataAgentId, string(payloadBytes))))
 
-	req, err := http.NewRequest(http.MethodPost, api, requestBody)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, api, requestBody)
 	if err != nil {
 		t.Fatalf("unable to create request: %s", err)
 	}
@@ -855,62 +855,35 @@ func runCreateDataAgentInvokeTest(t *testing.T, projectID, datasetID, tableID st
 		t.Fatalf("unable to find result in response body")
 	}
 
-	var op map[string]any
-	if err := json.Unmarshal([]byte(got), &op); err != nil {
-		t.Fatalf("failed to unmarshal operation string: %v", err)
+	var createdAgent map[string]any
+	if err := json.Unmarshal([]byte(got), &createdAgent); err != nil {
+		t.Fatalf("failed to unmarshal created agent string: %v", err)
 	}
 
-	opName, ok := op["name"].(string)
+	nameVal, ok := createdAgent["name"].(string)
 	if !ok {
-		t.Fatalf("operation response missing name: %s", got)
+		t.Fatalf("created agent missing name: %s", got)
+	}
+	if !strings.HasSuffix(nameVal, dataAgentId) {
+		t.Fatalf("expected created agent name to end with %s, got: %s", dataAgentId, nameVal)
+	}
+	
+	if displayName, ok := createdAgent["displayName"].(string); !ok || displayName != payloadMap["displayName"].(string) {
+		t.Fatalf("expected displayName %s, got: %s", payloadMap["displayName"], displayName)
 	}
 
-	// Poll for operation completion
+	// Setup client for teardown
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken})
-	client, _ := util.NewGDAClient(t.Context(), option.WithTokenSource(tokenSource))
-
-	ticker := time.NewTicker(2 * time.Second)
-	defer ticker.Stop()
-	timeout := time.After(60 * time.Second)
-
-	done := false
-	for !done {
-		select {
-		case <-t.Context().Done():
-			t.Fatalf("context cancelled while waiting for data agent creation")
-		case <-timeout:
-			t.Fatalf("timed out waiting for data agent creation")
-		case <-ticker.C:
-			opUrl := fmt.Sprintf("%s/v1/%s", util.GetGDAEndpoint(), opName)
-			opReq, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, opUrl, nil)
-			opResp, err := client.Do(opReq)
-			if err != nil {
-				t.Logf("failed to poll operation: %v", err)
-				continue
-			}
-			opRespBody, _ := io.ReadAll(opResp.Body)
-			opResp.Body.Close()
-
-			var pollOp map[string]any
-			if err := json.Unmarshal(opRespBody, &pollOp); err != nil {
-				t.Logf("failed to unmarshal polling response: %v", err)
-				continue
-			}
-
-			if d, ok := pollOp["done"].(bool); ok && d {
-				if errVal, ok := pollOp["error"]; ok && errVal != nil {
-					t.Fatalf("data agent creation failed: %v", errVal)
-				}
-				done = true
-			}
-		}
+	client, err := util.NewGDAClient(t.Context(), option.WithTokenSource(tokenSource))
+	if err != nil {
+		t.Fatalf("failed to create GDA client: %v", err)
 	}
 
 	teardown := func(t *testing.T) {
 		parent := fmt.Sprintf("projects/%s/locations/global", projectID)
 		agentName := fmt.Sprintf("%s/dataAgents/%s", parent, dataAgentId)
 		deleteUrl := fmt.Sprintf("%s/v1/%s", util.GetGDAEndpoint(), agentName)
-		delReq, _ := http.NewRequest(http.MethodDelete, deleteUrl, nil)
+		delReq, _ := http.NewRequestWithContext(t.Context(), http.MethodDelete, deleteUrl, nil)
 		delResp, err := client.Do(delReq)
 		if err != nil {
 			t.Errorf("failed to delete data agent %s: %v", agentName, err)

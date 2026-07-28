@@ -22,25 +22,30 @@ a new data agent in Conversational Analytics.
 `conversational-analytics-create-data-agent` accepts the following parameters:
 
 - **`data_agent_id`:** The ID to use for the new data agent.
-- **`payload`:** The JSON string representation of the DataAgent resource to create.
+- **`payload`:** The JSON representation of the DataAgent resource to create.
 
 ## Example
 
 ```yaml
-tools:
-  create_agent:
-    kind: conversational-analytics-create-data-agent
-    source: my-conversational-analytics-source
-    location: global
-    description: |
-      Use this tool to create a new data agent with the specified configuration payload.
+kind: tool
+name: create_agent
+type: conversational-analytics-create-data-agent
+source: my-conversational-analytics-source
+location: global
+description: |
+  Use this tool to create a new data agent with the specified configuration payload.
 ```
+
+## Output Format
+
+The tool returns the newly created DataAgent object after waiting for the operation to complete successfully. Note that the tool will block and poll for up to 60 seconds. A timeout error does not necessarily mean the creation failed; the operation may still be processing in the background.
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "conversational-analytics-create-data-agent". |
+| type        |  string  |     true     | Must be "conversational-analytics-create-data-agent". |
 | source      |  string  |     true     | Name of the source.                                |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 | location    |  string  |    false     | The Google Cloud location (default: "global").     |
+| authRequired| []string |    false     | List of auth services required to use the tool.    |
