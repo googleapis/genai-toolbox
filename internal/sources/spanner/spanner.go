@@ -175,7 +175,7 @@ func shouldUseReadOnlyTransaction(statement string) bool {
 }
 
 func (s *Source) RunSQL(ctx context.Context, readOnly bool, statement string, params map[string]any) (any, error) {
-	useReadOnly := shouldUseReadOnlyTransaction(statement)
+	useReadOnly := readOnly || shouldUseReadOnlyTransaction(statement)
 	stmt := spanner.Statement{
 		SQL: statement,
 	}
