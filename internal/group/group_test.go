@@ -29,8 +29,8 @@ import (
 
 func testFixtures() (map[string]tools.Tool, map[string]prompts.Prompt) {
 	toolsMap := map[string]tools.Tool{
-		"tool1": testutils.NewMockTool("tool1", "first tool", []parameters.Parameter{}, false, false),
-		"tool2": testutils.NewMockTool("tool2", "second tool", []parameters.Parameter{}, false, false),
+		"tool1": testutils.NewMockTool("tool1", "first tool", "", []parameters.Parameter{}, false, false),
+		"tool2": testutils.NewMockTool("tool2", "second tool", "", []parameters.Parameter{}, false, false),
 	}
 	promptsMap := map[string]prompts.Prompt{
 		"prompt1": testutils.NewMockPrompt("prompt1", "first prompt", prompts.Arguments{}),

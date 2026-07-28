@@ -231,17 +231,17 @@ func TestParamManifest(t *testing.T) {
 }
 
 func TestGenerateListToolsResult(t *testing.T) {
-	tool1 := testutils.NewMockTool("no_params", "", []parameters.Parameter{}, false, false)
+	tool1 := testutils.NewMockTool("no_params", "", "", []parameters.Parameter{}, false, false)
 	tool2 := testutils.NewMockTool(
 		"some_params",
-		"",
+		"", "",
 		parameters.Parameters{
 			parameters.NewIntParameter("param1", "This is the first parameter."),
 			parameters.NewIntParameter("param2", "This is the second parameter."),
 		}, false, false)
 	toolsMap := make(map[string]tools.Tool)
-	toolsMap[tool1.Name] = tool1
-	toolsMap[tool2.Name] = tool2
+	toolsMap[tool1.GetName()] = tool1
+	toolsMap[tool2.GetName()] = tool2
 	g := group.NewGroup(group.GroupConfig{
 		Name:      "test-toolset",
 		ToolNames: []string{"no_params", "some_params"},
