@@ -77,7 +77,11 @@ func ConvertNumbers(data any) (any, error) {
 		if i, err := v.Int64(); err == nil {
 			return i, nil
 		}
-		return v.Float64()
+		f, err := v.Float64()
+		if err != nil {
+			return nil, err
+		}
+		return f, nil
 
 	// For all other types, return them as is.
 	default:
