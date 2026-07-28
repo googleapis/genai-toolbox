@@ -26,10 +26,12 @@ import (
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
+	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 )
@@ -59,9 +61,12 @@ type compatibleSource interface {
 	GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
 	GoogleCloudProject() string
 	GoogleCloudLocation() string
+	GoogleCloudQuotaProject() string
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
 	LookerApiSettings() *rtl.ApiSettings
+	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
+	GetHostURL(context.Context, *v4.LookerSDK) (string, error)
 }
 
 // Structs for building the JSON payload
@@ -78,7 +83,6 @@ type LookerExploreReference struct {
 }
 type LookerExploreReferences struct {
 	ExploreReferences []LookerExploreReference `json:"exploreReferences"`
-	Credentials       Credentials              `json:"credentials,omitzero"`
 }
 type SecretBased struct {
 	ClientId     string `json:"clientId"`
@@ -116,11 +120,11 @@ type ConversationOptions struct {
 type InlineContext struct {
 	SystemInstruction    string               `json:"systemInstruction"`
 	DatasourceReferences DatasourceReferences `json:"datasourceReferences"`
-	Options              ConversationOptions  `json:"options"`
 }
 type CAPayload struct {
 	Messages      []Message     `json:"messages"`
 	InlineContext InlineContext `json:"inlineContext"`
+	Credentials   *Credentials  `json:"credentials,omitempty"`
 	ClientIdEnum  string        `json:"clientIdEnum"`
 }
 
@@ -177,8 +181,20 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
+}
+
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return nil
 }
 
 // parseExploreReferences converts the raw explore_references parameter into typed
@@ -210,10 +226,14 @@ func parseExploreReferences(raw []any, lookerInstanceURI string) ([]LookerExplor
 	return refs, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
+	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 
 	if source.GoogleCloudProject() == "" {
@@ -232,7 +252,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	userQuery, _ := mapParams["user_query_with_context"].(string)
 	exploreReferences, _ := mapParams["explore_references"].([]any)
 
-	ler, lerErr := parseExploreReferences(exploreReferences, source.LookerApiSettings().BaseUrl)
+	sdk, err := source.GetLookerSDK(ctx, string(accessToken))
+	if err != nil {
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
+	}
+
+	hostURL, err := source.GetHostURL(ctx, sdk)
+	if err != nil {
+		logger.WarnContext(ctx, "failed to dynamically resolve public host URL, utilizing fallback", "error", err)
+	}
+
+	ler, lerErr := parseExploreReferences(exploreReferences, hostURL)
 	if lerErr != nil {
 		return nil, lerErr
 	}
@@ -249,19 +279,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	lers := LookerExploreReferences{
 		ExploreReferences: ler,
-		Credentials: Credentials{
-			OAuth: oauth_creds,
-		},
 	}
 
 	// Construct URL, headers, and payload
 	projectID := source.GoogleCloudProject()
 	location := source.GoogleCloudLocation()
-	caURL := fmt.Sprintf("%s/v1beta/projects/%s/locations/%s:chat", util.GetGDAEndpoint(), url.PathEscape(projectID), url.PathEscape(location))
+	caURL := fmt.Sprintf("%s/v1/projects/%s/locations/%s:chat", util.GetGDAEndpoint(), url.PathEscape(projectID), url.PathEscape(location))
 
 	headers := map[string]string{
 		"Content-Type":      "application/json",
 		"X-Goog-API-Client": util.GDAClientID,
+	}
+	if quotaProject := source.GoogleCloudQuotaProject(); quotaProject != "" {
+		headers["X-Goog-User-Project"] = quotaProject
 	}
 
 	payload := CAPayload{
@@ -271,7 +301,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			DatasourceReferences: DatasourceReferences{
 				Looker: lers,
 			},
-			Options: ConversationOptions{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
+		},
+		Credentials: &Credentials{
+			OAuth: oauth_creds,
 		},
 		ClientIdEnum: util.GDAClientID,
 	}
@@ -291,12 +323,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return response, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return false, err
+func (t Tool) RequiresClientAuthorization(source sources.Source) (bool, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.UseClientAuthorization(), nil
+	return s.UseClientAuthorization(), nil
 }
 
 // StreamMessage represents a single message object from the streaming API response.
@@ -538,10 +570,10 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 	return append(messages, newMessage)
 }
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return "", err
+func (t Tool) GetAuthTokenHeaderName(source sources.Source) (string, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return "", fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.GetAuthTokenHeaderName(), nil
+	return s.GetAuthTokenHeaderName(), nil
 }

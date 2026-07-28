@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -102,16 +103,27 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
+	return nil
+}
 
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
 	paramsMap := params.AsMap()
 	locationId, ok := paramsMap["locationId"].(string)
 	if !ok || locationId == "" {
@@ -122,28 +134,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("dataProductId is required and must be a non-empty string", nil)
 	}
 
-	var filter string
-	if val, exists := paramsMap["filter"]; exists && val != nil {
-		var ok bool
-		filter, ok = val.(string)
-		if !ok {
-			return nil, util.NewAgentError("filter must be a string", nil)
-		}
-	}
-
-	pageSize, ok := paramsMap["pageSize"].(int)
-	if !ok {
-		return nil, util.NewAgentError("pageSize must be an integer", nil)
-	}
-
-	var orderBy string
-	if val, exists := paramsMap["orderBy"]; exists && val != nil {
-		var ok bool
-		orderBy, ok = val.(string)
-		if !ok {
-			return nil, util.NewAgentError("orderBy must be a string", nil)
-		}
-	}
+	filter, _ := paramsMap["filter"].(string)
+	pageSize, _ := paramsMap["pageSize"].(int)
+	orderBy, _ := paramsMap["orderBy"].(string)
 
 	resp, err := source.ListDataAssets(ctx, locationId, dataProductId, filter, pageSize, orderBy)
 	if err != nil {

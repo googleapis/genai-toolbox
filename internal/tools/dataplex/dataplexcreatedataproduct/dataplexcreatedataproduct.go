@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -51,7 +52,7 @@ type compatibleSource interface {
 		description string,
 		ownerEmails []string,
 		accessGroups []dataplex.AccessGroup,
-	) (string, string, error)
+	) (map[string]string, error)
 }
 
 type Config struct {
@@ -115,64 +116,55 @@ type Tool struct {
 
 var _ tools.Tool = Tool{}
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
+	return nil
+}
 
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
 	paramsMap := params.AsMap()
 	prodLocID, ok := paramsMap["locationId"].(string)
 	if !ok || prodLocID == "" {
 		return nil, util.NewAgentError("locationId is required and must be a non-empty string", nil)
 	}
 
-	var prodID string
-	if val, exists := paramsMap["dataProductId"]; exists && val != nil {
-		var ok bool
-		prodID, ok = val.(string)
-		if !ok {
-			return nil, util.NewAgentError("dataProductId must be a string", nil)
-		}
-	}
+	prodID, _ := paramsMap["dataProductId"].(string)
 
 	displayName, ok := paramsMap["displayName"].(string)
 	if !ok || displayName == "" {
 		return nil, util.NewAgentError("displayName is required and must be a non-empty string", nil)
 	}
 
-	var description string
-	if val, exists := paramsMap["description"]; exists && val != nil {
-		var ok bool
-		description, ok = val.(string)
-		if !ok {
-			return nil, util.NewAgentError("description must be a string", nil)
-		}
-	}
+	description, _ := paramsMap["description"].(string)
 
-	rawOwners, ok := paramsMap["ownerEmails"].([]any)
-	if !ok || len(rawOwners) == 0 {
-		return nil, util.NewAgentError("ownerEmails is required and must be a non-empty array of strings", nil)
-	}
+	rawOwners, _ := paramsMap["ownerEmails"].([]any)
 	var ownerEmails []string
 	for _, o := range rawOwners {
-		email, ok := o.(string)
-		if !ok || email == "" {
-			return nil, util.NewAgentError("each item in ownerEmails must be a non-empty string", nil)
+		if email, _ := o.(string); email != "" {
+			ownerEmails = append(ownerEmails, email)
 		}
-		ownerEmails = append(ownerEmails, email)
+	}
+	if len(ownerEmails) == 0 {
+		return nil, util.NewAgentError("ownerEmails is required and must contain at least one non-empty string", nil)
 	}
 
 	var accessGroups []dataplex.AccessGroup
-	if val, exists := paramsMap["accessGroups"]; exists && val != nil {
-		rawGroups, ok := val.([]any)
-		if !ok {
-			return nil, util.NewAgentError("accessGroups must be an array", nil)
-		}
+	if rawGroups, ok := paramsMap["accessGroups"].([]any); ok {
 		for _, rawG := range rawGroups {
 			gMap, ok := rawG.(map[string]any)
 			if !ok {
@@ -187,32 +179,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				return nil, util.NewAgentError("access group 'displayName' is required and must be a non-empty string", nil)
 			}
 
-			var desc string
-			if dVal, dExists := gMap["description"]; dExists && dVal != nil {
-				var dOk bool
-				desc, dOk = dVal.(string)
-				if !dOk {
-					return nil, util.NewAgentError("access group 'description' must be a string", nil)
-				}
-			}
-
-			var googleGroup string
-			if gVal, gExists := gMap["googleGroup"]; gExists && gVal != nil {
-				var gOk bool
-				googleGroup, gOk = gVal.(string)
-				if !gOk {
-					return nil, util.NewAgentError("access group 'googleGroup' must be a string", nil)
-				}
-			}
-
-			var serviceAccount string
-			if sVal, sExists := gMap["serviceAccount"]; sExists && sVal != nil {
-				var sOk bool
-				serviceAccount, sOk = sVal.(string)
-				if !sOk {
-					return nil, util.NewAgentError("access group 'serviceAccount' must be a string", nil)
-				}
-			}
+			desc, _ := gMap["description"].(string)
+			googleGroup, _ := gMap["googleGroup"].(string)
+			serviceAccount, _ := gMap["serviceAccount"].(string)
 
 			if googleGroup == "" && serviceAccount == "" {
 				return nil, util.NewAgentError("at least one of access group 'googleGroup' or 'serviceAccount' must be a non-empty string", nil)
@@ -228,13 +197,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	opLocID, opID, err := source.CreateDataProduct(ctx, prodLocID, prodID, displayName, description, ownerEmails, accessGroups)
+	resp, err := source.CreateDataProduct(ctx, prodLocID, prodID, displayName, description, ownerEmails, accessGroups)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
 
-	return map[string]string{
-		"locationId":  opLocID,
-		"operationId": opID,
-	}, nil
+	return resp, nil
 }

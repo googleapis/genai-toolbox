@@ -216,9 +216,13 @@ for performance and safety reasons.
 {{< notice tip >}}
 To minimize SQL injection risk when using template parameters, always provide
 the `allowedValues` field within the parameter to restrict inputs.
+
 Alternatively, for `string` type parameters, you can use the `escape` field to
-add delimiters to the identifier. For `integer` or `float` type parameters, you
-can use `minValue` and `maxValue` to define the allowable range.
+add delimiters to the identifier, though please note that escaping alone does
+not fully secure the parameter.
+
+For `integer` or `float` type parameters, you can use `minValue` and `maxValue`
+to define the allowable range.
 {{< /notice >}}
 
 ```yaml
@@ -337,6 +341,12 @@ Annotations appear in the `tools/list` MCP response:
   }
 }
 ```
+
+## URL Parameter Binding
+
+You can bind specific arguments to tools at the transport level using URL query parameters. This allows you to restrict clients to specific database instances, projects, or environments dynamically without modifying the server configuration.
+
+For a comprehensive guide, see the [URL Parameter Binding](./url_parameter_binding.md) documentation.
 
 ## Using tools with MCP Toolbox Client SDKs
 

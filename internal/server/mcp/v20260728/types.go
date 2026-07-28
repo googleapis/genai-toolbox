@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package vdraft
+package v20260728
 
 import (
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
@@ -24,7 +24,7 @@ import (
 const SERVER_NAME = "Toolbox"
 
 // PROTOCOL_VERSION is the version of the MCP protocol in this package.
-const PROTOCOL_VERSION = util.VERSION_DRAFT
+const PROTOCOL_VERSION = util.VERSION_20260728
 
 // methods that are supported.
 const (
@@ -33,6 +33,8 @@ const (
 	TOOLS_CALL      = "tools/call"
 	PROMPTS_LIST    = "prompts/list"
 	PROMPTS_GET     = "prompts/get"
+	GROUPS_LIST     = "groups/list"
+	GROUPS_GET      = "groups/get"
 )
 
 /* Request Params */
@@ -91,6 +93,26 @@ type RequestMetaObject struct {
 	MetaClientCapabilities *ClientCapabilities `json:"io.modelcontextprotocol/clientCapabilities"`
 }
 
+/**
+ * Extends {@link MetaObject} with additional result-specific fields. All key naming rules from `MetaObject` apply.
+ */
+type ResultMetaObject struct {
+	/**
+	 * Identifies the server software producing the response. Servers SHOULD
+	 * include this field on every response unless specifically configured not
+	 * to do so.
+	 *
+	 * The {@link Implementation} schema requires `name` and `version`; other
+	 * fields are optional.
+	 *
+	 * The value is self-reported by the server and is not verified by the
+	 * protocol. It is intended for display, logging, and debugging. Clients
+	 * SHOULD NOT use it to change their behavior, and SHOULD NOT rely on it for
+	 * security decisions.
+	 */
+	ServerInfo Implementation `json:"io.modelcontextprotocol/serverInfo,omitempty"`
+}
+
 // ClientCapabilities represents capabilities a client may support. Known
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // client can define its own, additional capabilities.
@@ -118,7 +140,7 @@ type DiscoverRequest struct {
 
 // The result returned by the server for a {@link DiscoverRequest | server/discover} request.
 type DiscoverResult struct {
-	jsonrpc.Result
+	Result
 	/**
 	 * MCP Protocol Versions this server supports. The client should choose a
 	 * version from this list for use in subsequent requests.
@@ -128,10 +150,6 @@ type DiscoverResult struct {
 	 * The capabilities of the server.
 	 */
 	Capabilities ServerCapabilities `json:"capabilities"`
-	/**
-	 * Information about the server software implementation.
-	 */
-	ServerInfo Implementation `json:"serverInfo"`
 	/**
 	 * Natural-language guidance describing the server and its features.
 	 *
@@ -179,7 +197,7 @@ type ListChanged struct {
 /* Empty result */
 
 // EmptyResult represents a response that indicates success but carries no data.
-type EmptyResult jsonrpc.Result
+type EmptyResult Result
 
 /* Pagination */
 
@@ -242,6 +260,27 @@ type CacheableResult struct {
 	CacheScope cacheScope `json:"cacheScope"`
 }
 
+type resultType string
+
+const (
+	resultTypeComplete      resultType = "complete"       // the request completed successfully and the result contains the final content.
+	resultTypeInputRequired resultType = "input_required" // the request is incomplete and the result contains an {@link InputRequiredResult} object
+)
+
+type Result struct {
+	jsonrpc.Result
+	/**
+	* Indicates the type of the result, which allows the client to determine
+	* how to parse the result object.
+	*
+	* Servers implementing this protocol version MUST include this field.
+	* For backward compatibility, when a client receives a result from a
+	* server implementing an earlier protocol version (which does not include
+	* `resultType`), the client MUST treat the absent field as `"complete"`.
+	 */
+	ResultType resultType `json:"resultType"`
+}
+
 /* Tools */
 
 // Sent from the client to request a list of tools the server has.
@@ -251,7 +290,7 @@ type ListToolsRequest struct {
 
 // The server's response to a tools/list request from the client.
 type ListToolsResult struct {
-	jsonrpc.Result
+	Result
 	PaginatedResult
 	CacheableResult
 	Tools []Tool `json:"tools"`
@@ -346,7 +385,7 @@ type TextContent struct {
 // server does not support tool calls, or any other exceptional conditions,
 // should be reported as an MCP error response.
 type CallToolResult struct {
-	jsonrpc.Result
+	Result
 	// Could be either a TextContent, ImageContent, or EmbeddedResources
 	// For Toolbox, we will only be sending TextContent
 	Content []TextContent `json:"content"`
@@ -407,7 +446,7 @@ type ListPromptsRequest struct {
 
 // The server's response to a prompts/list request from the client.
 type ListPromptsResult struct {
-	jsonrpc.Result
+	Result
 	PaginatedResult
 	CacheableResult
 	Prompts []Prompt `json:"prompts"`
@@ -428,7 +467,7 @@ type GetPromptRequestParams struct {
 
 // The server's response to a prompts/get request from the client.
 type GetPromptResult struct {
-	jsonrpc.Result
+	Result
 	Description string          `json:"description,omitempty"`
 	Messages    []PromptMessage `json:"messages"`
 }
@@ -457,4 +496,46 @@ type PromptArgument struct {
 type PromptMessage struct {
 	Role    string      `json:"role"`
 	Content TextContent `json:"content"`
+}
+
+/* Groups */
+
+// ListGroupsRequest is sent from the client to request the list of groups the
+// server has.
+type ListGroupsRequest struct {
+	PaginatedRequest
+}
+
+// Group is a single entry in a groups/list response.
+type Group struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+}
+
+// ListGroupsResult is the server's response to a groups/list request.
+type ListGroupsResult struct {
+	jsonrpc.Result
+	Groups []Group `json:"groups"`
+}
+
+// GetGroupRequest is sent from the client to request a single group's contents.
+type GetGroupRequest struct {
+	jsonrpc.Request
+	Params GetGroupRequestParams `json:"params"`
+}
+
+// GetGroupRequestParams contains the parameters for a groups/get request.
+type GetGroupRequestParams struct {
+	RequestParams
+	Name string `json:"name"`
+}
+
+// GetGroupResult is the server's response to a groups/get request: the group's
+// tools and prompts. The description is intentionally omitted; it is exposed only
+// through groups/list.
+type GetGroupResult struct {
+	jsonrpc.Result
+	Name    string   `json:"name"`
+	Tools   []Tool   `json:"tools"`
+	Prompts []Prompt `json:"prompts"`
 }

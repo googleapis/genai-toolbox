@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package vdraft
+package v20260728
 
 import (
 	"encoding/json"
@@ -21,7 +21,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -76,7 +78,7 @@ func TestGenerateToolManifest(t *testing.T) {
 			authInvoke:   []string{"auth1", "auth2"},
 			params:       parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
 			annotations:  nil,
-			wantMetadata: map[string]any{"toolbox/authInvoke": []string{"auth1", "auth2"}},
+			wantMetadata: map[string]any{"com.google.cloud/authInvoke": []string{"auth1", "auth2"}},
 		},
 		{
 			desc:        "with auth param metadata",
@@ -86,7 +88,7 @@ func TestGenerateToolManifest(t *testing.T) {
 			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter", parameters.WithStringAuth(authServices))},
 			annotations: nil,
 			wantMetadata: map[string]any{
-				"toolbox/authParam": map[string][]string{
+				"com.google.cloud/authParam": map[string][]string{
 					"string-param": {"my-google-auth-service", "other-auth-service"},
 				},
 			},
@@ -99,8 +101,8 @@ func TestGenerateToolManifest(t *testing.T) {
 			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter", parameters.WithStringAuth(authServices))},
 			annotations: nil,
 			wantMetadata: map[string]any{
-				"toolbox/authInvoke": []string{"auth1", "auth2"},
-				"toolbox/authParam": map[string][]string{
+				"com.google.cloud/authInvoke": []string{"auth1", "auth2"},
+				"com.google.cloud/authParam": map[string][]string{
 					"string-param": {"my-google-auth-service", "other-auth-service"},
 				},
 			},
@@ -229,31 +231,31 @@ func TestParamManifest(t *testing.T) {
 }
 
 func TestGenerateListToolsResult(t *testing.T) {
-	tool1 := testutils.NewMockTool("no_params", "", []parameters.Parameter{}, false, false)
+	tool1 := testutils.NewMockTool("no_params", "", "", []parameters.Parameter{}, false, false)
 	tool2 := testutils.NewMockTool(
 		"some_params",
-		"",
+		"", "",
 		parameters.Parameters{
 			parameters.NewIntParameter("param1", "This is the first parameter."),
 			parameters.NewIntParameter("param2", "This is the second parameter."),
 		}, false, false)
 	toolsMap := make(map[string]tools.Tool)
-	toolsMap[tool1.Name] = tool1
-	toolsMap[tool2.Name] = tool2
-	tc := tools.ToolsetConfig{
+	toolsMap[tool1.GetName()] = tool1
+	toolsMap[tool2.GetName()] = tool2
+	g := group.NewGroup(group.GroupConfig{
 		Name:      "test-toolset",
 		ToolNames: []string{"no_params", "some_params"},
-	}
-	toolset, err := tc.Initialize("test-version", toolsMap)
-	if err != nil {
-		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
-	}
+	})
 
-	got, err := GenerateListToolsResult(nil, toolset, toolsMap, nil)
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
+	got, err := GenerateListToolsResult(pMgr, g, nil)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
 	want := ListToolsResult{
+		Result: Result{
+			ResultType: resultTypeComplete,
+		},
 		CacheableResult: CacheableResult{
 			TtlMs:      300000,
 			CacheScope: cacheScopePublic,
@@ -357,20 +359,22 @@ func TestGenerateListPromptsResult(t *testing.T) {
 	promptsMap := make(map[string]prompts.Prompt)
 	promptsMap[prompt1.Name] = prompt1
 	promptsMap[prompt2.Name] = prompt2
-	pc := prompts.PromptsetConfig{
+	g := group.NewGroup(group.GroupConfig{
 		Name:        "test-promptset",
 		PromptNames: []string{"prompt1", "prompt2"},
+	})
+	gMap := map[string]group.Group{
+		g.Name: g,
 	}
-	promptset, err := pc.Initialize("test-version", promptsMap)
-	if err != nil {
-		t.Fatalf("unable to initialize promptset %q: %s", "test-promptset", err)
-	}
-
-	got, err := GenerateListPromptsResult(promptset, promptsMap)
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, promptsMap, gMap)
+	got, err := GenerateListPromptsResult(pMgr, g)
 	if err != nil {
 		t.Fatalf("unable to generate list prompt result: %s", err)
 	}
 	want := ListPromptsResult{
+		Result: Result{
+			ResultType: resultTypeComplete,
+		},
 		CacheableResult: CacheableResult{
 			TtlMs:      300000,
 			CacheScope: cacheScopePublic,
