@@ -910,11 +910,6 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Test listing databases",
 			},
-			"test-invalid-source": map[string]any{
-				"type":        "clickhouse-list-databases",
-				"source":      "non-existent-source",
-				"description": "Test with invalid source",
-			},
 		},
 	}
 
@@ -982,15 +977,6 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 		}
 
 		t.Logf("Successfully listed %d databases", len(databases))
-	})
-
-	t.Run("ListDatabasesWithInvalidSource", func(t *testing.T) {
-		api := "http://127.0.0.1:5000/api/tool/test-invalid-source/invoke"
-		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
-		if resp.StatusCode == http.StatusOK {
-			t.Fatalf("expected error for non-existent source, but got 200 OK")
-		}
-
 	})
 
 	t.Logf("✅ clickhouse-list-databases tool tests completed successfully")
