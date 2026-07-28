@@ -654,8 +654,9 @@ There are 3 GHA workflows we use to achieve document versioning:
     the new release tag. One to the new version subdirectory and one to the root
     directory of the cloudflare-pages branch.
 
-    **Note:** Before the release PR from release-please is merged, add the
-    newest version into the hugo.toml file.
+    **Note:** Adding the new version to `hugo.toml` before merging the release
+    PR is a maintainer release step — see the [Maintainer
+    Playbook](./maintainer-playbook.md#how-to-release-a-new-version).
 
 1. **Deploy Previous Version Docs:**
     This is a manual workflow, started from the GitHub Actions UI.
@@ -673,11 +674,10 @@ preview link will be automatically added as a comment to your PR.
 
 #### Maintainers
 
-1. **Inspect Changes:** Review the proposed changes in the PR to ensure they are
-   safe and do not contain malicious code. Pay close attention to changes in the
-   `.github/workflows/` directory.
-1. **Deploy Preview:** Apply the `docs: deploy-preview` label to the PR to
-   deploy a documentation preview.
+Deploying a documentation preview is a maintainer action — see [Deploying
+Documentation
+Previews](./maintainer-playbook.md#deploying-documentation-previews) in the
+Maintainer Playbook.
 
 ### Shortcodes
 
@@ -769,248 +769,6 @@ for instructions on developing Toolbox SDKs.
 
 ## Maintainer Information
 
-### Team
-
-Team `@googleapis/senseai-eco` has been set as
-[CODEOWNERS](.github/CODEOWNERS). The GitHub TeamSync tool is used to create
-this team from MDB Group, `senseai-eco`. Additionally, database-specific GitHub
-teams (e.g., `@googleapis/toolbox-alloydb`) have been created from MDB groups to
-manage code ownership and review for individual database products.
-
-### Issue/PR Triage and SLO
-After an issue is created, maintainers will assign the following labels:
-* `Priority` (defaulted to P0)
-* `Type` (if applicable)
-* `Product` (if applicable)
-
-All incoming issues and PRs will follow the following SLO:
-| Type            | Priority | Objective                                                              |
-|-----------------|----------|------------------------------------------------------------------------|
-| Feature Request | P0       | Must respond within **5 days**                                         |
-| Process         | P0       | Must respond within **5 days**                                         |
-| Bugs            | P0       | Must respond within **5 days**, and resolve/closure within **14 days** |
-| Bugs            | P1       | Must respond within **7 days**, and resolve/closure within **90 days** |
-| Bugs            | P2       | Must respond within **30 days**
-
-_Types that are not listed in the table do not adhere to any SLO._
-
-### Releasing
-
-Toolbox has two types of releases: versioned and continuous. It uses Google
-Cloud project, `database-toolbox`.
-
-* **Versioned Release:** Official, supported distributions tagged as `latest`.
-  The release process is defined in
-  [versioned.release.cloudbuild.yaml](.ci/versioned.release.cloudbuild.yaml).
-* **Continuous Release:** Used for early testing of features between official
-  releases and for end-to-end testing. The release process is defined in
-  [continuous.release.cloudbuild.yaml](.ci/continuous.release.cloudbuild.yaml).
-* **GitHub Release:** `.github/release-please.yml` automatically creates GitHub
-  Releases and release PRs.
-
-### How-to Release a new Version
-
-1. [Optional] If you want to override the version number, send a
-   [PR](https://github.com/googleapis/mcp-toolbox/pull/31) to trigger
-   [release-please](https://github.com/googleapis/release-please?tab=readme-ov-file#how-do-i-change-the-version-number).
-   You can generate a commit with the following line: `git commit -m "chore:
-   release 0.1.0" -m "Release-As: 0.1.0" --allow-empty`
-1. [Optional] If you want to edit the changelog, send commits to the release PR
-1. Approve and merge the PR with the title “[chore(main): release
-   x.x.x](https://github.com/googleapis/mcp-toolbox/pull/16)”
-1. The
-   [trigger](https://pantheon.corp.google.com/cloud-build/triggers;region=us-central1/edit/27bd0d21-264a-4446-b2d7-0df4e9915fb3?e=13802955&inv=1&invt=AbhU8A&mods=logs_tg_staging&project=database-toolbox)
-   should automatically run when a new tag is pushed. You can view [triggered
-   builds here to check the
-   status](https://pantheon.corp.google.com/cloud-build/builds;region=us-central1?query=trigger_id%3D%2227bd0d21-264a-4446-b2d7-0df4e9915fb3%22&e=13802955&inv=1&invt=AbhU8A&mods=logs_tg_staging&project=database-toolbox)
-1. Update the Github release notes to include the following table:
-    1. Run the following command (from the root directory):
-
-        ```
-        export VERSION="v0.0.0"
-        .ci/generate_release_table.sh
-        ```
-
-    1. Copy the table output
-    1. In the GitHub UI, navigate to Releases and click the `edit` button.
-    1. Paste the table at the bottom of release note and click `Update release`.
-1. Post release in internal chat and on Discord.
-
-#### Supported Binaries
-
-The following operating systems and architectures are supported for binary
-releases:
-
-* linux/amd64
-* darwin/arm64
-* darwin/amd64
-* windows/amd64
-* windows/arm64
-
-#### Supported Container Images
-
-The following base container images are supported for container image releases:
-
-* distroless
-
-### Automated Tests
-
-Integration and unit tests are automatically triggered via Cloud Build on each
-pull request. Integration tests run on merge and nightly.
-
-#### Failure notifications
-
-On-merge and nightly tests that fail have notification setup via Cloud Build
-Failure Reporter [GitHub Actions
-Workflow](.github/workflows/schedule_reporter.yml).
-
-#### Trigger Setup
-
-Configure a Cloud Build trigger using the UI or `gcloud` with the following
-settings:
-
-* **Event:** Pull request
-* **Region:** global (for default worker pools)
-* **Source:**
-  * Generation: 1st gen
-  * Repo: googleapis/mcp-toolbox (GitHub App)
-  * Base branch: `^main$`
-* **Comment control:** Required except for owners and collaborators
-* **Filters:** Add directory filter
-* **Config:** Cloud Build configuration file
-  * Location: Repository (add path to file)
-* **Service account:** Set for demo service to enable ID token creation for
-  authenticated services
-
-### Triggering Tests
-
-Trigger pull request tests for external contributors by:
-
-* **Cloud Build tests:** Comment `/gcbrun`
-* **Unit tests:** Add the `tests:run` label
-
-## Repo Setup & Automation
-
-* .github/blunderbuss.yml - Auto-assign issues and PRs from GitHub teams. Use a
-  product label to assign to a product-specific team member.
-* .github/renovate.json5 - Tooling for dependency updates. Dependabot is built
-  into the GitHub repo for GitHub security warnings
-* go/github-issue-mirror - GitHub issues are automatically mirrored into buganizer
-* (Suspended) .github/sync-repo-settings.yaml - configure repo settings
-* .github/release-please.yml - Creates GitHub releases
-* .github/ISSUE_TEMPLATE - templates for GitHub issues
-
-### How-to Release the npm Package
-
-MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.npmjs.com/package/@toolbox-sdk/server).
-
-> [!NOTE]
-> npm releases are automated through the **OSS Exit Gate** via the
-> `publish-npm-to-ar` and `trigger-exit-gate` steps in
-> [.ci/versioned.release.cloudbuild.yaml](.ci/versioned.release.cloudbuild.yaml).
-> The versioned release pipeline pushes all six packages to the Exit Gate
-> Artifact Registry (`us-npm.pkg.dev/oss-exit-gate-prod/mcp-toolbox--npm`) and
-> uploads a `publish_all: true` manifest to
-> `gs://oss-exit-gate-prod-projects-bucket/mcp-toolbox/npm/manifests/`, which
-> triggers Exit Gate to publish externally to npmjs.org.
->
-> If the npm portion fails after the Go binaries are already in GCS, retry
-> just the npm steps without rebuilding binaries via
-> [.ci/npm_retry.cloudbuild.yaml](.ci/npm_retry.cloudbuild.yaml) (invocation
-> instructions are in the file header). The retry is idempotent — already-
-> published packages are skipped.
->
-> **PyPI releases** are automated through the same Exit Gate via the
-> `publish-pypi-to-ar` and `trigger-exit-gate-pypi` steps. Each release
-> builds five platform-tagged wheels (one per OS/arch) via
-> [pypi/setup.py](pypi/setup.py) with `TOOLBOX_PLATFORM` set per wheel,
-> uploads them all to `us-python.pkg.dev/oss-exit-gate-prod/mcp-toolbox--pypi`,
-> then drops a manifest at
-> `gs://oss-exit-gate-prod-projects-bucket/mcp-toolbox/pypi/manifests/` so
-> Exit Gate publishes them to pypi.org via trusted publishing. PyPI-only
-> retries: [.ci/pypi_retry.cloudbuild.yaml](.ci/pypi_retry.cloudbuild.yaml).
-> Idempotency is handled by `twine upload --skip-existing`.
->
-> The manual procedure below is retained as a fallback for when the automation
-> is broken.
-
-To release a new version manually, follow these steps:
-
-**Pre-requisites**
-
-- **npm Account**: Create an account at [npmjs.com](https://npmjs.com) if you haven't already.
-- **2FA Setup:** Ensure Two-Factor Authentication is enabled on your npm account (required for publishing).
-- **Permissions:** Request Editor access to the `@toolbox-sdk/` organization by pinging the current maintainers.
-
-**Preparation**
-
-- You will be publishing packages for the following OS/Architecture combinations:
-  - `darwin/arm64` -> `server-darwin-arm64`
-  - `darwin/x64` -> `server-darwin-x64`
-  - `linux/x64` -> `server-linux-x64`
-  - `win32/arm64` -> `server-win32-arm64`
-  - `win32/x64` -> `server-win32-x64`
-
-**Phase A: Release Platform-Specific Packages**
-
-_Repeat the following steps for each of the 5 combinations listed above._
-
-1. **Navigate to the package directory:**
-   ```bash
-   cd npm/server-<os>-<arch>
-   ```
-2. **Verify versioning:**
-   - The toolbox binary version is sourced from `cmd/version.txt` at the repo root (the release-please `versionFile`); `downloadBinary.js` reads it from there during `prepack`. Verify it reflects the version to be released.
-   - Open `package.json` and verify that the `"version"` field matches `cmd/version.txt`.
-3. **Sync Lockfile:**
-   ```bash
-   npm install --force
-   ```
-4. **Clean Artifacts:** Remove any pre-existing binaries to ensure a clean pack.
-   ```bash
-   rm -rf bin/
-   ```
-5. **Pack and Publish:**
-   ```bash
-   npm pack .
-   npm publish --access public
-   ```
-6. **Verify:** Check the npm registry to ensure the version is live at `https://www.npmjs.com/package/@toolbox-sdk/server-<os>-<arch>` before moving to the next package.
-
-**Phase B: Release Main Package (@toolbox-sdk/server)**
-
-Once all platform-specific packages are live, release the main wrapper package.
-
-1. **Navigate to the main directory:**
-   ```bash
-   cd ../server
-   ```
-2. **Verify Versioning:**
-   - Open `package.json` and verify the `"version"` field reflects the target version.
-   - Verify that versions for dependencies in `"optionalDependencies"` match the new version for all 5 packages.
-3. **Sync Lockfile:** (Before this step, all 5 dep packages need to be published to npm)
-   ```bash
-   npm install --package-lock-only
-   ```
-   1. Ensure that a node module entry for each package is present in `package-lock.json`.
-   2. Ensure that the integrity hashes for all packages are updated. If not, delete the file and use the `Sync Lockfile` command to generate a new lockfile.
-4. **Pack and Publish:**
-   ```bash
-   npm pack .
-   npm publish --access public
-   ```
-5. **Verify:** Confirm the main package is live with the correct version at `https://www.npmjs.com/package/@toolbox-sdk/server`.
-
-**Committing changes to the repo**
-
-Once all packages have been successfully published, please create a Pull Request containing the updated `package-lock.json` files from all `npm/` subdirectories. Ensure that any additional changes made during the release process are also included in this PR. Finally, set the title of the PR to: `chore(main): release npm vX.Y.Z`.
-
-> [!IMPORTANT]
-> Do not commit the binaries to the repo.
-
-**Troubleshooting**
-
-- **Access Token Expired or Need Auth:** Run `npm login`. If the registry is not `https://registry.npmjs.org/`, update it via `npm config set registry https://registry.npmjs.org/` or by modifying your `.npmrc`.
-- **Version Mismatches:** Do not re-publish the same version. Increment the patch version and release the new version following the steps above.
-- **Deprecation (Preferred):** If a specific version is broken, mark it as deprecated: `npm deprecate <package_name>@<version> "critical bug fixed in vX.Y.Z"`.
-- **Unpublishing (Nuclear Option):** Only possible if published within the last 72 hours using `npm unpublish <package-name>@<version>`. Note that this permanently burns the version number.
+Maintainer processes — the team/CODEOWNERS setup, issue triage and SLOs,
+releasing (versioned, continuous, npm/PyPI), CI/test automation, and repo
+setup — are documented in the [Maintainer Playbook](./maintainer-playbook.md).

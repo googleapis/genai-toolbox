@@ -63,7 +63,7 @@ func TestParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -99,7 +99,7 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
@@ -129,23 +129,6 @@ func (m MockSource) LookerApiSettings() *rtl.ApiSettings {
 
 func (m MockSource) GetLookerSDK(ctx context.Context, s string) (*v4.LookerSDK, error) {
 	return &v4.LookerSDK{}, nil
-}
-
-type MockSourceProvider struct {
-	tools.SourceProvider
-	source MockSource
-}
-
-func (m MockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.source, true
-}
-
-func TestInvokeValidation(t *testing.T) {
-	resourceMgr := MockSourceProvider{source: MockSource{}}
-
-	// No validation errors to mock for this simple tool that throws errors from Invoke directly
-	_ = resourceMgr
-
 }
 
 func TestManifest(t *testing.T) {

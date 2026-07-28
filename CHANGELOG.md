@@ -1,5 +1,77 @@
 # Changelog
 
+## [1.8.0](https://github.com/googleapis/mcp-toolbox/compare/v1.7.0...v1.8.0) (2026-07-28)
+
+
+### Features
+
+* Add `groups` support ([#3605](https://github.com/googleapis/mcp-toolbox/issues/3605)) ([e75ec3b](https://github.com/googleapis/mcp-toolbox/commit/e75ec3b5c84dfad5b69f2d42ec2d3408f22e2463))
+* **prebuilt:** Migrate skills-repo toolsets to `kind: group` with descriptions ([#3595](https://github.com/googleapis/mcp-toolbox/issues/3595)) ([b895b36](https://github.com/googleapis/mcp-toolbox/commit/b895b36b10eb81dc609216fc5f76ae800d1c65f4))
+* **server:** Add `/healthz` endpoint for container health checks ([#3060](https://github.com/googleapis/mcp-toolbox/issues/3060)) ([d5aefbc](https://github.com/googleapis/mcp-toolbox/commit/d5aefbc9e9bd914042224daaf0d4f9257ac01c88))
+* **skills:** Add `--group` flag to generate a skill from one group ([#3585](https://github.com/googleapis/mcp-toolbox/issues/3585)) ([c1abd4f](https://github.com/googleapis/mcp-toolbox/commit/c1abd4fc4fcdfa52ba20aaf7d92424ca189c7282))
+* **skills:** Default `--name` to `--group`, `--toolset`, or single `--prebuilt` name ([#3586](https://github.com/googleapis/mcp-toolbox/issues/3586)) ([2b33b08](https://github.com/googleapis/mcp-toolbox/commit/2b33b08c3a220657c8ab6a3e0ce1274badc2fe15))
+* **skills:** Make description optional during skills gen ([#3584](https://github.com/googleapis/mcp-toolbox/issues/3584)) ([d0a8f14](https://github.com/googleapis/mcp-toolbox/commit/d0a8f14cbec1f9770da7f82a07b4e480f5a4c6a7))
+* **tool/looker:** Add `get_field_value_suggestions` tool ([#3696](https://github.com/googleapis/mcp-toolbox/issues/3696)) ([3debe81](https://github.com/googleapis/mcp-toolbox/commit/3debe8113fe2c9af012a7369658bb7a9e64f40f4))
+* **tools/dataplex-update-data-product-aspects:** Add dataplex-update-data-product-aspects tool ([#3607](https://github.com/googleapis/mcp-toolbox/issues/3607)) ([f940937](https://github.com/googleapis/mcp-toolbox/commit/f94093725c35189051321778576f801748ead226))
+* Update draft specs to 2026-07-28 ([#3699](https://github.com/googleapis/mcp-toolbox/issues/3699)) ([cf128ff](https://github.com/googleapis/mcp-toolbox/commit/cf128ff94c4d39aea1eb17caa706ff0b73d8c780))
+
+
+### Bug Fixes
+
+* Re-add name validation to tools name ([#3654](https://github.com/googleapis/mcp-toolbox/issues/3654)) ([944f6ce](https://github.com/googleapis/mcp-toolbox/commit/944f6ce97bc77a92a052de92b88f0fc09ac7578c))
+* Re-add tool validation during startup ([#3705](https://github.com/googleapis/mcp-toolbox/issues/3705)) ([25ce953](https://github.com/googleapis/mcp-toolbox/commit/25ce953559a201183f066f566dca5fb597efca39))
+* **server:** Sort default toolset alphabetically for stable ordering ([#3539](https://github.com/googleapis/mcp-toolbox/issues/3539)) ([e5da24c](https://github.com/googleapis/mcp-toolbox/commit/e5da24c5dfd2208c7e947a20e58a2e2c82236241))
+* **source/cloud-sql-admin:** Validate source instance for backup-run restore ([#3555](https://github.com/googleapis/mcp-toolbox/issues/3555)) ([3ebe500](https://github.com/googleapis/mcp-toolbox/commit/3ebe500ef7b27608464e891c7458df630ea4aab6))
+* **source/dataplex:** Cleanup Dataplex Data Product resources that may have leaked due to previously aborted tests ([#3627](https://github.com/googleapis/mcp-toolbox/issues/3627)) ([3fb5a3f](https://github.com/googleapis/mcp-toolbox/commit/3fb5a3f2cdf42cbd078720df3369dbc33788c6b1))
+* **source/http:** Block CGNAT 100.64.0.0/10 in default SSRF guard ([#3625](https://github.com/googleapis/mcp-toolbox/issues/3625)) ([a0f36f4](https://github.com/googleapis/mcp-toolbox/commit/a0f36f42c33df52727e934549e7d6ca7576fe9ac))
+* **tools/looker:** Enhance looker-run-dashboard to handle result maker structures and merge queries ([#3698](https://github.com/googleapis/mcp-toolbox/issues/3698)) ([7666bc0](https://github.com/googleapis/mcp-toolbox/commit/7666bc08debdc4f81e1c6f95f41a1dbd9db3b365))
+* **tools/looker:** Log request/response traces at debug, not error ([#3552](https://github.com/googleapis/mcp-toolbox/issues/3552)) ([c3ad445](https://github.com/googleapis/mcp-toolbox/commit/c3ad4451e8592606ce686d042623f9aa8142317f))
+
+## [1.7.0](https://github.com/googleapis/mcp-toolbox/compare/v1.6.0...v1.7.0) (2026-07-16)
+
+
+#### Features
+
+* Add `quotaProject` support for BigQuery and Looker conversational analytics ([#2610](https://github.com/googleapis/mcp-toolbox/issues/2610)) ([f3e7ca9](https://github.com/googleapis/mcp-toolbox/commit/f3e7ca9a8f49ce79f5b6fbef23c45a643c4e9d44))
+* **arcadedb:** Add arcadedb source and tools ([#2961](https://github.com/googleapis/mcp-toolbox/issues/2961)) ([351de00](https://github.com/googleapis/mcp-toolbox/commit/351de00781a08999e735356624370ea1e7414419))
+* **cmd/internal,docs:** Add warning log that prebuilt tools are for developer use ([#3451](https://github.com/googleapis/mcp-toolbox/issues/3451)) ([8cffcef](https://github.com/googleapis/mcp-toolbox/commit/8cffcef2b109ba913bd63b87a61f75db9e957d2f))
+* **source/postgres:** Add optional connectTimeout ([#3620](https://github.com/googleapis/mcp-toolbox/issues/3620)) ([b574b07](https://github.com/googleapis/mcp-toolbox/commit/b574b071fc27f717e90b4362864b1086be0c8995))
+* **tool/clickhouse-sql:** Add native vector embedding support ([#3229](https://github.com/googleapis/mcp-toolbox/issues/3229)) ([6cbe1c2](https://github.com/googleapis/mcp-toolbox/commit/6cbe1c2f13e1f57818fa3aa872c2a467daf41ad8))
+* **tool/dataplex-update-data-product,tool/dataplex-create-data-asset,tool/dataplex-update-data-asset:** Add update data product, create data asset, and update data asset tools for knowledge catalog source ([#3574](https://github.com/googleapis/mcp-toolbox/issues/3574)) ([721c204](https://github.com/googleapis/mcp-toolbox/commit/721c204053d2241f82cba0f7615b16f79ab77637))
+* **tools/dataplex-create-data-product:** Add dataplex-create-data-product tool ([#3504](https://github.com/googleapis/mcp-toolbox/issues/3504)) ([5cee0d2](https://github.com/googleapis/mcp-toolbox/commit/5cee0d2a6668f7f3109fb3f00202f87d7c71d7f2))
+* **tools/dataplex-get-data-asset:** Add dataplex-get-data-asset tool ([#3503](https://github.com/googleapis/mcp-toolbox/issues/3503)) ([1ddfbe9](https://github.com/googleapis/mcp-toolbox/commit/1ddfbe99f16742e9270c6ac21bde4b88c1c1988c))
+
+
+### Bug Fixes
+
+* **parameters:** Report the offending value in array/map type errors ([#3512](https://github.com/googleapis/mcp-toolbox/issues/3512)) ([4034d6f](https://github.com/googleapis/mcp-toolbox/commit/4034d6f7b820962495622dbedc64fea968c14963))
+* **parameters:** Return an error instead of panicking on a non-string type field ([#3516](https://github.com/googleapis/mcp-toolbox/issues/3516)) ([66a0d53](https://github.com/googleapis/mcp-toolbox/commit/66a0d53b9fd11d6ee90b28ae1c411fc8685ab990))
+* **source/looker:** Dynamically resolve public host URL ([#3603](https://github.com/googleapis/mcp-toolbox/issues/3603)) ([0428afd](https://github.com/googleapis/mcp-toolbox/commit/0428afd3e75339701a9dedb5199b89a001457349))
+* **tool/looker-run-dashboard:** Add support for SQL Runner query tiles ([#3594](https://github.com/googleapis/mcp-toolbox/issues/3594)) ([0975d0a](https://github.com/googleapis/mcp-toolbox/commit/0975d0ac8bc5042f51a8b01eb5514d3ea138f145))
+
+
+## [1.6.0](https://github.com/googleapis/mcp-toolbox/compare/v1.5.0...v1.6.0) (2026-06-30)
+
+
+### Features
+
+* Support MCP 2026 draft specs ([#3544](https://github.com/googleapis/mcp-toolbox/issues/3544)) ([d12eaa8](https://github.com/googleapis/mcp-toolbox/commit/d12eaa856bad70b49ba2b7b9f2882cffbf81220f))
+* **release:** Add digital signature to Toolbox binaries ([#3528](https://github.com/googleapis/mcp-toolbox/issues/3528)) ([3f0f0af](https://github.com/googleapis/mcp-toolbox/commit/3f0f0af29007929b01e95ee2caef4fd2015d5f12))
+* **tool/cloud-storage:** Configure object operation parameters ([#3529](https://github.com/googleapis/mcp-toolbox/issues/3529)) ([d6dc5fe](https://github.com/googleapis/mcp-toolbox/commit/d6dc5fe8e47b585415bd5f237b2ba5d8276bc0e0))
+* **tool/cloud-storage:** Support configurable parameters ([#3478](https://github.com/googleapis/mcp-toolbox/issues/3478)) ([bc2de2a](https://github.com/googleapis/mcp-toolbox/commit/bc2de2ab386e0ae8591c4b7f7faa6165b7edf8a2))
+* **tools/dataplex-list-data-products:** Add dataplex-list-data-products tool ([#3337](https://github.com/googleapis/mcp-toolbox/issues/3337)) ([6dd669a](https://github.com/googleapis/mcp-toolbox/commit/6dd669ad9bad3e54206a82b3af122d845e2cdc63))
+* **tools/dataplex-get-data-product:** Add dataplex-get-data-product tool ([#3499](https://github.com/googleapis/mcp-toolbox/issues/3499)) ([7ea7a09](https://github.com/googleapis/mcp-toolbox/commit/7ea7a095cc6dcf85520a8f39c4cd5a20062289f7))
+* **tools/dataplex-list-data-assets:** Add dataplex-list-data-assets tool ([#3500](https://github.com/googleapis/mcp-toolbox/issues/3500)) ([182f933](https://github.com/googleapis/mcp-toolbox/commit/182f9332d67cc90d81f78b536081a7f47766d966))
+* **tools/looker:** Support complex filter_expression parameter in queries ([#3494](https://github.com/googleapis/mcp-toolbox/issues/3494)) ([997fb8c](https://github.com/googleapis/mcp-toolbox/commit/997fb8c39a4cb60173bcc8543118057e77e0fce4))
+* **tools/looker:** Support dynamic_fields parameter in queries ([#3507](https://github.com/googleapis/mcp-toolbox/issues/3507)) ([cd22b89](https://github.com/googleapis/mcp-toolbox/commit/cd22b893573f87c0d5406490b71ddf317a07dc7b))
+
+
+### Bug Fixes
+
+* **tools/gda:** Support mTLS and GOOGLE_API_USE_MTLS_ENDPOINT for GDA client ([#3460](https://github.com/googleapis/mcp-toolbox/issues/3460)) ([cc2a61e](https://github.com/googleapis/mcp-toolbox/commit/cc2a61e9a522136d07f7be9b8bc87916f32bf076))
+* **tools/looker-conversational-analytics:** Validate explore_references shape instead of panicking ([#3531](https://github.com/googleapis/mcp-toolbox/issues/3531)) ([b67419d](https://github.com/googleapis/mcp-toolbox/commit/b67419d34bfc437b6eace5abaaf02ae1339d83ee))
+* **tool/looker-create-view-from-table:** Correct Looker API payload structure ([#3515](https://github.com/googleapis/mcp-toolbox/issues/3515)) ([18c539c](https://github.com/googleapis/mcp-toolbox/commit/18c539c5935c2a496e7e5da68241b4307d8f3e6e))
+
 ## [1.5.0](https://github.com/googleapis/mcp-toolbox/compare/v1.4.0...v1.5.0) (2026-06-18)
 
 

@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -63,8 +64,8 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	filter := parameters.NewStringParameter(
 		"filter",
-		"Optional. Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching accross all fields at once is not yet supported. E.g. \"display_name:\\\"my-product\\\"\"",
-		parameters.WithStringDefault(""),
+		"Optional. Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching across all fields at once is not yet supported. E.g. \"display_name:\\\"my-product\\\"\"",
+		parameters.WithStringRequired(false),
 	)
 	pageSize := parameters.NewIntParameter(
 		"pageSize",
@@ -74,7 +75,7 @@ func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	orderBy := parameters.NewStringParameter(
 		"orderBy",
 		"Optional. Specifies the ordering of results.",
-		parameters.WithStringDefault(""),
+		parameters.WithStringRequired(false),
 	)
 	params := parameters.Parameters{filter, pageSize, orderBy}
 
@@ -99,28 +100,31 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return nil
+}
+
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
 	paramsMap := params.AsMap()
-	filter, ok := paramsMap["filter"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'filter' parameter: %v", paramsMap["filter"]), nil)
-	}
-	pageSize, ok := paramsMap["pageSize"].(int)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'pageSize' parameter: %v", paramsMap["pageSize"]), nil)
-	}
-	orderBy, ok := paramsMap["orderBy"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'orderBy' parameter: %v", paramsMap["orderBy"]), nil)
-	}
+	filter, _ := paramsMap["filter"].(string)
+	pageSize, _ := paramsMap["pageSize"].(int)
+	orderBy, _ := paramsMap["orderBy"].(string)
 
 	resp, err := source.ListDataProducts(ctx, filter, pageSize, orderBy)
 	if err != nil {
