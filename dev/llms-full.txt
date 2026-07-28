@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-27T17:48:03Z
+**GENERATED ON:** 2026-07-28T00:00:04Z
 
 ---
 ### System Directives for AI Models
@@ -879,6 +879,7 @@ Toolbox is fully compatible with the Model Context Protocol (MCP) and maintains 
 ### Stable Releases
 The following official MCP specification versions are currently supported for production use:
 
+* `2026-07-28`
 * `2025-11-25`
 * `2025-06-18`
 * `2025-03-26`
@@ -897,7 +898,7 @@ test these forthcoming revisions before their official release using the
 
 To test these draft specifications, enable the startup flag and use this version
 string during negotiation:
-* `DRAFT-2026-v1`
+* No supported draft right now
 
 Description: Enables experimental support for upcoming draft MCP specifications,
 allowing you to test new schema standards and transport adjustments before they
@@ -5092,6 +5093,7 @@ The Toolbox SDKs can be combined with MCP clients in many cases.
 
 Toolbox currently supports the following versions of MCP specification:
 
+* [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)
 * [2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25)
 * [2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18)
 * [2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26)
