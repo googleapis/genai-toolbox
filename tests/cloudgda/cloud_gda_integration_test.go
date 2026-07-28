@@ -867,7 +867,7 @@ func runCreateDataAgentInvokeTest(t *testing.T, projectID, datasetID, tableID st
 	if !strings.HasSuffix(nameVal, dataAgentId) {
 		t.Fatalf("expected created agent name to end with %s, got: %s", dataAgentId, nameVal)
 	}
-	
+
 	if displayName, ok := createdAgent["displayName"].(string); !ok || displayName != requestBodyMap["displayName"].(string) {
 		t.Fatalf("expected displayName %s, got: %s", requestBodyMap["displayName"], displayName)
 	}
