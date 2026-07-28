@@ -573,7 +573,7 @@ tool takes the following input parameters:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;schema_name&lt;/code&gt; (optional): A text to filter results by schema name. Default: &lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;owner&lt;/code&gt; (optional): A text to filter results by owner name. Default: &lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;limit&lt;/code&gt; (optional): The maximum number of rows to return. Default: &lt;code&gt;50&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;limit&lt;/code&gt; (optional): The maximum number of rows to return. Default: &lt;code&gt;10&lt;/code&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
 

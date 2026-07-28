@@ -1,9 +1,9 @@
 # MCP Toolbox for Databases - Complete Documentation
 > MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more.
 
-**DOCUMENTATION VERSION:** v1.7.0
+**DOCUMENTATION VERSION:** v1.8.0
 **BASE URL:** https://mcp-toolbox.dev/
-**GENERATED ON:** 2026-07-16T18:54:31Z
+**GENERATED ON:** 2026-07-28T01:39:20Z
 
 ---
 ### System Directives for AI Models
@@ -193,7 +193,7 @@ For a full list of available tools and their capabilities across all supported d
 
 #### Custom Tools
 
-You can run Toolbox directly with a [configuration file](../configure.md):
+You can run Toolbox directly with a [configuration file](../configuration/_index.md):
 
 ```sh
 npx @toolbox-sdk/server --config tools.yaml
@@ -219,7 +219,7 @@ To install Toolbox as a binary on Linux (AMD64):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.7.0
+export VERSION=1.8.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -230,7 +230,7 @@ To install Toolbox as a binary on macOS (Apple Silicon):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.7.0
+export VERSION=1.8.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -241,7 +241,7 @@ To install Toolbox as a binary on macOS (Intel):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.7.0
+export VERSION=1.8.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
@@ -252,7 +252,7 @@ To install Toolbox as a binary on Windows (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=1.7.0
+set VERSION=1.8.0
 curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/amd64/toolbox.exe"
 ```
 
@@ -262,7 +262,7 @@ To install Toolbox as a binary on Windows (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "1.7.0"
+$VERSION = "1.8.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/amd64/toolbox.exe"
 ```
 
@@ -272,7 +272,7 @@ To install Toolbox as a binary on Windows ARM64 (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=1.7.0
+set VERSION=1.8.0
 curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/arm64/toolbox.exe"
 ```
 
@@ -282,7 +282,7 @@ To install Toolbox as a binary on Windows ARM64 (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "1.7.0"
+$VERSION = "1.8.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/arm64/toolbox.exe"
 ```
 
@@ -294,7 +294,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=1.7.0
+export VERSION=1.8.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -313,7 +313,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/mcp-toolbox@v1.7.0
+go install github.com/googleapis/mcp-toolbox@v1.8.0
 ```
 
 {{% /tab %}}
@@ -879,6 +879,7 @@ Toolbox is fully compatible with the Model Context Protocol (MCP) and maintains 
 ### Stable Releases
 The following official MCP specification versions are currently supported for production use:
 
+* `2026-07-28`
 * `2025-11-25`
 * `2025-06-18`
 * `2025-03-26`
@@ -897,7 +898,7 @@ test these forthcoming revisions before their official release using the
 
 To test these draft specifications, enable the startup flag and use this version
 string during negotiation:
-* `DRAFT-2026-v1`
+* No supported draft right now
 
 Description: Enables experimental support for upcoming draft MCP specifications,
 allowing you to test new schema standards and transport adjustments before they
@@ -1106,7 +1107,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -1802,6 +1803,23 @@ name: my_second_toolset
 tools:
   - my_second_tool
   - my_third_tool
+```
+
+### Groups
+
+The `group` kind scopes MCP primitives such as **tools** and **prompts**
+together under one name, with a `description` used as group metadata. A toolset
+is a tools-only group, so existing `kind: toolset` configs keep working
+unchanged. See [Groups](./groups/_index.md) for details.
+
+```yaml
+kind: group
+name: my_group
+description: Tools and prompts for a specific task.
+tools:
+  - my_first_tool
+prompts:
+  - my_first_prompt
 ```
 
 ### Prompts
@@ -3724,6 +3742,12 @@ Annotations appear in the `tools/list` MCP response:
 }
 ```
 
+## URL Parameter Binding
+
+You can bind specific arguments to tools at the transport level using URL query parameters. This allows you to restrict clients to specific database instances, projects, or environments dynamically without modifying the server configuration.
+
+For a comprehensive guide, see the [URL Parameter Binding](./url_parameter_binding.md) documentation.
+
 ## Using tools with MCP Toolbox Client SDKs
 
 Once your tools are defined in your configuration, you can retrieve them directly from your application code.
@@ -3939,6 +3963,27 @@ The client calls the tool without providing `project` in the body:
 
 The server automatically injects `project: "my-project"` and executes the tool.
 
+## Using with MCP Toolbox Client SDKs
+
+When using the MCP Toolbox Client SDKs, you can pass URL parameters directly in the server connection string. The SDK will automatically retain these parameters when communicating with the server.
+
+### Python
+
+```python
+from toolbox_core import ToolboxClient
+
+# Initialize the client with the full scoped connection string
+# The `project` parameter will be sent with all MCP requests
+client = ToolboxClient("http://localhost:5000?project=my-project")
+
+# When loading tools, the 'project' parameter is automatically omitted 
+# from the required schema by the server
+tool = await client.load_tool("my_tool")
+
+# The server will automatically inject `project: "my-project"` upon execution
+result = await tool(other_param="value")
+```
+
 ## Safety Warning
 
 > [!WARNING]
@@ -3964,6 +4009,10 @@ This is especially useful when you are building a system with multiple AI agents
 
 {{< notice tip >}}
 Try organizing your toolsets by the agent's persona or app feature (e.g., `data_analyst_set` vs `customer_support_set`). This keeps your client-side code clean and ensures an agent isn't distracted by tools it doesn't need.
+{{< /notice >}}
+
+{{< notice note >}}
+A toolset is a tools-only [Group](../groups/). `kind: toolset` continues to work unchanged and needs no migration. That said, we recommend migrating to `kind: group` — even for tools-only collections — because a group lets you attach a `description` and scope other MCP primitives such as **prompts** alongside your **tools**.
 {{< /notice >}}
 
 ## Defining Toolsets
@@ -4019,6 +4068,79 @@ allTools, err := client.LoadToolset("", ctx)
 // Load only the tools defined in 'my_second_toolset'
 mySecondToolset, err := client.LoadToolset("my-toolset", ctx)
 ```
+
+
+
+========================================================================
+## Groups
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Documentation > Configuration > Groups
+**URL:** https://mcp-toolbox.dev/documentation/configuration/groups/
+**Description:** Groups let you scope MCP primitives such as tools and prompts together under a single name, with a description used as group metadata.
+
+
+
+A Group is a single named collection that scopes MCP primitives together — currently **tools** and **prompts**, with more (such as resources) planned. Where a [Toolset](../toolsets/) groups only tools, a group bundles these primitives under one name and one MCP endpoint, and carries a `description` that describes the collection.
+
+Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list methods (such as `tools/list` and `prompts/list`) to that group.
+
+## Defining Groups
+
+Declare a group as a `kind: group` document in your configuration file. A group has the following fields:
+
+| Field         | Required | Description                                                              |
+| ------------- | -------- | ------------------------------------------------------------------------ |
+| `name`        | Yes\*    | Unique name for the group. Used as the endpoint path (`/mcp/{name}`).    |
+| `description` | No       | Human-readable description of the group.                                |
+| `tools`       | No       | List of tool names to include in the group.                             |
+| `prompts`     | No       | List of prompt names to include in the group.                           |
+
+\* `name` is required for every named group. The single [default group](#the-default-group) omits it.
+
+As Toolbox adds support for more MCP primitives, groups will gain corresponding fields (for example, `resources`).
+
+```yaml
+kind: group
+name: data_analyst
+description: Tools and prompts for exploratory data analysis.
+tools:
+  - list_tables
+  - execute_sql
+prompts:
+  - summarize_results
+---
+kind: group
+name: admin
+description: Administrative operations.
+tools:
+  - create_user
+  - list_users
+```
+
+## The default group
+
+A single **default (nameless) group** always exists and contains **all** configured primitives (every tool and prompt). Connecting to the default MCP endpoint (`/mcp`) returns everything.
+
+You may declare a `kind: group` document with no `name` to set a `description` for the default group. Because the default group always contains everything, it **cannot** declare `tools`, `prompts`, or any other primitive list:
+
+```yaml
+kind: group
+description: All tools and prompts available on this server.
+```
+
+## Validation rules
+
+At startup, Toolbox validates groups:
+
+- **Unique names.** A named group must have a unique name that satisfies the standard name rules (alphanumeric characters, underscores, and hyphens).
+- **One default group.** Declaring more than one nameless group is an error.
+- **Default group restrictions.** The default group may set only a `description`; declaring `tools`, `prompts`, or any other primitive list on it is an error.
+- **Group wins over a same-named toolset.** If a name is defined by both a `kind: toolset` and a `kind: group`, the group takes precedence and Toolbox logs a warning naming the shadowed toolset.
+
+## Relationship to toolsets
+
+Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations continue to work unchanged — they are treated as groups with tools and no other primitives, so no migration is required. That said, we recommend migrating to a `kind: group` even for tools-only collections: a group lets you attach a `description` and scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.
+
 
 
 
@@ -4245,6 +4367,10 @@ ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
 
 A `prompt` represents a reusable prompt template that can be retrieved and used
 by MCP clients.
+
+{{< notice note >}}
+You can use [Groups](../groups/) to organize prompts into collections. When you connect to a group's endpoint, `prompts/list` returns only the prompts in that group. The default endpoint returns all prompts.
+{{< /notice >}}
 
 A Prompt is essentially a template for a message or a series of messages that
 can be sent to a Large Language Model (LLM). The Toolbox server implements the
@@ -4532,7 +4658,7 @@ message will be displayed.
 
 
 
-The `skills-generate` command allows you to convert a **toolset** into an **Agent Skill**. A toolset is a collection of tools, and the generated skill will contain metadata and execution scripts for all tools within that toolset, complying with the [Agent Skill specification](https://agentskills.io/specification).
+The `skills-generate` command allows you to convert a **toolset** or a **[group](../groups/)** into an **Agent Skill**. The generated skill contains metadata and execution scripts for all tools in the collection, complying with the [Agent Skill specification](https://agentskills.io/specification).
 
 ## Before you begin
 
@@ -4551,6 +4677,7 @@ The basic syntax for the command is:
 ```bash
 toolbox <tool-source> skills-generate \
   --name <skill-name> \
+  --group <group-name> \
   --toolset <toolset-name> \
   --description <description> \
   --output-dir <output-directory> \
@@ -4559,8 +4686,9 @@ toolbox <tool-source> skills-generate \
 ```
 
 - `<tool-source>`: Can be `--config`, `--configs`, `--config-folder`, and `--prebuilt`. See the [CLI Reference](../../../reference/cli.md) for details.
-- `--name`: Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`).
-- `--description`: Description of the generated skill.
+- `--name`: (Optional) Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`). When omitted in a single-skill mode, the name defaults, in order, to: the `--group` name, then the `--toolset` name, then the single `--prebuilt` config name. Any other case (a custom `--config`, or multiple `--prebuilt` configs) requires `--name`.
+- `--description`: (Optional) Description of the generated skill. When a [group](../groups/) defines its own `description`, that takes precedence and `--description` acts as a fallback for groups without one.
+- `--group`: (Optional) Name of the [group](../groups/) to convert into a single skill. Uses the group's `description`, falling back to `--description`. Mutually exclusive with `--toolset`.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, one skill will be generated for every custom toolset defined. If no custom toolsets are defined, it defaults to a single skill containing all tools.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
 - `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
@@ -4618,13 +4746,33 @@ toolbox <tool-source> skills-generate \
 
    In this example, the skill contains two Node.js scripts (`tool_a.js` and `tool_b.js`), each mapping to a tool in the original toolset.
 
+### Example: Generating from a Group
+
+The `--group` flag generates a **single** skill from one named [group](../groups/), scoping the skill to that group's tools. This differs from `--toolset`, and the two flags are **mutually exclusive** — passing both is an error.
+
+Description resolution follows the group's metadata:
+
+- If the group defines a `description`, the generated skill uses it — this takes **precedence** over `--description`.
+- If the group has no `description`, the `--description` flag is used as a fallback.
+
+When `--name` is omitted, the skill is named after the group (e.g., `data_analyst`):
+
+```bash
+toolbox --config tools.yaml skills-generate \
+  --group "data_analyst" \
+  --description "Fallback description if the group has none"
+```
+
+{{< notice note >}}
+Sourcing the description from the group keeps the skill's description and the group's metadata in sync from a single place. To control the generated skill's description, set it on the group rather than passing `--description`.
+{{< /notice >}}
+
 ### Example: Prebuilt Configuration
 
-You can also generate skills from prebuilt toolsets:
+You can also generate skills from prebuilt configurations. When exactly one `--prebuilt` config is provided, `--name` is optional and defaults to the prebuilt config name, so no naming flags are required:
 
 ```bash
 toolbox --prebuilt alloydb-postgres-admin skills-generate \
-  --name "alloydb-postgres-admin" \
   --description "skill for performing administrative operations on alloydb"
 ```
 
@@ -4945,6 +5093,7 @@ The Toolbox SDKs can be combined with MCP clients in many cases.
 
 Toolbox currently supports the following versions of MCP specification:
 
+* [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)
 * [2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25)
 * [2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18)
 * [2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26)
@@ -5138,17 +5287,99 @@ Select your preferred language to explore installation instructions, quickstart 
 
 
 
-<html>
-  <head>
-    <title>Redirecting to the Python SDK API reference</title>
-    <link rel="canonical" href="https://py.mcp-toolbox.dev"/>
-    <meta http-equiv="refresh" content="0;url=https://py.mcp-toolbox.dev"/>
-  </head>
-  <body>
-    <p>If you are not automatically redirected, please <a href="https://py.mcp-toolbox.dev">follow this link to the Python SDK API reference</a>.</p>
-  </body>
-</html>
 
+## Overview
+
+The MCP Toolbox service provides a centralized way to manage and expose tools
+(like API connectors, database query tools, etc.) for use by GenAI applications.
+
+These Python SDKs act as clients for that service. They handle the communication needed to:
+
+* Fetch tool definitions from your running Toolbox instance.
+* Provide convenient Python objects or functions representing those tools.
+* Invoke the tools (calling the underlying APIs/services configured in Toolbox).
+* Handle authentication and parameter binding as needed.
+
+By using these SDKs, you can easily leverage your Toolbox-managed tools directly
+within your Python applications or AI orchestration frameworks.
+
+<a class="btn btn-primary" href="https://py.mcp-toolbox.dev" role="button"><i class="fa-brands fa-python"></i> Python API Reference</a>
+
+## Which Package Should I Use?
+
+Choosing the right package depends on how you are building your application:
+
+* [`toolbox-adk`](adk):
+  Use this package if you are building your application using Google ADK (Agent Development Kit).
+  It provides tools that are directly compatible with the
+  Google ADK ecosystem (`BaseTool` / `BaseToolset` interface) handling authentication propagation, header management, and tool wrapping automatically.
+* [`toolbox-core`](core):
+  Use this package if you are not using LangChain/LangGraph or any other
+  orchestration framework, or if you need a framework-agnostic way to interact
+  with Toolbox tools (e.g., for custom orchestration logic or direct use in
+  Python scripts).
+* [`toolbox-langchain`](langchain):
+  Use this package if you are building your application using the LangChain or
+  LangGraph frameworks. It provides tools that are directly compatible with the
+  LangChain ecosystem (`BaseTool` interface), simplifying integration.
+* [`toolbox-llamaindex`](llamaindex):
+  Use this package if you are building your application using the LlamaIndex framework.
+  It provides tools that are directly compatible with the
+  LlamaIndex ecosystem (`BaseTool` interface), simplifying integration.
+
+
+## Available Packages
+
+This repository hosts the following Python packages. See the package-specific
+README for detailed installation and usage instructions:
+
+| Package | Target Use Case | Integration | Path | Details (README) | PyPI Status |
+| :------ | :---------- | :---------- | :---------------------- | :---------- | :--------- 
+| `toolbox-adk` | Google ADK applications | Google ADK | `packages/toolbox-adk/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-adk/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-adk.svg) |
+| `toolbox-core` | Framework-agnostic / Custom applications | Use directly / Custom | `packages/toolbox-core/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-core.svg) |
+| `toolbox-langchain` | LangChain / LangGraph applications | LangChain / LangGraph | `packages/toolbox-langchain/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-langchain.svg) |
+| `toolbox-llamaindex` | LlamaIndex applications | LlamaIndex | `packages/toolbox-llamaindex/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-llamaindex/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-llamaindex.svg) |
+
+
+## Getting Started
+
+To get started using Toolbox tools with an application, follow these general steps:
+
+1. **Set up and Run the Toolbox Service:**
+
+    Before using the SDKs, you need the main MCP Toolbox service running. Follow
+    the instructions here: [**Toolbox Getting Started
+    Guide**](https://github.com/googleapis/mcp-toolbox?tab=readme-ov-file#getting-started)
+
+2. **Install the Appropriate SDK:**
+
+    Choose the package based on your needs (see "[Which Package Should I Use?](#which-package-should-i-use)" above) and install it:
+
+    ```bash
+    # For the Google ADK Integration
+    pip install google-adk[toolbox]
+
+    # OR
+    
+    # For the core, framework-agnostic SDK
+    pip install toolbox-core
+
+    # OR
+
+    # For LangChain/LangGraph integration
+    pip install toolbox-langchain
+
+    # OR
+
+    # For the LlamaIndex integration
+    pip install toolbox-llamaindex
+    ```
+
+
+
+{{< notice note >}}
+Source code for [python-sdk](https://github.com/googleapis/mcp-toolbox-sdk-python)
+{{< /notice >}}
 
 
 
@@ -7050,17 +7281,71 @@ Configure your OpenTelemetry `TracerProvider` and `MeterProvider` before creatin
 
 
 
-<html>
-  <head>
-    <title>Redirecting to the JavaScript SDK API reference</title>
-    <link rel="canonical" href="https://js.mcp-toolbox.dev"/>
-    <meta http-equiv="refresh" content="0;url=https://js.mcp-toolbox.dev"/>
-  </head>
-  <body>
-    <p>If you are not automatically redirected, please <a href="https://js.mcp-toolbox.dev">follow this link to the JavaScript SDK API reference</a>.</p>
-  </body>
-</html>
+## Overview
 
+The MCP Toolbox service provides a centralized way to manage and expose tools
+(like API connectors, database query tools, etc.) for use by GenAI applications.
+
+These JS SDKs act as clients for that service. They handle the communication needed to:
+
+* Fetch tool definitions from your running Toolbox instance.
+* Provide convenient JS objects or functions representing those tools.
+* Invoke the tools (calling the underlying APIs/services configured in Toolbox).
+* Handle authentication and parameter binding as needed.
+
+By using these SDKs, you can easily leverage your Toolbox-managed tools directly
+within your JS applications or AI orchestration frameworks.
+
+<a class="btn btn-primary" href="https://js.mcp-toolbox.dev" role="button"><i class="fa-brands fa-js"></i> JavaScript API Reference</a>
+
+## Which Package Should I Use?
+
+Choosing the right package depends on how you are building your application:
+
+- [`@toolbox-sdk/core`](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/toolbox-core):
+  This is a framework agnostic way to connect the tools to popular frameworks
+  like Langchain, LlamaIndex and Genkit.
+- [`@toolbox-sdk/adk`](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/toolbox-adk):
+  This package provides a seamless way to connect to [Google ADK TS](https://github.com/google/adk-js).
+
+## Available Packages
+
+This repository hosts the following TS packages. See the package-specific
+README for detailed installation and usage instructions:
+
+| Package | Target Use Case | Integration | Path | Details (README) | Npm Version |
+| :------ | :---------- | :---------- | :---------------------- | :---------- | :---------- |
+| `toolbox-core` | Framework-agnostic / Custom applications | Use directly / Custom | `packages/toolbox-core/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md) | ![npm](https://img.shields.io/npm/v/@toolbox-sdk/core) |
+| `toolbox-adk` | ADK applications | ADK | `packages/toolbox-adk/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-adk/README.md) | ![npm](https://img.shields.io/npm/v/@toolbox-sdk/adk) |
+
+
+## Getting Started
+
+To get started using Toolbox tools with an application, follow these general steps:
+
+1. **Set up and Run the Toolbox Service:**
+
+    Before using the SDKs, you need the main MCP Toolbox service running. Follow
+    the instructions here: [**Toolbox Getting Started
+    Guide**](https://github.com/googleapis/mcp-toolbox?tab=readme-ov-file#getting-started)
+
+2. **Install the Appropriate SDK:**
+
+    Choose the package based on your needs (see "[Which Package Should I Use?](#which-package-should-i-use)" above) and install it:
+
+    ```bash
+    # For the core, framework-agnostic SDK
+    npm install @toolbox-sdk/core
+
+    # For ADK applications
+    npm install @toolbox-sdk/adk
+    ```
+
+
+
+{{< notice note >}}
+Source code for [js-sdk](https://github.com/googleapis/mcp-toolbox-sdk-js)
+{{< /notice >}}
 
 
 
@@ -8096,17 +8381,72 @@ await ai.generate({
 
 
 
-<html>
-  <head>
-    <title>Redirecting to the Go SDK API reference</title>
-    <link rel="canonical" href="https://go.mcp-toolbox.dev"/>
-    <meta http-equiv="refresh" content="0;url=https://go.mcp-toolbox.dev"/>
-  </head>
-  <body>
-    <p>If you are not automatically redirected, please <a href="https://go.mcp-toolbox.dev">follow this link to the Go SDK API reference</a>.</p>
-  </body>
-</html>
+## Overview
 
+The MCP Toolbox service provides a centralized way to manage and expose tools
+(like API connectors, database query tools, etc.) for use by GenAI applications.
+
+The Go SDK act as clients for that service. They handle the communication needed to:
+
+* Fetch tool definitions from your running Toolbox instance.
+* Provide convenient Go structs representing those tools.
+* Invoke the tools (calling the underlying APIs/services configured in Toolbox).
+* Handle authentication and parameter binding as needed.
+
+By using the SDK, you can easily leverage your Toolbox-managed tools directly
+within your Go applications or AI orchestration frameworks.
+
+<a class="btn btn-primary" href="https://go.mcp-toolbox.dev" role="button"><i class="fa-brands fa-golang"></i> Go API Reference</a>
+
+## Which Package Should I Use?
+
+Choosing the right package depends on how you are building your application:
+
+- [**`core`**](core/):
+  This is a framework-agnostic way to connect tools to popular frameworks
+  like Google GenAI, LangChain, etc.
+
+- [**`tbadk`**](tbadk/):
+  This package provides a way to connect tools to ADK Go.
+
+- [**`tbgenkit`**](tbgenkit/):
+  This package provides functionality to convert the Tool fetched using the core package
+  into a Genkit Go compatible tool.
+
+## Available Packages
+
+This repository hosts the following Go packages. See the package-specific
+README for detailed installation and usage instructions:
+
+| Package | Target Use Case | Integration | Path | Details (README) |
+| :------ | :----------| :---------- | :---------------------- | :---------- |
+| [`core`](core/) | Framework-agnostic / Custom applications | Use directly / Custom | `core/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md) |
+| [`tbadk`](tbadk/) | ADK Go | Use directly | `tbadk/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/tbadk/README.md) |
+| [`tbgenkit`](tbgenkit/) | Genkit Go | Along with core | `tbgenkit/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/tbgenkit/README.md) |
+
+## Getting Started
+
+To get started using Toolbox tools with an application, follow these general steps:
+
+1. **Set up and Run the Toolbox Service:**
+
+    Before using the SDKs, you need the MCP Toolbox server running. Follow
+    the instructions here: [**Toolbox Getting Started
+    Guide**](https://github.com/googleapis/mcp-toolbox?tab=readme-ov-file#getting-started)
+
+2. **Install the Appropriate SDK:**
+
+    Choose the package based on your needs (see "[Which Package Should I Use?](#which-package-should-i-use)" above)
+    Use this command to install the SDK module
+
+    ```bash
+    # For the core, framework-agnostic SDK
+    go get github.com/googleapis/mcp-toolbox-sdk-go
+    ```
+
+{{< notice note >}}
+Source code for [Go-sdk](https://github.com/googleapis/mcp-toolbox-sdk-go)
+{{< /notice >}}
 
 
 
@@ -10687,23 +11027,23 @@ After you install Looker in the MCP Store, resources and tools from the server a
 
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -11193,23 +11533,23 @@ expose your developer assistant tools to a MySQL instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -11523,23 +11863,23 @@ expose your developer assistant tools to a Neo4j instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -11850,23 +12190,23 @@ to expose your developer assistant tools to an Oracle instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -12199,23 +12539,23 @@ Omni](https://cloud.google.com/alloydb/omni/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -12556,23 +12896,23 @@ instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -12886,23 +13226,23 @@ to expose your developer assistant tools to a SQLite instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -30511,7 +30851,7 @@ instead of hardcoding your secrets into the configuration file.
 ## Advanced Usage
 
 ### SSRF Protection (SSRF Guard)
-By default, the HTTP source implements strict protection against Server-Side Request Forgery (SSRF) and DNS Rebinding (TOCTOU) attacks. It automatically intercepts, resolves, and blocks connection requests to private IP ranges, loopback ranges (such as `127.0.0.1`), and link-local ranges (e.g. AWS/GCP metadata service at `169.254.169.254`).
+By default, the HTTP source implements strict protection against Server-Side Request Forgery (SSRF) and DNS Rebinding (TOCTOU) attacks. It automatically intercepts, resolves, and blocks connection requests to private IP ranges, loopback ranges (such as `127.0.0.1`), link-local ranges (e.g. AWS/GCP metadata service at `169.254.169.254`), and the RFC 6598 shared address space (`100.64.0.0/10`, commonly used for Kubernetes node and Pod networking).
 
 To override the default protection or block custom ranges, configure `allowPrivateNetworks`, `allowedIpRanges`, and `customBlockedIpRanges`:
 
@@ -31289,6 +31629,28 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+
+## Tool: update_data_product_aspects
+### Request
+1. Use this tool to update metadata aspects (like `overview` or `contacts`) on an existing Data Product Entry.
+2. You must provide `locationId`, `dataProductId`, and `aspects`.
+3. The `aspects` parameter is an array of aspects. Each aspect contains:
+   - `projectId` (string, required): The project ID of the aspect type (use `"dataplex-types"` for system aspects).
+   - `locationId` (string, required): The location ID of the aspect type (use `"global"` for system aspects).
+   - `aspectTypeId` (string, required): The name of the aspect type (e.g. `"overview"` or `"refresh-cadence"`).
+   - `data` (object, required): The aspect payload details.
+     - For `"overview"` (documentation), the `data` object accepts: `content` (string, required, markdown or text), `contentType` (string, optional, `MARKDOWN` or `HTML`), and `links` (array of objects with `url` and `title`).
+     - For `"refresh-cadence"` (contract), the `data` object accepts: `frequency` (string, required: `Daily`, `Weekly`, `Monthly`, etc.), `refreshTime` (string, optional, e.g. `"09:00 PST"`), `thresholdInMinutes` (int, optional), and `cronSchedule` (string, optional).
+### Response
+1. Present the updated entry details including `name`, `entrySource`, `entryType`, and the list of updated `aspects` (each containing `projectId`, `locationId`, `aspectTypeId`, and `data`).
+
+## Tool: get_operation
+### Request
+1. Use this tool to retrieve the status of an asynchronous long-running operation (LRO) like scan creation or data product/asset creation/updation.
+2. You must provide `operationName`, a fully-qualified operation name string having format `projects/{projectId}/locations/{locationId}/operations/{operationId}`.
+### Response
+1. Present whether the operation is done (`done: true` or `done: false`).
+2. Once the operation is completed (`done: true`), the response result will contain either an error (if it failed), or the created/updated resource (like `DataScan`, `DataProduct`, or `DataAsset`).
 ```
 
 
@@ -31374,6 +31736,162 @@ description: Trigger a new data quality scan.
 | type        |  string  |     true     | Must be "dataplex-check-data-quality".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-create-data-asset
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-create-data-asset
+**URL:** https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-asset/
+**Description:** A "dataplex-create-data-asset" tool creates a new Data Asset under an existing Data Product in Knowledge Catalog.
+
+
+
+## About
+
+A `dataplex-create-data-asset` tool creates a new Data Asset under a Data Product in Knowledge Catalog (formerly known as Dataplex). This is a long-running operation, and the tool returns immediately with the operation's location ID and operation ID.
+
+View the [Data Products guide][guide] for more information.
+
+[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+[dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-create-data-asset` tool accepts the following parameters:
+
+| **field**          | **type** | **required** | **description**                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------ | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| locationId         | string   | true         | The location ID (e.g. `us`, `us-central1`) where the parent Data Product is located.                                                                                                                                                                                                                                                                                        |
+| dataProductId      | string   | true         | The unique ID of the parent Data Product.                                                                                                                                                                                                                                                                                                                                   |
+| dataAssetId        | string   | true         | The unique ID of the Data Asset to create.                                                                                                                                                                                                                                                                                                                                  |
+| resourceUri        | string   | true         | The URI of the physical resource associated with the Data Asset (e.g. `//bigquery.googleapis.com/projects/my-project/datasets/my-dataset/tables/my-table`).                                                                                                                                                                                                                 |
+| labels             | map      | false        | The labels associated with the Data Asset. Keys and values must be strings.                                                                                                                                                                                                                                                                                                 |
+| accessGroupConfigs | map      | false        | Map of access group configurations to associate with the Data Asset. Keys represent the access group ID, and the value is a list of string IAM role names (e.g. `{"test-group": ["roles/bigquery.dataViewer"]}`). To find the list of supported roles that can be granted on the resource, refer to the [roles:queryGrantableRoles][query-grantable-roles-docs] API method. |
+
+[query-grantable-roles-docs]: https://cloud.google.com/iam/docs/reference/rest/v1/roles/queryGrantableRoles
+
+## Example
+
+```yaml
+kind: tool
+name: create_data_asset
+type: dataplex-create-data-asset
+source: my-dataplex-source
+description: Use this tool to create a Data Asset.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| ----------- | -------- | ------------ | -------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-create-data-asset".              |
+| source      | string   | true         | Name of the source the tool should execute on.     |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-create-data-product
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-create-data-product
+**URL:** https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-product/
+**Description:** A "dataplex-create-data-product" tool allows to create a new Data Product.
+
+
+
+## About
+
+A `dataplex-create-data-product` tool creates a new Data Product in Knowledge Catalog (formerly known as Dataplex). This is a long-running operation, and the tool returns immediately with the operation's location ID and operation ID.
+
+View the [Data Products guide][guide] for more information.
+
+[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+[dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-create-data-product` tool accepts the following parameters:
+
+| **field**     | **type**         | **required** | **description**                                                                                                                                                                                            |
+| ------------- | ---------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| locationId    | string           | true         | The location ID (e.g. `us`, `us-central1`) where the Data Product should be created.                                                                                                                       |
+| dataProductId | string           | false        | The unique ID of the Data Product to create. If not specified, the backend will auto-generate a unique ID.                                                                                                 |
+| displayName   | string           | true         | The display name of the Data Product.                                                                                                                                                                      |
+| description   | string           | false        | The description of the Data Product.                                                                                                                                                                       |
+| ownerEmails   | array of strings | true         | The list of owner emails for the Data Product.                                                                                                                                                             |
+| accessGroups  | array of objects | false        | List of access groups to associate with the Data Product. Each group object can contain: `id` (required), `displayName` (required), `description`, and at least one of `googleGroup` and `serviceAccount`. |
+
+## Example
+
+```yaml
+kind: tool
+name: create_data_product
+type: dataplex-create-data-product
+source: my-dataplex-source
+description: Use this tool to create a Data Product.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| ----------- | -------- | ------------ | -------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-create-data-product".            |
+| source      | string   | true         | Name of the source the tool should execute on.     |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
 
 
 
@@ -32046,11 +32564,12 @@ description: Fetch results of a completed metadata discovery scan.
 
 ## About
 
-A `dataplex-get-operation` tool retrieves the status of a Dataplex long-running operation (LRO) like scan creation.
+A `dataplex-get-operation` tool retrieves the status of a Dataplex long-running operation (LRO) (such as scan creation, data product creation/update, or data asset creation/update).
 
-Poll this tool until the `done` field from the response is `true`. Once completed, the `response` field will contain the created DataScan resource, from which you can extract the `scanId` (the last part of the `name` field, e.g. `nq-doc-1234`) to pass to `get_run_status` and get results.
-WARNING: This only tracks the creation of the scan template, NOT the actual background execution.
+Poll this tool until the `done` field from the response is `true`. Once completed, the `response` field will contain the details of the created or updated resource (such as `DataScan`, `DataProduct`, or `DataAsset`). 
+For scan template creation, you can extract the `scanId` (the last part of the `name` field, e.g. `nq-doc-1234`) to pass to `get_run_status` and retrieve execution results.
 
+WARNING: For scans, this only tracks the creation of the scan template, NOT the actual background execution.
 
 ## Compatible Sources
 
@@ -32081,9 +32600,9 @@ applying IAM permissions and roles to an identity.
 
 The `dataplex-get-operation` tool accepts the following parameters:
 
-| **field** | **type** | **required** | **description** |
-| --------- | :------: | :----------: | --------------- |
-| operationName | string | true | The full operation resource name (format: `projects/{project}/locations/{location}/operations/{operation_id}`). |
+| **field**     | **type** | **required** | **description**                                                                                                    |
+| ------------- | :------: | :----------: | ------------------------------------------------------------------------------------------------------------------ |
+| operationName |  string  |     true     | The full operation resource name (format: `projects/{projectId}/locations/{locationId}/operations/{operationId}`). |
 
 ## Example
 
@@ -32098,8 +32617,8 @@ description: Check the status of a long-running scan template creation.
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
-|-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-get-operation".                   |
+| ----------- | :------: | :----------: | -------------------------------------------------- |
+| type        |  string  |     true     | Must be "dataplex-get-operation".                  |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 
@@ -32689,162 +33208,6 @@ description: Use this tool to get all the entries based on the provided query.
 
 
 ========================================================================
-## dataplex-create-data-asset
-========================================================================
-**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-create-data-asset
-**URL:** https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-asset/
-**Description:** A "dataplex-create-data-asset" tool creates a new Data Asset under an existing Data Product in Knowledge Catalog.
-
-
-
-## About
-
-A `dataplex-create-data-asset` tool creates a new Data Asset under a Data Product in Knowledge Catalog (formerly known as Dataplex). This is a long-running operation, and the tool returns immediately with the operation's location ID and operation ID.
-
-View the [Data Products guide][guide] for more information.
-
-[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
-
-## Compatible Sources
-
-{{< compatible-sources >}}
-
-## Requirements
-
-### IAM Permissions
-
-Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
-user and group access to Knowledge Catalog resources. Toolbox will use your
-[Application Default Credentials (ADC)][adc] to authorize and authenticate when
-interacting with [Knowledge Catalog][dataplex-docs].
-
-In addition to [setting the ADC for your server][set-adc], you need to ensure
-the IAM identity has been given the correct IAM permissions for the tasks you
-intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
-and [Knowledge Catalog IAM roles][iam-roles] for more information on
-applying IAM permissions and roles to an identity.
-
-[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
-[adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
-[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
-[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
-[dataplex-docs]: https://cloud.google.com/dataplex
-
-## Parameters
-
-The `dataplex-create-data-asset` tool accepts the following parameters:
-
-| **field**          | **type** | **required** | **description**                                                                                                                                                                                                                                                                                                                                                             |
-| ------------------ | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| locationId         | string   | true         | The location ID (e.g. `us`, `us-central1`) where the parent Data Product is located.                                                                                                                                                                                                                                                                                        |
-| dataProductId      | string   | true         | The unique ID of the parent Data Product.                                                                                                                                                                                                                                                                                                                                   |
-| dataAssetId        | string   | true         | The unique ID of the Data Asset to create.                                                                                                                                                                                                                                                                                                                                  |
-| resourceUri        | string   | true         | The URI of the physical resource associated with the Data Asset (e.g. `//bigquery.googleapis.com/projects/my-project/datasets/my-dataset/tables/my-table`).                                                                                                                                                                                                                 |
-| labels             | map      | false        | The labels associated with the Data Asset. Keys and values must be strings.                                                                                                                                                                                                                                                                                                 |
-| accessGroupConfigs | map      | false        | Map of access group configurations to associate with the Data Asset. Keys represent the access group ID, and the value is a list of string IAM role names (e.g. `{"test-group": ["roles/bigquery.dataViewer"]}`). To find the list of supported roles that can be granted on the resource, refer to the [roles:queryGrantableRoles][query-grantable-roles-docs] API method. |
-
-[query-grantable-roles-docs]: https://cloud.google.com/iam/docs/reference/rest/v1/roles/queryGrantableRoles
-
-## Example
-
-```yaml
-kind: tool
-name: create_data_asset
-type: dataplex-create-data-asset
-source: my-dataplex-source
-description: Use this tool to create a Data Asset.
-```
-
-## Reference
-
-| **field**   | **type** | **required** | **description**                                    |
-| ----------- | -------- | ------------ | -------------------------------------------------- |
-| type        | string   | true         | Must be "dataplex-create-data-asset".              |
-| source      | string   | true         | Name of the source the tool should execute on.     |
-| description | string   | true         | Description of the tool that is passed to the LLM. |
-
-
-
-
-========================================================================
-## dataplex-create-data-product
-========================================================================
-**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-create-data-product
-**URL:** https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-product/
-**Description:** A "dataplex-create-data-product" tool allows to create a new Data Product.
-
-
-
-## About
-
-A `dataplex-create-data-product` tool creates a new Data Product in Knowledge Catalog (formerly known as Dataplex). This is a long-running operation, and the tool returns immediately with the operation's location ID and operation ID.
-
-View the [Data Products guide][guide] for more information.
-
-[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
-
-## Compatible Sources
-
-{{< compatible-sources >}}
-
-## Requirements
-
-### IAM Permissions
-
-Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
-user and group access to Knowledge Catalog resources. Toolbox will use your
-[Application Default Credentials (ADC)][adc] to authorize and authenticate when
-interacting with [Knowledge Catalog][dataplex-docs].
-
-In addition to [setting the ADC for your server][set-adc], you need to ensure
-the IAM identity has been given the correct IAM permissions for the tasks you
-intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
-and [Knowledge Catalog IAM roles][iam-roles] for more information on
-applying IAM permissions and roles to an identity.
-
-[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
-[adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
-[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
-[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
-[dataplex-docs]: https://cloud.google.com/dataplex
-
-## Parameters
-
-The `dataplex-create-data-product` tool accepts the following parameters:
-
-| **field**     | **type**         | **required** | **description**                                                                                                                                                                                            |
-| ------------- | ---------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| locationId    | string           | true         | The location ID (e.g. `us`, `us-central1`) where the Data Product should be created.                                                                                                                       |
-| dataProductId | string           | false        | The unique ID of the Data Product to create. If not specified, the backend will auto-generate a unique ID.                                                                                                 |
-| displayName   | string           | true         | The display name of the Data Product.                                                                                                                                                                      |
-| description   | string           | false        | The description of the Data Product.                                                                                                                                                                       |
-| ownerEmails   | array of strings | true         | The list of owner emails for the Data Product.                                                                                                                                                             |
-| accessGroups  | array of objects | false        | List of access groups to associate with the Data Product. Each group object can contain: `id` (required), `displayName` (required), `description`, and at least one of `googleGroup` and `serviceAccount`. |
-
-## Example
-
-```yaml
-kind: tool
-name: create_data_product
-type: dataplex-create-data-product
-source: my-dataplex-source
-description: Use this tool to create a Data Product.
-```
-
-## Reference
-
-| **field**   | **type** | **required** | **description**                                    |
-| ----------- | -------- | ------------ | -------------------------------------------------- |
-| type        | string   | true         | Must be "dataplex-create-data-product".            |
-| source      | string   | true         | Name of the source the tool should execute on.     |
-| description | string   | true         | Description of the tool that is passed to the LLM. |
-
-
-
-
-========================================================================
 ## dataplex-update-data-asset
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-update-data-asset
@@ -33002,6 +33365,125 @@ description: Use this tool to update a Data Product.
 
 
 ========================================================================
+## dataplex-update-data-product-aspects
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-update-data-product-aspects
+**URL:** https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-update-data-product-aspects/
+**Description:** A "dataplex-update-data-product-aspects" tool updates aspects for an existing Data Product Entry in Knowledge Catalog.
+
+
+
+## About
+
+A `dataplex-update-data-product-aspects` tool updates aspects on an existing Data Product Entry in Knowledge Catalog (formerly known as Dataplex). This tool operates on the catalog entry associated with the Data Product, allowing you to add or modify metadata aspects in a single request. 
+
+View the [Data Products guide][guide] for more information.
+
+[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+[dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-update-data-product-aspects` tool accepts the following parameters:
+
+| **field**     | **type**         | **required** | **description**                                                                                                                                                                                                                                            |
+| ------------- | ---------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| locationId    | string           | true         | The location ID (e.g. `us`, `us-central1`) of the Data Product.                                                                                                                                                                                         |
+| dataProductId | string           | true         | The unique ID of the Data Product.                                                                                                                                                                                                                      |
+| aspects       | array of objects | true         | The list of aspects to add or update on the Data Product Entry. Each object contains `projectId` (string, required), `locationId` (string, required), `aspectTypeId` (string, required), and `data` (object, optional, JSON map of the aspect details). |
+
+### Aspect Object Fields
+
+Each object in the `aspects` array must have the following fields:
+
+*   **`projectId`**: The project ID of the aspect type. The value is `"dataplex-types"` for system aspects (like `overview` and `refresh-cadence`).
+*   **`locationId`**: The location of the aspect type. The value is `"global"` for system aspects (like `overview` and `refresh-cadence`).
+*   **`aspectTypeId`**: The unique name of the aspect type (e.g. `"overview"` or `"refresh-cadence"`).
+*   **`data`**: The JSON payload conforming to the aspect type's schema:
+    *   **System `overview` (Documentation) Schema**:
+        *   `content` (string, required): The detailed documentation content (markdown or plain text).
+        *   `contentType` (string, optional): The content type format. Values: `MARKDOWN`, `HTML`.
+        *   `links` (array of objects, optional): List of relevant URL links. Each link object contains `url` (string, required) and `title` (string, optional).
+    *   **System `refresh-cadence` (Contract) Schema**:
+        *   `frequency` (string, required): How often the data is updated. Values: `Daily`, `Weekly`, `Monthly`, `Quarterly`, `Half-Yearly`, `Yearly`.
+        *   `refreshTime` (string, optional): Time of day when the data is updated (e.g. `"09:00 PST"`).
+        *   `thresholdInMinutes` (int, optional): Delinquency threshold in minutes (e.g. `15`).
+        *   `cronSchedule` (string, optional): Optional cron schedule expression (e.g. `"0 * * * *"`).
+
+## Example
+
+```yaml
+kind: tool
+name: update_data_product_aspects
+type: dataplex-update-data-product-aspects
+source: my-dataplex-source
+description: Use this tool to update aspects (like overview or contacts) on a Data Product Entry.
+```
+
+## Output Format
+
+The tool returns the updated catalog entry details and aspects:
+
+```json
+{
+  "locationId": "us",
+  "dataProductId": "my-data-product",
+  "entrySource": {
+    "resource": "projects/...",
+    "displayName": "My Data Product Resource",
+    "description": "Resource details"
+  },
+  "entryType": "projects/dataplex-types/locations/global/entryTypes/data-product",
+  "aspects": [
+    {
+      "projectId": "dataplex-types",
+      "locationId": "global",
+      "aspectTypeId": "overview",
+      "data": {
+        "content": "Updated description content"
+      }
+    }
+  ]
+}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                      |
+| ----------- | -------- | ------------ | ---------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-update-data-product-aspects".      |
+| source      | string   | true         | Name of the source the tool should execute on.       |
+| description | string   | true         | Description of the tool that is passed to the LLM.   |
+
+
+
+
+========================================================================
 ## Prebuilt Configs
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Prebuilt Configs
@@ -33043,6 +33525,7 @@ description: Use this tool to update a Data Product.
     *   `update_data_product`: Updates an existing Data Product.
     *   `create_data_asset`: Creates a new Data Asset under a Data Product.
     *   `update_data_asset`: Updates an existing Data Asset under a Data Product.
+    *   `update_data_product_aspects`: Updates aspects (like documentation or contracts) on a Data Product Entry.
     *   `generate_data_insights`: Creates a new Dataplex Data Documentation scan template and triggers the run.
     *   `get_data_insights`: Retrieves the final generated data insights for a completed scan.
     *   `generate_data_profile`: Creates a new Dataplex Data Profile scan template and triggers the run.
@@ -33055,7 +33538,7 @@ description: Use this tool to update a Data Product.
     *   `get_run_status`: Retrieves the execution status of the latest background job run.
 *   **Toolsets:**
     *   `discovery`: Metadata discovery and search toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `search_dq_scans`).
-    *   `data-products`: Data Products and Data Assets curation and management toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `list_data_products`, `get_data_product`, `list_data_assets`, `get_data_asset`, `create_data_product`, `update_data_product`, `create_data_asset`, `update_data_asset`).
+    *   `data-products`: Data Products and Data Assets curation and management toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `list_data_products`, `get_data_product`, `list_data_assets`, `get_data_asset`, `create_data_product`, `update_data_product`, `create_data_asset`, `update_data_asset`, `update_data_product_aspects`, `get_operation`).
     *   `enrich`: Metadata enrichment pipeline orchestration and execution toolset (`search_entries`, `lookup_entry`, `lookup_context`, `generate_data_insights`, `get_data_insights`, `generate_data_profile`, `get_data_profile`, `discover_metadata`, `get_discovery_results`, `check_data_quality`, `get_data_quality_results`, `get_operation`, `get_run_status`).
 
 
@@ -34527,6 +35010,79 @@ description: |
 |-------------|:--------:|:------------:|----------------------------------------------------|
 | type        |  string  |     true     | Must be "looker-get-explores".                     |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## looker-get-field-value-suggestions
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Looker > Tools > looker-get-field-value-suggestions
+**URL:** https://mcp-toolbox.dev/integrations/looker/tools/looker-get-field-value-suggestions/
+**Description:** A "looker-get-field-value-suggestions" tool retrieves distinct value suggestions for a given field in an explore.
+
+
+
+## About
+
+The `looker-get-field-value-suggestions` tool retrieves distinct value suggestions for a given field in an explore.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+| **field** | **type** | **required** | **description**                                     |
+| --------- | :------: | :----------: | --------------------------------------------------- |
+| model     |  string  |     true     | The name of the LookML model.                       |
+| explore   |  string  |     true     | The name of the explore containing the field.       |
+| field     |  string  |     true     | The name of the field to get suggestions for.       |
+| term      |  string  |    false     | Optional search term pattern to filter suggestions. |
+| filters   |  object  |    false     | Optional filters to enable conditional suggestions. |
+
+## Example
+
+```yaml
+kind: tool
+name: get_field_value_suggestions
+type: looker-get-field-value-suggestions
+source: looker-source
+description: |
+  This tool retrieves distinct value suggestions for a field, facilitating accurate filtering in downstream queries.
+
+  Required Parameters:
+  - model: The name of the LookML model, obtained from `get_models`.
+  - explore: The name of the explore containing the field, obtained from `get_explores`.
+  - field: The name of the field to get suggestions for, obtained from `get_dimensions`.
+
+  Optional Parameters:
+  - term: Optional search term pattern to filter suggestions. Evaluated as `%term%`.
+  - filters: Optional filters to enable conditional suggestions (restricting suggestions based on other field values), represented as a map of field names to filter expressions, e.g., `{"users.state": "CA", "users.age": ">=60"}`.
+
+  Output:
+  - A JSON object with a "suggestions" key containing an array of string values representing suggestions.
+```
+
+## Output Format
+
+The output is a JSON object with a "suggestions" key containing an array of string values.
+
+Example:
+
+```json
+{
+  "suggestions": ["CA", "NY", "TX", "WA"]
+}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| ----------- | :------: | :----------: | -------------------------------------------------- |
+| type        |  string  |     true     | Must be "looker-get-field-value-suggestions".      |
+| source      |  string  |     true     | Name of the source Looker instance.                |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 
 
@@ -36726,7 +37282,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -36887,7 +37443,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -37010,7 +37566,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.7.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.8.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -37122,6 +37678,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     *   `get_measures`: Retrieves the list of measures in an explore.
     *   `get_filters`: Retrieves the list of filters in an explore.
     *   `get_parameters`: Retrieves the list of parameters in an explore.
+    *   `get_field_value_suggestions`: Retrieves distinct value suggestions for a field.
     *   `query`: Runs a query against the LookML model.
     *   `query_sql`: Generates the SQL for a query.
     *   `query_url`: Generates a URL for a query in Looker.
@@ -38803,7 +39360,7 @@ This tool takes 2 optional input parameters:
 
 - `min_duration_secs` (optional): Only show queries running for at least this
   long in seconds, default `0`.
-- `limit` (optional):  max number of queries to return, default `10`.
+- `limit` (optional):  max number of queries to return, default `100`.
 
 ## Compatible Sources
 
@@ -38816,7 +39373,7 @@ kind: tool
 name: list_active_queries
 type: mysql-list-active-queries
 source: my-mysql-instance
-description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
+description: Lists top N (default 100) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
 ```
 
 The response is a json array with the following fields:
@@ -41670,7 +42227,7 @@ tool takes the following input parameters:
 
 - `schema_name` (optional): A text to filter results by schema name. Default: `""`
 - `owner` (optional): A text to filter results by owner name. Default: `""`
-- `limit` (optional): The maximum number of rows to return. Default: `50`.
+- `limit` (optional): The maximum number of rows to return. Default: `10`.
 
 ## Compatible Sources
 
@@ -44247,7 +44804,6 @@ instead of hardcoding your secrets into the configuration file.
 | schema    |  string  |     true     | Name of the schema to use (e.g. "my_schema").                          |
 | warehouse |  string  |     false    | The virtual warehouse to use. Defaults to "COMPUTE_WH".                |
 | role      |  string  |     false    | The security role to use. Defaults to "ACCOUNTADMIN".                  |
-| timeout   |  integer |     false    | The connection timeout in seconds. Defaults to 60.                     |
 
 
 
@@ -47729,7 +48285,7 @@ For more detailed instructions, see [Invoke Tools via CLI](../documentation/conf
 <details>
 <summary><code>skills-generate</code></summary>
 
-Generates a skill package from a specified toolset. Each tool in the toolset will have a corresponding Node.js execution script in the generated skill.
+Generates a skill package from a specified toolset or group. Each tool in the collection will have a corresponding Node.js execution script in the generated skill.
 
 **Syntax:**
 
@@ -47739,8 +48295,9 @@ toolbox skills-generate --name <name> --description <description> --toolset <too
 
 **Flags:**
 
-- `--name`: Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`).
-- `--description`: Description of the generated skill.
+- `--name`: (Optional) Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`). When omitted in a single-skill mode, the name defaults, in order, to: the `--group` name, then the `--toolset` name, then the single `--prebuilt` config name; any other case requires `--name`.
+- `--description`: (Optional) Description of the generated skill. When a group defines its own `description`, that takes precedence and `--description` acts as a fallback.
+- `--group`: (Optional) Name of the group to convert into a single skill. Uses the group's `description`, falling back to `--description`. Mutually exclusive with `--toolset`.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, one skill will be generated for every custom toolset defined. If no custom toolsets are defined, it defaults to a single skill containing all tools.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
 - `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
@@ -47986,6 +48543,32 @@ MCP Toolbox and [Google Cloud MCP Servers](https://cloud.google.com/blog/product
 
 - **Google Cloud MCP Servers** provides a managed, enterprise-grade experience with necessary stability and governance, offering a "Zero Ops" experience ideal for **[Build-Time Developers ("AI-Assisted")](../documentation/getting-started/_index.md#build-time-vs-runtime-implementation)** who need immediate, secure integration with Google Cloud services without any setup.
 - **MCP Toolbox** is open-source and self-hosted, allowing for rapid prototyping. It is designed for **[Run-Time Developers](../documentation/getting-started/_index.md#build-time-vs-runtime-implementation)** who need to build custom agents/applications, deploy custom tools, and connect to non-Google or on-premises data sources. MCP Toolbox is focused on delivering the most up to date and cutting-edge features quickly before they might be available in managed environments.
+
+
+
+
+========================================================================
+## Toolbox Client SDK API Reference
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Reference > Toolbox Client SDK API Reference
+**URL:** https://mcp-toolbox.dev/reference/sdk-api-reference/
+**Description:** Auto-generated API reference sites for the MCP Toolbox client SDKs.
+
+
+
+Each MCP Toolbox client SDK publishes an auto-generated API reference site
+documenting its public classes, functions, and types. Use these when you need the
+exact signatures and symbol-level details for a package.
+
+For usage guides, quickstarts, and framework-specific examples, see
+[Toolbox SDKs](../documentation/connect-to/toolbox-sdks/_index.md).
+
+| Language | API Reference | Source |
+| :--- | :--- | :--- |
+| <i class="fa-brands fa-python"></i> Python | [py.mcp-toolbox.dev](https://py.mcp-toolbox.dev) | [mcp-toolbox-sdk-python](https://github.com/googleapis/mcp-toolbox-sdk-python) |
+| <i class="fa-brands fa-js"></i> JavaScript / TypeScript | [js.mcp-toolbox.dev](https://js.mcp-toolbox.dev) | [mcp-toolbox-sdk-js](https://github.com/googleapis/mcp-toolbox-sdk-js) |
+| <i class="fa-brands fa-golang"></i> Go | [go.mcp-toolbox.dev](https://go.mcp-toolbox.dev) | [mcp-toolbox-sdk-go](https://github.com/googleapis/mcp-toolbox-sdk-go) |
+| <i class="fa-brands fa-java"></i> Java | _No dedicated site yet_ | [mcp-toolbox-sdk-java](https://github.com/googleapis/mcp-toolbox-sdk-java) |
 
 
 

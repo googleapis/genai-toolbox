@@ -104,7 +104,7 @@ This tool takes 2 optional input parameters:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;min_duration_secs&lt;/code&gt; (optional): Only show queries running for at least this
 long in seconds, default &lt;code&gt;0&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;limit&lt;/code&gt; (optional): max number of queries to return, default &lt;code&gt;10&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;limit&lt;/code&gt; (optional): max number of queries to return, default &lt;code&gt;100&lt;/code&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
 
