@@ -16,6 +16,7 @@ package bigqueryexecutesql_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -28,8 +29,10 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	bqutil "github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryexecutesql"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -274,6 +277,133 @@ func TestInvokeDatasetRestrictions(t *testing.T) {
 
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestInvokeRunSqlErrorClassification(t *testing.T) {
+	// The dry run always succeeds; the actual run then fails the way the
+	// provider said it would, and the failure must keep its classification
+	// instead of collapsing into an opaque 500.
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && strings.Contains(r.URL.Path, "/jobs") {
+			var body struct {
+				Configuration struct {
+					Query struct {
+						Query string `json:"query"`
+					} `json:"query"`
+				} `json:"configuration"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			resp := map[string]any{
+				"kind":         "bigquery#job",
+				"jobReference": map[string]string{"projectId": "test-project", "jobId": "mock-job-id"},
+				"status":       map[string]any{"state": "DONE"},
+				"configuration": map[string]any{
+					"query": map[string]any{"query": body.Configuration.Query.Query},
+				},
+				"statistics": map[string]any{
+					"creationTime": "123456789",
+					"startTime":    "123456789",
+					"endTime":      "123456789",
+					"query":        map[string]any{"statementType": "SELECT"},
+				},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(resp)
+			return
+		}
+		http.Error(w, "not implemented", http.StatusNotFound)
+	}))
+	defer mockServer.Close()
+
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("failed to create context with logger: %v", err)
+	}
+
+	bqClient, err := bigqueryapi.NewClient(ctx, "test-project", option.WithEndpoint(mockServer.URL), option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("failed to create mocked BigQuery client: %v", err)
+	}
+	restService, err := bigqueryrestapi.NewService(ctx, option.WithEndpoint(mockServer.URL), option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("failed to create mocked BigQuery REST service: %v", err)
+	}
+
+	cfg := bigqueryexecutesql.Config{
+		ConfigBase: tools.ConfigBase{Name: "execute_sql_tool", Description: "Execute SQL"},
+		Type:       "bigquery-execute-sql",
+		Source:     "my-bq-source",
+	}
+	tool, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	tcs := []struct {
+		desc     string
+		runErr   error
+		wantCode int // 0 means the error should not carry an HTTP status (AgentError)
+		wantSub  string
+	}{
+		{
+			desc: "access denied keeps its 403 instead of an opaque 500",
+			runErr: &googleapi.Error{
+				Code:    http.StatusForbidden,
+				Message: "Access Denied: Table test-project:secret_dataset.secret_table: User does not have bigquery.tables.getData permission",
+			},
+			wantCode: http.StatusForbidden,
+			wantSub:  "Access Denied",
+		},
+		{
+			desc: "other provider failures surface as a readable agent error",
+			runErr: &googleapi.Error{
+				Code:    http.StatusBadRequest,
+				Message: "Not found: Table test-project:missing_dataset.missing_table was not found in location US",
+			},
+			wantCode: 0,
+			wantSub:  "Not found",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			testSrc := &bqutil.MockSource{Client: bqClient, Service: restService, RunSQLError: tc.runErr}
+
+			params, err := tool.GetParameters(testSrc)
+			if err != nil {
+				t.Fatalf("failed to get parameters: %v", err)
+			}
+			paramVals, err := parameters.ParseParams(params, map[string]any{"sql": "SELECT 1"}, nil)
+			if err != nil {
+				t.Fatalf("unexpected error parsing parameters: %v", err)
+			}
+
+			_, err = tool.Invoke(ctx, testSrc, paramVals, "")
+			if err == nil {
+				t.Fatalf("expected error, got nil")
+			}
+			if !strings.Contains(err.Error(), tc.wantSub) {
+				t.Errorf("expected the provider cause to surface, got %v", err)
+			}
+			if tc.wantCode != 0 {
+				var csErr *util.ClientServerError
+				if !errors.As(err, &csErr) {
+					t.Fatalf("expected ClientServerError, got %T (%v)", err, err)
+				}
+				if csErr.Code != tc.wantCode {
+					t.Errorf("expected status %d, got %d", tc.wantCode, csErr.Code)
+				}
+			} else {
+				var agentErr *util.AgentError
+				if !errors.As(err, &agentErr) {
+					t.Fatalf("expected AgentError, got %T (%v)", err, err)
+				}
 			}
 		})
 	}
