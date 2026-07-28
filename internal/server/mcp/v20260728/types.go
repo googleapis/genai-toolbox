@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package vdraft
+package v20260728
 
 import (
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
@@ -24,7 +24,7 @@ import (
 const SERVER_NAME = "Toolbox"
 
 // PROTOCOL_VERSION is the version of the MCP protocol in this package.
-const PROTOCOL_VERSION = util.VERSION_DRAFT
+const PROTOCOL_VERSION = util.VERSION_20260728
 
 // methods that are supported.
 const (
@@ -33,6 +33,8 @@ const (
 	TOOLS_CALL      = "tools/call"
 	PROMPTS_LIST    = "prompts/list"
 	PROMPTS_GET     = "prompts/get"
+	GROUPS_LIST     = "groups/list"
+	GROUPS_GET      = "groups/get"
 )
 
 /* Request Params */
@@ -494,4 +496,46 @@ type PromptArgument struct {
 type PromptMessage struct {
 	Role    string      `json:"role"`
 	Content TextContent `json:"content"`
+}
+
+/* Groups */
+
+// ListGroupsRequest is sent from the client to request the list of groups the
+// server has.
+type ListGroupsRequest struct {
+	PaginatedRequest
+}
+
+// Group is a single entry in a groups/list response.
+type Group struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+}
+
+// ListGroupsResult is the server's response to a groups/list request.
+type ListGroupsResult struct {
+	jsonrpc.Result
+	Groups []Group `json:"groups"`
+}
+
+// GetGroupRequest is sent from the client to request a single group's contents.
+type GetGroupRequest struct {
+	jsonrpc.Request
+	Params GetGroupRequestParams `json:"params"`
+}
+
+// GetGroupRequestParams contains the parameters for a groups/get request.
+type GetGroupRequestParams struct {
+	RequestParams
+	Name string `json:"name"`
+}
+
+// GetGroupResult is the server's response to a groups/get request: the group's
+// tools and prompts. The description is intentionally omitted; it is exposed only
+// through groups/list.
+type GetGroupResult struct {
+	jsonrpc.Result
+	Name    string   `json:"name"`
+	Tools   []Tool   `json:"tools"`
+	Prompts []Prompt `json:"prompts"`
 }

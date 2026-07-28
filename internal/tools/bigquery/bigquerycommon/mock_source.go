@@ -87,13 +87,3 @@ func (m *MockSource) RunSQL(ctx context.Context, client *bigqueryapi.Client, sql
 	m.CalledSQL = sql
 	return m.RunSQLResult, m.RunSQLError
 }
-
-// MockSourceProvider is a reusable mock implementation of tools.SourceProvider.
-type MockSourceProvider struct {
-	tools.SourceProvider
-	Source sources.Source
-}
-
-func (m *MockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.Source, true
-}
