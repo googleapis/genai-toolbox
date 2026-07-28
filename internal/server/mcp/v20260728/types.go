@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package vdraft
+package v20260728
 
 import (
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
@@ -24,7 +24,7 @@ import (
 const SERVER_NAME = "Toolbox"
 
 // PROTOCOL_VERSION is the version of the MCP protocol in this package.
-const PROTOCOL_VERSION = util.VERSION_DRAFT
+const PROTOCOL_VERSION = util.VERSION_20260728
 
 // methods that are supported.
 const (

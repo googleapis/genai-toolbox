@@ -54,7 +54,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/http"
 	"github.com/googleapis/mcp-toolbox/internal/util"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Helper function to create temporary self-signed certs for the test
@@ -217,6 +216,169 @@ func TestServe(t *testing.T) {
 		})
 	}
 
+}
+
+func TestHealthz(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	addr, port := "127.0.0.1", 0
+	cfg := server.ServerConfig{
+		Version:      "0.0.0",
+		Address:      addr,
+		Port:         port,
+		AllowedHosts: []string{"*"},
+	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	}()
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("unable to initialize server: %v", err)
+	}
+
+	err = s.Listen(ctx, "", "")
+	if err != nil {
+		t.Fatalf("unable to start server: %v", err)
+	}
+
+	errCh := make(chan error)
+	go func() {
+		defer close(errCh)
+		if serveErr := s.Serve(ctx); serveErr != nil {
+			errCh <- serveErr
+		}
+	}()
+
+	url := fmt.Sprintf("http://%s/healthz", s.Addr())
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("error when sending a request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", resp.StatusCode)
+	}
+
+	if ct := resp.Header.Get("Content-Type"); ct != "application/json" {
+		t.Fatalf("expected Content-Type application/json, got %q", ct)
+	}
+
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("error reading from request body: %s", err)
+	}
+
+	var body map[string]string
+	if err := json.Unmarshal(raw, &body); err != nil {
+		t.Fatalf("expected JSON body, got %q: %s", string(raw), err)
+	}
+	if body["status"] != "ok" {
+		t.Fatalf(`expected {"status":"ok"}, got %q`, string(raw))
+	}
+}
+
+// TestHealthzBypassesHostCheck verifies that /healthz is reachable even when
+// AllowedHosts does not include the request host. Container probes (Kubernetes,
+// Docker, Cloud Run) commonly hit the endpoint via the pod IP or localhost,
+// so the strict host validation must not block them.
+func TestHealthzBypassesHostCheck(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	addr, port := "127.0.0.1", 0
+	cfg := server.ServerConfig{
+		Version:      "0.0.0",
+		Address:      addr,
+		Port:         port,
+		AllowedHosts: []string{"toolbox.example.com"},
+	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	}()
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("unable to initialize server: %v", err)
+	}
+
+	err = s.Listen(ctx, "", "")
+	if err != nil {
+		t.Fatalf("unable to start server: %v", err)
+	}
+
+	errCh := make(chan error)
+	go func() {
+		defer close(errCh)
+		if serveErr := s.Serve(ctx); serveErr != nil {
+			errCh <- serveErr
+		}
+	}()
+
+	// Hit /healthz via the pod IP (127.0.0.1), which is not in AllowedHosts.
+	url := fmt.Sprintf("http://%s/healthz", s.Addr())
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("error when sending a request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected /healthz to bypass host check and return 200, got %d", resp.StatusCode)
+	}
+
+	// Sanity check: confirm the host check is still active for other paths.
+	rootURL := fmt.Sprintf("http://%s/", s.Addr())
+	rootResp, err := http.Get(rootURL)
+	if err != nil {
+		t.Fatalf("error when sending root request: %s", err)
+	}
+	defer rootResp.Body.Close()
+	if rootResp.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected / to be blocked by host check (403), got %d", rootResp.StatusCode)
+	}
 }
 
 func TestUpdateServer(t *testing.T) {
@@ -1638,25 +1800,61 @@ prompts:
 	}
 }
 
-type offlineSourceConfig struct {
-	initialized *bool
-}
-
-func (c offlineSourceConfig) SourceConfigType() string { return "offline-test-source" }
-
-func (c offlineSourceConfig) Initialize(context.Context, trace.Tracer) (sources.Source, error) {
-	*c.initialized = true
-	return nil, fmt.Errorf("source Initialize should not be called during offline init")
-}
-
-type offlineToolConfig struct {
-	name string
-}
-
-func (c offlineToolConfig) ToolConfigType() string { return "offline-test-tool" }
-
-func (c offlineToolConfig) Initialize(context.Context) (tools.Tool, error) {
-	return testutils.NewMockTool(c.name, "offline tool", nil, false, false), nil
+func TestInitializeConfigs(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+	t.Run("valid initialization", func(t *testing.T) {
+		sourceConfig1 := testutils.MockSourceConfig{Name: "my-source", Type: "mock-source"}
+		source1, _ := sourceConfig1.Initialize(ctx, nil)
+		tools1 := testutils.NewMockTool("my-tool", "mock tool for offline config", "my-source", nil, false, false)
+		validCfg := server.ServerConfig{
+			Version: "0.0.0",
+			SourceConfigs: server.SourceConfigs{
+				"my-source": testutils.MockSourceConfig{Name: "my-source", Type: "mock-source"},
+			},
+			ToolConfigs: server.ToolConfigs{
+				"my-tool": tools1.ToConfig(),
+			},
+		}
+		sourcesMap, _, _, toolsMap, _, _, err := server.InitializeConfigs(ctx, validCfg)
+		if err != nil {
+			t.Fatalf("unexpected error during config initialization: %s", err)
+		}
+		wantSourcesMap := map[string]sources.Source{"my-source": source1}
+		wantToolsMap := map[string]tools.Tool{"my-tool": tools1}
+		if !reflect.DeepEqual(sourcesMap, wantSourcesMap) {
+			t.Fatalf("sources map mismatch: want %s, got %s", wantSourcesMap, sourcesMap)
+		}
+		if !reflect.DeepEqual(toolsMap, wantToolsMap) {
+			t.Fatalf("tools map mismatch: want %s, got %s", wantToolsMap, toolsMap)
+		}
+	})
+	t.Run("invalid initialization", func(t *testing.T) {
+		invalidCfg := server.ServerConfig{
+			Version: "0.0.0",
+			SourceConfigs: server.SourceConfigs{
+				"my-source": testutils.MockSourceConfig{Name: "my-source", Type: "invalid-type"},
+			},
+			ToolConfigs: server.ToolConfigs{
+				"my-invalid-tool": testutils.NewMockTool("my-tool", "mock tool for offline config", "my-source", nil, false, false).ToConfig(),
+			},
+		}
+		_, _, _, _, _, _, err := server.InitializeConfigs(ctx, invalidCfg)
+		if err == nil {
+			t.Fatalf("expected error but got nil")
+		}
+		wantErr := `invalid source for "mock-tool" tool: source "my-source" is not a compatible type`
+		if err.Error() != wantErr {
+			t.Fatalf("unexpected error: want %s, got %s", wantErr, err.Error())
+		}
+	})
 }
 
 func TestInitializeOfflineConfigs(t *testing.T) {
@@ -1670,23 +1868,19 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 	}
 	ctx = util.WithInstrumentation(ctx, instrumentation)
 
-	sourceInitialized := false
 	cfg := server.ServerConfig{
 		Version: "0.0.0",
 		SourceConfigs: server.SourceConfigs{
-			"my-source": offlineSourceConfig{initialized: &sourceInitialized},
+			"my-source": testutils.MockSourceConfig{Name: "my-source"},
 		},
 		ToolConfigs: server.ToolConfigs{
-			"my-tool": offlineToolConfig{name: "my-tool"},
+			"my-tool": testutils.NewMockTool("my-tool", "mock tool for offline config", "non-existance-source", nil, false, false).ToConfig(),
 		},
 	}
 
 	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
 	if err != nil {
 		t.Fatalf("InitializeOfflineConfigs returned error: %s", err)
-	}
-	if sourceInitialized {
-		t.Error("source Initialize was called during offline init")
 	}
 	if _, ok := toolsMap["my-tool"]; !ok {
 		t.Errorf("expected tool %q in toolsMap, got %v", "my-tool", toolsMap)
@@ -1765,9 +1959,9 @@ func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
 	cfg := server.ServerConfig{
 		Version: "0.0.0",
 		ToolConfigs: server.ToolConfigs{
-			"zoo":    offlineToolConfig{name: "zoo"},
-			"apple":  offlineToolConfig{name: "apple"},
-			"banana": offlineToolConfig{name: "banana"},
+			"zoo":    testutils.NewMockTool("zoo", "", "", nil, false, false).ToConfig(),
+			"apple":  testutils.NewMockTool("apple", "", "", nil, false, false).ToConfig(),
+			"banana": testutils.NewMockTool("banana", "", "", nil, false, false).ToConfig(),
 		},
 	}
 
