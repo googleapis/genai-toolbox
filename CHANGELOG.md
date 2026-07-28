@@ -5,20 +5,20 @@
 
 ### Features
 
-* Add groups support ([#3605](https://github.com/googleapis/mcp-toolbox/issues/3605)) ([e75ec3b](https://github.com/googleapis/mcp-toolbox/commit/e75ec3b5c84dfad5b69f2d42ec2d3408f22e2463))
-* **prebuilt:** Migrate skills-repo toolsets to kind: group with descriptions ([#3595](https://github.com/googleapis/mcp-toolbox/issues/3595)) ([b895b36](https://github.com/googleapis/mcp-toolbox/commit/b895b36b10eb81dc609216fc5f76ae800d1c65f4))
-* **server:** Add /healthz endpoint for container health checks ([#3060](https://github.com/googleapis/mcp-toolbox/issues/3060)) ([d5aefbc](https://github.com/googleapis/mcp-toolbox/commit/d5aefbc9e9bd914042224daaf0d4f9257ac01c88))
-* **skills:** Add --group flag to generate a skill from one group ([#3585](https://github.com/googleapis/mcp-toolbox/issues/3585)) ([c1abd4f](https://github.com/googleapis/mcp-toolbox/commit/c1abd4fc4fcdfa52ba20aaf7d92424ca189c7282))
-* **skills:** Default --name to --group, --toolset, or single --prebuilt name ([#3586](https://github.com/googleapis/mcp-toolbox/issues/3586)) ([2b33b08](https://github.com/googleapis/mcp-toolbox/commit/2b33b08c3a220657c8ab6a3e0ce1274badc2fe15))
+* Add `groups` support ([#3605](https://github.com/googleapis/mcp-toolbox/issues/3605)) ([e75ec3b](https://github.com/googleapis/mcp-toolbox/commit/e75ec3b5c84dfad5b69f2d42ec2d3408f22e2463))
+* **prebuilt:** Migrate skills-repo toolsets to `kind: group` with descriptions ([#3595](https://github.com/googleapis/mcp-toolbox/issues/3595)) ([b895b36](https://github.com/googleapis/mcp-toolbox/commit/b895b36b10eb81dc609216fc5f76ae800d1c65f4))
+* **server:** Add `/healthz` endpoint for container health checks ([#3060](https://github.com/googleapis/mcp-toolbox/issues/3060)) ([d5aefbc](https://github.com/googleapis/mcp-toolbox/commit/d5aefbc9e9bd914042224daaf0d4f9257ac01c88))
+* **skills:** Add `--group` flag to generate a skill from one group ([#3585](https://github.com/googleapis/mcp-toolbox/issues/3585)) ([c1abd4f](https://github.com/googleapis/mcp-toolbox/commit/c1abd4fc4fcdfa52ba20aaf7d92424ca189c7282))
+* **skills:** Default `--name` to `--group`, `--toolset`, or single `--prebuilt` name ([#3586](https://github.com/googleapis/mcp-toolbox/issues/3586)) ([2b33b08](https://github.com/googleapis/mcp-toolbox/commit/2b33b08c3a220657c8ab6a3e0ce1274badc2fe15))
 * **skills:** Make description optional during skills gen ([#3584](https://github.com/googleapis/mcp-toolbox/issues/3584)) ([d0a8f14](https://github.com/googleapis/mcp-toolbox/commit/d0a8f14cbec1f9770da7f82a07b4e480f5a4c6a7))
-* **tool/looker:** Add get_field_value_suggestions tool ([#3696](https://github.com/googleapis/mcp-toolbox/issues/3696)) ([3debe81](https://github.com/googleapis/mcp-toolbox/commit/3debe8113fe2c9af012a7369658bb7a9e64f40f4))
+* **tool/looker:** Add `get_field_value_suggestions` tool ([#3696](https://github.com/googleapis/mcp-toolbox/issues/3696)) ([3debe81](https://github.com/googleapis/mcp-toolbox/commit/3debe8113fe2c9af012a7369658bb7a9e64f40f4))
 * **tools/dataplex-update-data-product-aspects:** Add dataplex-update-data-product-aspects tool ([#3607](https://github.com/googleapis/mcp-toolbox/issues/3607)) ([f940937](https://github.com/googleapis/mcp-toolbox/commit/f94093725c35189051321778576f801748ead226))
 * Update draft specs to 2026-07-28 ([#3699](https://github.com/googleapis/mcp-toolbox/issues/3699)) ([cf128ff](https://github.com/googleapis/mcp-toolbox/commit/cf128ff94c4d39aea1eb17caa706ff0b73d8c780))
 
 
 ### Bug Fixes
 
-* Add name validation to tools name ([#3654](https://github.com/googleapis/mcp-toolbox/issues/3654)) ([944f6ce](https://github.com/googleapis/mcp-toolbox/commit/944f6ce97bc77a92a052de92b88f0fc09ac7578c))
+* Re-add name validation to tools name ([#3654](https://github.com/googleapis/mcp-toolbox/issues/3654)) ([944f6ce](https://github.com/googleapis/mcp-toolbox/commit/944f6ce97bc77a92a052de92b88f0fc09ac7578c))
 * Re-add tool validation during startup ([#3705](https://github.com/googleapis/mcp-toolbox/issues/3705)) ([25ce953](https://github.com/googleapis/mcp-toolbox/commit/25ce953559a201183f066f566dca5fb597efca39))
 * **server:** Sort default toolset alphabetically for stable ordering ([#3539](https://github.com/googleapis/mcp-toolbox/issues/3539)) ([e5da24c](https://github.com/googleapis/mcp-toolbox/commit/e5da24c5dfd2208c7e947a20e58a2e2c82236241))
 * **source/cloud-sql-admin:** Validate source instance for backup-run restore ([#3555](https://github.com/googleapis/mcp-toolbox/issues/3555)) ([3ebe500](https://github.com/googleapis/mcp-toolbox/commit/3ebe500ef7b27608464e891c7458df630ea4aab6))
