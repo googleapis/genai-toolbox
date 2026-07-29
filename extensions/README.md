@@ -4,7 +4,7 @@ This directory contains specifications and schemas for experimental Model Contex
 
 ## Extension Identifier
 
-The identifier we are using for this extension is `com.google.cloud/toolbox`. It packages all the custom experimental Toolbox features (such as groups, secure parameters, and authenticated parameters) under a single extension namespace.
+The identifier we are using for this extension is `com.google.cloud/toolbox.<version_string>`. It packages all the custom experimental Toolbox features (such as groups, secure parameters, and authenticated parameters) under a single extension namespace.
 
 ## Versioning Strategy
 
