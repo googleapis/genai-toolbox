@@ -183,7 +183,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d embeddingModels: %s", len(embeddingModelsMap), strings.Join(embeddingModelNames, ", ")))
 
-	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, instrumentation, l)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
 	}
@@ -241,8 +241,9 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
-
-	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	// Automatically skip source validation
+	cfg.SkipSourceValidation = true
+	toolsMap, err := initializeTools(ctx, cfg, map[string]sources.Source{}, instrumentation, l)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -266,7 +267,7 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 }
 
 // initializeTools initializes and validates the tools from the config.
-func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
+func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[string]sources.Source, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
 		t, err := func() (tools.Tool, error) {
@@ -280,6 +281,21 @@ func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *tel
 			t, err := tc.Initialize(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
+			}
+			if !cfg.SkipSourceValidation {
+				srcName := t.GetSourceName()
+				var src sources.Source
+				var ok bool
+				if srcName != "" {
+					src, ok = sourcesMap[srcName]
+					if !ok {
+						return nil, fmt.Errorf("unable to retrieve source %s for tool %s", srcName, name)
+					}
+				}
+				err = t.ValidateSource(src)
+				if err != nil {
+					return nil, err
+				}
 			}
 			return t, nil
 		}()
@@ -377,6 +393,14 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Skip host validation for health check probes. Container
+			// orchestrators (Kubernetes, Docker, Cloud Run) typically hit
+			// /healthz via the pod IP or localhost, which would otherwise
+			// trip a strict AllowedHosts setting and break liveness probes.
+			if r.URL.Path == "/healthz" {
+				next.ServeHTTP(w, r)
+				return
+			}
 			_, hasWildcard := allowedHosts["*"]
 			hostname := r.Host
 			if host, _, err := net.SplitHostPort(r.Host); err == nil {
@@ -561,6 +585,14 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	// default endpoint for validating server is running
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
+	})
+
+	// healthz endpoint for container orchestration health checks
+	// (Kubernetes liveness/readiness probes, Docker HEALTHCHECK, etc.).
+	// Returns 200 OK with a small JSON body so probes can rely on both
+	// status code and payload.
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		render.JSON(w, r, map[string]string{"status": "ok"})
 	})
 
 	return s, nil

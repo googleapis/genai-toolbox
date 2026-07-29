@@ -119,30 +119,30 @@ func WaitForString(ctx context.Context, re *regexp.Regexp, pr io.ReadCloser) (st
 	}
 }
 
-var MockTool1 = NewMockTool("no_params", "", []parameters.Parameter{}, false, false)
+var MockTool1 = NewMockTool("no_params", "", "", []parameters.Parameter{}, false, false)
 
 var MockTool2 = NewMockTool(
 	"some_params",
-	"",
+	"", "",
 	parameters.Parameters{
 		parameters.NewIntParameter("param1", "This is the first parameter."),
 		parameters.NewIntParameter("param2", "This is the second parameter."),
 	}, false, false)
 
 var MockTool3 = NewMockTool(
-	"array_param", "some description",
+	"array_param", "some description", "",
 	parameters.Parameters{
 		parameters.NewArrayParameter("my_array", "this param is an array of strings", parameters.NewStringParameter("my_string", "string item")),
 	}, false, false)
 
-var MockTool4 = NewMockTool("unauthorized_tool", "", []parameters.Parameter{}, true, false)
+var MockTool4 = NewMockTool("unauthorized_tool", "", "", []parameters.Parameter{}, true, false)
 
-var MockTool5 = NewMockTool("require_client_auth_tool", "", []parameters.Parameter{}, false, true)
+var MockTool5 = NewMockTool("require_client_auth_tool", "", "", []parameters.Parameter{}, false, true)
 
 var MockToolUrlBinding = func() MockTool {
 	t := NewMockTool(
 		"url_binding_tool",
-		"A tool for testing URL param binding",
+		"A tool for testing URL param binding", "",
 		parameters.Parameters{
 			parameters.NewStringParameter("param1", "A bound string param"),
 			parameters.NewIntParameter("param2", "A bound int param"),
@@ -169,8 +169,9 @@ func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
 	for _, tool := range mockTools {
-		toolsMap[tool.Name] = tool
-		allTools = append(allTools, tool.Name)
+		toolName := tool.GetName()
+		toolsMap[toolName] = tool
+		allTools = append(allTools, toolName)
 	}
 
 	groupToolNames := make(map[string][]string)
