@@ -47,10 +47,28 @@ func TestParseFromYamlDataplex(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with service account impersonation example",
+			in: `
+			kind: source
+			name: my-instance
+			type: dataplex
+			project: my-project
+			impersonateServiceAccount: service-account@my-project.iam.gserviceaccount.com
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": dataplex.Config{
+					Name:                      "my-instance",
+					Type:                      dataplex.SourceType,
+					Project:                   "my-project",
+					ImpersonateServiceAccount: "service-account@my-project.iam.gserviceaccount.com",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			got, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -91,7 +109,7 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

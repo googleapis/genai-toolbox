@@ -25,4 +25,6 @@ description: "Details of the MySQL prebuilt configuration."
     *   `list_tables_missing_unique_indexes`: Looks for tables that do not have
         primary or unique key contraint.
     *   `list_table_fragmentation`: Displays table fragmentation in MySQL.
+    *   `list_all_locks`: Lists all current locks on the database.
+    *   `show_query_stats`: Show query execution statistics.
     *   `list_table_stats`: Displays table statistics in MySQL.

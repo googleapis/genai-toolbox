@@ -37,8 +37,8 @@ import (
 	"github.com/googleapis/mcp-toolbox/cmd/internal/serve"
 	"github.com/googleapis/mcp-toolbox/cmd/internal/skills"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -116,7 +116,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	// setup flags that are common across all commands
 	internal.PersistentFlags(cmd, opts)
 	flags := cmd.Flags()
-	internal.ConfigFileFlags(flags, opts)
+	internal.ConfigFileFlags(cmd, flags, opts)
 	internal.ServeFlags(flags, opts)
 	flags.BoolVar(&opts.Cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&opts.Cfg.IgnoreUnknownTools, "ignore-unknown-tools", false, "Log warnings and skip unknown/unsupported tool types instead of failing to start.")
@@ -139,14 +139,14 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, err := validateReloadEdits(ctx, toolsFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	s.PrimitiveMgr.SetPrimitives(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap)
 
 	return nil
 }
@@ -154,7 +154,7 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 // validateReloadEdits checks that the reloaded config configs can initialized without failing
 func validateReloadEdits(
 	ctx context.Context, toolsFile internal.Config,
-) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, error,
+) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]prompts.Prompt, map[string]group.Group, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -177,19 +177,19 @@ func validateReloadEdits(
 		AuthServiceConfigs:    toolsFile.AuthServices,
 		EmbeddingModelConfigs: toolsFile.EmbeddingModels,
 		ToolConfigs:           toolsFile.Tools,
-		ToolsetConfigs:        toolsFile.Toolsets,
 		PromptConfigs:         toolsFile.Prompts,
+		GroupConfigs:          toolsFile.Groups,
 		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
-		return nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, err
 	}
 
-	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
+	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, nil
 }
 
 // Helper to check if a file has a newer ModTime than stored in the map
@@ -456,17 +456,27 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	}
 
 	// Validate ToolboxUrl if MCP Auth is enabled
+	var mcpAuthEnabled bool
 	for _, authSvc := range opts.Cfg.AuthServiceConfigs {
-		if genCfg, ok := authSvc.(generic.Config); ok && genCfg.McpEnabled {
-			if opts.Cfg.ToolboxUrl == "" {
-				opts.Cfg.ToolboxUrl = os.Getenv("TOOLBOX_URL")
-			}
-			if opts.Cfg.ToolboxUrl == "" {
-				errMsg := fmt.Errorf("MCP Auth is enabled but Toolbox URL is missing. Please provide it via --toolbox-url flag or TOOLBOX_URL environment variable")
-				opts.Logger.ErrorContext(ctx, errMsg.Error())
-				return errMsg
-			}
+		if authSvc.IsMCPEnabled() {
+			mcpAuthEnabled = true
 			break
+		}
+	}
+
+	if mcpAuthEnabled {
+		if opts.Cfg.EnableAPI {
+			errMsg := fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (--enable-api)")
+			opts.Logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+		if opts.Cfg.ToolboxUrl == "" {
+			opts.Cfg.ToolboxUrl = os.Getenv("TOOLBOX_URL")
+		}
+		if opts.Cfg.ToolboxUrl == "" {
+			errMsg := fmt.Errorf("MCP Auth is enabled but Toolbox URL is missing. Please provide it via --toolbox-url flag or TOOLBOX_URL environment variable")
+			opts.Logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
 		}
 	}
 

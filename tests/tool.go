@@ -4044,6 +4044,246 @@ func RunMySQLGetQueryPlanTest(t *testing.T, ctx context.Context, pool *sql.DB, d
 	}
 }
 
+func RunMySQLShowQueryStats(t *testing.T, ctx context.Context, pool *sql.DB, databaseName string) {
+
+	// Generating stats for query
+	selectStmt := "SELECT 1"
+	if _, err := pool.ExecContext(ctx, selectStmt); err != nil {
+		t.Logf("warning: unable to execute select: %v", err)
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		wantError      string
+	}{
+		{
+			name:           "list query stats with default limit",
+			requestBody:    bytes.NewBufferString(`{}`),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "list query stats with custom limit",
+			requestBody:    bytes.NewBufferString(`{"limit": 1}`),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "list query stats for specific database",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, databaseName)),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "list query stats with with schema other than connected schema, expected error",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, "some_random_db_name_foo_bar")),
+			wantStatusCode: http.StatusOK,
+			wantError:      "SCHEMA_MATCH_FAILED",
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/show_query_stats/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			if tc.wantError != "" {
+				var got map[string]any
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal error result: %v, resultString: %s", err, resultString)
+				}
+				errVal, ok := got["error"].(string)
+				if !ok {
+					t.Fatalf("expected error key in response, got: %v", got)
+				}
+				if !strings.Contains(errVal, tc.wantError) {
+					t.Fatalf("expected error containing %q, got: %q", tc.wantError, errVal)
+				}
+				return
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v, resultString: %s", err, resultString)
+			}
+
+			//verify if results have expected fields
+			if len(got) > 0 {
+				requiredFields := []string{"db", "query", "execution_count", "total_latency_ms", "average_latency_ms", "max_latency_ms", "total_rows_sent", "total_rows_examined", "full_table_scan_count", "inefficient_index_used_count", "last_executed"}
+				for _, field := range requiredFields {
+					if _, ok := got[0][field]; !ok {
+						t.Errorf("missing expected field: %s in result: %v", field, got[0])
+					}
+				}
+			}
+
+		})
+	}
+}
+
+func RunMySQLListAllLocks(t *testing.T, ctx context.Context, pool *sql.DB, databaseName string) {
+
+	// Create table and lock the table for test
+	testTableName := "test_list_table_stats_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createTableStmt := fmt.Sprintf(`
+        CREATE TABLE %s (
+            id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100),
+            email VARCHAR(100)
+        )
+    `, testTableName)
+
+	if _, err := pool.ExecContext(ctx, createTableStmt); err != nil {
+		t.Fatalf("unable to create test table: %s", err)
+	}
+	defer func() {
+		dropTableStmt := fmt.Sprintf("DROP TABLE IF EXISTS %s", testTableName)
+		if _, err := pool.ExecContext(ctx, dropTableStmt); err != nil {
+			t.Logf("warning: unable to drop test table: %v", err)
+		}
+	}()
+
+	// insert sample data
+	insertStmt := fmt.Sprintf(`
+        INSERT INTO %s (id, name, email) VALUES
+        (1, 'Alice', 'alice@example.com')
+    `, testTableName)
+
+	if _, err := pool.ExecContext(ctx, insertStmt); err != nil {
+		t.Fatalf("unable to insert test data: %s", err)
+	}
+
+	// Generating stats for query
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		tx, err := pool.BeginTx(ctx, nil)
+		if err != nil {
+			t.Logf("warning: unable to begin transaction: %v", err)
+			return
+		}
+		defer func() {
+			if err := tx.Rollback(); err != nil {
+				t.Logf("warning: unable to rollback transaction: %v", err)
+			}
+		}()
+
+		selectStmt := fmt.Sprintf("SELECT * FROM %s WHERE id = 1 FOR UPDATE", testTableName)
+		if _, err := tx.ExecContext(ctx, selectStmt); err != nil {
+			t.Logf("warning: unable to execute select: %v", err)
+			return
+		}
+		// Hold the lock for a while to allow tests to run
+		time.Sleep(10 * time.Second)
+	}()
+	// Give it a moment to actually acquire the lock
+	time.Sleep(1 * time.Second)
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		wantError      string
+	}{
+		{
+			name:           "list all locks with default limit",
+			requestBody:    bytes.NewBufferString(`{}`),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "list all locks with custom limit",
+			requestBody:    bytes.NewBufferString(`{"limit": 1}`),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "list all locks for specific database",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, databaseName)),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "list all locks with with schema other than connected schema, expected error",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, "some_random_db_name_foo_bar")),
+			wantStatusCode: http.StatusOK,
+			wantError:      "SCHEMA_MATCH_FAILED",
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_all_locks/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			if tc.wantError != "" {
+				var got map[string]any
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal error result: %v, resultString: %s", err, resultString)
+				}
+				errVal, ok := got["error"].(string)
+				if !ok {
+					t.Fatalf("expected error key in response, got: %v", got)
+				}
+				if !strings.Contains(errVal, tc.wantError) {
+					t.Fatalf("expected error containing %q, got: %q", tc.wantError, errVal)
+				}
+				return
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v, resultString: %s", err, resultString)
+			}
+
+			//verify if results have expected fields
+			if len(got) > 0 {
+				requiredFields := []string{"thread_id", "process_id", "table_schema", "table_name", "lock_type", "lock_mode", "lock_status", "transaction_state", "current_operation", "query"}
+				for _, field := range requiredFields {
+					if _, ok := got[0][field]; !ok {
+						t.Errorf("missing expected field: %s in result: %v", field, got[0])
+					}
+				}
+			}
+
+		})
+	}
+	wg.Wait()
+}
+
 // RunMSSQLListTablesTest run tests againsts the mssql-list-tables tools.
 func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
 	// TableNameParam columns to construct want.

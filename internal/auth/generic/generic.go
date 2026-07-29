@@ -55,6 +55,10 @@ func (cfg Config) AuthServiceConfigType() string {
 	return AuthServiceType
 }
 
+func (cfg Config) IsMCPEnabled() bool {
+	return cfg.McpEnabled
+}
+
 // Initialize a generic auth service
 func (cfg Config) Initialize() (auth.AuthService, error) {
 	if !cfg.McpEnabled {

@@ -21,7 +21,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -83,7 +85,7 @@ func TestGenerateToolManifest(t *testing.T) {
 			name:        "basic",
 			description: "foo bar",
 			authInvoke:  []string{},
-			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
+			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter", parameters.WithStringAuth(authServices))},
 			annotations: nil,
 			wantMetadata: map[string]any{
 				"toolbox/authParam": map[string][]string{
@@ -96,7 +98,7 @@ func TestGenerateToolManifest(t *testing.T) {
 			name:        "basic",
 			description: "foo bar",
 			authInvoke:  []string{"auth1", "auth2"},
-			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
+			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter", parameters.WithStringAuth(authServices))},
 			annotations: nil,
 			wantMetadata: map[string]any{
 				"toolbox/authInvoke": []string{"auth1", "auth2"},
@@ -108,7 +110,7 @@ func TestGenerateToolManifest(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations)
+			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations, nil)
 			gotM := got.Metadata
 			if diff := cmp.Diff(tc.wantMetadata, gotM); diff != "" {
 				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
@@ -140,15 +142,16 @@ func TestParamManifest(t *testing.T) {
 	tcs := []struct {
 		name          string
 		in            parameters.Parameters
+		urlParams     map[string]string
 		wantSchema    InputSchema
 		wantAuthParam map[string][]string
 	}{
 		{
 			name: "all types",
 			in: parameters.Parameters{
-				parameters.NewStringParameterWithDefault("foo-string", "foo", "bar"),
+				parameters.NewStringParameter("foo-string", "bar", parameters.WithStringDefault("foo")),
 				parameters.NewStringParameter("foo-string2", "bar"),
-				parameters.NewStringParameterWithAuth("foo-string3-auth", "bar", authServices),
+				parameters.NewStringParameter("foo-string3-auth", "bar", parameters.WithStringAuth(authServices)),
 				parameters.NewIntParameter("foo-int2", "bar"),
 				parameters.NewFloatParameter("foo-float", "bar"),
 				parameters.NewArrayParameter("foo-array2", "bar", parameters.NewStringParameter("foo-string", "bar")),
@@ -185,10 +188,28 @@ func TestParamManifest(t *testing.T) {
 				"foo-string3-auth": []string{"my-google-auth-service", "other-auth-service"},
 			},
 		},
+		{
+			name: "urlParams is not nil, skips matched params",
+			in: parameters.Parameters{
+				parameters.NewStringParameter("foo-string", "bar"),
+				parameters.NewIntParameter("foo-int", "bar"),
+			},
+			urlParams: map[string]string{
+				"foo-string": "url-val",
+			},
+			wantSchema: InputSchema{
+				Type: "object",
+				Properties: map[string]parameters.ParameterMcpManifest{
+					"foo-int": {Type: "integer", Description: "bar"},
+				},
+				Required: []string{"foo-int"},
+			},
+			wantAuthParam: map[string][]string{},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			gotSchema, gotAuthParam := generateParamManifest(tc.in)
+			gotSchema, gotAuthParam := generateParamManifest(tc.in, tc.urlParams)
 			if diff := cmp.Diff(tc.wantSchema, gotSchema); diff != "" {
 				t.Fatalf("unexpected manifest (-want +got):\n%s", diff)
 			}
@@ -210,27 +231,24 @@ func TestParamManifest(t *testing.T) {
 }
 
 func TestGenerateListToolsResult(t *testing.T) {
-	tool1 := testutils.NewMockTool("no_params", "", []parameters.Parameter{}, false, false)
+	tool1 := testutils.NewMockTool("no_params", "", "", []parameters.Parameter{}, false, false)
 	tool2 := testutils.NewMockTool(
 		"some_params",
-		"",
+		"", "",
 		parameters.Parameters{
 			parameters.NewIntParameter("param1", "This is the first parameter."),
 			parameters.NewIntParameter("param2", "This is the second parameter."),
 		}, false, false)
 	toolsMap := make(map[string]tools.Tool)
-	toolsMap[tool1.Name] = tool1
-	toolsMap[tool2.Name] = tool2
-	tc := tools.ToolsetConfig{
+	toolsMap[tool1.GetName()] = tool1
+	toolsMap[tool2.GetName()] = tool2
+	g := group.NewGroup(group.GroupConfig{
 		Name:      "test-toolset",
 		ToolNames: []string{"no_params", "some_params"},
-	}
-	toolset, err := tc.Initialize("test-version", toolsMap)
-	if err != nil {
-		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
-	}
+	})
 
-	got, err := GenerateListToolsResult(nil, toolset, toolsMap)
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
+	got, err := GenerateListToolsResult(pMgr, g, nil)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
@@ -302,7 +320,7 @@ func TestGeneratePromptManifest(t *testing.T) {
 			description: "Prompt with args.",
 			args: prompts.Arguments{
 				{Parameter: parameters.NewStringParameter("param1", "First param")},
-				{Parameter: parameters.NewIntParameterWithRequired("param2", "Second param", false)},
+				{Parameter: parameters.NewIntParameter("param2", "Second param", parameters.WithIntRequired(false))},
 			},
 			want: Prompt{
 				BaseMetadata: BaseMetadata{Name: "arg-prompt"},
@@ -334,16 +352,15 @@ func TestGenerateListPromptsResult(t *testing.T) {
 	promptsMap := make(map[string]prompts.Prompt)
 	promptsMap[prompt1.Name] = prompt1
 	promptsMap[prompt2.Name] = prompt2
-	pc := prompts.PromptsetConfig{
+	g := group.NewGroup(group.GroupConfig{
 		Name:        "test-promptset",
 		PromptNames: []string{"prompt1", "prompt2"},
+	})
+	gMap := map[string]group.Group{
+		g.Name: g,
 	}
-	promptset, err := pc.Initialize("test-version", promptsMap)
-	if err != nil {
-		t.Fatalf("unable to initialize promptset %q: %s", "test-promptset", err)
-	}
-
-	got, err := GenerateListPromptsResult(promptset, promptsMap)
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, promptsMap, gMap)
+	got, err := GenerateListPromptsResult(pMgr, g)
 	if err != nil {
 		t.Fatalf("unable to generate list prompt result: %s", err)
 	}
