@@ -36,13 +36,17 @@ this skill only adds how to apply them in a propose-only flow.
 
 - [references/maintainer-playbook.md](references/maintainer-playbook.md): the Reviewer's
   Checklist, SLO/release context, and the `release candidate` labeling rule.
-- `CONTRIBUTING.md` (repo root): PR conventions: title/scope format (Conventional Commits, with
-  the `type` table), the "keep PRs small" and "link an issue" guidelines, and the review process.
-  Cite it for title/description/process findings.
-- `DEVELOPER.md` (repo root): engineering conventions: tool/source naming, error categorization,
-  the patterns for adding a source/tool/integration test, the CI-enforced docs-structure rules,
-  and the local test/lint commands. Cite it for code, test, and docs-structure findings. Prefer
-  it over `GEMINI.md` (`CLAUDE.md`/`AGENTS.md` are symlinks to it), which only summarizes.
+- [references/CONTRIBUTING.md](references/CONTRIBUTING.md): PR conventions: title/scope format
+  (Conventional Commits, with the `type` table), the "keep PRs small" and "link an issue"
+  guidelines, and the review process. Cite it for title/description/process findings.
+- [references/DEVELOPER.md](references/DEVELOPER.md): engineering conventions: tool/source
+  naming, error categorization, the patterns for adding a source/tool/integration test, the
+  CI-enforced docs-structure rules, and the local test/lint commands. Cite it for code, test,
+  and docs-structure findings. Prefer it over `GEMINI.md` (`CLAUDE.md`/`AGENTS.md` are symlinks
+  to it), which only summarizes.
+
+All three are symlinks to the live files at the repo root, so they track `main`. Cite them by
+their repo-root names (`CONTRIBUTING.md`, `DEVELOPER.md`) in findings.
 
 Fetch the PR and its diff:
 ```bash
