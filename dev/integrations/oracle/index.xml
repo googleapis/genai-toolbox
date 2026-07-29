@@ -44,14 +44,14 @@ DW) database workloads.&lt;/p&gt;
  &lt;tbody&gt;
  
  &lt;tr&gt;
- &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/oracle/tools/oracle-list-tables/"&gt;&lt;strong&gt;list_tables&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
- &lt;td&gt;Lists all tables in the current user&amp;#39;s schema
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/oracle/tools/oracle-execute-sql/"&gt;&lt;strong&gt;oracle-execute-sql&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;An &amp;#34;oracle-execute-sql&amp;#34; tool executes a SQL statement against an Oracle database.
 &lt;/td&gt;
  &lt;/tr&gt;
  
  &lt;tr&gt;
- &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/oracle/tools/oracle-execute-sql/"&gt;&lt;strong&gt;oracle-execute-sql&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
- &lt;td&gt;An &amp;#34;oracle-execute-sql&amp;#34; tool executes a SQL statement against an Oracle database.
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/oracle/tools/oracle-list-tables/"&gt;&lt;strong&gt;oracle-list-tables&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Lists all tables in the current user&amp;#39;s schema
 &lt;/td&gt;
  &lt;/tr&gt;
  

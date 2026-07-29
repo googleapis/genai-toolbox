@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-29T17:10:08Z
+**GENERATED ON:** 2026-07-29T19:45:56Z
 
 ---
 ### System Directives for AI Models
@@ -20230,11 +20230,12 @@ CREATE TABLE documents (
 Define the embedding model:
 
 ```yaml
-embeddingModels:
-  gemini-model:
-    kind: gemini
-    model: gemini-embedding-001
-    dimension: 768
+kind: embeddingModel
+name: gemini-model
+type: gemini
+apiKey: ${GOOGLE_API_KEY}
+model: gemini-embedding-001
+dimension: 768
 ```
 
 Define an ingestion tool that embeds `content` before insert by mirroring it
@@ -20281,7 +20282,7 @@ parameters:
 ```
 
 Only `string`-typed parameters may declare `embeddedBy`. The embedding model
-must be defined under the top-level `embeddingModels:` key of the same
+must be defined as an `embeddingModel` kind of the same
 configuration file.
 
 ## Reference
@@ -25465,49 +25466,51 @@ CockroachDB Cloud clusters require SSL/TLS connections. Use the `queryParams` se
 ## Example
 
 ```yaml
-sources:
-  my_cockroachdb:
-    type: cockroachdb
-    host: your-cluster.cockroachlabs.cloud
-    port: "26257"
-    user: myuser
-    password: mypassword
-    database: defaultdb
-    maxRetries: 5
-    retryBaseDelay: 500ms
-    queryParams:
-      sslmode: require
-      application_name: my-app
-    
-    # MCP Security Settings (recommended for production)
-    readOnlyMode: true          # Read-only by default (MCP best practice)
-    enableWriteMode: false      # Set to true to allow write operations
-    maxRowLimit: 1000           # Limit query results
-    queryTimeoutSec: 30         # Prevent long-running queries
-    enableTelemetry: true       # Enable observability
-    telemetryVerbose: false     # Set true for detailed logs
-    clusterID: "my-cluster"     # Optional identifier
+kind: source
+name: my_cockroachdb
+type: cockroachdb
+host: your-cluster.cockroachlabs.cloud
+port: "26257"
+user: myuser
+password: mypassword
+database: defaultdb
+maxRetries: 5
+retryBaseDelay: 500ms
+queryParams:
+  sslmode: require
+  application_name: my-app
 
-tools:
-  list_expenses:
-    type: cockroachdb-sql
-    source: my_cockroachdb
-    description: List all expenses
-    statement: SELECT id, description, amount, category FROM expenses WHERE user_id = $1
-    parameters:
-      - name: user_id
-        type: string
-        description: The user's ID
-  
-  describe_expenses:
-    type: cockroachdb-describe-table
-    source: my_cockroachdb
-    description: Describe the expenses table schema
-  
-  list_expenses_indexes:
-    type: cockroachdb-list-indexes
-    source: my_cockroachdb
-    description: List indexes on the expenses table
+# MCP Security Settings (recommended for production)
+readOnlyMode: true          # Read-only by default (MCP best practice)
+enableWriteMode: false      # Set to true to allow write operations
+maxRowLimit: 1000           # Limit query results
+queryTimeoutSec: 30         # Prevent long-running queries
+enableTelemetry: true       # Enable observability
+telemetryVerbose: false     # Set true for detailed logs
+clusterID: "my-cluster"     # Optional identifier
+---
+kind: tool
+name: list_expenses
+type: cockroachdb-sql
+source: my_cockroachdb
+description: List all expenses
+statement: SELECT id, description, amount, category FROM expenses WHERE user_id = $1
+parameters:
+  - name: user_id
+    type: string
+    description: The user's ID
+---
+kind: tool
+name: describe_expenses
+type: cockroachdb-describe-table
+source: my_cockroachdb
+description: Describe the expenses table schema
+---
+kind: tool
+name: list_expenses_indexes
+type: cockroachdb-list-indexes
+source: my_cockroachdb
+description: List indexes on the expenses table
 ```
 
 ## Reference
@@ -25564,19 +25567,19 @@ Common query parameters for CockroachDB connections:
 **Read-Only by Default**: The integration follows MCP best practices by defaulting to read-only mode. This prevents accidental data modifications:
 
 ```yaml
-sources:
-  my_cockroachdb:
-    readOnlyMode: true        # Default behavior
-    enableWriteMode: false    # Explicit write opt-in required
+kind: source
+name: my_cockroachdb
+readOnlyMode: true        # Default behavior
+enableWriteMode: false    # Explicit write opt-in required
 ```
 
 To enable write operations:
 
 ```yaml
-sources:
-  my_cockroachdb:
-    readOnlyMode: false       # Disable read-only protection
-    enableWriteMode: true     # Explicitly allow writes
+kind: source
+name: my_cockroachdb
+readOnlyMode: false       # Disable read-only protection
+enableWriteMode: true     # Explicitly allow writes
 ```
 
 **Query Limits**: Automatic row limits prevent excessive data retrieval:
@@ -25705,22 +25708,22 @@ The tool accepts a single runtime parameter:
 ## Example
 
 ```yaml
-sources:
-  my_cockroachdb:
-    type: cockroachdb
-    host: your-cluster.cockroachlabs.cloud
-    port: "26257"
-    user: myuser
-    password: mypassword
-    database: defaultdb
-    queryParams:
-      sslmode: require
-
-tools:
-  execute_sql:
-    type: cockroachdb-execute-sql
-    source: my_cockroachdb
-    description: Execute any SQL statement against the CockroachDB database
+kind: source
+name: my_cockroachdb
+type: cockroachdb
+host: your-cluster.cockroachlabs.cloud
+port: "26257"
+user: myuser
+password: mypassword
+database: defaultdb
+queryParams:
+  sslmode: require
+---
+kind: tool
+name: execute_sql
+type: cockroachdb-execute-sql
+source: my_cockroachdb
+description: Execute any SQL statement against the CockroachDB database
 ```
 
 ### Usage Examples
@@ -25879,13 +25882,13 @@ Never expose this tool directly to end users without proper authorization contro
 Configure the `authRequired` field to restrict access:
 
 ```yaml
-tools:
-  execute_sql:
-    type: cockroachdb-execute-sql
-    source: my_cockroachdb
-    description: Execute SQL statements
-    authRequired:
-      - my-auth-service
+kind: tool
+name: execute_sql
+type: cockroachdb-execute-sql
+source: my_cockroachdb
+description: Execute SQL statements
+authRequired:
+  - my-auth-service
 ```
 
 #### Read-Only Users
@@ -25992,22 +25995,22 @@ To query objects within schemas, the user needs:
 ## Example
 
 ```yaml
-sources:
-  my_cockroachdb:
-    type: cockroachdb
-    host: your-cluster.cockroachlabs.cloud
-    port: "26257"
-    user: myuser
-    password: mypassword
-    database: defaultdb
-    queryParams:
-      sslmode: require
-
-tools:
-  list_schemas:
-    type: cockroachdb-list-schemas
-    source: my_cockroachdb
-    description: List all schemas in the database
+kind: source
+name: my_cockroachdb
+type: cockroachdb
+host: your-cluster.cockroachlabs.cloud
+port: "26257"
+user: myuser
+password: mypassword
+database: defaultdb
+queryParams:
+  sslmode: require
+---
+kind: tool
+name: list_schemas
+type: cockroachdb-list-schemas
+source: my_cockroachdb
+description: List all schemas in the database
 ```
 ### Usage Example
 
@@ -26127,13 +26130,13 @@ CREATE TABLE tenant_globex.orders (...);
 The `cockroachdb-list-schemas` tool helps discover all tenant schemas:
 
 ```yaml
-tools:
-  list_tenants:
-    type: cockroachdb-list-schemas
-    source: my_cockroachdb
-    description: |
-      List all tenant schemas in the database.
-      Each schema represents a separate tenant's data namespace.
+kind: tool
+name: list_tenants
+type: cockroachdb-list-schemas
+source: my_cockroachdb
+description: |
+  List all tenant schemas in the database.
+  Each schema represents a separate tenant's data namespace.
 ```
 
 ### Best Practices
@@ -26178,18 +26181,19 @@ REVOKE ALL ON SCHEMA hr FROM public;
 #### Combined with List Tables
 
 ```yaml
-tools:
-  list_schemas:
-    type: cockroachdb-list-schemas
-    source: my_cockroachdb
-    description: List all schemas first
-    
-  list_tables:
-    type: cockroachdb-list-tables
-    source: my_cockroachdb
-    description: |
-      List tables in the database.
-      Use list_schemas first to understand schema organization.
+kind: tool
+name: list_schemas
+type: cockroachdb-list-schemas
+source: my_cockroachdb
+description: List all schemas first
+---
+kind: tool
+name: list_tables
+type: cockroachdb-list-tables
+source: my_cockroachdb
+description: |
+  List tables in the database.
+  Use list_schemas first to understand schema organization.
 ```
 
 #### Schema Discovery Workflow
@@ -26203,37 +26207,37 @@ tools:
 #### Discover Database Structure
 
 ```yaml
-tools:
-  discover_schemas:
-    type: cockroachdb-list-schemas
-    source: my_cockroachdb
-    description: |
-      Discover how the database is organized into schemas.
-      Use this to understand the logical grouping of tables.
+kind: tool
+name: discover_schemas
+type: cockroachdb-list-schemas
+source: my_cockroachdb
+description: |
+  Discover how the database is organized into schemas.
+  Use this to understand the logical grouping of tables.
 ```
 
 #### Multi-Tenant Analysis
 
 ```yaml
-tools:
-  list_tenant_schemas:
-    type: cockroachdb-list-schemas
-    source: my_cockroachdb
-    description: |
-      List all tenant schemas (each tenant has their own schema).
-      Schema names follow the pattern: tenant_<company_name>
+kind: tool
+name: list_tenant_schemas
+type: cockroachdb-list-schemas
+source: my_cockroachdb
+description: |
+  List all tenant schemas (each tenant has their own schema).
+  Schema names follow the pattern: tenant_<company_name>
 ```
 
 #### Schema Migration Planning
 
 ```yaml
-tools:
-  audit_schemas:
-    type: cockroachdb-list-schemas
-    source: my_cockroachdb
-    description: |
-      Audit existing schemas before migration.
-      Identifies all schemas that need to be migrated.
+kind: tool
+name: audit_schemas
+type: cockroachdb-list-schemas
+source: my_cockroachdb
+description: |
+  Audit existing schemas before migration.
+  Identifies all schemas that need to be migrated.
 ```
 
 ### CockroachDB-Specific Features
@@ -26309,22 +26313,22 @@ The tool accepts optional runtime parameters:
 ## Example
 
 ```yaml
-sources:
-  my_cockroachdb:
-    type: cockroachdb
-    host: your-cluster.cockroachlabs.cloud
-    port: "26257"
-    user: myuser
-    password: mypassword
-    database: defaultdb
-    queryParams:
-      sslmode: require
-
-tools:
-  list_all_tables:
-    type: cockroachdb-list-tables
-    source: my_cockroachdb
-    description: List all user tables in the database with their structure
+kind: source
+name: my_cockroachdb
+type: cockroachdb
+host: your-cluster.cockroachlabs.cloud
+port: "26257"
+user: myuser
+password: mypassword
+database: defaultdb
+queryParams:
+  sslmode: require
+---
+kind: tool
+name: list_all_tables
+type: cockroachdb-list-tables
+source: my_cockroachdb
+description: List all user tables in the database with their structure
 ```
 
 ### Usage Examples
@@ -26510,13 +26514,13 @@ Returns comprehensive table information:
 The tool is ideal for helping AI assistants understand your database structure:
 
 ```yaml
-tools:
-  discover_schema:
-    type: cockroachdb-list-tables
-    source: my_cockroachdb
-    description: |
-      Use this tool first to understand the database schema before generating queries.
-      It shows all tables, their columns, data types, and relationships.
+kind: tool
+name: discover_schema
+type: cockroachdb-list-tables
+source: my_cockroachdb
+description: |
+  Use this tool first to understand the database schema before generating queries.
+  It shows all tables, their columns, data types, and relationships.
 ```
 
 #### Filter Large Schemas
@@ -26555,21 +26559,21 @@ Only user-created tables in the public schema (and other user schemas) are retur
 #### Prompt Example
 
 ```yaml
-tools:
-  list_tables:
-    type: cockroachdb-list-tables
-    source: my_cockroachdb
-    description: |
-      Lists all tables in the database with detailed schema information.
-      Use this tool to understand:
-      - What tables exist
-      - What columns each table has
-      - Data types and constraints
-      - Relationships between tables (foreign keys)
-      - Available indexes
-      
-      Always call this tool before generating SQL queries to ensure
-      you use correct table and column names.
+kind: tool
+name: list_tables
+type: cockroachdb-list-tables
+source: my_cockroachdb
+description: |
+  Lists all tables in the database with detailed schema information.
+  Use this tool to understand:
+  - What tables exist
+  - What columns each table has
+  - Data types and constraints
+  - Relationships between tables (foreign keys)
+  - Available indexes
+
+  Always call this tool before generating SQL queries to ensure
+  you use correct table and column names.
 ```
 
 ### Common Use Cases
@@ -26660,32 +26664,32 @@ Parameters allow you to safely pass values into your SQL queries using prepared 
 ### Example with Multiple Parameters
 
 ```yaml
-tools:
-  filter_expenses:
-    type: cockroachdb-sql
-    source: my_cockroachdb
-    description: Filter expenses by category and date range
-    statement: |
-      SELECT id, description, amount, category, expense_date
-      FROM expenses
-      WHERE user_id = $1
-        AND category = $2
-        AND expense_date >= $3
-        AND expense_date <= $4
-      ORDER BY expense_date DESC
-    parameters:
-      - name: user_id
-        type: string
-        description: The user's UUID
-      - name: category
-        type: string
-        description: Expense category (e.g., "Food", "Transport")
-      - name: start_date
-        type: string
-        description: Start date in YYYY-MM-DD format
-      - name: end_date
-        type: string
-        description: End date in YYYY-MM-DD format
+kind: tool
+name: filter_expenses
+type: cockroachdb-sql
+source: my_cockroachdb
+description: Filter expenses by category and date range
+statement: |
+  SELECT id, description, amount, category, expense_date
+  FROM expenses
+  WHERE user_id = $1
+    AND category = $2
+    AND expense_date >= $3
+    AND expense_date <= $4
+  ORDER BY expense_date DESC
+parameters:
+  - name: user_id
+    type: string
+    description: The user's UUID
+  - name: category
+    type: string
+    description: Expense category (e.g., "Food", "Transport")
+  - name: start_date
+    type: string
+    description: Start date in YYYY-MM-DD format
+  - name: end_date
+    type: string
+    description: End date in YYYY-MM-DD format
 ```
 
 ### Template Parameters
@@ -26695,57 +26699,57 @@ Template parameters enable dynamic query construction by replacing placeholders 
 #### Example with Template Parameters
 
 ```yaml
-tools:
-  get_column_data:
-    type: cockroachdb-sql
-    source: my_cockroachdb
-    description: Get data from a specific column
-    statement: |
-      SELECT {{column_name}}
-      FROM {{table_name}}
-      WHERE user_id = $1
-      LIMIT 100
-    templateParameters:
-      - name: table_name
-        type: string
-        description: The table to query
-      - name: column_name
-        type: string
-        description: The column to retrieve
-    parameters:
-      - name: user_id
-        type: string
-        description: The user's UUID
+kind: tool
+name: get_column_data
+type: cockroachdb-sql
+source: my_cockroachdb
+description: Get data from a specific column
+statement: |
+  SELECT {{column_name}}
+  FROM {{table_name}}
+  WHERE user_id = $1
+  LIMIT 100
+templateParameters:
+  - name: table_name
+    type: string
+    description: The table to query
+  - name: column_name
+    type: string
+    description: The column to retrieve
+parameters:
+  - name: user_id
+    type: string
+    description: The user's UUID
 ```
 
 ## Example
 
 ```yaml
-sources:
-  my_cockroachdb:
-    type: cockroachdb
-    host: your-cluster.cockroachlabs.cloud
-    port: "26257"
-    user: myuser
-    password: mypassword
-    database: defaultdb
-    queryParams:
-      sslmode: require
-
-tools:
-  get_user_orders:
-    type: cockroachdb-sql
-    source: my_cockroachdb
-    description: Get all orders for a specific user
-    statement: |
-      SELECT o.id, o.order_date, o.total_amount, o.status
-      FROM orders o
-      WHERE o.user_id = $1
-      ORDER BY o.order_date DESC
-    parameters:
-      - name: user_id
-        type: string
-        description: The UUID of the user
+kind: source
+name: my_cockroachdb
+type: cockroachdb
+host: your-cluster.cockroachlabs.cloud
+port: "26257"
+user: myuser
+password: mypassword
+database: defaultdb
+queryParams:
+  sslmode: require
+---
+kind: tool
+name: get_user_orders
+type: cockroachdb-sql
+source: my_cockroachdb
+description: Get all orders for a specific user
+statement: |
+  SELECT o.id, o.order_date, o.total_amount, o.status
+  FROM orders o
+  WHERE o.user_id = $1
+  ORDER BY o.order_date DESC
+parameters:
+  - name: user_id
+    type: string
+    description: The UUID of the user
 ```
 
 ## Reference
@@ -26800,22 +26804,22 @@ CockroachDB supports standard SQL JOINs. Keep joins efficient by:
 - Limiting result sets with WHERE clauses
 
 ```yaml
-tools:
-  get_user_with_orders:
-    type: cockroachdb-sql
-    source: my_cockroachdb
-    description: Get user details with their recent orders
-    statement: |
-      SELECT u.name, u.email, o.id as order_id, o.order_date, o.total_amount
-      FROM users u
-      LEFT JOIN orders o ON u.id = o.user_id
-      WHERE u.id = $1
-      ORDER BY o.order_date DESC
-      LIMIT 10
-    parameters:
-      - name: user_id
-        type: string
-        description: The user's UUID
+kind: tool
+name: get_user_with_orders
+type: cockroachdb-sql
+source: my_cockroachdb
+description: Get user details with their recent orders
+statement: |
+  SELECT u.name, u.email, o.id as order_id, o.order_date, o.total_amount
+  FROM users u
+  LEFT JOIN orders o ON u.id = o.user_id
+  WHERE u.id = $1
+  ORDER BY o.order_date DESC
+  LIMIT 10
+parameters:
+  - name: user_id
+    type: string
+    description: The user's UUID
 ```
 
 ### Handle NULL Values
@@ -26831,82 +26835,82 @@ WHERE user_id = $1
 ### Aggregations
 
 ```yaml
-tools:
-  expense_summary:
-    type: cockroachdb-sql
-    source: my_cockroachdb
-    description: Get expense summary by category for a user
-    statement: |
-      SELECT 
-        category,
-        COUNT(*) as count,
-        SUM(amount) as total_amount,
-        AVG(amount) as avg_amount
-      FROM expenses
-      WHERE user_id = $1
-        AND expense_date >= $2
-      GROUP BY category
-      ORDER BY total_amount DESC
-    parameters:
-      - name: user_id
-        type: string
-        description: The user's UUID
-      - name: start_date
-        type: string
-        description: Start date in YYYY-MM-DD format
+kind: tool
+name: expense_summary
+type: cockroachdb-sql
+source: my_cockroachdb
+description: Get expense summary by category for a user
+statement: |
+  SELECT 
+    category,
+    COUNT(*) as count,
+    SUM(amount) as total_amount,
+    AVG(amount) as avg_amount
+  FROM expenses
+  WHERE user_id = $1
+    AND expense_date >= $2
+  GROUP BY category
+  ORDER BY total_amount DESC
+parameters:
+  - name: user_id
+    type: string
+    description: The user's UUID
+  - name: start_date
+    type: string
+    description: Start date in YYYY-MM-DD format
 ```
 
 ### Window Functions
 
 ```yaml
-tools:
-  running_total:
-    type: cockroachdb-sql
-    source: my_cockroachdb
-    description: Get running total of expenses
-    statement: |
-      SELECT 
-        expense_date,
-        amount,
-        SUM(amount) OVER (ORDER BY expense_date) as running_total
-      FROM expenses
-      WHERE user_id = $1
-      ORDER BY expense_date
-    parameters:
-      - name: user_id
-        type: string
-        description: The user's UUID
+kind: tool
+name: running_total
+type: cockroachdb-sql
+source: my_cockroachdb
+description: Get running total of expenses
+statement: |
+  SELECT 
+    expense_date,
+    amount,
+    SUM(amount) OVER (ORDER BY expense_date) as running_total
+  FROM expenses
+  WHERE user_id = $1
+  ORDER BY expense_date
+parameters:
+  - name: user_id
+    type: string
+    description: The user's UUID
 ```
 
 ### Common Table Expressions (CTEs)
 
 ```yaml
-tools:
-  top_spenders:
-    type: cockroachdb-sql
-    source: my_cockroachdb
-    description: Find top spending users
-    statement: |
-      WITH user_totals AS (
-        SELECT 
-          user_id,
-          SUM(amount) as total_spent
-        FROM expenses
-        WHERE expense_date >= $1
-        GROUP BY user_id
-      )
-      SELECT 
-        u.name,
-        u.email,
-        ut.total_spent
-      FROM user_totals ut
-      JOIN users u ON ut.user_id = u.id
-      ORDER BY ut.total_spent DESC
-      LIMIT 10
-    parameters:
-      - name: start_date
-        type: string
-        description: Start date in YYYY-MM-DD format
+kind: tool
+name: top_spenders
+type: cockroachdb-sql
+source: my_cockroachdb
+description: Find top spending users
+statement: |
+  WITH user_totals AS (
+    SELECT 
+      user_id,
+      SUM(amount) as total_spent
+    FROM expenses
+    WHERE expense_date >= $1
+    GROUP BY user_id
+  )
+  SELECT 
+    u.name,
+    u.email,
+    ut.total_spent
+  FROM user_totals ut
+  JOIN users u ON ut.user_id = u.id
+  ORDER BY ut.total_spent DESC
+  LIMIT 10
+parameters:
+  - name: start_date
+    type: string
+    description: Start date in YYYY-MM-DD format
 ```
 
 
@@ -30628,24 +30632,24 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-  ask_data_agent:
-    kind: conversational-analytics-ask-data-agent
-    source: my-conversational-analytics-source
-    location: global
-    maxResults: 50
-    description: |
-      Perform natural language data analysis and get insights by interacting 
-      with a specific BigQuery Data Agent. This tool allows for conversational 
-      queries and provides detailed responses based on the agent's configured 
-      data sources.
+kind: tool
+name: ask_data_agent
+type: conversational-analytics-ask-data-agent
+source: my-conversational-analytics-source
+location: global
+maxResults: 50
+description: |
+  Perform natural language data analysis and get insights by interacting 
+  with a specific BigQuery Data Agent. This tool allows for conversational 
+  queries and provides detailed responses based on the agent's configured 
+  data sources.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "conversational-analytics-ask-data-agent". |
+| type        |  string  |     true     | Must be "conversational-analytics-ask-data-agent". |
 | source      |  string  |     true     | Name of the source for chat.                       |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 | location    |  string  |    false     | The Google Cloud location (default: "global").     |
@@ -30678,20 +30682,20 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-  get_agent_info:
-    kind: conversational-analytics-get-data-agent-info
-    source: my-conversational-analytics-source
-    location: global
-    description: |
-      Use this tool to get details about a specific data agent.
+kind: tool
+name: get_agent_info
+type: conversational-analytics-get-data-agent-info
+source: my-conversational-analytics-source
+location: global
+description: |
+  Use this tool to get details about a specific data agent.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "conversational-analytics-get-data-agent-info". |
+| type        |  string  |     true     | Must be "conversational-analytics-get-data-agent-info". |
 | source      |  string  |     true     | Name of the source.                                |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 | location    |  string  |    false     | The Google Cloud location (default: "global").     |
@@ -30721,20 +30725,20 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-  list_agents:
-    kind: conversational-analytics-list-accessible-data-agents
-    source: my-conversational-analytics-source
-    location: global
-    description: |
-      Use this tool to list available data agents.
+kind: tool
+name: list_agents
+type: conversational-analytics-list-accessible-data-agents
+source: my-conversational-analytics-source
+location: global
+description: |
+  Use this tool to list available data agents.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "conversational-analytics-list-accessible-data-agents". |
+| type        |  string  |     true     | Must be "conversational-analytics-list-accessible-data-agents". |
 | source      |  string  |     true     | Name of the source.                                |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 | location    |  string  |    false     | The Google Cloud location (default: "global").     |
@@ -33125,8 +33129,8 @@ The `dataplex-search-dq-scans` tool accepts the following optional parameters:
 ## Example
 
 ```yaml
-kind: tools
-name: dataplex-search-dq-scans
+kind: tool
+name: search_dq_scans
 type: dataplex-search-dq-scans
 source: my-dataplex-source
 description: Use this tool to search for data quality scans.
@@ -39447,7 +39451,7 @@ This tool takes 3 optional input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_all_locks
 type: mysql-list-all-locks
 source: my-mysql-instance
@@ -39595,7 +39599,7 @@ This tool takes 4 optional input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table_stats
 type: mysql-list-table-stats
 source: my-mysql-instance
@@ -39779,7 +39783,7 @@ This tool takes 2 optional input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: show_query_stats
 type: mysql-show-query-stats
 source: my-mysql-instance
@@ -40136,12 +40140,14 @@ Neo4j supports vector similarity search. When using an `embeddingModel` with a `
 
 See [EmbeddingModels](../../../documentation/configuration/embedding-models/_index.md) for more information.
 
+```yaml
 kind: embeddingModel
 name: gemini-model
 type: gemini
 model: gemini-embedding-001
 apiKey: ${GOOGLE_API_KEY}
 dimension: 768
+```
 
 #### Vector Ingestion Tool
 
@@ -41055,9 +41061,46 @@ instead of hardcoding your secrets into the configuration file.
 
 
 ========================================================================
-## list_tables
+## oracle-execute-sql
 ========================================================================
-**Hierarchy:** MCP Toolbox for Databases > Integrations > Oracle > Tools > list_tables
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Oracle > Tools > oracle-execute-sql
+**URL:** https://mcp-toolbox.dev/dev/integrations/oracle/tools/oracle-execute-sql/
+**Description:** An "oracle-execute-sql" tool executes a SQL statement against an Oracle database.
+
+
+
+## About
+
+An `oracle-execute-sql` tool executes a SQL statement against an Oracle
+database.
+
+`oracle-execute-sql` takes one input parameter `sql` and runs the sql
+statement against the `source`.
+
+> **Note:** This tool is intended for developer assistant workflows with
+> human-in-the-loop and shouldn't be used for production agents.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: execute_sql_tool
+type: oracle-execute-sql
+source: my-oracle-instance
+description: Use this tool to execute sql statement.
+```
+
+
+
+
+========================================================================
+## oracle-list-tables
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Oracle > Tools > oracle-list-tables
 **URL:** https://mcp-toolbox.dev/dev/integrations/oracle/tools/oracle-list-tables/
 **Description:** Lists all tables in the current user's schema
 
@@ -41090,50 +41133,14 @@ field to `false`.
 > names, or other parts of the query.
 
 ```yaml
-tools:
-  list_tables:
-    kind: oracle-sql
-    source: my-oracle-instance
-    statement: |
-      SELECT table_name from user_tables;
-    description: |
-      Lists all table names in the current user's schema.
-
-
-
-
-========================================================================
-## oracle-execute-sql
-========================================================================
-**Hierarchy:** MCP Toolbox for Databases > Integrations > Oracle > Tools > oracle-execute-sql
-**URL:** https://mcp-toolbox.dev/dev/integrations/oracle/tools/oracle-execute-sql/
-**Description:** An "oracle-execute-sql" tool executes a SQL statement against an Oracle database.
-
-
-
-## About
-
-An `oracle-execute-sql` tool executes a SQL statement against an Oracle
-database.
-
-`oracle-execute-sql` takes one input parameter `sql` and runs the sql
-statement against the `source`.
-
-> **Note:** This tool is intended for developer assistant workflows with
-> human-in-the-loop and shouldn't be used for production agents.
-
-## Compatible Sources
-
-{{< compatible-sources >}}
-
-## Example
-
-```yaml
 kind: tool
-name: execute_sql_tool
-type: oracle-execute-sql
+name: list_tables
+type: oracle-sql
 source: my-oracle-instance
-description: Use this tool to execute sql statement.
+statement: |
+  SELECT table_name from user_tables;
+description: |
+  Lists all table names in the current user's schema.
 ```
 
 
@@ -41175,49 +41182,50 @@ field to `false`.
 > names, or other parts of the query.
 
 ```yaml
-tools:
-  search_flights_by_number:
-    kind: oracle-sql
-    source: my-oracle-instance
-    statement: |
-      SELECT * FROM flights
-      WHERE airline = :1
-      AND flight_number = :2
-      FETCH FIRST 10 ROWS ONLY
-    description: |
-      Use this tool to get information for a specific flight.
-      Takes an airline code and flight number and returns info on the flight.
-      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
-      Example:
-      {{
-          "airline": "CY",
-          "flight_number": "888",
-      }}
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
-      - name: flight_number
-        type: string
-        description: 1 to 4 digit number
-
-  update_flight_status:
-    kind: oracle-sql
-    source: my-oracle-instance
-    readOnly: false  # Required for INSERT/UPDATE/DELETE
-    statement: |
-      UPDATE flights 
-      SET status = :1 
-      WHERE airline = :2 AND flight_number = :3
-    description: Updates the status of a specific flight.
-    parameters:
-      - name: status
-        type: string
-      - name: airline
-        type: string
-      - name: flight_number
-        type: string
-
+kind: tool
+name: search_flights_by_number
+type: oracle-sql
+source: my-oracle-instance
+statement: |
+  SELECT * FROM flights
+  WHERE airline = :1
+  AND flight_number = :2
+  FETCH FIRST 10 ROWS ONLY
+description: |
+  Use this tool to get information for a specific flight.
+  Takes an airline code and flight number and returns info on the flight.
+  Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
+  Example:
+  {{
+      "airline": "CY",
+      "flight_number": "888",
+  }}
+parameters:
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
+  - name: flight_number
+    type: string
+    description: 1 to 4 digit number
+---
+kind: tool
+name: update_flight_status
+type: oracle-sql
+source: my-oracle-instance
+readOnly: false  # Required for INSERT/UPDATE/DELETE
+statement: |
+  UPDATE flights 
+  SET status = :1 
+  WHERE airline = :2 AND flight_number = :3
+description: Updates the status of a specific flight.
+parameters:
+  - name: status
+    type: string
+  - name: airline
+    type: string
+  - name: flight_number
+    type: string
+```
 
 
 
@@ -44411,7 +44419,7 @@ queryTimeout: 30s # Optional: query timeout duration
 ### With SSL required
 
 ```yaml
-kind: sources
+kind: source
 name: my-singlestore-source
 type: singlestore
 host: svc-abc123.svc.singlestore.com
@@ -44426,7 +44434,7 @@ connectionParams:
 ### With SSL verification disabled
 
 ```yaml
-kind: sources
+kind: source
 name: my-singlestore-source
 type: singlestore
 host: svc-abc123.svc.singlestore.com
@@ -44441,7 +44449,7 @@ connectionParams:
 ### Without SSL
 
 ```yaml
-kind: sources
+kind: source
 name: my-singlestore-source
 type: singlestore
 host: 127.0.0.1
