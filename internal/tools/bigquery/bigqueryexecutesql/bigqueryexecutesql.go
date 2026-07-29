@@ -105,6 +105,17 @@ func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 
+// splitTableID splits a fully qualified table ID into project and dataset.
+// Domain-scoped projects (example.com:project) contain dots of their own, so
+// the project is everything before the last two segments.
+func splitTableID(tableID string) (projectID, datasetID string, ok bool) {
+	parts := strings.Split(tableID, ".")
+	if len(parts) < 3 {
+		return "", "", false
+	}
+	return strings.Join(parts[:len(parts)-2], "."), parts[len(parts)-2], true
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
@@ -160,12 +171,9 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 			return nil, util.NewAgentError("could not parse tables from query to validate against allowed datasets", parseErr)
 		}
 		for _, tableID := range parsedTables {
-			parts := strings.Split(tableID, ".")
-			if len(parts) == 3 {
-				projectID, datasetID := parts[0], parts[1]
-				if !source.IsDatasetAllowed(projectID, datasetID) {
-					return nil, util.NewAgentError(fmt.Sprintf("query accesses dataset '%s.%s', which is not in the allowed list", projectID, datasetID), nil)
-				}
+			projectID, datasetID, ok := splitTableID(tableID)
+			if ok && !source.IsDatasetAllowed(projectID, datasetID) {
+				return nil, util.NewAgentError(fmt.Sprintf("query accesses dataset '%s.%s', which is not in the allowed list", projectID, datasetID), nil)
 			}
 		}
 	}
@@ -221,12 +229,9 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		}
 
 		for tableID := range tableIDSet {
-			parts := strings.Split(tableID, ".")
-			if len(parts) == 3 {
-				projectID, datasetID := parts[0], parts[1]
-				if !source.IsDatasetAllowed(projectID, datasetID) {
-					return nil, util.NewAgentError(fmt.Sprintf("query accesses dataset '%s.%s', which is not in the allowed list", projectID, datasetID), nil)
-				}
+			projectID, datasetID, ok := splitTableID(tableID)
+			if ok && !source.IsDatasetAllowed(projectID, datasetID) {
+				return nil, util.NewAgentError(fmt.Sprintf("query accesses dataset '%s.%s', which is not in the allowed list", projectID, datasetID), nil)
 			}
 		}
 	}

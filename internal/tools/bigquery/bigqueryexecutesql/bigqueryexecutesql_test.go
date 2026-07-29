@@ -365,3 +365,65 @@ func TestInvokeDatasetRestrictionBeforeDryRun(t *testing.T) {
 		})
 	}
 }
+
+func TestInvokeDatasetRestrictionDomainScopedProject(t *testing.T) {
+	// With a domain-scoped default project (example.com:project), an
+	// unqualified table reference expands to a four-segment table ID. The
+	// dataset check must still apply instead of being skipped.
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Not found: Table no_such_table", http.StatusNotFound)
+	}))
+	defer mockServer.Close()
+
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("failed to create context with logger: %v", err)
+	}
+
+	bqClient, err := bigqueryapi.NewClient(ctx, "example.com:test-project", option.WithEndpoint(mockServer.URL), option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("failed to create mocked BigQuery client: %v", err)
+	}
+
+	restService, err := bigqueryrestapi.NewService(ctx, option.WithEndpoint(mockServer.URL), option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("failed to create mocked BigQuery REST service: %v", err)
+	}
+
+	testSrc := &bqutil.MockSource{
+		Client:          bqClient,
+		Service:         restService,
+		AllowedDatasets: []string{"example.com:test-project.allowed_dataset"},
+	}
+
+	cfg := bigqueryexecutesql.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "execute_sql_tool",
+			Description: "Execute SQL",
+		},
+		Type:   "bigquery-execute-sql",
+		Source: "my-bq-source",
+	}
+	tool, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	params, err := tool.GetParameters(testSrc)
+	if err != nil {
+		t.Fatalf("failed to get parameters: %v", err)
+	}
+	paramVals, err := parameters.ParseParams(params, map[string]any{"sql": "SELECT * FROM forbidden_dataset.no_such_table", "dry_run": true}, nil)
+	if err != nil {
+		t.Fatalf("unexpected error parsing parameters: %v", err)
+	}
+
+	_, err = tool.Invoke(ctx, testSrc, paramVals, "")
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+	wantSub := "query accesses dataset 'example.com:test-project.forbidden_dataset', which is not in the allowed list"
+	if !strings.Contains(err.Error(), wantSub) {
+		t.Errorf("expected error to contain %q, got %v", wantSub, err)
+	}
+}
