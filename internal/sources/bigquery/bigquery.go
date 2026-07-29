@@ -783,7 +783,7 @@ func initBigQueryConnection(
 
 	if endpoint != "" {
 		opts = append(opts, option.WithEndpoint(endpoint))
-  }
+	}
 	if quotaProject != "" {
 		opts = append(opts, option.WithQuotaProject(quotaProject))
 	}

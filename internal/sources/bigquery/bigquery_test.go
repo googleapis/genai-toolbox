@@ -547,8 +547,8 @@ func TestInitialize_APIEndpoint(t *testing.T) {
 				t.Fatalf("expected *bigquery.Source, got %T", src)
 			}
 			// Verify the raw field is preserved on Config.
-			if bqSrc.Config.APIEndpoint != tc.cfg.APIEndpoint {
-				t.Errorf("Config.APIEndpoint = %q, want %q", bqSrc.Config.APIEndpoint, tc.cfg.APIEndpoint)
+			if bqSrc.APIEndpoint != tc.cfg.APIEndpoint {
+				t.Errorf("Config.APIEndpoint = %q, want %q", bqSrc.APIEndpoint, tc.cfg.APIEndpoint)
 			}
 			// Exercise the ClientCreator — it closes over the normalized endpoint
 			// and passes option.WithEndpoint when non-empty. Both bigqueryapi.NewClient
