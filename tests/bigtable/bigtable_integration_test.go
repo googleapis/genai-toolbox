@@ -117,6 +117,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigtableToolType, paramTestStatement, idParamTestStatement, nameParamTestStatement, arrayTestStatement, authToolStatement)
 	toolsFile = addTemplateParamConfig(t, toolsFile)
+	toolsFile = addBigTableAdminToolsConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -147,6 +148,8 @@ func TestBigtableToolEndpoints(t *testing.T) {
 		tests.WithMyToolById4Want(myToolById4Want),
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
+	runBigTableAdminToolsGetTest(t)
+	runBigTableAdminToolsTest(t, sourceConfig["instance"].(string))
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithNameFieldArray(nameFieldArray),
 		tests.WithNameColFilter(nameColFilter),
@@ -332,6 +335,588 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 			parameters.NewStringParameter("columnFilter", "some description"),
 		},
 	}
+
 	config["tools"] = toolsMap
 	return config
+}
+
+func runBigTableAdminToolsTest(t *testing.T, instanceId string) {
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableName := "admin_test_table_" + uniqueID
+	viewName := "admin_test_view_" + uniqueID
+
+	// Create table
+	_, _, err := tests.InvokeMCPTool(t, "bigtable-create-table", map[string]any{
+		"table_id":      tableName,
+		"column_family": "cf1",
+	}, map[string]string{})
+	if err != nil {
+		t.Fatalf("bigtable-create-table failed: %v", err)
+	}
+
+	// Make sure we clean up the table!
+	defer func() {
+		_, _, _ = tests.InvokeMCPTool(t, "bigtable-delete-table", map[string]any{
+			"table_id": tableName,
+		}, map[string]string{})
+	}()
+
+	// Get table
+	_, _, err = tests.InvokeMCPTool(t, "bigtable-get-table", map[string]any{
+		"table_id": tableName,
+	}, map[string]string{})
+	if err != nil {
+		t.Fatalf("bigtable-get-table failed: %v", err)
+	}
+
+	// Update table (disable_change_stream)
+	_, _, err = tests.InvokeMCPTool(t, "bigtable-update-table", map[string]any{
+		"table_id":              tableName,
+		"disable_change_stream": true,
+	}, map[string]string{})
+	if err != nil {
+		t.Fatalf("bigtable-update-table failed: %v", err)
+	}
+
+	// List tables
+	_, _, err = tests.InvokeMCPTool(t, "bigtable-list-tables", map[string]any{}, map[string]string{})
+	if err != nil {
+		t.Fatalf("bigtable-list-tables failed: %v", err)
+	}
+
+	// Create logical view
+	_, _, err = tests.InvokeMCPTool(t, "bigtable-create-logical-view", map[string]any{
+		"instance_id":     instanceId,
+		"logical_view_id": viewName,
+		"query":           "SELECT * FROM " + tableName,
+	}, map[string]string{})
+	if err != nil {
+		t.Fatalf("bigtable-create-logical-view failed: %v", err)
+	}
+
+	// Make sure we clean up the view!
+	defer func() {
+		_, _, _ = tests.InvokeMCPTool(t, "bigtable-delete-logical-view", map[string]any{
+			"instance_id":     instanceId,
+			"logical_view_id": viewName,
+		}, map[string]string{})
+	}()
+
+	// Get logical view
+	_, _, err = tests.InvokeMCPTool(t, "bigtable-get-logical-view", map[string]any{
+		"instance_id":     instanceId,
+		"logical_view_id": viewName,
+	}, map[string]string{})
+	if err != nil {
+		t.Fatalf("bigtable-get-logical-view failed: %v", err)
+	}
+
+	// We purposely invoke other admin tools with fake IDs to trigger safe API errors
+	params := map[string]any{
+		"instance_id":     "fake-instance-" + uniqueID,
+		"cluster_id":      "fake-cluster-" + uniqueID,
+		"display_name":    "fake",
+		"serve_nodes":     int64(3),
+		"zone":            "us-east1-b",
+		"num_nodes":       int64(3),
+		"query":           "SELECT *",
+		"view_query":      "SELECT *",
+		"logical_view_id": viewName,
+	}
+
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-create-cluster", params, map[string]string{})
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-update-cluster", params, map[string]string{})
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-delete-cluster", params, map[string]string{})
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-get-cluster", params, map[string]string{})
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-list-clusters", params, map[string]string{})
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-create-instance", params, map[string]string{})
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-update-instance", params, map[string]string{})
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-delete-instance", params, map[string]string{})
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-get-instance", params, map[string]string{})
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-update-logical-view", params, map[string]string{})
+	_, _, _ = tests.InvokeMCPTool(t, "bigtable-list-logical-views", params, map[string]string{})
+}
+
+func addBigTableAdminToolsConfig(t *testing.T, config map[string]any) map[string]any {
+	toolsMap, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+
+	adminTools := []string{
+		"bigtable-create-cluster", "bigtable-update-cluster", "bigtable-delete-cluster", "bigtable-get-cluster", "bigtable-list-clusters",
+		"bigtable-create-instance", "bigtable-update-instance", "bigtable-delete-instance", "bigtable-get-instance", "bigtable-list-instances",
+		"bigtable-create-table", "bigtable-update-table", "bigtable-delete-table", "bigtable-get-table", "bigtable-list-tables",
+		"bigtable-create-logical-view", "bigtable-update-logical-view", "bigtable-delete-logical-view", "bigtable-get-logical-view", "bigtable-list-logical-views",
+	}
+
+	for _, toolType := range adminTools {
+		toolsMap[toolType] = map[string]any{
+			"type":   toolType,
+			"source": "my-instance",
+		}
+	}
+
+	config["tools"] = toolsMap
+	return config
+}
+func runBigTableAdminToolsGetTest(t *testing.T) {
+	tests.RunToolGetTestByName(t, "bigtable-create-cluster",
+		map[string]any{
+			"bigtable-create-cluster": map[string]any{
+				"description":  "Create a new Bigtable cluster in an instance.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the cluster",
+						"name":         "cluster_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The zone for the cluster (e.g. us-central1-b)",
+						"name":         "zone",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The number of nodes to allocate",
+						"name":         "num_nodes",
+						"required":     true,
+						"type":         "integer",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-create-instance",
+		map[string]any{
+			"bigtable-create-instance": map[string]any{
+				"description":  "Create a new Bigtable instance.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance to create",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Display name for the instance",
+						"name":         "display_name",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the primary cluster",
+						"name":         "cluster_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The zone for the cluster (e.g. us-central1-b)",
+						"name":         "zone",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The number of nodes for the cluster",
+						"name":         "num_nodes",
+						"required":     true,
+						"type":         "integer",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-create-logical-view",
+		map[string]any{
+			"bigtable-create-logical-view": map[string]any{
+				"description":  "Create a new Bigtable logical view.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the logical view",
+						"name":         "logical_view_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The logical view query",
+						"name":         "query",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-create-table",
+		map[string]any{
+			"bigtable-create-table": map[string]any{
+				"description":  "Create a new Bigtable table.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the table to create",
+						"name":         "table_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-delete-cluster",
+		map[string]any{
+			"bigtable-delete-cluster": map[string]any{
+				"description":  "Delete a Bigtable cluster.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the cluster",
+						"name":         "cluster_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-delete-instance",
+		map[string]any{
+			"bigtable-delete-instance": map[string]any{
+				"description":  "Delete a Bigtable instance.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance to delete",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-delete-logical-view",
+		map[string]any{
+			"bigtable-delete-logical-view": map[string]any{
+				"description":  "Delete a Bigtable logical view.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the logical view",
+						"name":         "logical_view_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-delete-table",
+		map[string]any{
+			"bigtable-delete-table": map[string]any{
+				"description":  "Delete a Bigtable table.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the table to delete",
+						"name":         "table_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-get-cluster",
+		map[string]any{
+			"bigtable-get-cluster": map[string]any{
+				"description":  "Get details of a Bigtable cluster.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the cluster",
+						"name":         "cluster_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-get-instance",
+		map[string]any{
+			"bigtable-get-instance": map[string]any{
+				"description":  "Get details of a Bigtable instance.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance to get",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-get-logical-view",
+		map[string]any{
+			"bigtable-get-logical-view": map[string]any{
+				"description":  "Get details of a Bigtable logical view.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the logical view",
+						"name":         "logical_view_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-get-table",
+		map[string]any{
+			"bigtable-get-table": map[string]any{
+				"description":  "Get details of a Bigtable table.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the table to get",
+						"name":         "table_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-list-clusters",
+		map[string]any{
+			"bigtable-list-clusters": map[string]any{
+				"description":  "List all Bigtable clusters in the instance.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-list-instances",
+		map[string]any{
+			"bigtable-list-instances": map[string]any{
+				"description":  "List all Bigtable instances in the project.",
+				"authRequired": []any{},
+				"parameters":   []any{},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-list-logical-views",
+		map[string]any{
+			"bigtable-list-logical-views": map[string]any{
+				"description":  "List all Bigtable logical views in the instance.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-list-tables",
+		map[string]any{
+			"bigtable-list-tables": map[string]any{
+				"description":  "List all Bigtable tables in the instance.",
+				"authRequired": []any{},
+				"parameters":   []any{},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-update-cluster",
+		map[string]any{
+			"bigtable-update-cluster": map[string]any{
+				"description":  "Update the number of nodes in a Bigtable cluster.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the cluster",
+						"name":         "cluster_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The new number of nodes to allocate",
+						"name":         "serve_nodes",
+						"required":     true,
+						"type":         "integer",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-update-instance",
+		map[string]any{
+			"bigtable-update-instance": map[string]any{
+				"description":  "Update an existing Bigtable instance.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance to update",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The new display name",
+						"name":         "display_name",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-update-logical-view",
+		map[string]any{
+			"bigtable-update-logical-view": map[string]any{
+				"description":  "Update an existing Bigtable logical view.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the logical view",
+						"name":         "logical_view_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The new logical view query",
+						"name":         "query",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-update-table",
+		map[string]any{
+			"bigtable-update-table": map[string]any{
+				"description":  "Update an existing Bigtable table's configuration.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the table to update",
+						"name":         "table_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      true,
+						"description":  "Disable change stream",
+						"name":         "disable_change_stream",
+						"required":     false,
+						"type":         "boolean",
+					},
+				},
+			},
+		},
+	)
 }
