@@ -31,19 +31,18 @@ so the important things aren't buried, and a paste-ready summary comment.
 
 ## Guidance
 
-**Read source-of-truth live, not from memory** (conventions drift):
+**Read source-of-truth live, not from memory** (conventions drift). All three are authoritative;
+this skill only adds how to apply them in a propose-only flow.
 
-- [references/maintainer-playbook.md](references/maintainer-playbook.md): the
-  **authoritative** Reviewer's Checklist, SLO/release context, and the `release candidate`
-  labeling rule. This skill only adds how to apply the checklist in a propose-only flow.
-- `CONTRIBUTING.md` (repo root): the **authoritative** PR conventions: title/scope format
-  (Conventional Commits, with the `type` table), the "keep PRs small" and "link an issue"
-  guidelines, and the review process. Cite it for title/description/process findings.
-- `DEVELOPER.md` (repo root): the **authoritative** engineering conventions: tool/source
-  naming, error categorization, the patterns for adding a source/tool/integration test, the
-  CI-enforced docs-structure rules, and the local test/lint commands. Cite it for code,
-  test, and docs-structure findings. (Prefer these two over the agent-specific
-  `GEMINI.md`/`CLAUDE.md`/`AGENTS.md`, which only summarize them and are symlinks to one file.)
+- [references/maintainer-playbook.md](references/maintainer-playbook.md): the Reviewer's
+  Checklist, SLO/release context, and the `release candidate` labeling rule.
+- `CONTRIBUTING.md` (repo root): PR conventions: title/scope format (Conventional Commits, with
+  the `type` table), the "keep PRs small" and "link an issue" guidelines, and the review process.
+  Cite it for title/description/process findings.
+- `DEVELOPER.md` (repo root): engineering conventions: tool/source naming, error categorization,
+  the patterns for adding a source/tool/integration test, the CI-enforced docs-structure rules,
+  and the local test/lint commands. Cite it for code, test, and docs-structure findings. Prefer
+  it over `GEMINI.md` (`CLAUDE.md`/`AGENTS.md` are symlinks to it), which only summarizes.
 
 Fetch the PR and its diff:
 ```bash
@@ -57,11 +56,18 @@ just: are the checks green? If so, propose merge and stop. If the PR `isDraft`, 
 lightly and say so, since the author isn't asking for a final pass yet.
 
 **Non-code / policy PRs.** Some PRs (adding a third-party badge, backlink, or promotional
-README line, often from a drive-by contributor) carry little code risk but raise a
-project/brand decision the maintainer must own. Don't manufacture code findings; state
-plainly that acceptance is a maintainer policy call, and still check the objective things
-(title convention, CI). For an external badge/link, don't vouch for a URL you haven't
-fetched: mark it `[UNVERIFIED]` and suggest the maintainer verify the source and target.
+README line, often from a drive-by contributor) raise a project/brand decision the maintainer
+must own rather than a code question. Don't manufacture code findings; state plainly that
+acceptance is a maintainer policy call, and still check the objective things (title convention,
+CI). For an external badge or link, don't vouch for a URL you haven't fetched: mark it
+`[UNVERIFIED]` and suggest the maintainer verify the source and target.
+
+**A docs-shaped title never lowers the read bar.** PR #2473, titled "docs: fix typo in getting
+started guide", added an npm `preinstall` hook that hijacked `git` via `GITHUB_PATH` to
+exfiltrate an RSA-encrypted `GITHUB_TOKEN`. Read every file in the diff of any PR touching
+`.hugo/`, `package.json` lifecycle scripts, `.github/workflows/`, or `.ci/`, whatever the title
+says. A file in the diff that the title and description don't account for is itself a blocking
+finding.
 
 **Read the whole diff before commenting, and look for what's *missing*, not just what's
 wrong.** The costly misses are absences and cross-file shape: a refactor applied to 4 of 5
@@ -85,7 +91,11 @@ it doesn't apply: say so, don't invent a finding.
   the schema needs JSON-serializable output, but database drivers return native types that
   don't serialize (e.g. MySQL returns `[]byte` for decimals, nulls come back as `nil`/`None`).
   Require explicit type handling that maps cleanly to the tool's JSON schema; reject implicit
-  casts or a missing type switch.
+  casts or a missing type switch. On any new or changed error path, check the error taxonomy
+  (`DEVELOPER.md`, error handling): `AgentError` for input/execution errors the agent can fix
+  itself (HTTP 200, `isError: true`) versus `ClientServerError` for infrastructure failures it
+  can't. Getting these backwards is invisible to CI and decides whether the agent retries or
+  gives up.
 - **Breaking changes.** Changed config field names/YAML shape, tool names, removed/renamed
   exported symbols, or altered default behavior break users. If you find one, check the
   title carries `!`/`BREAKING CHANGE` and the description justifies it; if not, that's a
@@ -93,19 +103,37 @@ it doesn't apply: say so, don't invent a finding.
 - **Refactor purity.** A `refactor:` PR must not change behavior; the logic should be
   equivalent. If a bug fix or default-behavior change is bundled in, ask for it to be split
   into a separate `fix:`/`feat:` PR so it is reviewable and revertable on its own.
+- **Source reuse (new sources).** The most-enforced architectural rule in this repo, stated in
+  `DEVELOPER.md` (adding a new database source or tool): a new `internal/sources/<db>/` is not
+  accepted when the database is wire-compatible with a source that already exists. If the PR adds
+  a source, require the description to establish that the wire protocol differs from every
+  existing source; if it doesn't, the fix is to configure the existing source instead, and that is
+  blocking. Precedent to cite if the author pushes back: the MariaDB source was removed after
+  merge on these grounds (#1908) and SingleStore landed only with an explicit maintenance
+  commitment (#1333). The same logic applies to a tool duplicating an existing tool's behavior
+  under a new name.
 - **Architecture (no boilerplate).** New tools embed `tools.BaseTool[Config]` and new
   sources follow the registration pattern rather than re-declaring the standard interface
   methods (`GetName`, `Manifest`, etc.); reject copy-pasted boilerplate. The authoritative
   list of what `BaseTool` provides is in `DEVELOPER.md` (adding a new tool).
+- **Tool and parameter descriptions.** Every `description:` in a tool or parameter definition is
+  an LLM prompt, not developer documentation. Review it for whether an agent could pick this tool
+  and fill its parameters from that text alone, at a token cost worth paying. Flag descriptions
+  that merely restate the field name, omit units/format/allowed values, or run long without
+  adding information.
 - **Tests.** New functionality or a bug fix should add tests. For a bug fix, look for a test
   that fails without the fix. Check that both happy path and edge cases are covered, and
   that a new source/tool follows the repo's unit + integration test pattern (and is wired
   into `.ci/integration.cloudbuild.yaml` when adding a source), per `DEVELOPER.md`. Missing
-  tests on new logic is usually a request-changes. Integration tests need GCP credentials
-  that an external contributor's PR can't trigger in CI, so green CI on an external PR does
-  not mean they ran; when the code looks ready and passes locally, the next step is a
-  maintainer running them via the `tests: run` label or a `/gcbrun` comment
-  (`DEVELOPER.md`). Note that rather than treating the un-run tests as a blocker.
+  tests on new logic is usually a request-changes. Placement is reviewed as closely as coverage:
+  source-specific helpers stay unexported in `tests/<db>/<db>_integration_test.go` and must not
+  land in the shared `tests/common.go`. Where a test looks flaky, the fixes reviewers ask for by
+  name are UUID-scoped resource names, `t.Cleanup` teardown, polling instead of `time.Sleep`, and
+  subset assertions rather than exact-match on result sets that a shared instance can add rows to.
+  Integration tests need GCP credentials that an external contributor's PR can't trigger in CI,
+  so green CI on an external PR does not mean they ran; when the code looks ready and passes
+  locally, the next step is a maintainer running them via the `tests: run` label or a `/gcbrun`
+  comment (`DEVELOPER.md`). Note that rather than treating the un-run tests as a blocker.
 - **Docs.** If the change alters how a user configures or interacts with the toolbox, the
   matching docs under `docs/en/` must be updated. New sources/tools have CI-enforced page
   structure (H2 ordering, `_index.md` frontmatter-only, title conventions); see the
@@ -117,21 +145,49 @@ it doesn't apply: say so, don't invent a finding.
 - **Dependencies.** New entries in `go.mod` deserve a note: is the dependency necessary,
   maintained, and appropriately licensed? Call out additions so the maintainer can vet them.
 
+**Findings this repo rejects.** These four are settled decisions, not oversights, and each looks
+like a defect by general Go standards, so they are easy to raise by reflex. Raising one costs the
+contributor a cycle and the review its credibility.
+
+- **No defensive checks for states the call graph already rules out.** Don't ask for a nil or
+  bounds check on a value the caller guarantees (#3388).
+- **Direct type assertions on parameters are the house pattern.** Don't ask for comma-ok in
+  parameter handling; a panic on an internally impossible type is acceptable here.
+- **Duplication across MCP protocol versions is deliberate.** Each version keeps its own copy of
+  shared structures so versions can diverge independently; don't propose factoring them together
+  (#3167, #3211).
+- **Wildcard `--allowed-hosts` and CORS defaults are a product decision.** A CVE was requested for
+  this and declined (#2750, #3113). Don't file it as a vulnerability.
+
+A genuine bug in code that happens to touch one of these areas is still a finding. What's out of
+scope is re-litigating the convention.
+
 **CI status.** Read `gh pr checks`. Failing lint/tests are objective blockers: name which
 check failed rather than re-deriving it by hand. Don't claim the linter passes; report what
 CI says, or run `golangci-lint run` / `go test` locally only if the branch is checked out
-and note results as advisory.
+and note results as advisory. The CLA check has one recurring non-obvious failure: commits
+co-authored by an AI agent (for example `cursoragent@cursor.com` or a Claude agent address) fail
+it even when the human author has signed. The fix is to squash to a single commit authored solely
+by the human, so suggest that rather than pointing the contributor at the CLA docs.
+
+**Existing bot review.** If `gemini-code-assist` has already commented, don't restate its points
+as your own. It is the highest-volume reviewer in the repo and frequently wrong, having been
+overruled on Go stdlib behavior, third-party API surfaces, and compile errors that did not exist.
+Verify anything you carry forward against the diff yourself and drop the rest. Its review carries
+no approval weight either way.
 
 **Severity is the point.** A wall of equal-weight comments is noise. Separate **blocking**
 (correctness bug, breaking change without `!`, missing tests on new logic, CI red, docs that
 break the build) from **non-blocking** (style, naming, test-coverage gaps on existing code)
 from **nits** (typos, wording). The verdict follows: any blocking finding means request
 changes; only non-blocking/nits means approve with comments; an unresolved judgment call
-means comment and ask. Don't spend findings on mere preference (early-return vs nested-if,
-naming that matches the file) or on what CI already catches (formatting, lint); call
-something wrong only when you can say *why* it is worse, not just different. When there are
-no blockers, say so plainly, since "no blockers, a couple of nits" tells the maintainer it's
-mergeable as-is.
+means comment and ask. Calibrate against how the team actually votes: humans on this repo
+approve roughly 4.5 times for every changes-requested, so treat "request changes" as a real
+signal reserved for the blocking list, not the default for any imperfection. Don't spend findings
+on mere preference (early-return vs nested-if, naming that matches the file) or on what CI already
+catches (formatting, lint); call something wrong only when you can say *why* it is worse, not just
+different. When there are no blockers, say so plainly, since "no blockers, a couple of nits" tells
+the maintainer it's mergeable as-is.
 
 **`release candidate`.** Per the playbook, propose adding the `release candidate` label
 (defined in `.github/labels.yaml`) when the change should ship in the next release. Propose
