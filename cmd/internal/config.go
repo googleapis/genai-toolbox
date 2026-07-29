@@ -64,7 +64,8 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		p.EnvVars = make(map[string]string)
 	}
 
-	var err error
+	var missing []string
+	seenMissing := make(map[string]bool)
 	matches := re.FindAllStringSubmatchIndex(input, -1)
 	var output strings.Builder
 	lastIndex := 0
@@ -95,9 +96,10 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 			if p.AllowMissingEnvVars {
 				p.EnvVars[variableName] = variableName
 				output.WriteString(variableName)
-			} else if err == nil {
+			} else if !seenMissing[variableName] {
+				seenMissing[variableName] = true
 				line, column := lineColumnAt(input, start)
-				err = fmt.Errorf("environment variable not found: %q (line %d, column %d)", variableName, line, column)
+				missing = append(missing, fmt.Sprintf("%q (line %d, column %d)", variableName, line, column))
 			}
 		}
 
@@ -113,6 +115,15 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		}
 	}
 	p.OptionalEnvVars = finalOptional
+
+	var err error
+	if len(missing) > 0 {
+		if len(missing) == 1 {
+			err = fmt.Errorf("environment variable not found: %s", missing[0])
+		} else {
+			err = fmt.Errorf("environment variables not found:\n  - %s", strings.Join(missing, "\n  - "))
+		}
+	}
 
 	return output.String(), err
 }
