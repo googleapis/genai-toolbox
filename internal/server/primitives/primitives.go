@@ -140,13 +140,16 @@ func (r *PrimitiveManager) GetEmbeddingModelMap() map[string]embeddingmodels.Emb
 func (r *PrimitiveManager) Groups() iter.Seq2[string, group.Group] {
 	return func(yield func(string, group.Group) bool) {
 		r.mu.RLock()
-		defer r.mu.RUnlock()
-
 		names := make([]string, 0, len(r.groups))
 		for name := range r.groups {
 			names = append(names, name)
 		}
 		slices.Sort(names)
+		groups := make([]group.Group, len(names))
+		for i, name := range names {
+			groups[i] = r.groups[name]
+		}
+		r.mu.RUnlock()
 
 		for _, name := range names {
 			if !yield(name, r.groups[name]) {
