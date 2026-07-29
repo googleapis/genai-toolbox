@@ -8,7 +8,7 @@
 // ==========================================================================
 const BANNER_CONFIG = {
   title: "MCP Toolbox Now Supports the New Stateless MCP Spec!",
-  message: "Natively support the new 2026-07-28 stateless Model Context Protocol spec for better scaling.",
+  message: "Try out the new 2026-07-28 stateless MCP spec for better scaling.",
   linkText: "Read the launch blog!",
   linkUrl: "https://medium.com/google-cloud/mcp-toolbox-adds-support-for-the-new-july-28-mcp-spec-a0fbe401cbba"
 };
