@@ -429,8 +429,7 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	promptsMap := primitiveMgr.GetPromptsMap()
-	listPromptsResult, err := GenerateListPromptsResult(g, promptsMap)
+	listPromptsResult, err := GenerateListPromptsResult(primitiveMgr, g)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -522,80 +521,6 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group,
 	result := GetPromptResult{
 		Description: prompt.Manifest().Description,
 		Messages:    promptMessages,
-	}
-
-	return jsonrpc.JSONRPCResponse{
-		Jsonrpc: jsonrpc.JSONRPC_VERSION,
-		Id:      id,
-		Result:  result,
-	}, nil
-}
-
-// groupsListHandler handles the "groups/list" method. It returns every named
-// group's name and description. The default nameless group is omitted.
-func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *primitives.PrimitiveManager, body []byte) (any, error) {
-	// retrieve logger from context
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
-	}
-	logger.DebugContext(ctx, "handling groups/list request")
-
-	var req ListGroupsRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		err = fmt.Errorf("invalid mcp groups list request: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
-	}
-
-	result := GenerateListGroupsResult(primitiveMgr.GetGroupsMap())
-	logger.DebugContext(ctx, fmt.Sprintf("returning %d groups", len(result.Groups)))
-	return jsonrpc.JSONRPCResponse{
-		Jsonrpc: jsonrpc.JSONRPC_VERSION,
-		Id:      id,
-		Result:  result,
-	}, nil
-}
-
-// groupsGetHandler handles the "groups/get" method. It returns the named group's
-// tools and prompts.
-func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *primitives.PrimitiveManager, body []byte) (any, error) {
-	// retrieve logger from context
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
-	}
-	logger.DebugContext(ctx, "handling groups/get request")
-
-	var req GetGroupRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		err = fmt.Errorf("invalid mcp groups/get request: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
-	}
-
-	groupName := req.Params.Name
-	logger.DebugContext(ctx, fmt.Sprintf("group name: %s", groupName))
-
-	// Update span name and set gen_ai attributes
-	span := trace.SpanFromContext(ctx)
-	span.SetName(fmt.Sprintf("%s %s", GROUPS_GET, groupName))
-	span.SetAttributes(attribute.String("gen_ai.group.name", groupName))
-
-	// Populate gen_ai attributes for operation duration metric
-	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
-		genAIAttrs.OperationName = "get_group"
-		genAIAttrs.GroupName = groupName
-	}
-
-	g, ok := primitiveMgr.GetGroup(groupName)
-	if !ok {
-		err := fmt.Errorf("invalid group name: group with name %q does not exist", groupName)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
-	}
-
-	urlParams, _ := util.UrlParamsFromContext(ctx)
-	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams)
-	if err != nil {
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	return jsonrpc.JSONRPCResponse{
