@@ -8725,7 +8725,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode255s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode418s0hbhb"&gt;
 
 
 
@@ -19410,6 +19410,11 @@ on the target service account.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;BIGQUERY_MAXIMUM_BYTES_BILLED&lt;/code&gt;: (Optional) Per-query bytes scanned cap
 (in bytes). Queries that exceed this limit fail before executing and
 cost nothing.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;BIGQUERY_ENDPOINT&lt;/code&gt;: (Optional) Override the BigQuery API endpoint to
+route traffic through a corporate proxy or a local emulator. Both
+&lt;code&gt;http://&lt;/code&gt; and &lt;code&gt;https://&lt;/code&gt; schemes are supported (e.g.,
+&lt;code&gt;http://localhost:9050&lt;/code&gt;). When unset, the default Google API endpoint
+is used.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
