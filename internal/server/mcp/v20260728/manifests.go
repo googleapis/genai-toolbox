@@ -16,6 +16,8 @@ package v20260728
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
@@ -180,11 +182,12 @@ func GenerateListPromptsResult(pMgr *primitives.PrimitiveManager, g group.Group)
 // GenerateListGroupsResult generates the groups/list result. It omits the
 // default nameless group and returns the remaining groups sorted by name.
 func GenerateListGroupsResult(pMgr *primitives.PrimitiveManager) ListGroupsResult {
+	grps := pMgr.Groups()
+	delete(grps, "")
+
 	groupsList := []Group{}
-	for name, g := range pMgr.Groups() {
-		if name == "" {
-			continue
-		}
+	for _, name := range slices.Sorted(maps.Keys(grps)) {
+		g := grps[name]
 		groupsList = append(groupsList, Group{Name: g.Name, Description: g.Description})
 	}
 	return ListGroupsResult{Groups: groupsList}
