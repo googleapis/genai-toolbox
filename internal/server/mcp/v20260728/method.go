@@ -719,7 +719,7 @@ func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *
 		return validateErr, err
 	}
 
-	result := GenerateListGroupsResult(primitiveMgr.GetGroupsMap())
+	result := GenerateListGroupsResult(primitiveMgr)
 	logger.DebugContext(ctx, fmt.Sprintf("returning %d groups", len(result.Groups)))
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,

@@ -15,6 +15,8 @@
 package primitives
 
 import (
+	"iter"
+	"slices"
 	"sync"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -134,12 +136,22 @@ func (r *PrimitiveManager) GetEmbeddingModelMap() map[string]embeddingmodels.Emb
 	return copiedMap
 }
 
-func (r *PrimitiveManager) GetGroupsMap() map[string]group.Group {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]group.Group, len(r.groups))
-	for k, v := range r.groups {
-		copiedMap[k] = v
+// Groups returns a thread-safe iterator over the groups map.
+func (r *PrimitiveManager) Groups() iter.Seq2[string, group.Group] {
+	return func(yield func(string, group.Group) bool) {
+		r.mu.RLock()
+		defer r.mu.RUnlock()
+
+		names := make([]string, 0, len(r.groups))
+		for name := range r.groups {
+			names = append(names, name)
+		}
+		slices.Sort(names)
+
+		for _, name := range names {
+			if !yield(name, r.groups[name]) {
+				return
+			}
+		}
 	}
-	return copiedMap
 }
