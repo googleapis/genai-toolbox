@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigtablecreatetable
+package bigtablegetmaterializedview
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "bigtable-create-table"
+const resourceType string = "bigtable-get-materialized-view"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -43,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	CreateTable(context.Context, string, string) (any, error)
+	GetMaterializedView(context.Context, string, string) (any, error)
 }
 
 type Config struct {
@@ -61,18 +61,18 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
-		cfg.Description = "Create a new Bigtable table."
+		cfg.Description = "Get information about an existing Bigtable materialized view."
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameter("table_id", "The ID of the table to create"),
-		parameters.NewStringParameter("column_family", "Optional column family name to create with the table", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("instance_id", "The ID of the instance"),
+		parameters.NewStringParameter("materialized_view_id", "The ID of the materialized view"),
 	}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
-			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
 			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),
@@ -109,15 +109,7 @@ func (t Tool) Invoke(ctx context.Context, src sources.Source, params parameters.
 
 	paramsMap := params.AsMap()
 
-	tableID := paramsMap["table_id"].(string)
-	var columnFamily string
-	if cf, ok := paramsMap["column_family"]; ok && cf != nil {
-		if cfStr, ok := cf.(string); ok {
-			columnFamily = cfStr
-		}
-	}
-
-	res, err := source.CreateTable(ctx, tableID, columnFamily)
+	res, err := source.GetMaterializedView(ctx, paramsMap["instance_id"].(string), paramsMap["materialized_view_id"].(string))
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
