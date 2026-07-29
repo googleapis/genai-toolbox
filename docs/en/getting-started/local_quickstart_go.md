@@ -81,6 +81,7 @@ from Toolbox.
 {{< /tab >}}
 
 {{< tab header="ADK Go" lang="go" >}}
+
    Set your API key (If you don't have an API key yet, you can get one from [Google AI Studio](https://aistudio.google.com/app/apikey).)
    
    ```bash
