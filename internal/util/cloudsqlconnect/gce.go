@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,14 @@
 package cloudsqlconnect
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"sync"
+
+	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/option"
+	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 // ParseConnectionName splits a Cloud SQL instance connection name
@@ -81,3 +87,125 @@ func AssertEngine(expected DatabaseType, instanceName, databaseVersion string) e
 		instanceName, got, databaseVersion, ToolSlug(got),
 	)
 }
+
+// computeService is lazily initialized on first use and shared across
+// invocations: *compute.Service is goroutine-safe and rebuilding it per
+// call would re-pay token-source + service-discovery costs.
+var (
+	computeOnce    sync.Once
+	computeService *compute.Service
+	computeErr     error
+)
+
+// GetComputeService returns a process-wide Compute Engine client, built
+// once on first call. The initializer uses context.Background() on
+// purpose: a request-scoped ctx cached inside sync.Once would poison
+// every subsequent invocation if the first caller cancelled or timed
+// out. Callers still propagate their request ctx to individual API
+// calls via Instances.Get(...).Context(ctx).Do().
+func GetComputeService() (*compute.Service, error) {
+	computeOnce.Do(func() {
+		computeService, computeErr = compute.NewService(context.Background(), option.WithScopes(compute.ComputeReadonlyScope))
+	})
+	return computeService, computeErr
+}
+
+// ExtractSQLInfo lifts the fields the connect tools need out of a
+// Cloud SQL Admin DatabaseInstance.
+func ExtractSQLInfo(inst *sqladmin.DatabaseInstance) *CloudSQLInstanceInfo {
+	info := &CloudSQLInstanceInfo{
+		Name:            inst.Name,
+		Project:         inst.Project,
+		Region:          inst.Region,
+		ConnectionName:  inst.ConnectionName,
+		DatabaseVersion: inst.DatabaseVersion,
+		DatabaseType:    ParseDatabaseType(inst.DatabaseVersion),
+	}
+	for _, ip := range inst.IpAddresses {
+		switch ip.Type {
+		case "PRIMARY":
+			info.PublicIPAddress = ip.IpAddress
+			info.PublicIPEnabled = true
+		case "PRIVATE":
+			info.PrivateIPAddress = ip.IpAddress
+			info.PrivateIPEnabled = true
+		}
+	}
+	if inst.Settings != nil && inst.Settings.IpConfiguration != nil {
+		info.VPCNetwork = inst.Settings.IpConfiguration.PrivateNetwork
+		info.RequireSSL = inst.Settings.IpConfiguration.RequireSsl
+	}
+	return info
+}
+
+// ExtractVMInfo lifts the fields the connect tools need out of a
+// Compute Engine instance.
+func ExtractVMInfo(inst *compute.Instance, zone string) *GCEInstanceInfo {
+	info := &GCEInstanceInfo{Name: inst.Name, Zone: zone}
+	if len(inst.NetworkInterfaces) > 0 {
+		ni := inst.NetworkInterfaces[0]
+		info.InternalIP = ni.NetworkIP
+		info.VPCNetwork = ExtractNetworkName(ni.Network)
+		info.Subnetwork = ExtractNetworkName(ni.Subnetwork)
+		for _, ac := range ni.AccessConfigs {
+			if ac.NatIP != "" {
+				info.ExternalIP = ac.NatIP
+				info.HasExternalIP = true
+				break
+			}
+		}
+	}
+	if len(inst.ServiceAccounts) > 0 {
+		info.ServiceAccount = inst.ServiceAccounts[0].Email
+	}
+	return info
+}
+
+// FindVM resolves a VM by name across all zones in a project. It uses a
+// server-side name filter so the API short-circuits per-zone scans, and
+// stops paging once a second match is seen (so we don't read pages we
+// don't need just to error out).
+func FindVM(ctx context.Context, service *compute.Service, project, vmName string) (*compute.Instance, string, error) {
+	var foundInstances []*compute.Instance
+	var foundZones []string
+
+	const stopPaging stringErr = "stop-paging"
+
+	// vmName is whitelist-validated by ValidateGCEResourceName upstream of this
+	// call, so it cannot contain quote/space/special chars; %q wraps it in
+	// quotes for GCE's filter language regardless.
+	req := service.Instances.AggregatedList(project).Filter(fmt.Sprintf("name eq %q", vmName))
+	err := req.Pages(ctx, func(page *compute.InstanceAggregatedList) error {
+		for zone, list := range page.Items {
+			for _, instance := range list.Instances {
+				if instance.Name != vmName {
+					continue
+				}
+				foundInstances = append(foundInstances, instance)
+				foundZones = append(foundZones, ExtractNetworkName(zone))
+				if len(foundInstances) > 1 {
+					return stopPaging
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil && err != stopPaging {
+		return nil, "", fmt.Errorf("failed to search for VM: %w", err)
+	}
+
+	switch len(foundInstances) {
+	case 0:
+		return nil, "", fmt.Errorf("VM %q not found in project %q", vmName, project)
+	case 1:
+		return foundInstances[0], foundZones[0], nil
+	default:
+		return nil, "", fmt.Errorf("multiple VMs named %q found in zones: %v - please specify vm_zone parameter", vmName, foundZones)
+	}
+}
+
+// stringErr signals early termination from Pages without conflating with
+// real API errors. Unexported: only FindVM's Pages callback uses it.
+type stringErr string
+
+func (e stringErr) Error() string { return string(e) }

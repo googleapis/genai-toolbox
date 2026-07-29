@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -32,7 +31,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/cloudsqlconnect"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/option"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
@@ -147,7 +145,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		return nil, util.ProcessGcpError(err)
 	}
 
-	computeService, err := getComputeService(ctx)
+	computeService, err := cloudsqlconnect.GetComputeService()
 	if err != nil {
 		return nil, util.NewClientServerError("failed to initialize Compute Engine service", http.StatusInternalServerError, err)
 	}
@@ -196,7 +194,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
-	sqlInfo := extractSQLInfo(sqlInstance)
+	sqlInfo := cloudsqlconnect.ExtractSQLInfo(sqlInstance)
 
 	if err := cloudsqlconnect.AssertEngine(cloudsqlconnect.PostgreSQL, instanceName, sqlInfo.DatabaseVersion); err != nil {
 		return nil, util.NewAgentError(err.Error(), err)
@@ -204,7 +202,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 
 	var vmInstance *compute.Instance
 	if vmZone == "" {
-		vmInstance, vmZone, err = findVM(ctx, computeService, project, vmName)
+		vmInstance, vmZone, err = cloudsqlconnect.FindVM(ctx, computeService, project, vmName)
 		if err != nil {
 			return nil, util.ProcessGcpError(err)
 		}
@@ -214,7 +212,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 			return nil, util.ProcessGcpError(err)
 		}
 	}
-	vmInfo := extractVMInfo(vmInstance, vmZone)
+	vmInfo := cloudsqlconnect.ExtractVMInfo(vmInstance, vmZone)
 
 	validation := cloudsqlconnect.ValidateGCEConnection(sqlInfo, vmInfo)
 	sameVPC := cloudsqlconnect.IsSameVPC(sqlInfo.VPCNetwork, vmInfo.VPCNetwork)
@@ -266,118 +264,3 @@ func (t Tool) RequiresClientAuthorization(source sources.Source) (bool, error) {
 	}
 	return s.UseClientAuthorization(), nil
 }
-
-// computeService is lazily initialized on first use and shared across
-// invocations: *compute.Service is goroutine-safe and rebuilding it per
-// call would re-pay token-source + service-discovery costs.
-var (
-	computeOnce    sync.Once
-	computeService *compute.Service
-	computeErr     error
-)
-
-func getComputeService(ctx context.Context) (*compute.Service, error) {
-	computeOnce.Do(func() {
-		computeService, computeErr = compute.NewService(ctx, option.WithScopes(compute.ComputeReadonlyScope))
-	})
-	return computeService, computeErr
-}
-
-// extractSQLInfo lifts the fields the connect tool needs out of a
-// Cloud SQL Admin DatabaseInstance.
-func extractSQLInfo(inst *sqladmin.DatabaseInstance) *cloudsqlconnect.CloudSQLInstanceInfo {
-	info := &cloudsqlconnect.CloudSQLInstanceInfo{
-		Name:            inst.Name,
-		Project:         inst.Project,
-		Region:          inst.Region,
-		ConnectionName:  inst.ConnectionName,
-		DatabaseVersion: inst.DatabaseVersion,
-		DatabaseType:    cloudsqlconnect.ParseDatabaseType(inst.DatabaseVersion),
-	}
-	for _, ip := range inst.IpAddresses {
-		switch ip.Type {
-		case "PRIMARY":
-			info.PublicIPAddress = ip.IpAddress
-			info.PublicIPEnabled = true
-		case "PRIVATE":
-			info.PrivateIPAddress = ip.IpAddress
-			info.PrivateIPEnabled = true
-		}
-	}
-	if inst.Settings != nil && inst.Settings.IpConfiguration != nil {
-		info.VPCNetwork = inst.Settings.IpConfiguration.PrivateNetwork
-		info.RequireSSL = inst.Settings.IpConfiguration.RequireSsl
-	}
-	return info
-}
-
-// extractVMInfo lifts the fields the connect tool needs out of a
-// Compute Engine instance.
-func extractVMInfo(inst *compute.Instance, zone string) *cloudsqlconnect.GCEInstanceInfo {
-	info := &cloudsqlconnect.GCEInstanceInfo{Name: inst.Name, Zone: zone}
-	if len(inst.NetworkInterfaces) > 0 {
-		ni := inst.NetworkInterfaces[0]
-		info.InternalIP = ni.NetworkIP
-		info.VPCNetwork = cloudsqlconnect.ExtractNetworkName(ni.Network)
-		info.Subnetwork = cloudsqlconnect.ExtractNetworkName(ni.Subnetwork)
-		for _, ac := range ni.AccessConfigs {
-			if ac.NatIP != "" {
-				info.ExternalIP = ac.NatIP
-				info.HasExternalIP = true
-				break
-			}
-		}
-	}
-	if len(inst.ServiceAccounts) > 0 {
-		info.ServiceAccount = inst.ServiceAccounts[0].Email
-	}
-	return info
-}
-
-// findVM resolves a VM by name across all zones in a project. It uses a
-// server-side name filter so the API short-circuits per-zone scans, and
-// stops paging once we've seen a second match.
-func findVM(ctx context.Context, service *compute.Service, project, vmName string) (*compute.Instance, string, error) {
-	var foundInstances []*compute.Instance
-	var foundZones []string
-
-	const stopPaging stringErr = "stop-paging"
-
-	// vmName is whitelist-validated by ValidateGCEResourceName upstream of this
-	// call, so it cannot contain quote/space/special chars; %q wraps it in
-	// quotes for GCE's filter language regardless.
-	req := service.Instances.AggregatedList(project).Filter(fmt.Sprintf("name eq %q", vmName))
-	err := req.Pages(ctx, func(page *compute.InstanceAggregatedList) error {
-		for zone, list := range page.Items {
-			for _, instance := range list.Instances {
-				if instance.Name != vmName {
-					continue
-				}
-				foundInstances = append(foundInstances, instance)
-				foundZones = append(foundZones, cloudsqlconnect.ExtractNetworkName(zone))
-				if len(foundInstances) > 1 {
-					return stopPaging
-				}
-			}
-		}
-		return nil
-	})
-	if err != nil && err != stopPaging {
-		return nil, "", fmt.Errorf("failed to search for VM: %w", err)
-	}
-
-	switch len(foundInstances) {
-	case 0:
-		return nil, "", fmt.Errorf("VM %q not found in project %q", vmName, project)
-	case 1:
-		return foundInstances[0], foundZones[0], nil
-	default:
-		return nil, "", fmt.Errorf("multiple VMs named %q found in zones: %v - please specify vm_zone parameter", vmName, foundZones)
-	}
-}
-
-// stringErr is a tiny error type used to signal early termination from
-// Pages without conflating with real API errors.
-type stringErr string
-
-func (e stringErr) Error() string { return string(e) }
