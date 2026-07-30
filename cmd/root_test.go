@@ -63,6 +63,12 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.UserAgentMetadata == nil {
 		c.UserAgentMetadata = []string{}
 	}
+	if c.Extensions == nil {
+		c.Extensions = []string{}
+	}
+	if c.ExperimentalExtensions == nil {
+		c.ExperimentalExtensions = []string{}
+	}
 	if c.HttpMaxRequestBytes == 0 {
 		c.HttpMaxRequestBytes = server.DefaultHTTPMaxRequestBytes
 	}
@@ -254,6 +260,20 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--tls-key", "key.pem"},
 			want: withDefaults(server.ServerConfig{
 				KeyFile: "key.pem",
+			}),
+		},
+		{
+			desc: "extensions",
+			args: []string{"--extensions", "com.google.cloud/toolbox.v1"},
+			want: withDefaults(server.ServerConfig{
+				Extensions: []string{"com.google.cloud/toolbox.v1"},
+			}),
+		},
+		{
+			desc: "experimental extensions",
+			args: []string{"--experimental-extensions", "com.google.cloud/toolbox.v1"},
+			want: withDefaults(server.ServerConfig{
+				ExperimentalExtensions: []string{"com.google.cloud/toolbox.v1"},
 			}),
 		},
 	}

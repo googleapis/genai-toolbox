@@ -151,23 +151,24 @@ func TestWithClientCapabilities(t *testing.T) {
 }
 
 func TestServerExtensions(t *testing.T) {
-	if GetServerExtensions() != nil {
+	ctx := context.Background()
+	if GetServerExtensions(ctx) != nil {
 		t.Errorf("expected nil when no server extensions registered")
 	}
-	if GetServerExperimental() != nil {
+	if GetServerExperimental(ctx) != nil {
 		t.Errorf("expected nil when no server experimental extensions registered")
 	}
 
-	RegisterServerExtension(testExtURI, map[string]any{})
-	RegisterServerExperimental(testExtURI, true)
+	ctx = WithServerExtensions(ctx, []string{testExtURI})
+	ctx = WithServerExperimentalExtensions(ctx, []string{testExtURI})
 
-	exts := GetServerExtensions()
+	exts := GetServerExtensions(ctx)
 	if exts == nil || exts[testExtURI] == nil {
 		t.Errorf("expected testExtURI to be registered in server extensions")
 	}
 
-	exp := GetServerExperimental()
-	if exp == nil || exp[testExtURI] != true {
+	exp := GetServerExperimental(ctx)
+	if exp == nil || exp[testExtURI] == nil {
 		t.Errorf("expected testExtURI to be registered in server experimental")
 	}
 }

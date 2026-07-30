@@ -103,6 +103,10 @@ type ServerConfig struct {
 	EnableDraftSpecs bool
 	// SkipSourceValidation skips source validation during server startup
 	SkipSourceValidation bool
+	// Extensions specifies standard MCP extension URIs supported and advertised by this server.
+	Extensions []string
+	// ExperimentalExtensions specifies experimental MCP extension URIs supported and advertised by this server.
+	ExperimentalExtensions []string
 }
 
 type logFormat string

@@ -51,19 +51,21 @@ import (
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	version             string
-	sqlCommenterEnabled bool
-	toolboxUrl          string
-	srv                 *http.Server
-	listener            net.Listener
-	root                chi.Router
-	logger              log.Logger
-	instrumentation     *telemetry.Instrumentation
-	sseManager          *sseManager
-	PrimitiveMgr        *primitives.PrimitiveManager
-	mcpPrmFile          string
-	httpMaxRequestBytes int64
-	enableDraftSpecs    bool
+	version                string
+	sqlCommenterEnabled    bool
+	toolboxUrl             string
+	srv                    *http.Server
+	listener               net.Listener
+	root                   chi.Router
+	logger                 log.Logger
+	instrumentation        *telemetry.Instrumentation
+	sseManager             *sseManager
+	PrimitiveMgr           *primitives.PrimitiveManager
+	mcpPrmFile             string
+	httpMaxRequestBytes    int64
+	enableDraftSpecs       bool
+	extensions             []string
+	experimentalExtensions []string
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -470,18 +472,20 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	}
 
 	s := &Server{
-		version:             cfg.Version,
-		sqlCommenterEnabled: cfg.SQLCommenter,
-		srv:                 srv,
-		root:                r,
-		logger:              l,
-		instrumentation:     instrumentation,
-		sseManager:          sseManager,
-		PrimitiveMgr:        primitiveManager,
-		toolboxUrl:          cfg.ToolboxUrl,
-		mcpPrmFile:          cfg.McpPrmFile,
-		httpMaxRequestBytes: limit,
-		enableDraftSpecs:    cfg.EnableDraftSpecs,
+		version:                cfg.Version,
+		sqlCommenterEnabled:    cfg.SQLCommenter,
+		srv:                    srv,
+		root:                   r,
+		logger:                 l,
+		instrumentation:        instrumentation,
+		sseManager:             sseManager,
+		PrimitiveMgr:           primitiveManager,
+		toolboxUrl:             cfg.ToolboxUrl,
+		mcpPrmFile:             cfg.McpPrmFile,
+		httpMaxRequestBytes:    limit,
+		enableDraftSpecs:       cfg.EnableDraftSpecs,
+		extensions:             cfg.Extensions,
+		experimentalExtensions: cfg.ExperimentalExtensions,
 	}
 
 	if s.enableDraftSpecs {

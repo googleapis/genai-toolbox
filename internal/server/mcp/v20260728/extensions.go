@@ -14,17 +14,16 @@
 
 package v20260728
 
-import (
-	"context"
-	"sync"
-)
+import "context"
 
 type extensionsKey struct{}
+type serverExtensionsKey struct{}
+type serverExperimentalExtensionsKey struct{}
 
 // ClientExtensions holds the set of extension URIs supported by the client.
 type ClientExtensions map[string]bool
 
-// CapabilitiesProvider is implemented by client capabilities structs across all MCP protocol versions.
+// CapabilitiesProvider provides access to client extension maps.
 type CapabilitiesProvider interface {
 	GetExtensions() map[string]any
 	GetExperimental() map[string]any
@@ -47,12 +46,7 @@ func SupportsExtension(ctx context.Context, uri string) bool {
 	return exts != nil && exts[uri]
 }
 
-// ExtractClientExtensions extracts supported extension URIs from standard extensions
-// and experimental capabilities maps.
-// According to the MCP specification, extensions may be advertised under
-// clientCapabilities.extensions or clientCapabilities.experimental, with values
-// represented either as boolean flags or as settings objects (where an empty
-// object {} indicates default support).
+// ExtractClientExtensions extracts supported extension URIs from standard and experimental capability maps.
 func ExtractClientExtensions(extensions map[string]any, experimental map[string]any) ClientExtensions {
 	exts := make(ClientExtensions)
 	extract := func(m map[string]any) {
@@ -78,9 +72,7 @@ func ExtractClientExtensions(extensions map[string]any, experimental map[string]
 	return exts
 }
 
-// WithClientCapabilities extracts client extensions from standard and experimental
-// capabilities and attaches them to the context. This shared helper can be called
-// by handlers across any protocol version.
+// WithClientCapabilities extracts client extensions from capabilities and attaches them to the context.
 func WithClientCapabilities(ctx context.Context, caps CapabilitiesProvider) context.Context {
 	if caps == nil || (caps.GetExtensions() == nil && caps.GetExperimental() == nil) {
 		return ctx
@@ -88,50 +80,54 @@ func WithClientCapabilities(ctx context.Context, caps CapabilitiesProvider) cont
 	return WithClientExtensions(ctx, ExtractClientExtensions(caps.GetExtensions(), caps.GetExperimental()))
 }
 
-var (
-	serverExtMu        sync.RWMutex
-	serverExtensions   = make(map[string]interface{})
-	serverExperimental = make(map[string]interface{})
-)
-
-// RegisterServerExtension registers a standard extension to be advertised in server capabilities.
-func RegisterServerExtension(uri string, settings interface{}) {
-	serverExtMu.Lock()
-	defer serverExtMu.Unlock()
-	serverExtensions[uri] = settings
+// WithServerExtensions adds server standard extensions into the context.
+func WithServerExtensions(ctx context.Context, exts []string) context.Context {
+	return context.WithValue(ctx, serverExtensionsKey{}, exts)
 }
 
-// RegisterServerExperimental registers an experimental extension to be advertised in server capabilities.
-func RegisterServerExperimental(uri string, settings interface{}) {
-	serverExtMu.Lock()
-	defer serverExtMu.Unlock()
-	serverExperimental[uri] = settings
+// ServerExtensionsFromContext retrieves server standard extensions from context.
+func ServerExtensionsFromContext(ctx context.Context) ([]string, bool) {
+	if exts, ok := ctx.Value(serverExtensionsKey{}).([]string); ok {
+		return exts, true
+	}
+	return nil, false
 }
 
-// GetServerExtensions returns standard extensions advertised by this server, or nil if none are registered.
-func GetServerExtensions() map[string]interface{} {
-	serverExtMu.RLock()
-	defer serverExtMu.RUnlock()
-	if len(serverExtensions) == 0 {
+// WithServerExperimentalExtensions adds server experimental extensions into the context.
+func WithServerExperimentalExtensions(ctx context.Context, exts []string) context.Context {
+	return context.WithValue(ctx, serverExperimentalExtensionsKey{}, exts)
+}
+
+// ServerExperimentalExtensionsFromContext retrieves server experimental extensions from context.
+func ServerExperimentalExtensionsFromContext(ctx context.Context) ([]string, bool) {
+	if exts, ok := ctx.Value(serverExperimentalExtensionsKey{}).([]string); ok {
+		return exts, true
+	}
+	return nil, false
+}
+
+// GetServerExtensions returns standard extensions advertised by this server from context.
+func GetServerExtensions(ctx context.Context) map[string]interface{} {
+	exts, _ := ServerExtensionsFromContext(ctx)
+	if len(exts) == 0 {
 		return nil
 	}
-	res := make(map[string]interface{}, len(serverExtensions))
-	for k, v := range serverExtensions {
-		res[k] = v
+	res := make(map[string]interface{}, len(exts))
+	for _, uri := range exts {
+		res[uri] = map[string]any{}
 	}
 	return res
 }
 
-// GetServerExperimental returns experimental extensions advertised by this server, or nil if none are registered.
-func GetServerExperimental() map[string]interface{} {
-	serverExtMu.RLock()
-	defer serverExtMu.RUnlock()
-	if len(serverExperimental) == 0 {
+// GetServerExperimental returns experimental extensions advertised by this server from context.
+func GetServerExperimental(ctx context.Context) map[string]interface{} {
+	exts, _ := ServerExperimentalExtensionsFromContext(ctx)
+	if len(exts) == 0 {
 		return nil
 	}
-	res := make(map[string]interface{}, len(serverExperimental))
-	for k, v := range serverExperimental {
-		res[k] = v
+	res := make(map[string]interface{}, len(exts))
+	for _, uri := range exts {
+		res[uri] = map[string]any{}
 	}
 	return res
 }
