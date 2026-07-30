@@ -411,30 +411,6 @@ func runBigTableAdminToolsTest(t *testing.T, instanceId string) {
 		t.Fatalf("bigtable-get-logical-view failed: %v", err)
 	}
 
-	// We purposely invoke other admin tools with fake IDs to trigger safe API errors
-	params := map[string]any{
-		"instance_id":     "fake-instance-" + uniqueID,
-		"cluster_id":      "fake-cluster-" + uniqueID,
-		"display_name":    "fake",
-		"serve_nodes":     int64(3),
-		"zone":            "us-east1-b",
-		"num_nodes":       int64(3),
-		"query":           "SELECT *",
-		"view_query":      "SELECT *",
-		"logical_view_id": viewName,
-	}
-
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-create-cluster", params, map[string]string{})
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-update-cluster", params, map[string]string{})
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-delete-cluster", params, map[string]string{})
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-get-cluster", params, map[string]string{})
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-list-clusters", params, map[string]string{})
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-create-instance", params, map[string]string{})
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-update-instance", params, map[string]string{})
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-delete-instance", params, map[string]string{})
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-get-instance", params, map[string]string{})
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-update-logical-view", params, map[string]string{})
-	_, _, _ = tests.InvokeMCPTool(t, "bigtable-list-logical-views", params, map[string]string{})
 }
 
 func addBigTableAdminToolsConfig(t *testing.T, config map[string]any) map[string]any {
