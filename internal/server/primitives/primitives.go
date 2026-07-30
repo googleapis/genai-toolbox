@@ -126,16 +126,6 @@ func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
 	return copiedMap
 }
 
-func (r *PrimitiveManager) GetEmbeddingModelMap() map[string]embeddingmodels.EmbeddingModel {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]embeddingmodels.EmbeddingModel, len(r.embeddingModels))
-	for k, v := range r.embeddingModels {
-		copiedMap[k] = v
-	}
-	return copiedMap
-}
-
 // GroupsList returns a copy of the groups list sorted alphabetically by name
 func (r *PrimitiveManager) GroupsList() []group.Group {
 	r.mu.RLock()
