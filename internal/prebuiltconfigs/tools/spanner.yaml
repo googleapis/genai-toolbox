@@ -24,14 +24,7 @@ kind: tool
 name: execute_sql
 type: spanner-execute-sql
 source: spanner-source
-description: Use this tool to execute DML SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
----
-kind: tool
-name: execute_sql_dql
-type: spanner-execute-sql
-source: spanner-source
-description: Use this tool to execute DQL SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
-readOnly: true
+description: Use this tool to execute SQL statements. It will route read-only statements to a read-only transaction and write statements to a read-write transaction. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
 ---
 kind: tool
 name: list_tables
@@ -56,7 +49,6 @@ name: data
 description: Use these skills when you need to explore the database structure, discover schema objects like tables and graphs, and execute custom SQL queries to interact with your data.
 tools:
 - execute_sql
-- execute_sql_dql
 - list_tables
 - list_graphs
 ---
@@ -64,7 +56,6 @@ kind: toolset
 name: data_with_discovery
 tools:
 - execute_sql
-- execute_sql_dql
 - list_tables
 - list_graphs
 - search_catalog

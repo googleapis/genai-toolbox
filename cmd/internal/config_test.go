@@ -2131,11 +2131,11 @@ func TestPrebuiltTools(t *testing.T) {
 				"data": group.GroupConfig{
 					Name:        "data",
 					Description: "Use these skills when you need to explore the database structure, discover schema objects like tables and graphs, and execute custom SQL queries to interact with your data.",
-					ToolNames:   []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
+					ToolNames:   []string{"execute_sql", "list_tables", "list_graphs"},
 				},
 				"data_with_discovery": group.GroupConfig{
 					Name:      "data_with_discovery",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs", "search_catalog"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_graphs", "search_catalog"},
 				},
 			},
 		},
@@ -2145,11 +2145,11 @@ func TestPrebuiltTools(t *testing.T) {
 			wantGroups: server.GroupConfigs{
 				"data": group.GroupConfig{
 					Name:      "data",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 				"data_with_discovery": group.GroupConfig{
 					Name:      "data_with_discovery",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "search_catalog"},
+					ToolNames: []string{"execute_sql", "list_tables", "search_catalog"},
 				},
 			},
 		},
