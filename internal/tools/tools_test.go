@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -134,9 +133,8 @@ func TestBaseToolEmbedParamsPassthrough(t *testing.T) {
 		tools.Manifest{},
 		parameters.Parameters{parameters.NewStringParameter("p1", "first")},
 	)
-	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil)
 	values := parameters.ParamValues{{Name: "p1", Value: "hello"}}
-	got, err := b.EmbedParams(context.Background(), values, pMgr)
+	got, err := b.EmbedParams(context.Background(), values, nil)
 	if err != nil {
 		t.Fatalf("EmbedParams() error = %v", err)
 	}
