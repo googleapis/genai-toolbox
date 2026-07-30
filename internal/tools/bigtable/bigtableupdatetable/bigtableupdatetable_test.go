@@ -15,13 +15,17 @@
 package bigtableupdatetable_test
 
 import (
+	"context"
+	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigtable/bigtableupdatetable"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlBigtable(t *testing.T) {
@@ -92,4 +96,56 @@ func TestParseFromYamlBigtable(t *testing.T) {
 		})
 	}
 
+}
+
+type mockSource struct {
+	sources.Source
+	err error
+}
+
+func (m *mockSource) UpdateTable(ctx context.Context, tableID string, disableChangeStream bool) (any, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return map[string]string{"status": "table updated successfully"}, nil
+}
+
+func TestInvoke(t *testing.T) {
+	cfg := bigtableupdatetable.Config{
+		ConfigBase: tools.ConfigBase{Name: "test_tool"},
+		Type:       "bigtable-update-table",
+		Source:     "test-source",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	t.Run("success", func(t *testing.T) {
+		src := &mockSource{}
+		params := parameters.ParamValues{
+			{Name: "table_id", Value: "t1"},
+			{Name: "disable_change_stream", Value: true},
+		}
+		got, err := tool.Invoke(context.Background(), src, params, "")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want := any(map[string]string{"status": "table updated successfully"})
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("unexpected output (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		src := &mockSource{err: errors.New("gcp error")}
+		params := parameters.ParamValues{
+			{Name: "table_id", Value: "t1"},
+			{Name: "disable_change_stream", Value: true},
+		}
+		_, err := tool.Invoke(context.Background(), src, params, "")
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+	})
 }

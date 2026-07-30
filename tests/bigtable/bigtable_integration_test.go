@@ -18,8 +18,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"slices"
@@ -340,77 +342,224 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 	return config
 }
 
+// assertMCPSuccess invokes an MCP tool and strictly asserts that the HTTP status is 200,
+// no JSON-RPC error is returned, and Result.IsError is false.
+func assertMCPSuccess(t *testing.T, toolName string, args map[string]any) *tests.MCPCallToolResponse {
+	t.Helper()
+	statusCode, mcpResp, err := tests.InvokeMCPTool(t, toolName, args, map[string]string{})
+	if err != nil {
+		t.Fatalf("native error executing %s: %s", toolName, err)
+	}
+	if statusCode != http.StatusOK {
+		t.Fatalf("%s: expected HTTP status 200, got %d", toolName, statusCode)
+	}
+	if mcpResp.Error != nil {
+		t.Fatalf("%s: unexpected JSON-RPC error: %v", toolName, mcpResp.Error)
+	}
+	if mcpResp.Result.IsError {
+		t.Fatalf("%s: expected success, got error result: %v", toolName, mcpResp.Result.Content)
+	}
+	return mcpResp
+}
+
+// runBigTableAdminToolsTest verifies admin tools for tables, logical views, instances, and clusters.
+// runBigTableAdminToolsTest verifies all 20 Bigtable admin lifecycle tools for instances, clusters, tables, and logical views.
 func runBigTableAdminToolsTest(t *testing.T, instanceId string) {
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableName := "admin_test_table_" + uniqueID
 	viewName := "admin_test_view_" + uniqueID
 
+	// List instances
+	listInstResp := assertMCPSuccess(t, "bigtable-list-instances", map[string]any{})
+	if len(listInstResp.Result.Content) == 0 || !strings.Contains(listInstResp.Result.Content[0].Text, instanceId) {
+		t.Fatalf("bigtable-list-instances output does not contain expected instance %q: %v", instanceId, listInstResp.Result.Content)
+	}
+
+	// Get existing instance
+	getInstResp := assertMCPSuccess(t, "bigtable-get-instance", map[string]any{
+		"instance_id": instanceId,
+	})
+	if len(getInstResp.Result.Content) == 0 || !strings.Contains(getInstResp.Result.Content[0].Text, instanceId) {
+		t.Fatalf("bigtable-get-instance unexpected output: %v", getInstResp.Result.Content)
+	}
+
+	// List clusters
+	listClustersResp := assertMCPSuccess(t, "bigtable-list-clusters", map[string]any{
+		"instance_id": instanceId,
+	})
+	var clusters []map[string]any
+	if err := json.Unmarshal([]byte(listClustersResp.Result.Content[0].Text), &clusters); err != nil || len(clusters) == 0 {
+		t.Fatalf("failed to parse bigtable-list-clusters output: %v, body: %s", err, listClustersResp.Result.Content[0].Text)
+	}
+	primaryClusterName, _ := clusters[0]["Name"].(string)
+	primaryClusterId := primaryClusterName
+	if idx := strings.LastIndex(primaryClusterName, "/clusters/"); idx >= 0 {
+		primaryClusterId = primaryClusterName[idx+len("/clusters/"):]
+	}
+	if primaryClusterId == "" {
+		t.Fatalf("unexpected empty cluster ID from Name: %q", primaryClusterName)
+	}
+
+	// Get existing cluster
+	getClusterResp := assertMCPSuccess(t, "bigtable-get-cluster", map[string]any{
+		"instance_id": instanceId,
+		"cluster_id":  primaryClusterId,
+	})
+	if len(getClusterResp.Result.Content) == 0 || !strings.Contains(getClusterResp.Result.Content[0].Text, primaryClusterId) {
+		t.Fatalf("bigtable-get-cluster unexpected output: %v", getClusterResp.Result.Content)
+	}
+
+	// Create test instance for lifecycle tools (createinstance, updateinstance, updatecluster, createcluster, deletecluster, deleteinstance)
+	testInstId := "testi-" + uniqueID[:8]
+	testClusterId1 := "testc1-" + uniqueID[:8]
+	createInstResp := assertMCPSuccess(t, "bigtable-create-instance", map[string]any{
+		"instance_id":  testInstId,
+		"display_name": "Test Instance " + uniqueID[:8],
+		"cluster_id":   testClusterId1,
+		"zone":         "us-east1-b",
+		"num_nodes":    1,
+	})
+	if len(createInstResp.Result.Content) == 0 || !strings.Contains(createInstResp.Result.Content[0].Text, "instance created successfully") {
+		t.Fatalf("bigtable-create-instance unexpected output: %v", createInstResp.Result.Content)
+	}
+	defer func() {
+		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "bigtable-delete-instance", map[string]any{
+			"instance_id": testInstId,
+		}, map[string]string{})
+		if err != nil || statusCode != http.StatusOK || (mcpResp != nil && (mcpResp.Error != nil || mcpResp.Result.IsError)) {
+			t.Logf("cleanup: bigtable-delete-instance failed for %q (status %d): err=%v, mcpResp=%v", testInstId, statusCode, err, mcpResp)
+		}
+	}()
+
+	// Update instance
+	updateInstResp := assertMCPSuccess(t, "bigtable-update-instance", map[string]any{
+		"instance_id":  testInstId,
+		"display_name": "Updated Display Name",
+	})
+	if len(updateInstResp.Result.Content) == 0 || !strings.Contains(updateInstResp.Result.Content[0].Text, "instance updated successfully") {
+		t.Fatalf("bigtable-update-instance unexpected output: %v", updateInstResp.Result.Content)
+	}
+
+	// Update cluster
+	updateClusterResp := assertMCPSuccess(t, "bigtable-update-cluster", map[string]any{
+		"instance_id": testInstId,
+		"cluster_id":  testClusterId1,
+		"serve_nodes": 1,
+	})
+	if len(updateClusterResp.Result.Content) == 0 || !strings.Contains(updateClusterResp.Result.Content[0].Text, "cluster updated successfully") {
+		t.Fatalf("bigtable-update-cluster unexpected output: %v", updateClusterResp.Result.Content)
+	}
+
+	// Create secondary cluster
+	testClusterId2 := "testc2-" + uniqueID[:8]
+	createClusterResp := assertMCPSuccess(t, "bigtable-create-cluster", map[string]any{
+		"instance_id": testInstId,
+		"cluster_id":  testClusterId2,
+		"zone":        "us-west1-b",
+		"num_nodes":   1,
+	})
+	if len(createClusterResp.Result.Content) == 0 || !strings.Contains(createClusterResp.Result.Content[0].Text, "cluster created successfully") {
+		t.Fatalf("bigtable-create-cluster unexpected output: %v", createClusterResp.Result.Content)
+	}
+
+	// Delete secondary cluster
+	deleteClusterResp := assertMCPSuccess(t, "bigtable-delete-cluster", map[string]any{
+		"instance_id": testInstId,
+		"cluster_id":  testClusterId2,
+	})
+	if len(deleteClusterResp.Result.Content) == 0 || !strings.Contains(deleteClusterResp.Result.Content[0].Text, "cluster deleted successfully") {
+		t.Fatalf("bigtable-delete-cluster unexpected output: %v", deleteClusterResp.Result.Content)
+	}
+
 	// Create table
-	_, _, err := tests.InvokeMCPTool(t, "bigtable-create-table", map[string]any{
+	createTableResp := assertMCPSuccess(t, "bigtable-create-table", map[string]any{
 		"table_id":      tableName,
 		"column_family": "cf1",
-	}, map[string]string{})
-	if err != nil {
-		t.Fatalf("bigtable-create-table failed: %v", err)
+	})
+	if len(createTableResp.Result.Content) == 0 || !strings.Contains(createTableResp.Result.Content[0].Text, "table created successfully") {
+		t.Fatalf("bigtable-create-table unexpected output: %v", createTableResp.Result.Content)
 	}
 
 	// Make sure we clean up the table!
 	defer func() {
-		_, _, _ = tests.InvokeMCPTool(t, "bigtable-delete-table", map[string]any{
+		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "bigtable-delete-table", map[string]any{
 			"table_id": tableName,
 		}, map[string]string{})
+		if err != nil || statusCode != http.StatusOK || (mcpResp != nil && (mcpResp.Error != nil || mcpResp.Result.IsError)) {
+			t.Logf("cleanup: bigtable-delete-table failed for %q (status %d): err=%v, mcpResp=%v", tableName, statusCode, err, mcpResp)
+		}
 	}()
 
 	// Get table
-	_, _, err = tests.InvokeMCPTool(t, "bigtable-get-table", map[string]any{
+	getTableResp := assertMCPSuccess(t, "bigtable-get-table", map[string]any{
 		"table_id": tableName,
-	}, map[string]string{})
-	if err != nil {
-		t.Fatalf("bigtable-get-table failed: %v", err)
+	})
+	if len(getTableResp.Result.Content) == 0 || !strings.Contains(getTableResp.Result.Content[0].Text, "DeletionProtection") {
+		t.Fatalf("bigtable-get-table unexpected output: %v", getTableResp.Result.Content)
 	}
 
 	// Update table (disable_change_stream)
-	_, _, err = tests.InvokeMCPTool(t, "bigtable-update-table", map[string]any{
+	updateTableResp := assertMCPSuccess(t, "bigtable-update-table", map[string]any{
 		"table_id":              tableName,
 		"disable_change_stream": true,
-	}, map[string]string{})
-	if err != nil {
-		t.Fatalf("bigtable-update-table failed: %v", err)
+	})
+	if len(updateTableResp.Result.Content) == 0 || !strings.Contains(updateTableResp.Result.Content[0].Text, "table updated successfully") {
+		t.Fatalf("bigtable-update-table unexpected output: %v", updateTableResp.Result.Content)
 	}
 
 	// List tables
-	_, _, err = tests.InvokeMCPTool(t, "bigtable-list-tables", map[string]any{}, map[string]string{})
-	if err != nil {
-		t.Fatalf("bigtable-list-tables failed: %v", err)
+	listTablesResp := assertMCPSuccess(t, "bigtable-list-tables", map[string]any{})
+	if len(listTablesResp.Result.Content) == 0 || !strings.Contains(listTablesResp.Result.Content[0].Text, tableName) {
+		t.Fatalf("bigtable-list-tables output does not contain expected table %q: %v", tableName, listTablesResp.Result.Content)
 	}
 
 	// Create logical view
-	_, _, err = tests.InvokeMCPTool(t, "bigtable-create-logical-view", map[string]any{
+	createViewResp := assertMCPSuccess(t, "bigtable-create-logical-view", map[string]any{
 		"instance_id":     instanceId,
 		"logical_view_id": viewName,
-		"query":           "SELECT * FROM " + tableName,
-	}, map[string]string{})
-	if err != nil {
-		t.Fatalf("bigtable-create-logical-view failed: %v", err)
+		"query":           "SELECT _key FROM " + tableName,
+	})
+	if len(createViewResp.Result.Content) == 0 || !strings.Contains(createViewResp.Result.Content[0].Text, "logical view created successfully") {
+		t.Fatalf("bigtable-create-logical-view unexpected output: %v", createViewResp.Result.Content)
 	}
 
 	// Make sure we clean up the view!
 	defer func() {
-		_, _, _ = tests.InvokeMCPTool(t, "bigtable-delete-logical-view", map[string]any{
+		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "bigtable-delete-logical-view", map[string]any{
 			"instance_id":     instanceId,
 			"logical_view_id": viewName,
 		}, map[string]string{})
+		if err != nil || statusCode != http.StatusOK || (mcpResp != nil && (mcpResp.Error != nil || mcpResp.Result.IsError)) {
+			t.Logf("cleanup: bigtable-delete-logical-view failed for %q (status %d): err=%v, mcpResp=%v", viewName, statusCode, err, mcpResp)
+		}
 	}()
 
 	// Get logical view
-	_, _, err = tests.InvokeMCPTool(t, "bigtable-get-logical-view", map[string]any{
+	getViewResp := assertMCPSuccess(t, "bigtable-get-logical-view", map[string]any{
 		"instance_id":     instanceId,
 		"logical_view_id": viewName,
-	}, map[string]string{})
-	if err != nil {
-		t.Fatalf("bigtable-get-logical-view failed: %v", err)
+	})
+	if len(getViewResp.Result.Content) == 0 || (!strings.Contains(getViewResp.Result.Content[0].Text, viewName) && !strings.Contains(getViewResp.Result.Content[0].Text, "SELECT")) {
+		t.Fatalf("bigtable-get-logical-view unexpected output: %v", getViewResp.Result.Content)
 	}
 
+	// Update logical view
+	updateViewResp := assertMCPSuccess(t, "bigtable-update-logical-view", map[string]any{
+		"instance_id":     instanceId,
+		"logical_view_id": viewName,
+		"query":           "SELECT _key FROM " + tableName,
+	})
+	if len(updateViewResp.Result.Content) == 0 || !strings.Contains(updateViewResp.Result.Content[0].Text, "logical view updated successfully") {
+		t.Fatalf("bigtable-update-logical-view unexpected output: %v", updateViewResp.Result.Content)
+	}
+
+	// List logical views
+	listViewsResp := assertMCPSuccess(t, "bigtable-list-logical-views", map[string]any{
+		"instance_id": instanceId,
+	})
+	if len(listViewsResp.Result.Content) == 0 || !strings.Contains(listViewsResp.Result.Content[0].Text, viewName) {
+		t.Fatalf("bigtable-list-logical-views output does not contain expected view %q: %v", viewName, listViewsResp.Result.Content)
+	}
 }
 
 func addBigTableAdminToolsConfig(t *testing.T, config map[string]any) map[string]any {

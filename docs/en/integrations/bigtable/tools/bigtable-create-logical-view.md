@@ -9,15 +9,18 @@ description: "The \"bigtable-create-logical-view\" tool allows you to create a n
 
 Create a new Bigtable logical view.
 
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
 `bigtable-create-logical-view` accepts the following parameters:
 
 - **`instance_id`** (string): The ID of the instance
 - **`logical_view_id`** (string): The ID of the logical view
 - **`query`** (string): The logical view query
-
-## Compatible Sources
-
-{{< compatible-sources >}}
 
 ## Example
 

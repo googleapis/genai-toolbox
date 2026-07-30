@@ -9,13 +9,16 @@ description: "The \"bigtable-delete-table\" tool allows you to delete a bigtable
 
 Delete a Bigtable table.
 
-`bigtable-delete-table` accepts the following parameters:
-
-- **`table_id`** (string): The ID of the table to delete
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-delete-table` accepts the following parameters:
+
+- **`table_id`** (string): The ID of the table to delete
 
 ## Example
 

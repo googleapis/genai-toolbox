@@ -9,13 +9,16 @@ description: "The \"bigtable-list-logical-views\" tool allows you to list all bi
 
 List all Bigtable logical views in the instance.
 
-`bigtable-list-logical-views` accepts the following parameters:
-
-- **`instance_id`** (string): The ID of the instance
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-list-logical-views` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
 
 ## Example
 

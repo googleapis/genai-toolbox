@@ -9,14 +9,17 @@ description: "The \"bigtable-get-cluster\" tool allows you to get details of a b
 
 Get details of a Bigtable cluster.
 
-`bigtable-get-cluster` accepts the following parameters:
-
-- **`instance_id`** (string): The ID of the instance
-- **`cluster_id`** (string): The ID of the cluster
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-get-cluster` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`cluster_id`** (string): The ID of the cluster
 
 ## Example
 

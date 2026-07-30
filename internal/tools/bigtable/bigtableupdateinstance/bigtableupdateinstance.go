@@ -111,7 +111,7 @@ func (t Tool) Invoke(ctx context.Context, src sources.Source, params parameters.
 
 	res, err := source.UpdateInstance(ctx, paramsMap["instance_id"].(string), paramsMap["display_name"].(string))
 	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return res, nil
 }

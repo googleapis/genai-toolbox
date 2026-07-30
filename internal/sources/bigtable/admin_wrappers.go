@@ -17,6 +17,7 @@ package bigtable
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/bigtable"
 )
@@ -62,6 +63,14 @@ func (s *Source) DeleteInstance(ctx context.Context, instanceId string) (any, er
 		return nil, fmt.Errorf("failed to delete instance: %w", err)
 	}
 	return map[string]string{"status": "instance deleted successfully"}, nil
+}
+
+func (s *Source) ListInstances(ctx context.Context) (any, error) {
+	instances, err := s.InstanceAdmin.Instances(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list instances: %w", err)
+	}
+	return instances, nil
 }
 
 func (s *Source) GetCluster(ctx context.Context, instanceId, clusterId string) (any, error) {
@@ -134,9 +143,21 @@ func (s *Source) DeleteTable(ctx context.Context, tableId string) (any, error) {
 	return map[string]string{"status": "table deleted successfully"}, nil
 }
 
-// Update table is intentionally omitted since CBT admin sdk mostly modifies column families which requires complex structs
-func (s *Source) UpdateTable(ctx context.Context, tableId string) (any, error) {
-	err := s.Admin.UpdateTableDisableChangeStream(ctx, tableId) // Arbitrary safe-update placeholder previously used
+func (s *Source) ListTables(ctx context.Context) (any, error) {
+	tables, err := s.Admin.Tables(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list tables: %w", err)
+	}
+	return tables, nil
+}
+
+func (s *Source) UpdateTable(ctx context.Context, tableId string, disableChangeStream bool) (any, error) {
+	var err error
+	if disableChangeStream {
+		err = s.Admin.UpdateTableDisableChangeStream(ctx, tableId)
+	} else {
+		err = s.Admin.UpdateTableWithChangeStream(ctx, tableId, 24*time.Hour)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to update table: %w", err)
 	}

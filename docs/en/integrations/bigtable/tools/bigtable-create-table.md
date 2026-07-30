@@ -9,13 +9,16 @@ description: "The \"bigtable-create-table\" tool allows you to create a new bigt
 
 Create a new Bigtable table.
 
-`bigtable-create-table` accepts the following parameters:
-
-- **`table_id`** (string): The ID of the table to create
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-create-table` accepts the following parameters:
+
+- **`table_id`** (string): The ID of the table to create
 
 ## Example
 

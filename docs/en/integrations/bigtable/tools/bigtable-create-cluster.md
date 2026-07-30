@@ -9,16 +9,19 @@ description: "The \"bigtable-create-cluster\" tool allows you to create a new bi
 
 Create a new Bigtable cluster in an instance.
 
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
 `bigtable-create-cluster` accepts the following parameters:
 
 - **`instance_id`** (string): The ID of the instance
 - **`cluster_id`** (string): The ID of the cluster
 - **`zone`** (string): The zone for the cluster (e.g. us-central1-b)
 - **`num_nodes`** (integer): The number of nodes to allocate
-
-## Compatible Sources
-
-{{< compatible-sources >}}
 
 ## Example
 

@@ -114,7 +114,7 @@ func (t Tool) Invoke(ctx context.Context, src sources.Source, params parameters.
 
 	res, err := source.CreateInstance(ctx, paramsMap["instance_id"].(string), paramsMap["display_name"].(string), paramsMap["cluster_id"].(string), paramsMap["zone"].(string), int32(paramsMap["num_nodes"].(int)))
 	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return res, nil
 }

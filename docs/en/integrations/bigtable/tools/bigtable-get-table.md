@@ -9,13 +9,16 @@ description: "The \"bigtable-get-table\" tool allows you to get details of a big
 
 Get details of a Bigtable table.
 
-`bigtable-get-table` accepts the following parameters:
-
-- **`table_id`** (string): The ID of the table to get
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-get-table` accepts the following parameters:
+
+- **`table_id`** (string): The ID of the table to get
 
 ## Example
 

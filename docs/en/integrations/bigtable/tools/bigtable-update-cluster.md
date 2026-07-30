@@ -9,15 +9,18 @@ description: "The \"bigtable-update-cluster\" tool allows you to update the numb
 
 Update the number of nodes in a Bigtable cluster.
 
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
 `bigtable-update-cluster` accepts the following parameters:
 
 - **`instance_id`** (string): The ID of the instance
 - **`cluster_id`** (string): The ID of the cluster
 - **`serve_nodes`** (integer): The new number of nodes to allocate
-
-## Compatible Sources
-
-{{< compatible-sources >}}
 
 ## Example
 

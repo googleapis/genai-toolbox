@@ -43,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	UpdateTable(context.Context, string) (any, error)
+	UpdateTable(context.Context, string, bool) (any, error)
 }
 
 type Config struct {
@@ -109,9 +109,9 @@ func (t Tool) Invoke(ctx context.Context, src sources.Source, params parameters.
 
 	paramsMap := params.AsMap()
 
-	res, err := source.UpdateTable(ctx, paramsMap["table_id"].(string))
+	res, err := source.UpdateTable(ctx, paramsMap["table_id"].(string), paramsMap["disable_change_stream"].(bool))
 	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return res, nil
 }

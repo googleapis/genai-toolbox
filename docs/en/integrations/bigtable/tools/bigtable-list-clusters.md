@@ -9,13 +9,16 @@ description: "The \"bigtable-list-clusters\" tool allows you to list all bigtabl
 
 List all Bigtable clusters in the instance.
 
-`bigtable-list-clusters` accepts the following parameters:
-
-- **`instance_id`** (string): The ID of the instance
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-list-clusters` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
 
 ## Example
 

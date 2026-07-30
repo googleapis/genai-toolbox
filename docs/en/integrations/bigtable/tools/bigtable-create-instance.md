@@ -9,6 +9,13 @@ description: "The \"bigtable-create-instance\" tool allows you to create a new b
 
 Create a new Bigtable instance.
 
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
 `bigtable-create-instance` accepts the following parameters:
 
 - **`instance_id`** (string): The ID of the instance to create
@@ -16,10 +23,6 @@ Create a new Bigtable instance.
 - **`cluster_id`** (string): The ID of the primary cluster
 - **`zone`** (string): The zone for the cluster (e.g. us-central1-b)
 - **`num_nodes`** (integer): The number of nodes for the cluster
-
-## Compatible Sources
-
-{{< compatible-sources >}}
 
 ## Example
 

@@ -15,13 +15,17 @@
 package bigtablecreateinstance_test
 
 import (
+	"context"
+	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigtable/bigtablecreateinstance"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlBigtable(t *testing.T) {
@@ -92,4 +96,62 @@ func TestParseFromYamlBigtable(t *testing.T) {
 		})
 	}
 
+}
+
+type mockSource struct {
+	sources.Source
+	err error
+}
+
+func (m *mockSource) CreateInstance(ctx context.Context, instanceID, displayName, clusterID, zone string, numNodes int32) (any, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return map[string]string{"status": "instance created successfully"}, nil
+}
+
+func TestInvoke(t *testing.T) {
+	cfg := bigtablecreateinstance.Config{
+		ConfigBase: tools.ConfigBase{Name: "test_tool"},
+		Type:       "bigtable-create-instance",
+		Source:     "test-source",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	t.Run("success", func(t *testing.T) {
+		src := &mockSource{}
+		params := parameters.ParamValues{
+			{Name: "instance_id", Value: "inst-1"},
+			{Name: "display_name", Value: "Test Inst"},
+			{Name: "cluster_id", Value: "clus-1"},
+			{Name: "zone", Value: "us-central1-b"},
+			{Name: "num_nodes", Value: 3},
+		}
+		got, err := tool.Invoke(context.Background(), src, params, "")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want := any(map[string]string{"status": "instance created successfully"})
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("unexpected output (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		src := &mockSource{err: errors.New("gcp error")}
+		params := parameters.ParamValues{
+			{Name: "instance_id", Value: "inst-1"},
+			{Name: "display_name", Value: "Test Inst"},
+			{Name: "cluster_id", Value: "clus-1"},
+			{Name: "zone", Value: "us-central1-b"},
+			{Name: "num_nodes", Value: 3},
+		}
+		_, err := tool.Invoke(context.Background(), src, params, "")
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+	})
 }

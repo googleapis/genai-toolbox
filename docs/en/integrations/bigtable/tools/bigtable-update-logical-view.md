@@ -9,15 +9,18 @@ description: "The \"bigtable-update-logical-view\" tool allows you to update an 
 
 Update an existing Bigtable logical view.
 
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
 `bigtable-update-logical-view` accepts the following parameters:
 
 - **`instance_id`** (string): The ID of the instance
 - **`logical_view_id`** (string): The ID of the logical view
 - **`query`** (string): The new logical view query
-
-## Compatible Sources
-
-{{< compatible-sources >}}
 
 ## Example
 

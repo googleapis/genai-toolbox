@@ -9,14 +9,17 @@ description: "The \"bigtable-delete-cluster\" tool allows you to delete a bigtab
 
 Delete a Bigtable cluster.
 
-`bigtable-delete-cluster` accepts the following parameters:
-
-- **`instance_id`** (string): The ID of the instance
-- **`cluster_id`** (string): The ID of the cluster
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-delete-cluster` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`cluster_id`** (string): The ID of the cluster
 
 ## Example
 

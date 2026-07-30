@@ -110,7 +110,7 @@ func (t Tool) Invoke(ctx context.Context, src sources.Source, params parameters.
 
 	res, err := source.DeleteTable(ctx, paramsMap["table_id"].(string))
 	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return res, nil
 }

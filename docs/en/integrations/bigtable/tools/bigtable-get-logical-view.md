@@ -9,14 +9,17 @@ description: "The \"bigtable-get-logical-view\" tool allows you to get details o
 
 Get details of a Bigtable logical view.
 
-`bigtable-get-logical-view` accepts the following parameters:
-
-- **`instance_id`** (string): The ID of the instance
-- **`logical_view_id`** (string): The ID of the logical view
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-get-logical-view` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`logical_view_id`** (string): The ID of the logical view
 
 ## Example
 

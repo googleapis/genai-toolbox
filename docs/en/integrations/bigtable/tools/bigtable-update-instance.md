@@ -9,14 +9,17 @@ description: "The \"bigtable-update-instance\" tool allows you to update an exis
 
 Update an existing Bigtable instance.
 
-`bigtable-update-instance` accepts the following parameters:
-
-- **`instance_id`** (string): The ID of the instance to update
-- **`display_name`** (string): The new display name
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-update-instance` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance to update
+- **`display_name`** (string): The new display name
 
 ## Example
 

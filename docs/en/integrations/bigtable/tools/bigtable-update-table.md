@@ -9,14 +9,17 @@ description: "The \"bigtable-update-table\" tool allows you to update an existin
 
 Update an existing Bigtable table's configuration.
 
-`bigtable-update-table` accepts the following parameters:
-
-- **`table_id`** (string): The ID of the table to update
-- **`disable_change_stream`** (boolean): Disable change stream
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-update-table` accepts the following parameters:
+
+- **`table_id`** (string): The ID of the table to update
+- **`disable_change_stream`** (boolean): Disable change stream
 
 ## Example
 

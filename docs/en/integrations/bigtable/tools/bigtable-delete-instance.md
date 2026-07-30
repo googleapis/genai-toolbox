@@ -9,13 +9,16 @@ description: "The \"bigtable-delete-instance\" tool allows you to delete a bigta
 
 Delete a Bigtable instance.
 
-`bigtable-delete-instance` accepts the following parameters:
-
-- **`instance_id`** (string): The ID of the instance to delete
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-delete-instance` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance to delete
 
 ## Example
 

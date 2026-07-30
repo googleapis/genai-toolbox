@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"cloud.google.com/go/bigtable"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -44,10 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	BigtableInstanceAdminClient() *bigtable.InstanceAdminClient
-	BigtableAdminClient() *bigtable.AdminClient
-	ProjectID() string
-	InstanceID() string
+	ListTables(context.Context) (any, error)
 }
 
 type Config struct {
@@ -108,10 +104,9 @@ func (t Tool) Invoke(ctx context.Context, src sources.Source, params parameters.
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
 
-	client := source.BigtableAdminClient()
-	tables, err := client.Tables(ctx)
+	tables, err := source.ListTables(ctx)
 	if err != nil {
-		return nil, util.NewClientServerError("failed to list tables", http.StatusInternalServerError, err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return tables, nil
 }

@@ -9,13 +9,16 @@ description: "The \"bigtable-get-instance\" tool allows you to get details of a 
 
 Get details of a Bigtable instance.
 
-`bigtable-get-instance` accepts the following parameters:
-
-- **`instance_id`** (string): The ID of the instance to get
 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-get-instance` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance to get
 
 ## Example
 
