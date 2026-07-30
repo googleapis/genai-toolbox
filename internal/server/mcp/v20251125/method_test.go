@@ -26,7 +26,9 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // Dummy JSONRPC ID for testing
@@ -640,5 +642,59 @@ func TestPromptsGetHandler(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestToolsCallHandlerResultCaps(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+	ctxLogger := util.WithLogger(ctx, testLogger)
+
+	// MockTool.Invoke returns []any{name}; a 1-byte budget drops that row.
+	cappedCfg := testutils.MockToolConfig{
+		ConfigBase: tools.ConfigBase{Name: "capped_tool", MaxResponseBytes: 1},
+		Type:       "mock-tool",
+		Parameters: parameters.Parameters{},
+	}
+	capped, err := cappedCfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("unable to initialize capped mock tool: %s", err)
+	}
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, []testutils.MockTool{capped.(testutils.MockTool), testutils.MockTool1}, nil)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
+
+	body, err := json.Marshal(CallToolRequest{
+		Request: jsonrpc.Request{Method: TOOLS_CALL},
+		Params: struct {
+			Name      string         `json:"name"`
+			Arguments map[string]any `json:"arguments,omitempty"`
+		}{Name: "capped_tool"},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error during marshaling: %v", err)
+	}
+
+	got, err := toolsCallHandler(ctxLogger, dummyID, mustGroup(t, primitiveMgr), primitiveMgr, body, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	resp, ok := got.(jsonrpc.JSONRPCResponse)
+	if !ok {
+		t.Fatalf("unexpected response type %T", got)
+	}
+	result, ok := resp.Result.(CallToolResult)
+	if !ok {
+		t.Fatalf("unexpected result type %T", resp.Result)
+	}
+	if len(result.Content) != 1 {
+		t.Fatalf("expected only the truncation notice in content, got %d items: %v", len(result.Content), result.Content)
+	}
+	notice := result.Content[0].Text
+	if !strings.Contains(notice, `"truncation"`) || !strings.Contains(notice, `"truncated":true`) {
+		t.Errorf("expected structured truncation notice, got %q", notice)
 	}
 }

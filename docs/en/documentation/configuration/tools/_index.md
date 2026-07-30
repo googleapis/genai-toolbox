@@ -457,6 +457,48 @@ You can bind specific arguments to tools at the transport level using URL query 
 
 For a comprehensive guide, see the [URL Parameter Binding](./url_parameter_binding.md) documentation.
 
+## Result Caps
+
+You can bound the size of any tool's results by declaring caps in its
+configuration. This protects both the server and the calling LLM's context
+window from unexpectedly large result sets (for example, a query without a
+`LIMIT` clause matching millions of rows).
+
+| **field**        | **type** | **default** | **description**                                                       |
+|------------------|:--------:|:-----------:|-----------------------------------------------------------------------|
+| maxRows          |   int    | 0 (uncapped)| Maximum number of elements returned for list-shaped results.          |
+| maxResponseBytes |   int    | 0 (uncapped)| Maximum serialized size of the returned result, in bytes.             |
+
+```yaml
+kind: tool
+name: search_flights
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM flights WHERE origin = @origin
+maxRows: 200
+maxResponseBytes: 65536
+```
+
+Both caps apply to every invocation surface (MCP `tools/call` and the HTTP
+API). For list-shaped results, `maxResponseBytes` drops whole trailing rows
+rather than cutting a row mid-way. A result that is not list-shaped and
+exceeds the byte cap is returned as a `truncatedResult` string holding the
+leading fragment, since a document cut mid-way is no longer valid JSON.
+
+When a cap fires, the response includes a structured truncation notice so the
+calling model can tell a capped result from a complete one — as an additional
+text content item in MCP responses, or a `truncation` field alongside `result`
+in HTTP API responses:
+
+```json
+{"truncation": {"truncated": true, "appliedLimit": "maxRows", "returnedRows": 200, "totalRows": 1434}}
+```
+
+Result caps are a guardrail, not a paging mechanism: agents that need to walk
+a large result set should page explicitly (for example, with `LIMIT` and
+`OFFSET` parameters in the statement).
+
 ## Using tools with MCP Toolbox Client SDKs
 
 Once your tools are defined in your configuration, you can retrieve them directly from your application code.
