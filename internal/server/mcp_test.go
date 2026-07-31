@@ -48,7 +48,7 @@ const protocolVersion20241105 = "2024-11-05"
 const protocolVersion20250326 = "2025-03-26"
 const protocolVersion20250618 = "2025-06-18"
 const protocolVersion20251125 = "2025-11-25"
-const protocolVersionDraft = "DRAFT-2026-v1"
+const protocolVersion20260728 = "2026-07-28"
 const serverName = "Toolbox"
 
 var basicInputSchema = map[string]any{
@@ -562,13 +562,13 @@ func TestMcpEndpoint(t *testing.T) {
 			invalidMethods: []string{"server/discover"},
 		},
 		{
-			name:           "version DRAFT",
-			protocol:       protocolVersionDraft,
+			name:           "version 2026-07-28",
+			protocol:       protocolVersion20260728,
 			idHeader:       false,
 			reqHeader:      []string{"Mcp-Protocol-Version", "Mcp-Method", "Mcp-Name"},
 			invalidMethods: []string{"ping"},
 			meta: map[string]any{
-				"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
+				"io.modelcontextprotocol/protocolVersion": protocolVersion20260728,
 				"io.modelcontextprotocol/clientInfo": map[string]any{
 					"version": "client-temp-version",
 					"name":    "client-name",
@@ -845,7 +845,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"id":      "server-discover",
 						"result": map[string]any{
 							"resultType":        "complete",
-							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "DRAFT-2026-v1"},
+							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 							"capabilities": map[string]any{
 								"tools":   map[string]any{"listChanged": false},
 								"prompts": map[string]any{"listChanged": false},
@@ -1396,9 +1396,9 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 	ts := runServer(r, false)
 	defer ts.Close()
 
-	protocol := protocolVersionDraft
+	protocol := "DRAFT"
 	meta := map[string]any{
-		"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
+		"io.modelcontextprotocol/protocolVersion": protocol,
 		"io.modelcontextprotocol/clientInfo": map[string]any{
 			"version": "client-temp-version",
 			"name":    "client-name",
@@ -1422,8 +1422,8 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 		"error": map[string]interface{}{
 			"code": float64(-32022),
 			"data": map[string]interface{}{
-				"requested": "DRAFT-2026-v1",
-				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"},
+				"requested": "DRAFT",
+				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 			},
 			"message": "unsupported protocol version",
 		},
