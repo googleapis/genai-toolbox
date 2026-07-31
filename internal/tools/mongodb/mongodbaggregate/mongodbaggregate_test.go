@@ -255,3 +255,21 @@ func TestRuntimeCollectionAllowedValues(t *testing.T) {
 		t.Fatalf("expected 2 allowed values on the collection parameter, got %d", len(collectionParam.AllowedValues))
 	}
 }
+
+func TestRuntimeCollectionDuplicateParam(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	// When collection is omitted and a pipeline param is also named "collection",
+	// initialization should fail on the duplicate parameter.
+	collectionParam := parameters.NewStringParameter("collection", "duplicate", parameters.WithStringRequired(true))
+	cfg := mongodbaggregate.Config{
+		ConfigBase:     tools.ConfigBase{Name: "example_tool", Description: "some description"},
+		PipelineParams: parameters.Parameters{collectionParam},
+	}
+	if _, err := cfg.Initialize(ctx); err == nil {
+		t.Fatal("expected initialization to fail on duplicate collection parameter")
+	}
+}
