@@ -143,6 +143,11 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"create_merge_query": map[string]any{
+				"type":        "looker-create-merge-query",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 			"get_looks": map[string]any{
 				"type":        "looker-get-looks",
 				"source":      "my-instance",
@@ -879,6 +884,109 @@ func TestLooker(t *testing.T) {
 						"additionalProperties": true,
 						"authServices":         []any{},
 						"description":          "The visualization config for the query",
+						"name":                 "vis_config",
+						"required":             false,
+						"type":                 "object",
+						"default":              map[string]any{},
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "create_merge_query",
+		map[string]any{
+			"create_merge_query": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The queries whose results will be merged, one per explore. Order is significant: the first entry is the primary query and the results of every later entry are joined onto it, like a SQL left outer join. Each entry is an object with the required keys `model`, `explore` and `fields`, plus the optional keys `name`, `filters`, `pivots`, `sorts`, `limit`, `filter_expression`, `dynamic_fields`, `tz` and `merge_fields`. `merge_fields` declares how the entry lines up with the merged results: it is an array of objects with `source_field_name` (a field of this entry) and `field_name` (the field of the primary query it maps onto), e.g. [{\"source_field_name\": \"events.event_date\", \"field_name\": \"orders.created_date\"}].",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          "A query to be merged, keyed by query attribute.",
+							"name":                 "source_query",
+							"required":             true,
+							"type":                 "object",
+						},
+						"name":     "source_queries",
+						"required": true,
+						"type":     "array",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The pivots of the merged results. Names refer to fields of the merged results.",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be used as a pivot in the merged results",
+							"name":         "pivot_field",
+							"required":     false,
+							"type":         "string",
+						},
+						"name":     "pivots",
+						"required": false,
+						"type":     "array",
+						"default":  []any{},
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The sorts of the merged results like \"field.id desc 0\".",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be used as a sort in the merged results",
+							"name":         "sort_field",
+							"required":     false,
+							"type":         "string",
+						},
+						"name":     "sorts",
+						"required": false,
+						"type":     "array",
+						"default":  []any{},
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The row limit of the merged results.",
+						"name":         "limit",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(500),
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "An optional column limit for the merged results.",
+						"name":         "column_limit",
+						"required":     false,
+						"type":         "integer",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Whether to include a totals row in the merged results.",
+						"name":         "total",
+						"required":     false,
+						"type":         "boolean",
+						"default":      false,
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      []any{},
+						"description":  "An optional array of dynamic fields (table calculations, custom measures, custom dimensions) computed over the merged results.",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          "A dynamic field definition",
+							"name":                 "dynamic_field",
+							"required":             false,
+							"type":                 "object",
+						},
+						"name":     "dynamic_fields",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authServices":         []any{},
+						"description":          "The visualization config for the merged results",
 						"name":                 "vis_config",
 						"required":             false,
 						"type":                 "object",
@@ -2119,6 +2227,11 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "system__activity"
 	tests.RunToolInvokeParametersTest(t, "query_url", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
+
+	// A merge query returns the created merge query rather than rows, since
+	// Looker has no API endpoint that runs one.
+	wantResult = `"source_queries":`
+	tests.RunToolInvokeParametersTest(t, "create_merge_query", []byte(`{"source_queries": [{"model": "system__activity", "explore": "look", "fields": ["look.id", "look.count"]}, {"model": "system__activity", "explore": "look", "fields": ["look.id", "look.title"], "merge_fields": [{"source_field_name": "look.id", "field_name": "look.id"}]}]}`), wantResult)
 
 	// A system that is just being used for testing has no looks or dashboards
 	wantResult = "null"
