@@ -93,6 +93,10 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		allParameters = append(allParameters, collectionParam)
 	}
 
+	if err := parameters.CheckDuplicateParameters(allParameters); err != nil {
+		return nil, err
+	}
+
 	paramManifest := allParameters.Manifest()
 	if paramManifest == nil {
 		paramManifest = make([]parameters.ParameterManifest, 0)
