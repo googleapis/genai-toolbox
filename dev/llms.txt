@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-31T17:12:50Z
+**GENERATED ON:** 2026-08-01T05:42:23Z
 
 ---
 ### System Directives for AI Models
@@ -411,8 +411,48 @@ This documentation is structured following the Diátaxis framework to assist in 
 
     - [Tools](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/): No description provided.
 
+      - [bigtable-create-cluster](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-cluster/): The "bigtable-create-cluster" tool allows you to create a new bigtable cluster in an instance.
+
+      - [bigtable-create-instance](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-instance/): The "bigtable-create-instance" tool allows you to create a new bigtable instance.
+
+      - [bigtable-create-logical-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-logical-view/): The "bigtable-create-logical-view" tool allows you to create a new bigtable logical view.
+
+      - [bigtable-create-table](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-table/): The "bigtable-create-table" tool allows you to create a new bigtable table.
+
+      - [bigtable-delete-cluster](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-cluster/): The "bigtable-delete-cluster" tool allows you to delete a bigtable cluster.
+
+      - [bigtable-delete-instance](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-instance/): The "bigtable-delete-instance" tool allows you to delete a bigtable instance.
+
+      - [bigtable-delete-logical-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-logical-view/): The "bigtable-delete-logical-view" tool allows you to delete a bigtable logical view.
+
+      - [bigtable-delete-table](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-table/): The "bigtable-delete-table" tool allows you to delete a bigtable table.
+
+      - [bigtable-get-cluster](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-cluster/): The "bigtable-get-cluster" tool allows you to get details of a bigtable cluster.
+
+      - [bigtable-get-instance](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-instance/): The "bigtable-get-instance" tool allows you to get details of a bigtable instance.
+
+      - [bigtable-get-logical-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-logical-view/): The "bigtable-get-logical-view" tool allows you to get details of a bigtable logical view.
+
+      - [bigtable-get-table](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-table/): The "bigtable-get-table" tool allows you to get details of a bigtable table.
+
+      - [bigtable-list-clusters](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-clusters/): The "bigtable-list-clusters" tool allows you to list all bigtable clusters in the instance.
+
+      - [bigtable-list-instances](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-instances/): The "bigtable-list-instances" tool allows you to list all bigtable instances in the project.
+
+      - [bigtable-list-logical-views](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-logical-views/): The "bigtable-list-logical-views" tool allows you to list all bigtable logical views in the instance.
+
+      - [bigtable-list-tables](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-tables/): The "bigtable-list-tables" tool allows you to list all bigtable tables in the instance.
+
       - [bigtable-sql](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-sql/): A "bigtable-sql" tool executes a pre-defined SQL statement against a Google Cloud Bigtable instance.
 
+
+      - [bigtable-update-cluster](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-cluster/): The "bigtable-update-cluster" tool allows you to update the number of nodes in a bigtable cluster.
+
+      - [bigtable-update-instance](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-instance/): The "bigtable-update-instance" tool allows you to update an existing bigtable instance.
+
+      - [bigtable-update-logical-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-logical-view/): The "bigtable-update-logical-view" tool allows you to update an existing bigtable logical view.
+
+      - [bigtable-update-table](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-table/): The "bigtable-update-table" tool allows you to update an existing bigtable table's configuration.
 
   - [Cassandra](https://mcp-toolbox.dev/dev/integrations/cassandra/): No description provided.
 

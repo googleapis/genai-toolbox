@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-31T17:12:50Z
+**GENERATED ON:** 2026-08-01T05:42:23Z
 
 ---
 ### System Directives for AI Models
@@ -19651,6 +19651,709 @@ instance: "test-instance"
 
 
 ========================================================================
+## bigtable-create-cluster
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-create-cluster
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-cluster/
+**Description:** The "bigtable-create-cluster" tool allows you to create a new bigtable cluster in an instance.
+
+
+## About
+
+Create a new Bigtable cluster in an instance.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-create-cluster` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`cluster_id`** (string): The ID of the cluster
+- **`zone`** (string): The zone for the cluster (e.g. us-central1-b)
+- **`num_nodes`** (integer): The number of nodes to allocate
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_create_cluster
+type: bigtable-create-cluster
+source: my-bigtable-source
+description: Create a new Bigtable cluster in an instance.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-create-cluster`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-create-instance
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-create-instance
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-instance/
+**Description:** The "bigtable-create-instance" tool allows you to create a new bigtable instance.
+
+
+## About
+
+Create a new Bigtable instance.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-create-instance` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance to create
+- **`display_name`** (string): Display name for the instance
+- **`cluster_id`** (string): The ID of the primary cluster
+- **`zone`** (string): The zone for the cluster (e.g. us-central1-b)
+- **`num_nodes`** (integer): The number of nodes for the cluster
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_create_instance
+type: bigtable-create-instance
+source: my-bigtable-source
+description: Create a new Bigtable instance.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-create-instance`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-create-logical-view
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-create-logical-view
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-logical-view/
+**Description:** The "bigtable-create-logical-view" tool allows you to create a new bigtable logical view.
+
+
+## About
+
+Create a new Bigtable logical view.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-create-logical-view` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`logical_view_id`** (string): The ID of the logical view
+- **`query`** (string): The logical view query
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_create_logical_view
+type: bigtable-create-logical-view
+source: my-bigtable-source
+description: Create a new Bigtable logical view.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-create-logical-view`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-create-table
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-create-table
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-table/
+**Description:** The "bigtable-create-table" tool allows you to create a new bigtable table.
+
+
+## About
+
+Create a new Bigtable table.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-create-table` accepts the following parameters:
+
+- **`table_id`** (string): The ID of the table to create
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_create_table
+type: bigtable-create-table
+source: my-bigtable-source
+description: Create a new Bigtable table.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-create-table`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-delete-cluster
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-delete-cluster
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-cluster/
+**Description:** The "bigtable-delete-cluster" tool allows you to delete a bigtable cluster.
+
+
+## About
+
+Delete a Bigtable cluster.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-delete-cluster` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`cluster_id`** (string): The ID of the cluster
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_delete_cluster
+type: bigtable-delete-cluster
+source: my-bigtable-source
+description: Delete a Bigtable cluster.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-delete-cluster`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-delete-instance
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-delete-instance
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-instance/
+**Description:** The "bigtable-delete-instance" tool allows you to delete a bigtable instance.
+
+
+## About
+
+Delete a Bigtable instance.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-delete-instance` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance to delete
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_delete_instance
+type: bigtable-delete-instance
+source: my-bigtable-source
+description: Delete a Bigtable instance.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-delete-instance`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-delete-logical-view
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-delete-logical-view
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-logical-view/
+**Description:** The "bigtable-delete-logical-view" tool allows you to delete a bigtable logical view.
+
+
+## About
+
+Delete a Bigtable logical view.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-delete-logical-view` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`logical_view_id`** (string): The ID of the logical view
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_delete_logical_view
+type: bigtable-delete-logical-view
+source: my-bigtable-source
+description: Delete a Bigtable logical view.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-delete-logical-view`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-delete-table
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-delete-table
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-table/
+**Description:** The "bigtable-delete-table" tool allows you to delete a bigtable table.
+
+
+## About
+
+Delete a Bigtable table.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-delete-table` accepts the following parameters:
+
+- **`table_id`** (string): The ID of the table to delete
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_delete_table
+type: bigtable-delete-table
+source: my-bigtable-source
+description: Delete a Bigtable table.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-delete-table`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-get-cluster
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-get-cluster
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-cluster/
+**Description:** The "bigtable-get-cluster" tool allows you to get details of a bigtable cluster.
+
+
+## About
+
+Get details of a Bigtable cluster.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-get-cluster` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`cluster_id`** (string): The ID of the cluster
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_get_cluster
+type: bigtable-get-cluster
+source: my-bigtable-source
+description: Get details of a Bigtable cluster.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-get-cluster`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-get-instance
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-get-instance
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-instance/
+**Description:** The "bigtable-get-instance" tool allows you to get details of a bigtable instance.
+
+
+## About
+
+Get details of a Bigtable instance.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-get-instance` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance to get
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_get_instance
+type: bigtable-get-instance
+source: my-bigtable-source
+description: Get details of a Bigtable instance.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-get-instance`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-get-logical-view
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-get-logical-view
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-logical-view/
+**Description:** The "bigtable-get-logical-view" tool allows you to get details of a bigtable logical view.
+
+
+## About
+
+Get details of a Bigtable logical view.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-get-logical-view` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`logical_view_id`** (string): The ID of the logical view
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_get_logical_view
+type: bigtable-get-logical-view
+source: my-bigtable-source
+description: Get details of a Bigtable logical view.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-get-logical-view`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-get-table
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-get-table
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-table/
+**Description:** The "bigtable-get-table" tool allows you to get details of a bigtable table.
+
+
+## About
+
+Get details of a Bigtable table.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-get-table` accepts the following parameters:
+
+- **`table_id`** (string): The ID of the table to get
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_get_table
+type: bigtable-get-table
+source: my-bigtable-source
+description: Get details of a Bigtable table.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-get-table`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-list-clusters
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-list-clusters
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-clusters/
+**Description:** The "bigtable-list-clusters" tool allows you to list all bigtable clusters in the instance.
+
+
+## About
+
+List all Bigtable clusters in the instance.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-list-clusters` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_list_clusters
+type: bigtable-list-clusters
+source: my-bigtable-source
+description: List all Bigtable clusters in the instance.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-list-clusters`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-list-instances
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-list-instances
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-instances/
+**Description:** The "bigtable-list-instances" tool allows you to list all bigtable instances in the project.
+
+
+## About
+
+List all Bigtable instances in the project.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_list_instances
+type: bigtable-list-instances
+source: my-bigtable-source
+description: List all Bigtable instances in the project.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-list-instances`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-list-logical-views
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-list-logical-views
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-logical-views/
+**Description:** The "bigtable-list-logical-views" tool allows you to list all bigtable logical views in the instance.
+
+
+## About
+
+List all Bigtable logical views in the instance.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-list-logical-views` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_list_logical_views
+type: bigtable-list-logical-views
+source: my-bigtable-source
+description: List all Bigtable logical views in the instance.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-list-logical-views`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-list-tables
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-list-tables
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-tables/
+**Description:** The "bigtable-list-tables" tool allows you to list all bigtable tables in the instance.
+
+
+## About
+
+List all Bigtable tables in the instance.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_list_tables
+type: bigtable-list-tables
+source: my-bigtable-source
+description: List all Bigtable tables in the instance.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-list-tables`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
 ## bigtable-sql
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-sql
@@ -19776,6 +20479,188 @@ templateParameters:
 [bigtable-logical-view]:
     https://cloud.google.com/bigtable/docs/create-manage-logical-views
 [bigtable-querybuilder]: https://cloud.google.com/bigtable/docs/query-builder
+
+
+
+
+========================================================================
+## bigtable-update-cluster
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-update-cluster
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-cluster/
+**Description:** The "bigtable-update-cluster" tool allows you to update the number of nodes in a bigtable cluster.
+
+
+## About
+
+Update the number of nodes in a Bigtable cluster.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-update-cluster` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`cluster_id`** (string): The ID of the cluster
+- **`serve_nodes`** (integer): The new number of nodes to allocate
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_update_cluster
+type: bigtable-update-cluster
+source: my-bigtable-source
+description: Update the number of nodes in a Bigtable cluster.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-update-cluster`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-update-instance
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-update-instance
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-instance/
+**Description:** The "bigtable-update-instance" tool allows you to update an existing bigtable instance.
+
+
+## About
+
+Update an existing Bigtable instance.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-update-instance` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance to update
+- **`display_name`** (string): The new display name
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_update_instance
+type: bigtable-update-instance
+source: my-bigtable-source
+description: Update an existing Bigtable instance.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-update-instance`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-update-logical-view
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-update-logical-view
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-logical-view/
+**Description:** The "bigtable-update-logical-view" tool allows you to update an existing bigtable logical view.
+
+
+## About
+
+Update an existing Bigtable logical view.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-update-logical-view` accepts the following parameters:
+
+- **`instance_id`** (string): The ID of the instance
+- **`logical_view_id`** (string): The ID of the logical view
+- **`query`** (string): The new logical view query
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_update_logical_view
+type: bigtable-update-logical-view
+source: my-bigtable-source
+description: Update an existing Bigtable logical view.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-update-logical-view`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## bigtable-update-table
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Bigtable > Tools > bigtable-update-table
+**URL:** https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-table/
+**Description:** The "bigtable-update-table" tool allows you to update an existing bigtable table's configuration.
+
+
+## About
+
+Update an existing Bigtable table's configuration.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`bigtable-update-table` accepts the following parameters:
+
+- **`table_id`** (string): The ID of the table to update
+- **`disable_change_stream`** (boolean): Disable change stream
+
+## Example
+
+```yaml
+kind: tool
+name: bigtable_update_table
+type: bigtable-update-table
+source: my-bigtable-source
+description: Update an existing Bigtable table's configuration.
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description** |
+|-----------|----------|--------------|-----------------|
+| type | string | true | Must be `bigtable-update-table`. |
+| source | string | true | Name of the source to execute on. |
+| description | string | false | Description of the tool that is passed to the LLM. |
 
 
 
