@@ -2,3 +2,9 @@
 {{ if not .Site.Params.disableBanner }}
   <script src="{{ "js/custom-layout.js" | relURL }}"></script>
 {{ end }}
+{{ if and .IsSection (findRE `^/integrations/[^/]+/$` .RelPermalink) }}
+  {{ with .GetPage "source" }}
+    <link rel="canonical" href="{{ .Permalink }}">
+    <meta http-equiv="refresh" content="0;url={{ .RelPermalink }}">
+  {{ end }}
+{{ end }}
