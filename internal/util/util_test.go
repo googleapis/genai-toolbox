@@ -13,6 +13,7 @@
 package util
 
 import (
+	"context"
 	"net/http"
 	"testing"
 )
@@ -125,5 +126,138 @@ func TestSnakeFromCamelCase(t *testing.T) {
 				t.Errorf("SnakeFromCamelCase(%q) = %q, want %q", tt.in, got, tt.want)
 			}
 		})
+	}
+}
+
+const testExtURI = "com.google.cloud/test-extension"
+
+type mockCapabilities struct {
+	extensions map[string]any
+}
+
+func (m *mockCapabilities) GetExtensions() map[string]any {
+	return m.extensions
+}
+
+func TestClientExtensions(t *testing.T) {
+	ctx := context.Background()
+
+	// Context without extensions attached
+	if SupportsExtension(ctx, testExtURI) {
+		t.Errorf("expected false when no extensions attached")
+	}
+
+	// Attach extensions map
+	exts := ClientExtensions{
+		testExtURI: true,
+	}
+	ctx = WithClientExtensions(ctx, exts)
+
+	if !SupportsExtension(ctx, testExtURI) {
+		t.Errorf("expected true for testExtURI")
+	}
+
+	if SupportsExtension(ctx, "com.google.cloud/unsupported") {
+		t.Errorf("expected false for unsupported extension")
+	}
+}
+
+func TestExtractClientExtensions(t *testing.T) {
+	tests := []struct {
+		name        string
+		extensions  map[string]any
+		expectedUri string
+		expectedVal bool
+	}{
+		{
+			name:        "nil map",
+			extensions:  nil,
+			expectedUri: testExtURI,
+			expectedVal: false,
+		},
+		{
+			name: "enabled extension via boolean in extensions",
+			extensions: map[string]any{
+				testExtURI: true,
+			},
+			expectedUri: testExtURI,
+			expectedVal: true,
+		},
+		{
+			name: "disabled extension via boolean in extensions",
+			extensions: map[string]any{
+				testExtURI: false,
+			},
+			expectedUri: testExtURI,
+			expectedVal: false,
+		},
+		{
+			name: "enabled extension via empty settings object in extensions",
+			extensions: map[string]any{
+				testExtURI: map[string]any{},
+			},
+			expectedUri: testExtURI,
+			expectedVal: true,
+		},
+		{
+			name: "enabled extension via settings object with values in extensions",
+			extensions: map[string]any{
+				testExtURI: map[string]any{"setting": "val"},
+			},
+			expectedUri: testExtURI,
+			expectedVal: true,
+		},
+		{
+			name: "nil value ignored",
+			extensions: map[string]any{
+				testExtURI: nil,
+			},
+			expectedUri: testExtURI,
+			expectedVal: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			exts := ExtractClientExtensions(tc.extensions)
+			if exts[tc.expectedUri] != tc.expectedVal {
+				t.Errorf("ExtractClientExtensions() value for %s = %v, want %v", tc.expectedUri, exts[tc.expectedUri], tc.expectedVal)
+			}
+		})
+	}
+}
+
+func TestWithClientCapabilities(t *testing.T) {
+	ctx := context.Background()
+
+	// nil capabilities
+	ctxNil := WithClientCapabilities(ctx, nil)
+	if SupportsExtension(ctxNil, testExtURI) {
+		t.Errorf("expected false for nil capabilities")
+	}
+
+	// mock capabilities with standard extension object
+	caps := &mockCapabilities{
+		extensions: map[string]any{
+			testExtURI: map[string]any{},
+		},
+	}
+	ctxCaps := WithClientCapabilities(ctx, caps)
+	if !SupportsExtension(ctxCaps, testExtURI) {
+		t.Errorf("expected true for testExtURI via WithClientCapabilities")
+	}
+}
+
+func TestServerExtensions(t *testing.T) {
+	ctx := context.Background()
+	if GetServerExtensions(ctx) != nil {
+		t.Errorf("expected nil when no server extensions registered")
+	}
+
+	ctx = WithServerExtensions(ctx, []string{testExtURI})
+
+	exts := GetServerExtensions(ctx)
+	if exts == nil || exts[testExtURI] == nil {
+		t.Errorf("expected testExtURI to be registered in server extensions")
 	}
 }

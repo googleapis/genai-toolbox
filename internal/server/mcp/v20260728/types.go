@@ -117,6 +117,8 @@ type ResultMetaObject struct {
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // client can define its own, additional capabilities.
 type ClientCapabilities struct {
+	// Experimental, non-standard capabilities that the client supports.
+	Experimental map[string]interface{} `json:"experimental,omitempty"`
 	// Standard extensions that the client supports.
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 	// Present if the client supports listing roots.
@@ -130,7 +132,10 @@ func (c *ClientCapabilities) GetExtensions() map[string]any {
 	if c == nil {
 		return nil
 	}
-	return c.Extensions
+	if c.Extensions != nil {
+		return c.Extensions
+	}
+	return c.Experimental
 }
 
 /* Discovery */
