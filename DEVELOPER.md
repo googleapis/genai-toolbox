@@ -193,6 +193,14 @@ directly with the team.
 > However, any new database source should also include at least one new tool
 > type.
 
+> [!IMPORTANT]
+> A new source is not accepted when the database is wire-compatible with a
+> source Toolbox already supports, since every subsequent fix would have to be
+> re-applied to each copy. Where an existing source can be configured to connect
+> instead, do that; new packages for protocol-compatible databases have been
+> removed after merge on these grounds. Raise this in the issue above before
+> implementing.
+
 #### Adding a New Database Source
 
 We recommend looking at an [example source
