@@ -115,21 +115,27 @@ func buildParams() parameters.Parameters {
 	}
 }
 
+var _ tools.Tool = Tool{}
+
 // Tool represents the cloud-sql-mssql-connect-gce tool.
 type Tool struct {
 	tools.BaseTool[Config]
 }
 
-func (t Tool) GetSourceName() string { return t.Cfg.Source }
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
 
-func (t Tool) ToConfig() tools.ToolConfig { return t.Cfg }
-
-func (t Tool) ValidateSource(source sources.Source) error {
-	_, ok := source.(compatibleSource)
+func (t Tool) ValidateSource(src sources.Source) error {
+	_, ok := src.(compatibleSource)
 	if !ok {
 		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
 	return nil
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
 }
 
 // Invoke validates connectivity between a Cloud SQL SQL Server instance and a
