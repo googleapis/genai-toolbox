@@ -164,12 +164,11 @@ func TestParseEnv(t *testing.T) {
 
 func TestConvertConfig(t *testing.T) {
 	tcs := []struct {
-		desc           string
-		in             string
-		want           string
-		migrateToolset bool
-		isErr          bool
-		errStr         string
+		desc   string
+		in     string
+		want   string
+		isErr  bool
+		errStr string
 	}{
 		{
 			desc: "basic convert",
@@ -241,7 +240,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -339,7 +338,7 @@ name: my-google-auth
 type: google
 clientId: testing-id
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -461,7 +460,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -505,14 +504,14 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset2
 tools:
 - example_tool
 ---
 tools:
 - example_tool
-kind: toolset
+kind: group
 name: example_toolset3
 ---
 kind: prompt
@@ -530,7 +529,7 @@ type: gemini
 `,
 		},
 		{
-			desc: "no convertion needed",
+			desc: "flat format only rewrites the toolset kind",
 			in: `
 kind: source
 name: my-pg-instance
@@ -579,7 +578,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -598,8 +597,17 @@ tools:
 			errStr: `doc 1: invalid config format at key "toolsets": expected nested format keys and type map`,
 		},
 		{
-			desc:           "migrate nested toolset to group",
-			migrateToolset: true,
+			// Toolsets are emitted as groups, but the error must still name the
+			// key the user wrote.
+			desc: "invalid toolset entry",
+			in: `
+            toolsets:
+                example_toolset: not-a-list`,
+			isErr:  true,
+			errStr: `doc 1: invalid config format at key "toolsets": unable to convert entryBody to MapSlice`,
+		},
+		{
+			desc: "convert nested toolset to group",
 			in: `
             toolsets:
                 example_toolset:
@@ -612,8 +620,7 @@ tools:
 `,
 		},
 		{
-			desc:           "migrate flat toolset to group",
-			migrateToolset: true,
+			desc: "convert flat toolset to group",
 			in: `
 kind: toolset
 name: example_toolset
@@ -627,8 +634,24 @@ tools:
 `,
 		},
 		{
-			desc:           "migrate flat toolset to group with kind not first",
-			migrateToolset: true,
+			// A toolset has no description of its own, so converting must not turn
+			// one into a group description.
+			desc: "convert flat toolset to group drops the description",
+			in: `
+kind: toolset
+name: example_toolset
+description: some description
+tools:
+- example_tool`,
+			want: `
+kind: group
+name: example_toolset
+tools:
+- example_tool
+`,
+		},
+		{
+			desc: "convert flat toolset to group with kind not first",
 			in: `
 tools:
 - example_tool
@@ -642,8 +665,7 @@ name: example_toolset
 `,
 		},
 		{
-			desc:           "migrate leaves other kinds untouched",
-			migrateToolset: true,
+			desc: "convert toolset to group leaves other kinds untouched",
 			in: `
             sources:
                 my-pg-instance:
@@ -691,7 +713,7 @@ messages:
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			output, err := ConvertConfig([]byte(tc.in), tc.migrateToolset)
+			output, err := ConvertConfig([]byte(tc.in))
 			if tc.isErr {
 				if err == nil {
 					t.Fatalf("expected error")
@@ -1033,6 +1055,36 @@ func TestParseConfigFailure(t *testing.T) {
 			statement: SELECT *;
 			`,
 			wantError: "invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed",
+		},
+		{
+			// Toolsets are parsed as groups, so unknown fields are now rejected by
+			// the group's strict decoder instead of being silently dropped.
+			description: "unknown field in toolset",
+			in: `
+			kind: toolset
+			name: my_toolset
+			tools:
+			- example_tool
+			descriptoin: typo
+			`,
+			wantError: "unable to unmarshal group",
+		},
+		{
+			// Toolsets are parsed as groups, so a toolset and a group of the same
+			// name now collide instead of the group silently winning.
+			description: "toolset and group share a name",
+			in: `
+			kind: toolset
+			name: my_collection
+			tools:
+			- example_tool
+---
+			kind: group
+			name: my_collection
+			tools:
+			- example_tool
+			`,
+			wantError: `group "my_collection" declared more than once`,
 		},
 	}
 	for _, tc := range tcs {

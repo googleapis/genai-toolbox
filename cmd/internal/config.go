@@ -155,7 +155,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 	raw = []byte(output)
 
-	raw, err = ConvertConfig(raw, false)
+	raw, err = ConvertConfig(raw)
 	if err != nil {
 		return config, fmt.Errorf("error converting config file: %s", err)
 	}
@@ -168,11 +168,9 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	return config, nil
 }
 
-// ConvertConfig converts configuration file to flat format. When migrateToolset
-// is true, toolsets are additionally rewritten to the group kind (both nested
-// and already-flat inputs); the runtime parse path passes false to leave
-// toolsets untouched.
-func ConvertConfig(raw []byte, migrateToolset bool) ([]byte, error) {
+// ConvertConfig converts configuration file to flat format, rewriting toolsets
+// to the group kind in both nested and already-flat inputs.
+func ConvertConfig(raw []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	// Manually copy top-level comments and empty lines from the source
 	scanner := bufio.NewScanner(bytes.NewReader(raw))
@@ -211,16 +209,19 @@ func ConvertConfig(raw []byte, migrateToolset bool) ([]byte, error) {
 			}
 			if hasKindField(input) {
 				// this doc is already in flat format, encode to buf
-				if migrateToolset {
-					migrateToolsetKind(input)
-				}
-				if err := encoder.Encode(input); err != nil {
+				if err := encoder.Encode(migrateToolsetKind(input)); err != nil {
 					return nil, err
 				}
 				break
 			}
 			// check if value conversion to yaml.MapSlice successfully
 			if slice, ok := item.Value.(yaml.MapSlice); slices.Contains(nestedFormatKey, key) && ok {
+				// A toolset entry's body is a bare tool list rather than a map, so
+				// transformDocs needs to know the source key even though toolsets
+				// are emitted as groups. srcKey is kept for error messages, which
+				// should name the key the user actually wrote.
+				srcKey := key
+				isToolset := key == "toolsets"
 				switch key {
 				case "authServices":
 					key = "authService"
@@ -230,21 +231,14 @@ func ConvertConfig(raw []byte, migrateToolset bool) ([]byte, error) {
 					key = "embeddingModel"
 				case "tools":
 					key = "tool"
-				case "toolsets":
-					key = "toolset"
+				case "toolsets", "groups":
+					key = "group"
 				case "prompts":
 					key = "prompt"
-				case "groups":
-					key = "group"
 				}
-				isToolset := key == "toolset"
-				outputKind := key
-				if isToolset && migrateToolset {
-					outputKind = "group"
-				}
-				transformed, err := transformDocs(outputKind, isToolset, slice)
+				transformed, err := transformDocs(key, isToolset, slice)
 				if err != nil {
-					return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, key, err)
+					return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, srcKey, err)
 				}
 				// encode per-doc
 				for _, doc := range transformed {
@@ -271,22 +265,42 @@ func hasKindField(input yaml.MapSlice) bool {
 }
 
 // migrateToolsetKind rewrites a top-level `kind: toolset` to `kind: group` in a
-// flat-format doc, preserving field order. Docs of any other kind are left
-// unchanged.
-func migrateToolsetKind(input yaml.MapSlice) {
+// flat-format doc, preserving field order. Nested `toolsets:` blocks never reach
+// here; they are rewritten while being flattened in ConvertConfig. Docs of any
+// other kind are returned unchanged.
+//
+// A toolset has no description of its own, so any description on one is dropped
+// rather than promoted into a group description, which would otherwise start
+// surfacing in group listings for a collection that never declared one.
+func migrateToolsetKind(input yaml.MapSlice) yaml.MapSlice {
+	kindIndex := -1
 	for i, item := range input {
 		if key, ok := item.Key.(string); ok && key == "kind" {
-			if val, ok := item.Value.(string); ok && val == "toolset" {
-				input[i].Value = "group"
-			}
-			return
+			kindIndex = i
+			break
 		}
 	}
+	if kindIndex < 0 {
+		return input
+	}
+	if val, ok := input[kindIndex].Value.(string); !ok || val != "toolset" {
+		return input
+	}
+	input[kindIndex].Value = "group"
+
+	migrated := make(yaml.MapSlice, 0, len(input))
+	for _, item := range input {
+		if key, ok := item.Key.(string); ok && key == "description" {
+			continue
+		}
+		migrated = append(migrated, item)
+	}
+	return migrated
 }
 
 // transformDocs transforms the configuration file from nested to flat format.
 // kind is the emitted flat kind; isToolset selects the toolset list-wrapping
-// behavior independently, so a toolset can be emitted as a group. yaml.MapSlice
+// behavior independently, since toolsets are emitted as groups. yaml.MapSlice
 // preserves map order.
 func transformDocs(kind string, isToolset bool, input yaml.MapSlice) ([]yaml.MapSlice, error) {
 	var transformed []yaml.MapSlice
