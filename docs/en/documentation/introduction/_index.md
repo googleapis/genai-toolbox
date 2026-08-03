@@ -806,3 +806,21 @@ spec to the stable release. Developers must manually migrate their clients to
 the stable version once it is available. Do not use this flag in production
 environments.
 {{< /notice >}}
+
+### MCP Extensions
+
+Toolbox supports standard MCP extensions to advertise and negotiate additional capabilities between clients and servers. By default, the server advertises support for the `com.google.cloud/toolbox.v1` extension.
+
+You can configure which extensions are enabled or disabled when starting the server using the `--enable-ext` and `--disable-ext` CLI flags:
+
+* `--enable-ext`: Specifies a list of MCP extension URIs enabled on this server (default: `com.google.cloud/toolbox.v1`).
+* `--disable-ext`: Specifies a list of MCP extension URIs disabled on this server. Any extension listed in `--disable-ext` will be omitted from the server's advertised capabilities, even if included in `--enable-ext`.
+
+**Example usage:**
+```bash
+# Enable multiple extensions
+toolbox --enable-ext=com.google.cloud/toolbox.v1 --enable-ext=io.modelcontextprotocol/tasks
+
+# Disable a specific extension
+toolbox --disable-ext=com.google.cloud/toolbox.v1
+```

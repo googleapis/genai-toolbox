@@ -37,6 +37,8 @@ description: >
 |              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                            |             |
 |              | `--poll-interval`          | Specifies the polling frequency (seconds) for configuration file updates.                                                                                                 | `0`         |
 |              | `--enable-draft-specs`     | Opt-in and test upcoming draft MCP specifications.                                                                                                                        | `false`     |
+|              | `--enable-ext`             | Specifies MCP extension URIs enabled on this server.                                                                                                                      | `com.google.cloud/toolbox.v1` |
+|              | `--disable-ext`            | Specifies MCP extension URIs disabled on this server.                                                                                                                     |             |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                       |             |
 
 ## Sub Commands
