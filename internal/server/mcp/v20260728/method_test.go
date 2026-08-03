@@ -1233,7 +1233,7 @@ func TestWithClientExtensions(t *testing.T) {
 		},
 	}
 	ctx = withClientExtensions(ctx, meta)
-	if !SupportsExtension(ctx, "com.google.cloud/test-ext") {
+	if !util.SupportsExtension(ctx, "com.google.cloud/test-ext") {
 		t.Errorf("expected extension com.google.cloud/test-ext to be supported in ctx")
 	}
 }

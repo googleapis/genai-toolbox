@@ -101,7 +101,7 @@ func withClientExtensions(ctx context.Context, meta *RequestMetaObject) context.
 	if meta == nil {
 		return ctx
 	}
-	return WithClientCapabilities(ctx, meta.MetaClientCapabilities)
+	return util.WithClientCapabilities(ctx, meta.MetaClientCapabilities)
 }
 
 // validateHeader checks the header of every requests
@@ -205,7 +205,7 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 		},
 		SupportedVersions: mcputil.GetSupportedVersions(enableDraft),
 		Capabilities: ServerCapabilities{
-			Extensions: GetServerExtensions(ctx),
+			Extensions: util.GetServerExtensions(ctx),
 			Tools: &ListChanged{
 				ListChanged: &toolsListChanged,
 			},
