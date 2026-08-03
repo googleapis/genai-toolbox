@@ -71,12 +71,12 @@ func getMssqlConnectGCEToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"connect_to_gce": map[string]any{
-				"type":        "cloud-sql-mssql-connect-gce",
+				"type":        "cloud-sql-connect-gce",
 				"source":      "my-cloud-sql-source",
 				"description": "Integration test: Connect SQL Server to GCE VM",
 			},
 			"connect_to_gce_with_language": map[string]any{
-				"type":        "cloud-sql-mssql-connect-gce",
+				"type":        "cloud-sql-connect-gce",
 				"source":      "my-cloud-sql-source",
 				"description": "Integration test: SQL Server → GCE with python snippet",
 			},

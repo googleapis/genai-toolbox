@@ -74,12 +74,12 @@ func getConnectGCEToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"connect_to_gce": map[string]any{
-				"type":        "cloud-sql-postgres-connect-gce",
+				"type":        "cloud-sql-connect-gce",
 				"source":      "my-cloud-sql-source",
 				"description": "Integration test: Connect PostgreSQL to GCE VM",
 			},
 			"connect_to_gce_with_language": map[string]any{
-				"type":        "cloud-sql-postgres-connect-gce",
+				"type":        "cloud-sql-connect-gce",
 				"source":      "my-cloud-sql-source",
 				"description": "Integration test: Postgres → GCE with python snippet",
 			},
@@ -87,7 +87,7 @@ func getConnectGCEToolsConfig() map[string]any {
 	}
 }
 
-// TestCloudSQLPostgresConnectGCE exercises the cloud-sql-postgres-connect-gce
+// TestCloudSQLPostgresConnectGCE exercises the cloud-sql-connect-gce
 // tool end-to-end via the Toolbox HTTP endpoint against a live Cloud SQL
 // Postgres instance and GCE VM.
 func TestCloudSQLPostgresConnectGCE(t *testing.T) {

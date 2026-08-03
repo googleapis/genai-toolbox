@@ -71,12 +71,12 @@ func getMysqlConnectGCEToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"connect_to_gce": map[string]any{
-				"type":        "cloud-sql-mysql-connect-gce",
+				"type":        "cloud-sql-connect-gce",
 				"source":      "my-cloud-sql-source",
 				"description": "Integration test: Connect MySQL to GCE VM",
 			},
 			"connect_to_gce_with_language": map[string]any{
-				"type":        "cloud-sql-mysql-connect-gce",
+				"type":        "cloud-sql-connect-gce",
 				"source":      "my-cloud-sql-source",
 				"description": "Integration test: MySQL → GCE with python snippet",
 			},
