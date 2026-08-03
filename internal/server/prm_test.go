@@ -23,6 +23,7 @@ func TestGetPRMURL(t *testing.T) {
 		name       string
 		toolboxUrl string
 		want       string
+		wantErr    bool
 	}{
 		{
 			name:       "empty url",
@@ -64,13 +65,56 @@ func TestGetPRMURL(t *testing.T) {
 			toolboxUrl: "http://127.0.0.1:5000/mcp",
 			want:       "http://127.0.0.1:5000/.well-known/oauth-protected-resource/mcp",
 		},
+		{
+			name:       "relative path with leading slash",
+			toolboxUrl: "/mcp",
+			want:       "/.well-known/oauth-protected-resource/mcp",
+		},
+		{
+			name:       "relative path without leading slash",
+			toolboxUrl: "mcp",
+			want:       "/.well-known/oauth-protected-resource/mcp",
+		},
+		{
+			name:       "relative path with trailing slash",
+			toolboxUrl: "/mcp/",
+			want:       "/.well-known/oauth-protected-resource/mcp",
+		},
+		{
+			name:       "relative root slash",
+			toolboxUrl: "/",
+			want:       "/.well-known/oauth-protected-resource",
+		},
+		{
+			name:       "relative multi-segment path with leading slash",
+			toolboxUrl: "/api/v1/mcp",
+			want:       "/.well-known/oauth-protected-resource/api/v1/mcp",
+		},
+		{
+			name:       "relative multi-segment path without leading slash",
+			toolboxUrl: "api/v1/mcp",
+			want:       "/.well-known/oauth-protected-resource/api/v1/mcp",
+		},
+		{
+			name:       "invalid url with scheme but no host",
+			toolboxUrl: "http://",
+			wantErr:    true,
+		},
+		{
+			name:       "malformed url",
+			toolboxUrl: "://invalid",
+			wantErr:    true,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			s := &Server{toolboxUrl: tc.toolboxUrl}
-			got := s.getPRMURL()
-			if got != tc.want {
+			got, err := s.getPRMURL()
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("getPRMURL(%q) error = %v, wantErr %v", tc.toolboxUrl, err, tc.wantErr)
+			}
+			if !tc.wantErr && got != tc.want {
 				t.Errorf("getPRMURL(%q) = %q, want %q", tc.toolboxUrl, got, tc.want)
 			}
 		})

@@ -15,6 +15,7 @@
 package server
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 )
@@ -74,17 +75,27 @@ type ProtectedResourceMetadata struct {
 }
 
 // getPRMURL returns the full URL to advertise in WWW-Authenticate headers.
-func (s *Server) getPRMURL() string {
+func (s *Server) getPRMURL() (string, error) {
 	if s.toolboxUrl == "" {
-		return "/.well-known/oauth-protected-resource"
+		return "/.well-known/oauth-protected-resource", nil
 	}
 	u, err := url.Parse(s.toolboxUrl)
 	if err != nil {
-		return "/.well-known/oauth-protected-resource"
+		return "", fmt.Errorf("invalid toolbox-url %q: %w", s.toolboxUrl, err)
+	}
+	if u.Scheme != "" || u.Host != "" {
+		if u.Scheme == "" || u.Host == "" {
+			return "", fmt.Errorf("invalid toolbox-url %q: must be a valid absolute URL with scheme and host", s.toolboxUrl)
+		}
+		path := strings.TrimSuffix(u.Path, "/")
+		return u.Scheme + "://" + u.Host + "/.well-known/oauth-protected-resource" + path, nil
 	}
 	path := strings.TrimSuffix(u.Path, "/")
-	if u.Scheme == "" && u.Host == "" {
-		return path + "/.well-known/oauth-protected-resource"
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
 	}
-	return u.Scheme + "://" + u.Host + "/.well-known/oauth-protected-resource" + path
+	if path == "/" {
+		return "/.well-known/oauth-protected-resource", nil
+	}
+	return "/.well-known/oauth-protected-resource" + path, nil
 }

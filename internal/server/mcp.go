@@ -637,14 +637,16 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			if errors.As(err, &mcpErr) {
 				switch mcpErr.Code {
 				case http.StatusForbidden:
-					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.getPRMURL(), mcpErr.Message))
+					prmURL, _ := s.getPRMURL()
+					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), prmURL, mcpErr.Message))
 					render.Status(r, http.StatusForbidden)
 				case http.StatusUnauthorized:
 					scopesArg := ""
 					if len(mcpErr.ScopesRequired) > 0 {
 						scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
 					}
-					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.getPRMURL(), scopesArg))
+					prmURL, _ := s.getPRMURL()
+					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, prmURL, scopesArg))
 					render.Status(r, http.StatusUnauthorized)
 				}
 			}

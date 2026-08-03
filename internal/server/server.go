@@ -491,6 +491,10 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		enableDraftSpecs:    cfg.EnableDraftSpecs,
 	}
 
+	if _, err := s.getPRMURL(); err != nil {
+		return nil, fmt.Errorf("unable to initialize server: %w", err)
+	}
+
 	if s.enableDraftSpecs {
 		s.logger.WarnContext(ctx, "Flag --enable-draft-specs is active. Please note that draft specs are subject to breaking changes and will be completely removed (not redirected) once stable MCP specifications are released. Do not use this configuration in production.")
 	}
@@ -548,7 +552,14 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// Register route if auth is enabled or a manual file is provided
 	if mcpAuthEnabled || s.mcpPrmFile != "" {
-		prmURL, _ := url.Parse(s.getPRMURL())
+		prmURLStr, err := s.getPRMURL()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get PRM URL: %w", err)
+		}
+		prmURL, err := url.Parse(prmURLStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse PRM URL: %w", err)
+		}
 		r.Get(prmURL.Path, func(w http.ResponseWriter, req *http.Request) {
 			// Serve from memory if file was loaded
 			if s.mcpPrmFile != "" {
@@ -634,12 +645,14 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 						if len(mcpErr.ScopesRequired) > 0 {
 							scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
 						}
-						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.getPRMURL(), scopesArg))
+						prmURL, _ := s.getPRMURL()
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, prmURL, scopesArg))
 						render.Status(r, http.StatusUnauthorized)
 						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.UNAUTHORIZED, mcpErr.Message, nil))
 						return
 					case http.StatusForbidden:
-						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.getPRMURL(), mcpErr.Message))
+						prmURL, _ := s.getPRMURL()
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), prmURL, mcpErr.Message))
 						render.Status(r, http.StatusForbidden)
 						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.FORBIDDEN, mcpErr.Message, nil))
 						return
