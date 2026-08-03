@@ -1227,7 +1227,7 @@ func TestWithClientExtensions(t *testing.T) {
 	ctx := context.Background()
 	meta := &RequestMetaObject{
 		MetaClientCapabilities: &ClientCapabilities{
-			Experimental: map[string]any{
+			Extensions: map[string]any{
 				"com.google.cloud/test-ext": true,
 			},
 		},

@@ -117,8 +117,6 @@ type ResultMetaObject struct {
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // client can define its own, additional capabilities.
 type ClientCapabilities struct {
-	// Experimental, non-standard capabilities that the client supports.
-	Experimental map[string]interface{} `json:"experimental,omitempty"`
 	// Standard extensions that the client supports.
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 	// Present if the client supports listing roots.
@@ -133,14 +131,6 @@ func (c *ClientCapabilities) GetExtensions() map[string]any {
 		return nil
 	}
 	return c.Extensions
-}
-
-// GetExperimental returns experimental capabilities advertised by the client.
-func (c *ClientCapabilities) GetExperimental() map[string]any {
-	if c == nil {
-		return nil
-	}
-	return c.Experimental
 }
 
 /* Discovery */
@@ -203,10 +193,9 @@ type Implementation struct {
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // server can define its own, additional capabilities.
 type ServerCapabilities struct {
-	Experimental map[string]interface{} `json:"experimental,omitempty"`
-	Extensions   map[string]interface{} `json:"extensions,omitempty"`
-	Tools        *ListChanged           `json:"tools,omitempty"`
-	Prompts      *ListChanged           `json:"prompts,omitempty"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
+	Tools      *ListChanged           `json:"tools,omitempty"`
+	Prompts    *ListChanged           `json:"prompts,omitempty"`
 }
 
 // ListChange represents whether the server supports notification for changes to the capabilities.

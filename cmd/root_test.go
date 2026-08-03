@@ -63,11 +63,11 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.UserAgentMetadata == nil {
 		c.UserAgentMetadata = []string{}
 	}
-	if c.Extensions == nil {
-		c.Extensions = []string{}
+	if c.EnableExt == nil {
+		c.EnableExt = []string{"com.google.cloud/toolbox.v1"}
 	}
-	if c.ExperimentalExtensions == nil {
-		c.ExperimentalExtensions = []string{}
+	if c.DisableExt == nil {
+		c.DisableExt = []string{}
 	}
 	if c.HttpMaxRequestBytes == 0 {
 		c.HttpMaxRequestBytes = server.DefaultHTTPMaxRequestBytes
@@ -263,17 +263,17 @@ func TestServerConfigFlags(t *testing.T) {
 			}),
 		},
 		{
-			desc: "extensions",
-			args: []string{"--extensions", "com.google.cloud/toolbox.v1"},
+			desc: "enable ext",
+			args: []string{"--enable-ext", "com.google.cloud/toolbox.v1,io.modelcontextprotocol/tasks"},
 			want: withDefaults(server.ServerConfig{
-				Extensions: []string{"com.google.cloud/toolbox.v1"},
+				EnableExt: []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"},
 			}),
 		},
 		{
-			desc: "experimental extensions",
-			args: []string{"--experimental-extensions", "com.google.cloud/toolbox.v1"},
+			desc: "disable ext",
+			args: []string{"--disable-ext", "io.modelcontextprotocol/tasks"},
 			want: withDefaults(server.ServerConfig{
-				ExperimentalExtensions: []string{"com.google.cloud/toolbox.v1"},
+				DisableExt: []string{"io.modelcontextprotocol/tasks"},
 			}),
 		},
 	}

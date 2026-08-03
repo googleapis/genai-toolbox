@@ -18,7 +18,6 @@ import "context"
 
 type extensionsKey struct{}
 type serverExtensionsKey struct{}
-type serverExperimentalExtensionsKey struct{}
 
 // ClientExtensions holds the set of extension URIs supported by the client.
 type ClientExtensions map[string]bool
@@ -26,7 +25,6 @@ type ClientExtensions map[string]bool
 // CapabilitiesProvider provides access to client extension maps.
 type CapabilitiesProvider interface {
 	GetExtensions() map[string]any
-	GetExperimental() map[string]any
 }
 
 // WithClientExtensions attaches the client's supported extensions to the context.
@@ -46,38 +44,34 @@ func SupportsExtension(ctx context.Context, uri string) bool {
 	return exts != nil && exts[uri]
 }
 
-// ExtractClientExtensions extracts supported extension URIs from standard and experimental capability maps.
-func ExtractClientExtensions(extensions map[string]any, experimental map[string]any) ClientExtensions {
+// ExtractClientExtensions extracts supported extension URIs from standard capability maps.
+func ExtractClientExtensions(extensions map[string]any) ClientExtensions {
 	exts := make(ClientExtensions)
-	extract := func(m map[string]any) {
-		if m == nil {
-			return
-		}
-		for k, v := range m {
-			if v == nil {
-				continue
-			}
-			if b, ok := v.(bool); ok {
-				if b {
-					exts[k] = true
-				}
-				continue
-			}
-			// Any non-nil, non-false setting object (e.g., {}, map, struct) indicates support.
-			exts[k] = true
-		}
+	if extensions == nil {
+		return exts
 	}
-	extract(extensions)
-	extract(experimental)
+	for k, v := range extensions {
+		if v == nil {
+			continue
+		}
+		if b, ok := v.(bool); ok {
+			if b {
+				exts[k] = true
+			}
+			continue
+		}
+		// Any non-nil, non-false setting object (e.g., {}, map, struct) indicates support.
+		exts[k] = true
+	}
 	return exts
 }
 
 // WithClientCapabilities extracts client extensions from capabilities and attaches them to the context.
 func WithClientCapabilities(ctx context.Context, caps CapabilitiesProvider) context.Context {
-	if caps == nil || (caps.GetExtensions() == nil && caps.GetExperimental() == nil) {
+	if caps == nil || caps.GetExtensions() == nil {
 		return ctx
 	}
-	return WithClientExtensions(ctx, ExtractClientExtensions(caps.GetExtensions(), caps.GetExperimental()))
+	return WithClientExtensions(ctx, ExtractClientExtensions(caps.GetExtensions()))
 }
 
 // WithServerExtensions adds server standard extensions into the context.
@@ -93,35 +87,9 @@ func ServerExtensionsFromContext(ctx context.Context) ([]string, bool) {
 	return nil, false
 }
 
-// WithServerExperimentalExtensions adds server experimental extensions into the context.
-func WithServerExperimentalExtensions(ctx context.Context, exts []string) context.Context {
-	return context.WithValue(ctx, serverExperimentalExtensionsKey{}, exts)
-}
-
-// ServerExperimentalExtensionsFromContext retrieves server experimental extensions from context.
-func ServerExperimentalExtensionsFromContext(ctx context.Context) ([]string, bool) {
-	if exts, ok := ctx.Value(serverExperimentalExtensionsKey{}).([]string); ok {
-		return exts, true
-	}
-	return nil, false
-}
-
-// GetServerExtensions returns standard extensions advertised by this server from context.
+// GetServerExtensions returns extensions advertised by this server from context.
 func GetServerExtensions(ctx context.Context) map[string]interface{} {
 	exts, _ := ServerExtensionsFromContext(ctx)
-	if len(exts) == 0 {
-		return nil
-	}
-	res := make(map[string]interface{}, len(exts))
-	for _, uri := range exts {
-		res[uri] = map[string]any{}
-	}
-	return res
-}
-
-// GetServerExperimental returns experimental extensions advertised by this server from context.
-func GetServerExperimental(ctx context.Context) map[string]interface{} {
-	exts, _ := ServerExperimentalExtensionsFromContext(ctx)
 	if len(exts) == 0 {
 		return nil
 	}

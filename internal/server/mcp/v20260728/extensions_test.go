@@ -22,16 +22,11 @@ import (
 const testExtURI = "com.google.cloud/test-extension"
 
 type mockCapabilities struct {
-	extensions   map[string]any
-	experimental map[string]any
+	extensions map[string]any
 }
 
 func (m *mockCapabilities) GetExtensions() map[string]any {
 	return m.extensions
-}
-
-func (m *mockCapabilities) GetExperimental() map[string]any {
-	return m.experimental
 }
 
 func TestClientExtensions(t *testing.T) {
@@ -59,32 +54,28 @@ func TestClientExtensions(t *testing.T) {
 
 func TestExtractClientExtensions(t *testing.T) {
 	tests := []struct {
-		name         string
-		extensions   map[string]any
-		experimental map[string]any
-		expectedUri  string
-		expectedVal  bool
+		name        string
+		extensions  map[string]any
+		expectedUri string
+		expectedVal bool
 	}{
 		{
-			name:         "nil maps",
-			extensions:   nil,
-			experimental: nil,
-			expectedUri:  testExtURI,
-			expectedVal:  false,
+			name:        "nil map",
+			extensions:  nil,
+			expectedUri: testExtURI,
+			expectedVal: false,
 		},
 		{
-			name:       "enabled extension via boolean in experimental",
-			extensions: nil,
-			experimental: map[string]any{
+			name: "enabled extension via boolean in extensions",
+			extensions: map[string]any{
 				testExtURI: true,
 			},
 			expectedUri: testExtURI,
 			expectedVal: true,
 		},
 		{
-			name:       "disabled extension via boolean in experimental",
-			extensions: nil,
-			experimental: map[string]any{
+			name: "disabled extension via boolean in extensions",
+			extensions: map[string]any{
 				testExtURI: false,
 			},
 			expectedUri: testExtURI,
@@ -95,33 +86,30 @@ func TestExtractClientExtensions(t *testing.T) {
 			extensions: map[string]any{
 				testExtURI: map[string]any{},
 			},
-			experimental: nil,
-			expectedUri:  testExtURI,
-			expectedVal:  true,
+			expectedUri: testExtURI,
+			expectedVal: true,
 		},
 		{
 			name: "enabled extension via settings object with values in extensions",
 			extensions: map[string]any{
 				testExtURI: map[string]any{"setting": "val"},
 			},
-			experimental: nil,
-			expectedUri:  testExtURI,
-			expectedVal:  true,
+			expectedUri: testExtURI,
+			expectedVal: true,
 		},
 		{
 			name: "nil value ignored",
 			extensions: map[string]any{
 				testExtURI: nil,
 			},
-			experimental: nil,
-			expectedUri:  testExtURI,
-			expectedVal:  false,
+			expectedUri: testExtURI,
+			expectedVal: false,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			exts := ExtractClientExtensions(tc.extensions, tc.experimental)
+			exts := ExtractClientExtensions(tc.extensions)
 			if exts[tc.expectedUri] != tc.expectedVal {
 				t.Errorf("ExtractClientExtensions() value for %s = %v, want %v", tc.expectedUri, exts[tc.expectedUri], tc.expectedVal)
 			}
@@ -155,20 +143,11 @@ func TestServerExtensions(t *testing.T) {
 	if GetServerExtensions(ctx) != nil {
 		t.Errorf("expected nil when no server extensions registered")
 	}
-	if GetServerExperimental(ctx) != nil {
-		t.Errorf("expected nil when no server experimental extensions registered")
-	}
 
 	ctx = WithServerExtensions(ctx, []string{testExtURI})
-	ctx = WithServerExperimentalExtensions(ctx, []string{testExtURI})
 
 	exts := GetServerExtensions(ctx)
 	if exts == nil || exts[testExtURI] == nil {
 		t.Errorf("expected testExtURI to be registered in server extensions")
-	}
-
-	exp := GetServerExperimental(ctx)
-	if exp == nil || exp[testExtURI] == nil {
-		t.Errorf("expected testExtURI to be registered in server experimental")
 	}
 }
