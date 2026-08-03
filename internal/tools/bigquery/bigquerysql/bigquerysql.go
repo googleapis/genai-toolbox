@@ -24,7 +24,6 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -318,8 +317,8 @@ func formatVectorForBigQuery(vectorFloats []float32) any {
 	return res
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.StaticParameters, paramValues, embeddingModelsMap, formatVectorForBigQuery)
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, pMgr tools.PrimitiveManagerI) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.StaticParameters, paramValues, pMgr, formatVectorForBigQuery)
 }
 
 func (t Tool) RequiresClientAuthorization(source sources.Source) (bool, error) {
