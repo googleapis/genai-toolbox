@@ -266,6 +266,40 @@ func TestParseDatabaseType(t *testing.T) {
 	}
 }
 
+func TestParseDatabaseTypeStrict(t *testing.T) {
+	tcs := []struct {
+		desc    string
+		version string
+		want    DatabaseType
+		wantErr bool
+	}{
+		{desc: "postgres 15", version: "POSTGRES_15", want: PostgreSQL},
+		{desc: "mysql 8.0", version: "MYSQL_8_0", want: MySQL},
+		{desc: "sqlserver 2022 standard", version: "SQLSERVER_2022_STANDARD", want: SQLServer},
+		{desc: "lowercased input is normalized", version: "postgres_15", want: PostgreSQL},
+		{desc: "unknown returns error", version: "UNKNOWN_DB", wantErr: true},
+		{desc: "empty returns error", version: "", wantErr: true},
+		{desc: "short unknown returns error", version: "PG", wantErr: true},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, err := ParseDatabaseTypeStrict(tc.version)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("ParseDatabaseTypeStrict(%q) got no error, want one", tc.version)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("ParseDatabaseTypeStrict(%q) unexpected error: %v", tc.version, err)
+			}
+			if got != tc.want {
+				t.Errorf("ParseDatabaseTypeStrict(%q) = %q, want %q", tc.version, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestDatabaseTypeConstants(t *testing.T) {
 	// Verify constant values are correct
 	if PostgreSQL != "postgres" {

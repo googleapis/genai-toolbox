@@ -16,22 +16,81 @@ package cloudsqlconnect
 
 import (
 	"fmt"
+	"strings"
 )
+
+// appendDependencyNotes decorates snippet.Notes with a human-readable
+// install command derived from Dependencies, plus a one-line reminder
+// that the pinned versions are the floor tested against Cloud SQL. It
+// preserves any Notes the per-language generator already set.
+func appendDependencyNotes(snippet *CodeSnippet) *CodeSnippet {
+	if snippet == nil || len(snippet.Dependencies) == 0 {
+		return snippet
+	}
+	var installCmd string
+	switch snippet.Language {
+	case LangPython:
+		installCmd = "pip install " + strings.Join(snippet.Dependencies, " ")
+	case LangNodeJS:
+		installCmd = "npm install " + strings.Join(snippet.Dependencies, " ")
+	case LangGo:
+		// Go modules install one at a time; join with a newline in the note.
+		lines := make([]string, 0, len(snippet.Dependencies))
+		for _, d := range snippet.Dependencies {
+			lines = append(lines, "go get "+d)
+		}
+		installCmd = strings.Join(lines, "\n")
+	case LangJava:
+		installCmd = "See pom.xml or build.gradle: " + strings.Join(snippet.Dependencies, ", ")
+	default:
+		return snippet
+	}
+	extra := []string{
+		"Install with: " + installCmd,
+		"Versions above are the floor tested against Cloud SQL; newer minor releases should work. Pin exact versions in production.",
+	}
+	snippet.Notes = append(snippet.Notes, extra...)
+	return snippet
+}
 
 // GenerateCodeSnippet generates a code snippet for the given configuration.
 // SQL Server is routed to dedicated generators because the Cloud SQL
 // Connector libraries fully support only Postgres and MySQL.
+//
+// Every returned snippet carries a Dependencies list floor-pinned to the
+// minimum tested version of each library (pip `>=`, npm `^`, Maven exact,
+// Go module `@version`), plus an install-command note derived from that
+// list, so the caller can install a known-working environment without
+// hitting the "which version?" question.
 func GenerateCodeSnippet(lang Language, method ConnectionMethod, dbType DatabaseType, connectionName, dbName string, port int, privateIP string) *CodeSnippet {
+	var snippet *CodeSnippet
 	if dbType == SQLServer {
 		switch lang {
 		case LangPython:
-			return generateSQLServerPython(method, connectionName, dbName, port, privateIP)
+			snippet = generateSQLServerPython(method, connectionName, dbName, port, privateIP)
 		case LangNodeJS:
-			return generateSQLServerNodeJS(method, connectionName, dbName, port, privateIP)
+			snippet = generateSQLServerNodeJS(method, connectionName, dbName, port, privateIP)
 		case LangJava:
-			return generateSQLServerJava(method, connectionName, dbName, port, privateIP)
+			snippet = generateSQLServerJava(method, connectionName, dbName, port, privateIP)
 		case LangGo:
-			return generateSQLServerGo(method, connectionName, dbName, port, privateIP)
+			snippet = generateSQLServerGo(method, connectionName, dbName, port, privateIP)
+		default:
+			return &CodeSnippet{
+				Language: lang,
+				Code:     "// Unsupported language",
+				Notes:    []string{"Supported languages: python, nodejs, java, go"},
+			}
+		}
+	} else {
+		switch lang {
+		case LangPython:
+			snippet = generatePythonCode(method, dbType, connectionName, dbName, port, privateIP)
+		case LangNodeJS:
+			snippet = generateNodeJSCode(method, dbType, connectionName, dbName, port, privateIP)
+		case LangJava:
+			snippet = generateJavaCode(method, dbType, connectionName, dbName, port, privateIP)
+		case LangGo:
+			snippet = generateGoCode(method, dbType, connectionName, dbName, port, privateIP)
 		default:
 			return &CodeSnippet{
 				Language: lang,
@@ -40,23 +99,7 @@ func GenerateCodeSnippet(lang Language, method ConnectionMethod, dbType Database
 			}
 		}
 	}
-
-	switch lang {
-	case LangPython:
-		return generatePythonCode(method, dbType, connectionName, dbName, port, privateIP)
-	case LangNodeJS:
-		return generateNodeJSCode(method, dbType, connectionName, dbName, port, privateIP)
-	case LangJava:
-		return generateJavaCode(method, dbType, connectionName, dbName, port, privateIP)
-	case LangGo:
-		return generateGoCode(method, dbType, connectionName, dbName, port, privateIP)
-	default:
-		return &CodeSnippet{
-			Language: lang,
-			Code:     "// Unsupported language",
-			Notes:    []string{"Supported languages: python, nodejs, java, go"},
-		}
-	}
+	return appendDependencyNotes(snippet)
 }
 
 func generatePythonCode(method ConnectionMethod, dbType DatabaseType, connectionName, dbName string, port int, privateIP string) *CodeSnippet {
@@ -65,7 +108,7 @@ func generatePythonCode(method ConnectionMethod, dbType DatabaseType, connection
 	switch method {
 	case MethodConnector:
 		if dbType == PostgreSQL {
-			snippet.Dependencies = []string{"cloud-sql-python-connector[pg8000]", "sqlalchemy"}
+			snippet.Dependencies = []string{"cloud-sql-python-connector[pg8000]>=1.13", "sqlalchemy>=2.0"}
 			snippet.Code = fmt.Sprintf(`import os
 from google.cloud.sql.connector import Connector
 import sqlalchemy
@@ -101,7 +144,7 @@ if __name__ == "__main__":
         print(result.fetchone())
 `, connectionName, dbName)
 		} else {
-			snippet.Dependencies = []string{"cloud-sql-python-connector[pymysql]", "sqlalchemy"}
+			snippet.Dependencies = []string{"cloud-sql-python-connector[pymysql]>=1.13", "sqlalchemy>=2.0"}
 			snippet.Code = fmt.Sprintf(`import os
 from google.cloud.sql.connector import Connector
 import sqlalchemy
@@ -140,7 +183,7 @@ if __name__ == "__main__":
 
 	case MethodAuthProxy:
 		if dbType == PostgreSQL {
-			snippet.Dependencies = []string{"psycopg2-binary", "sqlalchemy"}
+			snippet.Dependencies = []string{"psycopg2-binary>=2.9", "sqlalchemy>=2.0"}
 			snippet.Code = fmt.Sprintf(`import os
 import sqlalchemy
 
@@ -165,7 +208,7 @@ if __name__ == "__main__":
         print(result.fetchone())
 `, port, dbName, port, connectionName)
 		} else {
-			snippet.Dependencies = []string{"pymysql", "sqlalchemy"}
+			snippet.Dependencies = []string{"pymysql>=1.1", "sqlalchemy>=2.0"}
 			snippet.Code = fmt.Sprintf(`import os
 import sqlalchemy
 
@@ -193,7 +236,7 @@ if __name__ == "__main__":
 
 	case MethodDirectPrivateIP:
 		if dbType == PostgreSQL {
-			snippet.Dependencies = []string{"psycopg2-binary", "sqlalchemy"}
+			snippet.Dependencies = []string{"psycopg2-binary>=2.9", "sqlalchemy>=2.0"}
 			snippet.Code = fmt.Sprintf(`import os
 import sqlalchemy
 
@@ -217,7 +260,7 @@ if __name__ == "__main__":
         print(result.fetchone())
 `, dbName, privateIP, port)
 		} else {
-			snippet.Dependencies = []string{"pymysql", "sqlalchemy"}
+			snippet.Dependencies = []string{"pymysql>=1.1", "sqlalchemy>=2.0"}
 			snippet.Code = fmt.Sprintf(`import os
 import sqlalchemy
 
@@ -244,7 +287,7 @@ if __name__ == "__main__":
 
 	case MethodUnixSocket:
 		if dbType == PostgreSQL {
-			snippet.Dependencies = []string{"psycopg2-binary", "sqlalchemy"}
+			snippet.Dependencies = []string{"psycopg2-binary>=2.9", "sqlalchemy>=2.0"}
 			snippet.Code = fmt.Sprintf(`import os
 import sqlalchemy
 
@@ -267,7 +310,7 @@ if __name__ == "__main__":
         print(result.fetchone())
 `, dbName, connectionName)
 		} else {
-			snippet.Dependencies = []string{"pymysql", "sqlalchemy"}
+			snippet.Dependencies = []string{"pymysql>=1.1", "sqlalchemy>=2.0"}
 			snippet.Code = fmt.Sprintf(`import os
 import sqlalchemy
 
@@ -301,7 +344,7 @@ func generateNodeJSCode(method ConnectionMethod, dbType DatabaseType, connection
 	switch method {
 	case MethodConnector:
 		if dbType == PostgreSQL {
-			snippet.Dependencies = []string{"@google-cloud/cloud-sql-connector", "pg"}
+			snippet.Dependencies = []string{"@google-cloud/cloud-sql-connector@^1.9", "pg@^8.11"}
 			snippet.Code = fmt.Sprintf(`const { Connector } = require('@google-cloud/cloud-sql-connector');
 const { Pool } = require('pg');
 
@@ -332,7 +375,7 @@ async function connectWithConnector() {
 })();
 `, connectionName, dbName)
 		} else {
-			snippet.Dependencies = []string{"@google-cloud/cloud-sql-connector", "mysql2"}
+			snippet.Dependencies = []string{"@google-cloud/cloud-sql-connector@^1.9", "mysql2@^3.11"}
 			snippet.Code = fmt.Sprintf(`const { Connector } = require('@google-cloud/cloud-sql-connector');
 const mysql = require('mysql2/promise');
 
@@ -366,7 +409,7 @@ async function connectWithConnector() {
 
 	case MethodAuthProxy:
 		if dbType == PostgreSQL {
-			snippet.Dependencies = []string{"pg"}
+			snippet.Dependencies = []string{"pg@^8.11"}
 			snippet.Code = fmt.Sprintf(`const { Pool } = require('pg');
 
 async function connectWithAuthProxy() {
@@ -392,7 +435,7 @@ async function connectWithAuthProxy() {
 })();
 `, connectionName, dbName, port)
 		} else {
-			snippet.Dependencies = []string{"mysql2"}
+			snippet.Dependencies = []string{"mysql2@^3.11"}
 			snippet.Code = fmt.Sprintf(`const mysql = require('mysql2/promise');
 
 async function connectWithAuthProxy() {
@@ -421,7 +464,7 @@ async function connectWithAuthProxy() {
 
 	case MethodUnixSocket:
 		if dbType == PostgreSQL {
-			snippet.Dependencies = []string{"pg"}
+			snippet.Dependencies = []string{"pg@^8.11"}
 			snippet.Code = fmt.Sprintf(`const { Pool } = require('pg');
 
 async function connectWithUnixSocket() {
@@ -444,7 +487,7 @@ async function connectWithUnixSocket() {
 })();
 `, dbName, connectionName)
 		} else {
-			snippet.Dependencies = []string{"mysql2"}
+			snippet.Dependencies = []string{"mysql2@^3.11"}
 			snippet.Code = fmt.Sprintf(`const mysql = require('mysql2/promise');
 
 async function connectWithUnixSocket() {
@@ -471,7 +514,7 @@ async function connectWithUnixSocket() {
 
 	case MethodDirectPrivateIP:
 		if dbType == PostgreSQL {
-			snippet.Dependencies = []string{"pg"}
+			snippet.Dependencies = []string{"pg@^8.11"}
 			snippet.Code = fmt.Sprintf(`const { Pool } = require('pg');
 
 async function connectWithPrivateIP() {
@@ -498,7 +541,7 @@ async function connectWithPrivateIP() {
 })();
 `, dbName, privateIP, port)
 		} else {
-			snippet.Dependencies = []string{"mysql2"}
+			snippet.Dependencies = []string{"mysql2@^3.11"}
 			snippet.Code = fmt.Sprintf(`const mysql = require('mysql2/promise');
 
 async function connectWithPrivateIP() {
@@ -643,9 +686,9 @@ func generateGoCode(method ConnectionMethod, dbType DatabaseType, connectionName
 	case MethodConnector:
 		if dbType == PostgreSQL {
 			snippet.Dependencies = []string{
-				"cloud.google.com/go/cloudsqlconn",
-				"github.com/jackc/pgx/v5",
-				"github.com/jackc/pgx/v5/stdlib",
+				"cloud.google.com/go/cloudsqlconn@v1.15.0",
+				"github.com/jackc/pgx/v5@v5.7.0",
+				"github.com/jackc/pgx/v5/stdlib@v5.7.0",
 			}
 			snippet.Code = fmt.Sprintf(`package main
 
@@ -718,8 +761,8 @@ func main() {
 `, dbName, connectionName)
 		} else {
 			snippet.Dependencies = []string{
-				"cloud.google.com/go/cloudsqlconn",
-				"github.com/go-sql-driver/mysql",
+				"cloud.google.com/go/cloudsqlconn@v1.15.0",
+				"github.com/go-sql-driver/mysql@v1.9.0",
 			}
 			snippet.Code = fmt.Sprintf(`package main
 
@@ -790,7 +833,10 @@ func main() {
 		}
 
 	default:
-		snippet.Dependencies = []string{"database/sql driver for your database"}
+		// Leave Dependencies empty so appendDependencyNotes does not emit a
+		// synthetic install command; direct the caller to pick a driver via
+		// Notes instead.
+		snippet.Notes = append(snippet.Notes, "Install the database/sql driver appropriate for your engine (pgx for Postgres, go-sql-driver/mysql for MySQL, microsoft/go-mssqldb for SQL Server).")
 		snippet.Code = fmt.Sprintf(`// For %s method, use standard database/sql connection
 // Host: %s, Port: %d
 // See connector method above for recommended approach`, method, privateIP, port)

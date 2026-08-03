@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/oauth2"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
 	sqladmin "google.golang.org/api/sqladmin/v1"
@@ -56,54 +57,42 @@ func IsSameVPC(sqlVPC, vmVPC string) bool {
 	return sqlNet != "" && sqlNet == vmVPC
 }
 
-// ToolSlug returns the slug used in tool kinds for a given engine
-// ("postgres", "mysql", "mssql"). Used in user-facing error messages that
-// point at the correct sibling tool when a user invokes the wrong one.
-func ToolSlug(dt DatabaseType) string {
-	switch dt {
-	case PostgreSQL:
-		return "postgres"
-	case MySQL:
-		return "mysql"
-	case SQLServer:
-		return "mssql"
-	default:
-		return string(dt)
-	}
-}
-
-// AssertEngine returns nil when sqlInfo's DatabaseVersion matches expected,
-// or an error pointing the caller at the correct sibling tool otherwise.
-// Tools call this immediately after fetching the Cloud SQL instance so a
-// Postgres-tool-on-MySQL-instance (or similar) surfaces a clear diagnostic
-// instead of silently producing wrong code snippets.
-func AssertEngine(expected DatabaseType, instanceName, databaseVersion string) error {
-	got := ParseDatabaseType(databaseVersion)
-	if got == expected {
-		return nil
-	}
-	return fmt.Errorf(
-		"instance %q is %s (DatabaseVersion=%s); use the cloud-sql-%s-connect-gce tool instead",
-		instanceName, got, databaseVersion, ToolSlug(got),
-	)
-}
-
 // computeService is lazily initialized on first use and shared across
-// invocations: *compute.Service is goroutine-safe and rebuilding it per
-// call would re-pay token-source + service-discovery costs.
+// invocations that rely on Application Default Credentials:
+// *compute.Service is goroutine-safe and rebuilding it per call would
+// re-pay token-source + service-discovery costs.
 var (
 	computeOnce    sync.Once
 	computeService *compute.Service
 	computeErr     error
 )
 
-// GetComputeService returns a process-wide Compute Engine client, built
-// once on first call. The initializer uses context.Background() on
-// purpose: a request-scoped ctx cached inside sync.Once would poison
-// every subsequent invocation if the first caller cancelled or timed
-// out. Callers still propagate their request ctx to individual API
-// calls via Instances.Get(...).Context(ctx).Do().
-func GetComputeService() (*compute.Service, error) {
+// GetComputeService returns a Compute Engine read-only client.
+//
+// When accessToken is non-empty the returned client is scoped to that
+// caller-supplied OAuth token, so IAM decisions on the Compute API are
+// evaluated as the caller (matching how cloudsqladmin.Source.GetService
+// treats its accessToken). When accessToken is empty the function
+// returns the process-wide client backed by Application Default
+// Credentials, built once on first call.
+//
+// The ADC-backed initializer runs with context.Background() on purpose:
+// a request-scoped ctx cached inside sync.Once would poison every
+// subsequent invocation if the first caller cancelled. Callers still
+// propagate their request ctx to individual API calls via
+// Instances.Get(...).Context(ctx).Do().
+func GetComputeService(ctx context.Context, accessToken string) (*compute.Service, error) {
+	if accessToken != "" {
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken})
+		svc, err := compute.NewService(ctx,
+			option.WithTokenSource(ts),
+			option.WithScopes(compute.ComputeReadonlyScope),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build token-scoped Compute Engine client: %w", err)
+		}
+		return svc, nil
+	}
 	computeOnce.Do(func() {
 		computeService, computeErr = compute.NewService(context.Background(), option.WithScopes(compute.ComputeReadonlyScope))
 	})

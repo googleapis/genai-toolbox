@@ -24,7 +24,7 @@ func generateSQLServerPython(method ConnectionMethod, connectionName, dbName str
 
 	switch method {
 	case MethodAuthProxy:
-		snippet.Dependencies = []string{"pyodbc", "sqlalchemy"}
+		snippet.Dependencies = []string{"pyodbc>=5.0", "sqlalchemy>=2.0"}
 		snippet.Code = fmt.Sprintf(`import os
 import sqlalchemy
 
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         print(result.fetchone())
 `, port, dbName, port, connectionName)
 	case MethodDirectPrivateIP:
-		snippet.Dependencies = []string{"pyodbc", "sqlalchemy"}
+		snippet.Dependencies = []string{"pyodbc>=5.0", "sqlalchemy>=2.0"}
 		snippet.Code = fmt.Sprintf(`import os
 import sqlalchemy
 
@@ -95,7 +95,7 @@ func generateSQLServerNodeJS(method ConnectionMethod, connectionName, dbName str
 
 	switch method {
 	case MethodAuthProxy:
-		snippet.Dependencies = []string{"mssql"}
+		snippet.Dependencies = []string{"mssql@^11.0"}
 		snippet.Code = fmt.Sprintf(`const sql = require('mssql');
 
 async function connectWithAuthProxy() {
@@ -120,7 +120,7 @@ async function connectWithAuthProxy() {
 })();
 `, connectionName, dbName, port)
 	case MethodDirectPrivateIP:
-		snippet.Dependencies = []string{"mssql"}
+		snippet.Dependencies = []string{"mssql@^11.0"}
 		snippet.Code = fmt.Sprintf(`const sql = require('mssql');
 
 async function connectWithPrivateIP() {
@@ -203,7 +203,7 @@ public class CloudSQLConnector {
 func generateSQLServerGo(method ConnectionMethod, connectionName, dbName string, port int, privateIP string) *CodeSnippet {
 	snippet := &CodeSnippet{
 		Language:     LangGo,
-		Dependencies: []string{"github.com/microsoft/go-mssqldb"},
+		Dependencies: []string{"github.com/microsoft/go-mssqldb@v1.10.0"},
 	}
 
 	host := "127.0.0.1"

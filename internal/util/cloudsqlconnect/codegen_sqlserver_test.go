@@ -94,8 +94,8 @@ func TestGenerateCodeSnippetSQLServer(t *testing.T) {
 				}
 			}
 			for _, dep := range tc.wantDeps {
-				if !sliceContains(snippet.Dependencies, dep) {
-					t.Errorf("Dependencies missing %q, got %v", dep, snippet.Dependencies)
+				if !sliceContainsPackage(snippet.Dependencies, dep) {
+					t.Errorf("Dependencies missing package %q, got %v", dep, snippet.Dependencies)
 				}
 			}
 		})
@@ -126,9 +126,15 @@ func TestGenerateCodeSnippetUnsupportedLanguageForSQLServer(t *testing.T) {
 	}
 }
 
-func sliceContains(haystack []string, needle string) bool {
+// sliceContainsPackage matches when any dep string equals needle or begins
+// with needle followed by one of the version-suffix delimiters used across
+// package managers (pip `>=`, npm/Go `@`, Maven `:`).
+func sliceContainsPackage(haystack []string, needle string) bool {
 	for _, h := range haystack {
-		if h == needle {
+		if h == needle ||
+			strings.HasPrefix(h, needle+">=") ||
+			strings.HasPrefix(h, needle+"@") ||
+			strings.HasPrefix(h, needle+":") {
 			return true
 		}
 	}

@@ -361,6 +361,8 @@ func DefaultDatabaseName(dbType DatabaseType) string {
 
 // ParseDatabaseType maps a Cloud SQL Admin API DatabaseVersion string
 // (e.g. "POSTGRES_15", "MYSQL_8_0", "SQLSERVER_2022_STANDARD") to a DatabaseType.
+// Unknown or empty versions fall back to PostgreSQL; callers that need to
+// reject unknown values should use ParseDatabaseTypeStrict.
 func ParseDatabaseType(version string) DatabaseType {
 	upper := strings.ToUpper(version)
 	switch {
@@ -372,5 +374,25 @@ func ParseDatabaseType(version string) DatabaseType {
 		return SQLServer
 	default:
 		return PostgreSQL
+	}
+}
+
+// ParseDatabaseTypeStrict is like ParseDatabaseType but returns an error
+// instead of silently defaulting when the DatabaseVersion prefix is not one
+// of the engines this package supports. Use it when auto-detecting the
+// engine from a live sqladmin response so a new Cloud SQL engine (or a
+// malformed value) surfaces a clear diagnostic instead of producing wrong
+// output.
+func ParseDatabaseTypeStrict(version string) (DatabaseType, error) {
+	upper := strings.ToUpper(version)
+	switch {
+	case strings.HasPrefix(upper, "POSTGRES"):
+		return PostgreSQL, nil
+	case strings.HasPrefix(upper, "MYSQL"):
+		return MySQL, nil
+	case strings.HasPrefix(upper, "SQLSERVER"):
+		return SQLServer, nil
+	default:
+		return "", fmt.Errorf("unsupported DatabaseVersion %q: expected a value starting with POSTGRES, MYSQL, or SQLSERVER", version)
 	}
 }
