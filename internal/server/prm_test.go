@@ -109,13 +109,18 @@ func TestGetPRMURL(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			s := &Server{toolboxUrl: tc.toolboxUrl}
-			got, err := s.getPRMURL()
+			got, err := parsePRMURL(tc.toolboxUrl)
 			if (err != nil) != tc.wantErr {
-				t.Fatalf("getPRMURL(%q) error = %v, wantErr %v", tc.toolboxUrl, err, tc.wantErr)
+				t.Fatalf("parsePRMURL(%q) error = %v, wantErr %v", tc.toolboxUrl, err, tc.wantErr)
 			}
 			if !tc.wantErr && got != tc.want {
-				t.Errorf("getPRMURL(%q) = %q, want %q", tc.toolboxUrl, got, tc.want)
+				t.Errorf("parsePRMURL(%q) = %q, want %q", tc.toolboxUrl, got, tc.want)
+			}
+			if !tc.wantErr {
+				s := &Server{prmURL: got}
+				if s.getPRMURL() != got {
+					t.Errorf("s.getPRMURL() = %q, want %q", s.getPRMURL(), got)
+				}
 			}
 		})
 	}

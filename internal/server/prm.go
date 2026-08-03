@@ -75,17 +75,22 @@ type ProtectedResourceMetadata struct {
 }
 
 // getPRMURL returns the full URL to advertise in WWW-Authenticate headers.
-func (s *Server) getPRMURL() (string, error) {
-	if s.toolboxUrl == "" {
+func (s *Server) getPRMURL() string {
+	return s.prmURL
+}
+
+// parsePRMURL returns the full URL to advertise in WWW-Authenticate headers from a toolbox URL.
+func parsePRMURL(toolboxUrl string) (string, error) {
+	if toolboxUrl == "" {
 		return "/.well-known/oauth-protected-resource", nil
 	}
-	u, err := url.Parse(s.toolboxUrl)
+	u, err := url.Parse(toolboxUrl)
 	if err != nil {
-		return "", fmt.Errorf("invalid toolbox-url %q: %w", s.toolboxUrl, err)
+		return "", fmt.Errorf("invalid toolbox-url %q: %w", toolboxUrl, err)
 	}
 	if u.Scheme != "" || u.Host != "" {
 		if u.Scheme == "" || u.Host == "" {
-			return "", fmt.Errorf("invalid toolbox-url %q: must be a valid absolute URL with scheme and host", s.toolboxUrl)
+			return "", fmt.Errorf("invalid toolbox-url %q: must be a valid absolute URL with scheme and host", toolboxUrl)
 		}
 		path := strings.TrimSuffix(u.Path, "/")
 		return u.Scheme + "://" + u.Host + "/.well-known/oauth-protected-resource" + path, nil

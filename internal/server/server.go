@@ -57,6 +57,7 @@ type Server struct {
 	version             string
 	sqlCommenterEnabled bool
 	toolboxUrl          string
+	prmURL              string
 	srv                 *http.Server
 	listener            net.Listener
 	root                chi.Router
@@ -476,6 +477,15 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		DisableExt: cfg.DisableExt,
 	})
 
+	prmURLStr, err := parsePRMURL(cfg.ToolboxUrl)
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize server: %w", err)
+	}
+	prmURL, err := url.Parse(prmURLStr)
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize server: %w", err)
+	}
+
 	s := &Server{
 		version:             cfg.Version,
 		sqlCommenterEnabled: cfg.SQLCommenter,
@@ -486,13 +496,10 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		sseManager:          sseManager,
 		PrimitiveMgr:        primitiveManager,
 		toolboxUrl:          cfg.ToolboxUrl,
+		prmURL:              prmURLStr,
 		mcpPrmFile:          cfg.McpPrmFile,
 		httpMaxRequestBytes: limit,
 		enableDraftSpecs:    cfg.EnableDraftSpecs,
-	}
-
-	if _, err := s.getPRMURL(); err != nil {
-		return nil, fmt.Errorf("unable to initialize server: %w", err)
 	}
 
 	if s.enableDraftSpecs {
@@ -552,14 +559,6 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// Register route if auth is enabled or a manual file is provided
 	if mcpAuthEnabled || s.mcpPrmFile != "" {
-		prmURLStr, err := s.getPRMURL()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get PRM URL: %w", err)
-		}
-		prmURL, err := url.Parse(prmURLStr)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse PRM URL: %w", err)
-		}
 		r.Get(prmURL.Path, func(w http.ResponseWriter, req *http.Request) {
 			// Serve from memory if file was loaded
 			if s.mcpPrmFile != "" {
@@ -645,14 +644,12 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 						if len(mcpErr.ScopesRequired) > 0 {
 							scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
 						}
-						prmURL, _ := s.getPRMURL()
-						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, prmURL, scopesArg))
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.getPRMURL(), scopesArg))
 						render.Status(r, http.StatusUnauthorized)
 						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.UNAUTHORIZED, mcpErr.Message, nil))
 						return
 					case http.StatusForbidden:
-						prmURL, _ := s.getPRMURL()
-						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), prmURL, mcpErr.Message))
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.getPRMURL(), mcpErr.Message))
 						render.Status(r, http.StatusForbidden)
 						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.FORBIDDEN, mcpErr.Message, nil))
 						return
