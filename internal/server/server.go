@@ -23,6 +23,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"slices"
 	"strconv"
@@ -547,7 +548,8 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// Register route if auth is enabled or a manual file is provided
 	if mcpAuthEnabled || s.mcpPrmFile != "" {
-		r.Get("/.well-known/oauth-protected-resource", func(w http.ResponseWriter, req *http.Request) {
+		prmURL, _ := url.Parse(s.getPRMURL())
+		r.Get(prmURL.Path, func(w http.ResponseWriter, req *http.Request) {
 			// Serve from memory if file was loaded
 			if s.mcpPrmFile != "" {
 				w.Header().Set("Content-Type", "application/json")
@@ -632,12 +634,12 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 						if len(mcpErr.ScopesRequired) > 0 {
 							scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
 						}
-						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.getPRMURL(), scopesArg))
 						render.Status(r, http.StatusUnauthorized)
 						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.UNAUTHORIZED, mcpErr.Message, nil))
 						return
 					case http.StatusForbidden:
-						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.getPRMURL(), mcpErr.Message))
 						render.Status(r, http.StatusForbidden)
 						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.FORBIDDEN, mcpErr.Message, nil))
 						return

@@ -936,6 +936,123 @@ func TestPRMEndpoint(t *testing.T) {
 	}
 }
 
+func TestPRMEndpointWithPath(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Setup telemetry and logging
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	defer func() {
+		if err := otelShutdown(ctx); err != nil {
+			t.Fatalf("unexpected error shutting down otel: %s", err)
+		}
+	}()
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	// Create a mock OIDC server to bypass JWKS discovery during init
+	mockOIDC := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/openid-configuration" {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, `{"issuer": "http://%s", "jwks_uri": "http://%s/jwks"}`, r.Host, r.Host)
+			return
+		}
+		if r.URL.Path == "/jwks" {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, `{"keys": []}`)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer mockOIDC.Close()
+
+	// Configure the server with a ToolboxUrl containing a path component
+	cfg := server.ServerConfig{
+		Version:      "0.0.0",
+		Address:      "127.0.0.1",
+		Port:         0,
+		ToolboxUrl:   "https://my-toolbox.example.com/mcp",
+		AllowedHosts: []string{"*"},
+		AuthServiceConfigs: map[string]auth.AuthServiceConfig{
+			"generic1": generic.Config{
+				Name:                "generic1",
+				Type:                generic.AuthServiceType,
+				McpEnabled:          true,
+				AuthorizationServer: mockOIDC.URL,
+				ScopesRequired:      []string{"read", "write"},
+			},
+		},
+	}
+
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("unable to initialize server: %v", err)
+	}
+
+	if err := s.Listen(ctx, "", ""); err != nil {
+		t.Fatalf("unable to start server: %v", err)
+	}
+
+	go func() {
+		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+			t.Errorf("server serve error: %v", err)
+		}
+	}()
+	defer func() {
+		if err := s.Shutdown(ctx); err != nil {
+			t.Errorf("failed to cleanly shutdown server: %v", err)
+		}
+	}()
+
+	// Test the PRM endpoint at the RFC 9728 §3.1 path
+	url := fmt.Sprintf("http://%s/.well-known/oauth-protected-resource/mcp", s.Addr())
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("error when sending a request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("unexpected error reading body: %s", err)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+
+	want := map[string]any{
+		"resource": "https://my-toolbox.example.com/mcp",
+		"authorization_servers": []any{
+			mockOIDC.URL,
+		},
+		"scopes_supported":         []any{"read", "write"},
+		"bearer_methods_supported": []any{"header"},
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("unexpected PRM response:\ngot  %+v\nwant %+v", got, want)
+	}
+}
+
 func TestPRMOverride(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

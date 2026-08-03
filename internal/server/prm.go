@@ -14,6 +14,11 @@
 
 package server
 
+import (
+	"net/url"
+	"strings"
+)
+
 // ProtectedResourceMetadata represents the OAuth 2.0 Protected Resource Metadata document as defined in RFC 9728.
 // Reference: https://datatracker.ietf.org/doc/html/rfc9728
 type ProtectedResourceMetadata struct {
@@ -66,4 +71,20 @@ type ProtectedResourceMetadata struct {
 	// OPTIONAL. A JWT containing metadata parameters about the protected resource
 	// as claims. Consists of the entire signed JWT string.
 	SignedMetadata string `json:"signed_metadata,omitempty"`
+}
+
+// getPRMURL returns the full URL to advertise in WWW-Authenticate headers.
+func (s *Server) getPRMURL() string {
+	if s.toolboxUrl == "" {
+		return "/.well-known/oauth-protected-resource"
+	}
+	u, err := url.Parse(s.toolboxUrl)
+	if err != nil {
+		return "/.well-known/oauth-protected-resource"
+	}
+	path := strings.TrimSuffix(u.Path, "/")
+	if u.Scheme == "" && u.Host == "" {
+		return path + "/.well-known/oauth-protected-resource"
+	}
+	return u.Scheme + "://" + u.Host + "/.well-known/oauth-protected-resource" + path
 }
