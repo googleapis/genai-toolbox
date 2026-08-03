@@ -15,6 +15,8 @@
 package primitives
 
 import (
+	"cmp"
+	"slices"
 	"sync"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -124,32 +126,21 @@ func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
 	return copiedMap
 }
 
-func (r *PrimitiveManager) GetEmbeddingModelMap() map[string]embeddingmodels.EmbeddingModel {
+// GroupsList returns a copy of the groups list sorted alphabetically by name
+func (r *PrimitiveManager) GroupsList() []group.Group {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	copiedMap := make(map[string]embeddingmodels.EmbeddingModel, len(r.embeddingModels))
-	for k, v := range r.embeddingModels {
-		copiedMap[k] = v
+	groupsList := make([]group.Group, 0, len(r.groups))
+	for k, g := range r.groups {
+		if k == "" {
+			continue
+		}
+		groupsList = append(groupsList, g)
 	}
-	return copiedMap
-}
 
-func (r *PrimitiveManager) GetPromptsMap() map[string]prompts.Prompt {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]prompts.Prompt, len(r.prompts))
-	for k, v := range r.prompts {
-		copiedMap[k] = v
-	}
-	return copiedMap
-}
+	slices.SortFunc(groupsList, func(a, b group.Group) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
 
-func (r *PrimitiveManager) GetGroupsMap() map[string]group.Group {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]group.Group, len(r.groups))
-	for k, v := range r.groups {
-		copiedMap[k] = v
-	}
-	return copiedMap
+	return groupsList
 }

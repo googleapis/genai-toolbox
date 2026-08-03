@@ -101,6 +101,8 @@ type ServerConfig struct {
 	HttpMaxRequestBytes int64
 	// EnableDraftSpecs allow users to opt-in and test upcoming draft MCP specs.
 	EnableDraftSpecs bool
+	// SkipSourceValidation skips source validation during server startup
+	SkipSourceValidation bool
 }
 
 type logFormat string

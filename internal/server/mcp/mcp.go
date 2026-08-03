@@ -27,7 +27,7 @@ import (
 	v20250326 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250326"
 	v20250618 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250618"
 	v20251125 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20251125"
-	vdraft "github.com/googleapis/mcp-toolbox/internal/server/mcp/vdraft"
+	v20260728 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20260728"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
@@ -53,11 +53,8 @@ func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId,
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 	switch mcpVersion {
-	case mcputil.VERSION_DRAFT:
-		if enableDraft {
-			return vdraft.ProcessMethod(ctx, id, method, g, primitiveMgr, body, header)
-		}
-		return jsonrpc.NewUnsupportedProtocolVersionError(id, mcpVersion, enableDraft)
+	case mcputil.VERSION_20260728:
+		return v20260728.ProcessMethod(ctx, id, method, g, primitiveMgr, body, header)
 	case mcputil.VERSION_20251125:
 		return v20251125.ProcessMethod(ctx, id, method, g, primitiveMgr, body, header)
 	case mcputil.VERSION_20250618:

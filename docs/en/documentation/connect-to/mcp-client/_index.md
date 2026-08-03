@@ -20,6 +20,7 @@ The Toolbox SDKs can be combined with MCP clients in many cases.
 
 Toolbox currently supports the following versions of MCP specification:
 
+* [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)
 * [2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25)
 * [2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18)
 * [2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26)
