@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlpgconnectgce_test
+package cloudsqlconnectgce_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
-	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlpg/cloudsqlpgconnectgce"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlconnectgce"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -39,18 +39,18 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			kind: tool
 			name: connect_to_gce
-			type: cloud-sql-postgres-connect-gce
-			description: Connect PostgreSQL to GCE VM
+			type: cloud-sql-connect-gce
+			description: Connect a Cloud SQL instance to a GCE VM
 			source: my-cloudsql-source
 			`,
 			want: server.ToolConfigs{
-				"connect_to_gce": cloudsqlpgconnectgce.Config{
+				"connect_to_gce": cloudsqlconnectgce.Config{
 					ConfigBase: tools.ConfigBase{
 						Name:         "connect_to_gce",
-						Description:  "Connect PostgreSQL to GCE VM",
+						Description:  "Connect a Cloud SQL instance to a GCE VM",
 						AuthRequired: []string{},
 					},
-					Type:   "cloud-sql-postgres-connect-gce",
+					Type:   "cloud-sql-connect-gce",
 					Source: "my-cloudsql-source",
 				},
 			},
@@ -60,20 +60,20 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			kind: tool
 			name: connect_to_gce
-			type: cloud-sql-postgres-connect-gce
-			description: Connect PostgreSQL to GCE VM
+			type: cloud-sql-connect-gce
+			description: Connect a Cloud SQL instance to a GCE VM
 			source: my-cloudsql-source
 			authRequired:
 				- https://www.googleapis.com/auth/cloud-platform
 			`,
 			want: server.ToolConfigs{
-				"connect_to_gce": cloudsqlpgconnectgce.Config{
+				"connect_to_gce": cloudsqlconnectgce.Config{
 					ConfigBase: tools.ConfigBase{
 						Name:         "connect_to_gce",
-						Description:  "Connect PostgreSQL to GCE VM",
+						Description:  "Connect a Cloud SQL instance to a GCE VM",
 						AuthRequired: []string{"https://www.googleapis.com/auth/cloud-platform"},
 					},
-					Type:   "cloud-sql-postgres-connect-gce",
+					Type:   "cloud-sql-connect-gce",
 					Source: "my-cloudsql-source",
 				},
 			},

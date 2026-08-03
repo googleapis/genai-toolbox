@@ -12,11 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package cloudsqlpgconnectgce provides a tool that connects a Cloud SQL for
-// PostgreSQL instance to a Google Compute Engine VM: it validates network
-// reachability, recommends a connection method, and emits ready-to-paste
-// setup steps and an optional language-specific code snippet.
-package cloudsqlpgconnectgce
+// Package cloudsqlconnectgce provides a single tool that connects any
+// Cloud SQL instance (PostgreSQL, MySQL, or SQL Server) to a Google
+// Compute Engine VM. The engine is auto-detected from the
+// DatabaseVersion returned by the Cloud SQL Admin API, so the caller
+// does not have to specify it.
+//
+// The tool validates network reachability between the instance and the
+// VM, recommends a connection method (Auth Proxy, Connector, or Direct
+// Private IP) with ranked alternatives, and returns ready-to-paste
+// setup steps and an optional language-specific code snippet with
+// floor-pinned dependency versions.
+//
+// Identity boundary: both the Cloud SQL Admin call and the Compute
+// Engine call now honor the caller's access token when the underlying
+// cloud-sql-admin source is configured with useClientOAuth. When no
+// caller token is supplied the tool falls back to Application Default
+// Credentials for the Compute Engine call.
+package cloudsqlconnectgce
 
 import (
 	"context"
@@ -34,7 +47,7 @@ import (
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
-const resourceType string = "cloud-sql-postgres-connect-gce"
+const resourceType string = "cloud-sql-connect-gce"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -55,7 +68,7 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 }
 
-// Config defines the configuration for the cloud-sql-postgres-connect-gce tool.
+// Config defines the configuration for the cloud-sql-connect-gce tool.
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
 	Type             string                 `yaml:"type" validate:"required"`
@@ -71,10 +84,10 @@ func (cfg Config) ToolConfigType() string { return resourceType }
 // Initialize initializes the tool from the configuration.
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
-		cfg.Description = "Helps connect a Cloud SQL PostgreSQL instance to a GCE VM. " +
-			"Validates network connectivity, recommends the best connection method " +
-			"(Auth Proxy, Connector, or Direct Private IP), and provides setup " +
-			"instructions and optional code snippets."
+		cfg.Description = "Helps connect a Cloud SQL instance (PostgreSQL, MySQL, or SQL Server) to a GCE VM. " +
+			"Auto-detects the engine from the instance, validates network connectivity, recommends the best " +
+			"connection method (Auth Proxy, Connector, or Direct Private IP), and provides setup instructions " +
+			"and optional code snippets."
 	}
 	allParameters := buildParams()
 	return Tool{
@@ -104,8 +117,8 @@ func buildParams() parameters.Parameters {
 		),
 		parameters.NewStringParameter(
 			"database_name",
-			"Database name to connect to (defaults to 'postgres')",
-			parameters.WithStringDefault("postgres"),
+			"Database name to connect to (optional - defaults to the engine's conventional default: 'postgres', 'mysql', or 'master')",
+			parameters.WithStringDefault(""),
 		),
 		parameters.NewStringParameter(
 			"language",
@@ -117,7 +130,7 @@ func buildParams() parameters.Parameters {
 
 var _ tools.Tool = Tool{}
 
-// Tool represents the cloud-sql-postgres-connect-gce tool.
+// Tool represents the cloud-sql-connect-gce tool.
 type Tool struct {
 	tools.BaseTool[Config]
 }
@@ -138,8 +151,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-// Invoke validates connectivity between a Cloud SQL Postgres instance and a
-// GCE VM, then returns connection recommendations.
+// Invoke fetches the Cloud SQL instance, detects its engine, validates
+// connectivity to the target VM, and returns connection recommendations.
 func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, ok := s.(compatibleSource)
 	if !ok {
@@ -151,7 +164,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		return nil, util.ProcessGcpError(err)
 	}
 
-	computeService, err := cloudsqlconnect.GetComputeService()
+	computeService, err := cloudsqlconnect.GetComputeService(ctx, string(accessToken))
 	if err != nil {
 		return nil, util.NewClientServerError("failed to initialize Compute Engine service", http.StatusInternalServerError, err)
 	}
@@ -178,13 +191,12 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		}
 	}
 
+	// database_name has no default here because the sensible default
+	// depends on the auto-detected engine; the engine-derived default is
+	// applied after Instances.Get. Validation runs against the final
+	// value, whether caller-supplied or defaulted, matching the contract
+	// the earlier per-engine tools enforced.
 	dbName, _ := paramsMap["database_name"].(string)
-	if dbName == "" {
-		dbName = cloudsqlconnect.DefaultDatabaseName(cloudsqlconnect.PostgreSQL)
-	}
-	if err := cloudsqlconnect.ValidateDatabaseName(dbName); err != nil {
-		return nil, util.NewAgentError(err.Error(), err)
-	}
 
 	language, _ := paramsMap["language"].(string)
 	if err := cloudsqlconnect.ValidateLanguage(language); err != nil {
@@ -202,7 +214,19 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	}
 	sqlInfo := cloudsqlconnect.ExtractSQLInfo(sqlInstance)
 
-	if err := cloudsqlconnect.AssertEngine(cloudsqlconnect.PostgreSQL, instanceName, sqlInfo.DatabaseVersion); err != nil {
+	// Auto-detect the engine from the sqladmin response. Reject unknown
+	// engines up front rather than silently emitting a Postgres-shaped
+	// result for a future Cloud SQL variant.
+	engine, err := cloudsqlconnect.ParseDatabaseTypeStrict(sqlInfo.DatabaseVersion)
+	if err != nil {
+		return nil, util.NewAgentError(fmt.Sprintf("instance %q: %s", instanceName, err.Error()), err)
+	}
+	sqlInfo.DatabaseType = engine
+
+	if dbName == "" {
+		dbName = cloudsqlconnect.DefaultDatabaseName(engine)
+	}
+	if err := cloudsqlconnect.ValidateDatabaseName(dbName); err != nil {
 		return nil, util.NewAgentError(err.Error(), err)
 	}
 
@@ -224,19 +248,19 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	sameVPC := cloudsqlconnect.IsSameVPC(sqlInfo.VPCNetwork, vmInfo.VPCNetwork)
 	primary, alternatives := cloudsqlconnect.GetGCERecommendations(sqlInfo, vmInfo, sameVPC)
 
-	port := cloudsqlconnect.GetDatabasePort(cloudsqlconnect.PostgreSQL)
+	port := cloudsqlconnect.GetDatabasePort(engine)
 	setupSteps := cloudsqlconnect.GenerateGCESetupSteps(primary.Method, connName, port, sqlInfo.PrivateIPAddress, vmInfo.ServiceAccount)
 	envConfig := cloudsqlconnect.GenerateEnvironmentConfig(
 		primary.Method, cloudsqlconnect.ComputeGCE, connName, port,
 		sqlInfo.PrivateIPAddress, dbName, project,
 	)
-	connStrings := cloudsqlconnect.BuildConnectionStrings(primary.Method, cloudsqlconnect.PostgreSQL, sqlInfo, dbName, connName)
+	connStrings := cloudsqlconnect.BuildConnectionStrings(primary.Method, engine, sqlInfo, dbName, connName)
 
 	result := &cloudsqlconnect.ConnectResult{
 		InstanceConnectionName: connName,
 		Project:                project,
 		Region:                 region,
-		DatabaseType:           cloudsqlconnect.PostgreSQL,
+		DatabaseType:           engine,
 		DatabaseVersion:        sqlInfo.DatabaseVersion,
 		ComputeType:            cloudsqlconnect.ComputeGCE,
 		ComputeResource:        vmName,
@@ -255,7 +279,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	if language != "" {
 		lang := cloudsqlconnect.Language(strings.ToLower(language))
 		result.CodeSnippet = cloudsqlconnect.GenerateCodeSnippet(
-			lang, primary.Method, cloudsqlconnect.PostgreSQL,
+			lang, primary.Method, engine,
 			connName, dbName, port, sqlInfo.PrivateIPAddress,
 		)
 	}
