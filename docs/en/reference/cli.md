@@ -79,7 +79,7 @@ toolbox migrate --config <path>
 - `--config-folder`: (Optional) Path to a folder whose `.yaml` and `.yml` files should be migrated.
 - `--dry-run`: (Optional) Print the migrated configuration to stdout instead of writing it.
 
-`--config`, `--configs`, and `--config-folder` are mutually exclusive. Each file is rewritten in place, with the original kept alongside it as `<filename>.bak`; a file that needs no changes is left as is. Comments other than top-level ones are not preserved, so review the result before deleting the backup.
+--config, --configs, and --config-folder are mutually exclusive. Each file is rewritten in place, with the original kept alongside it with .bak appended (e.g., tools.yaml.bak); a file that needs no changes is left as is. Comments other than top-level ones are not preserved, so review the result before deleting the backup.
 
 </details>
 
