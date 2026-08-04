@@ -65,16 +65,15 @@ regex whitelists before use.
 ## Example
 
 ```yaml
-sources:
-  my-cloud-sql-admin-source:
-    kind: cloud-sql-admin
-
-tools:
-  connect_to_gce:
-    kind: tool
-    type: cloud-sql-connect-gce
-    source: my-cloud-sql-admin-source
-    description: Help me connect a Cloud SQL instance to a GCE VM.
+kind: source
+name: my-cloud-sql-admin-source
+type: cloud-sql-admin
+---
+kind: tool
+name: connect_to_gce
+type: cloud-sql-connect-gce
+source: my-cloud-sql-admin-source
+description: Help me connect a Cloud SQL instance to a GCE VM.
 ```
 
 ## Output Format
