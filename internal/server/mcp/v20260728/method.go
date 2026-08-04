@@ -432,8 +432,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	embeddingModels := primitiveMgr.GetEmbeddingModelMap()
-	params, err = tool.EmbedParams(ctx, params, embeddingModels)
+	params, err = tool.EmbedParams(ctx, params, primitiveMgr)
 	if err != nil {
 		err = fmt.Errorf("error embedding parameters: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
@@ -719,12 +718,16 @@ func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *
 		return validateErr, err
 	}
 
-	result := GenerateListGroupsResult(primitiveMgr.GetGroupsMap())
-	logger.DebugContext(ctx, fmt.Sprintf("returning %d groups", len(result.Groups)))
+	groupsList := primitiveMgr.GroupsList()
+	groups := []Group{}
+	for _, v := range groupsList {
+		groups = append(groups, Group{Name: v.Name, Description: v.Description})
+	}
+	logger.DebugContext(ctx, fmt.Sprintf("returning %d groups", len(groups)))
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  result,
+		Result:  ListGroupsResult{Groups: groups},
 	}, nil
 }
 
