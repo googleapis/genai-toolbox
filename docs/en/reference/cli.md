@@ -95,6 +95,8 @@ Migrates the provided configuration files to the current flat format, updating d
 
 By default the original file is renamed to `<file>.bak` and the migrated content is written back in place. Use `--dry-run` to preview the result without modifying any files. Comments (other than top-level comments) are not preserved.
 
+A toolset does not support a `description`, so any description written on one is dropped during migration and a warning naming the toolset is logged. Add it back to the resulting `kind: group` if you want it published.
+
 **Syntax:**
 
 ```bash

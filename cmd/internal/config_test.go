@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -651,6 +652,24 @@ tools:
 `,
 		},
 		{
+			// A nested toolset body may be written as a map rather than a bare
+			// list, in which case it can carry a description too. Both
+			// spellings must produce the same group.
+			desc: "convert nested map-form toolset to group drops the description",
+			in: `
+toolsets:
+    example_toolset:
+        description: some description
+        tools:
+        - example_tool`,
+			want: `
+kind: group
+name: example_toolset
+tools:
+- example_tool
+`,
+		},
+		{
 			desc: "convert flat toolset to group with kind not first",
 			in: `
 tools:
@@ -713,7 +732,7 @@ messages:
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			output, err := ConvertConfig([]byte(tc.in))
+			output, err := ConvertConfig(context.Background(), []byte(tc.in))
 			if tc.isErr {
 				if err == nil {
 					t.Fatalf("expected error")

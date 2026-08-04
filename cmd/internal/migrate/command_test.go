@@ -16,6 +16,7 @@ package migrate
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -159,6 +160,64 @@ tools:
 		got, err := invokeCommand(args)
 		if err != nil {
 			t.Fatalf("command failed: %v\nOutput: %s", err, got)
+		}
+
+		actualContent, err := os.ReadFile(toolsFilePath)
+		if err != nil {
+			t.Fatalf("failed to read migrated file: %v", err)
+		}
+		if !bytes.Equal(actualContent, []byte(toolsetFileContentNew)) {
+			t.Fatalf("file content mismatch!\nExpected: %q\nGot: %q", toolsetFileContentNew, actualContent)
+		}
+	})
+	t.Run("migrate toolset with description warns and drops it", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		// A description can be written on a toolset in either the nested
+		// map form or the flat form; neither is supported, so both are
+		// dropped with a warning.
+		toolsetFileContent := `
+toolsets:
+  nested_toolset:
+    description: nested description
+    tools:
+    - example_tool
+---
+kind: toolset
+name: flat_toolset
+description: flat description
+tools:
+- example_tool`
+		toolsetFileContentNew := `
+kind: group
+name: nested_toolset
+tools:
+- example_tool
+---
+kind: group
+name: flat_toolset
+tools:
+- example_tool
+`
+
+		toolsFilePath := filepath.Join(tmpDir, "toolsets.yaml")
+		if err := os.WriteFile(toolsFilePath, []byte(toolsetFileContent), 0644); err != nil {
+			t.Fatalf("failed to write tools file: %v", err)
+		}
+
+		args := []string{"migrate", "--tools-file", toolsFilePath}
+		got, err := invokeCommand(args)
+		if err != nil {
+			t.Fatalf("command failed: %v\nOutput: %s", err, got)
+		}
+
+		for _, name := range []string{"nested_toolset", "flat_toolset"} {
+			// The logger renders the message as a quoted string, so the
+			// name's own quotes come through escaped.
+			want := fmt.Sprintf(`toolset \"%s\": dropping description`, name)
+			if !strings.Contains(got, want) {
+				t.Errorf("missing warning %q in output: %s", want, got)
+			}
 		}
 
 		actualContent, err := os.ReadFile(toolsFilePath)

@@ -30,6 +30,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 type Config struct {
@@ -155,7 +156,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 	raw = []byte(output)
 
-	raw, err = ConvertConfig(raw)
+	raw, err = ConvertConfig(ctx, raw)
 	if err != nil {
 		return config, fmt.Errorf("error converting config file: %s", err)
 	}
@@ -170,7 +171,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 
 // ConvertConfig converts configuration file to flat format, rewriting toolsets
 // to the group kind in both nested and already-flat inputs.
-func ConvertConfig(raw []byte) ([]byte, error) {
+func ConvertConfig(ctx context.Context, raw []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	// Manually copy top-level comments and empty lines from the source
 	scanner := bufio.NewScanner(bytes.NewReader(raw))
@@ -209,7 +210,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 			}
 			if hasKindField(input) {
 				// this doc is already in flat format, encode to buf
-				if err := encoder.Encode(migrateToolsetKind(input)); err != nil {
+				if err := encoder.Encode(migrateToolsetKind(ctx, input)); err != nil {
 					return nil, err
 				}
 				break
@@ -236,7 +237,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 				case "prompts":
 					key = "prompt"
 				}
-				transformed, err := transformDocs(key, isToolset, slice)
+				transformed, err := transformDocs(ctx, key, isToolset, slice)
 				if err != nil {
 					return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, srcKey, err)
 				}
@@ -266,13 +267,9 @@ func hasKindField(input yaml.MapSlice) bool {
 
 // migrateToolsetKind rewrites a top-level `kind: toolset` to `kind: group` in a
 // flat-format doc, preserving field order. Nested `toolsets:` blocks never reach
-// here; they are rewritten while being flattened in ConvertConfig. Docs of any
-// other kind are returned unchanged.
-//
-// A toolset has no description of its own, so any description on one is dropped
-// rather than promoted into a group description, which would otherwise start
-// surfacing in group listings for a collection that never declared one.
-func migrateToolsetKind(input yaml.MapSlice) yaml.MapSlice {
+// here; transformDocs rewrites those while flattening them. Docs of any other
+// kind are returned unchanged.
+func migrateToolsetKind(ctx context.Context, input yaml.MapSlice) yaml.MapSlice {
 	kindIndex := -1
 	for i, item := range input {
 		if key, ok := item.Key.(string); ok && key == "kind" {
@@ -286,23 +283,62 @@ func migrateToolsetKind(input yaml.MapSlice) yaml.MapSlice {
 	if val, ok := input[kindIndex].Value.(string); !ok || val != "toolset" {
 		return input
 	}
-	input[kindIndex].Value = "group"
 
-	migrated := make(yaml.MapSlice, 0, len(input))
-	for _, item := range input {
-		if key, ok := item.Key.(string); ok && key == "description" {
-			continue
-		}
-		migrated = append(migrated, item)
+	migrated := make(yaml.MapSlice, len(input))
+	copy(migrated, input)
+	migrated[kindIndex].Value = "group"
+
+	migrated, dropped := dropDescription(migrated)
+	if dropped {
+		warnDescriptionDropped(ctx, mapSliceString(input, "name"))
 	}
 	return migrated
+}
+
+// dropDescription removes a top-level description field, reporting whether one
+// was present. A toolset has no description of its own, so a description
+// written on one is discarded rather than promoted when the toolset is
+// rewritten as a group; promoting it would start publishing a description for a
+// collection that never declared one.
+func dropDescription(items yaml.MapSlice) (yaml.MapSlice, bool) {
+	for i, item := range items {
+		if key, ok := item.Key.(string); ok && key == "description" {
+			filtered := make(yaml.MapSlice, 0, len(items)-1)
+			filtered = append(filtered, items[:i]...)
+			filtered = append(filtered, items[i+1:]...)
+			return filtered, true
+		}
+	}
+	return items, false
+}
+
+// mapSliceString returns the string value of key, or "" if absent.
+func mapSliceString(items yaml.MapSlice, key string) string {
+	for _, item := range items {
+		if k, ok := item.Key.(string); ok && k == key {
+			if v, ok := item.Value.(string); ok {
+				return v
+			}
+		}
+	}
+	return ""
+}
+
+// warnDescriptionDropped reports a discarded toolset description. Warning is
+// best effort: a caller without a logger in context still gets the conversion.
+func warnDescriptionDropped(ctx context.Context, name string) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return
+	}
+	logger.WarnContext(ctx, fmt.Sprintf("toolset %q: dropping description, which a toolset does not support; declare the collection as `kind: group` to keep it", name))
 }
 
 // transformDocs transforms the configuration file from nested to flat format.
 // kind is the emitted flat kind; isToolset selects the toolset list-wrapping
 // behavior independently, since toolsets are emitted as groups. yaml.MapSlice
 // preserves map order.
-func transformDocs(kind string, isToolset bool, input yaml.MapSlice) ([]yaml.MapSlice, error) {
+func transformDocs(ctx context.Context, kind string, isToolset bool, input yaml.MapSlice) ([]yaml.MapSlice, error) {
 	var transformed []yaml.MapSlice
 	for _, entry := range input {
 		entryName, ok := entry.Key.(string)
@@ -318,6 +354,15 @@ func transformDocs(kind string, isToolset bool, input yaml.MapSlice) ([]yaml.Map
 
 		// Merge the transformed body into our result
 		if bodySlice, ok := entryBody.(yaml.MapSlice); ok {
+			// A toolset body given as a map can carry a description; the bare
+			// list form cannot. Drop it either way so both spellings convert
+			// to the same group.
+			if isToolset {
+				var dropped bool
+				if bodySlice, dropped = dropDescription(bodySlice); dropped {
+					warnDescriptionDropped(ctx, entryName)
+				}
+			}
 			currentTransformed = append(currentTransformed, bodySlice...)
 		} else {
 			return nil, fmt.Errorf("unable to convert entryBody to MapSlice")

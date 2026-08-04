@@ -65,9 +65,13 @@ At startup, Toolbox validates groups:
 
 ## Relationship to toolsets
 
-Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations keep working — Toolbox parses every toolset as a group, so no migration is required. That said, we recommend migrating to a `kind: group` even for tools-only collections, so the configuration matches what Toolbox actually loads and can grow to scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.
+Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations still load — Toolbox parses every toolset as a group — but that parity is not exact, so review the differences below before assuming a toolset behaves as it did:
 
-A toolset has no `description` of its own, so one written on a `kind: toolset` is dropped rather than promoted. To give a collection a description, declare it as a `kind: group`. Unrecognized fields on a toolset are now rejected at startup instead of being silently ignored.
+- A toolset has no `description` of its own, so one written on a `kind: toolset` is dropped rather than promoted, and Toolbox logs a warning. To give a collection a description, declare it as a `kind: group`.
+- Unrecognized fields on a toolset are rejected at startup instead of being silently ignored.
+- Declaring the same name as both a `kind: toolset` and a `kind: group` is a duplicate-name error; previously the group silently took precedence.
+
+We recommend migrating to a `kind: group` even for tools-only collections, so the configuration matches what Toolbox actually loads and can grow to scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.
 
 To convert existing toolsets to groups automatically, run the [`migrate`](../../../reference/cli.md) command. It rewrites both nested `toolsets:` blocks and already-flat `kind: toolset` documents to `kind: group`:
 
