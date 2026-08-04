@@ -56,6 +56,20 @@ func TestParseEnv(t *testing.T) {
 			errString: `environment variable not found: "FOO" (line 1, column 1)`,
 		},
 		{
+			desc:      "multiple missing required vars reported together",
+			in:        "host: ${HOST}, user: ${USER_NAME}, pass: ${PASSWORD}",
+			want:      "host: , user: , pass: ",
+			err:       true,
+			errString: "environment variables not found:\n  - \"HOST\" (line 1, column 7)\n  - \"USER_NAME\" (line 1, column 22)\n  - \"PASSWORD\" (line 1, column 42)",
+		},
+		{
+			desc:      "repeated missing required var reported once",
+			in:        "a: ${HOST}, b: ${HOST}",
+			want:      "a: , b: ",
+			err:       true,
+			errString: `environment variable not found: "HOST" (line 1, column 4)`,
+		},
+		{
 			desc:    "without default without env, lenient",
 			in:      "${FOO}",
 			want:    "FOO",
@@ -1984,7 +1998,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"data-products": group.GroupConfig{
 					Name:      "data-products",
-					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "list_data_products", "get_data_product", "list_data_assets", "get_data_asset", "create_data_product", "update_data_product", "create_data_asset", "update_data_asset"},
+					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "list_data_products", "get_data_product", "list_data_assets", "get_data_asset", "create_data_product", "update_data_product", "create_data_asset", "update_data_asset", "update_data_product_aspects", "get_operation"},
 				},
 				"enrich": group.GroupConfig{
 					Name:      "enrich",
