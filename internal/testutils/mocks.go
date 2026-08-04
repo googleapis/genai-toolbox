@@ -18,47 +18,102 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"go.opentelemetry.io/otel/trace"
 )
+
+// MockSourceConfig is used to mock source config in tests
+type MockSourceConfig struct {
+	Name string `yaml:"name"`
+	Type string `yaml:"type"`
+	Foo  string `yaml:"foo"`
+}
+
+func (m MockSourceConfig) SourceConfigType() string {
+	return m.Type
+}
+
+func (m MockSourceConfig) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	return MockSource{MockSourceConfig: m}, nil
+}
+
+// MockSource is used to mock source in tests
+type MockSource struct {
+	MockSourceConfig
+}
+
+func (s MockSource) SourceType() string {
+	return s.Type
+}
+
+func (s MockSource) ToConfig() sources.SourceConfig {
+	return s.MockSourceConfig
+}
+
+// MockToolConfig is used to mock tool config in tests
+type MockToolConfig struct {
+	tools.ConfigBase `yaml:",inline"`
+	Source           string                `yaml:"source"`
+	Parameters       parameters.Parameters `yaml:"parameters"`
+	Type             string                `yaml:"type"`
+}
+
+func (m MockToolConfig) ToolConfigType() string {
+	return "mock-tool"
+}
+
+func (m MockToolConfig) Initialize(context.Context) (tools.Tool, error) {
+	return MockTool{
+		BaseTool: tools.NewBaseTool(
+			m, tools.GetAnnotationsOrDefault(&tools.ToolAnnotations{}, nil),
+			tools.Manifest{Description: m.Description, Parameters: m.Parameters.Manifest(), AuthRequired: m.AuthRequired},
+			m.Parameters,
+		),
+	}, nil
+}
+
+var _ tools.ToolConfig = MockToolConfig{}
 
 // MockTool is used to mock tools in tests
 type MockTool struct {
-	Name                       string
-	Description                string
-	Params                     []parameters.Parameter
-	manifest                   tools.Manifest
+	tools.BaseTool[MockToolConfig]
 	unauthorized               bool
 	requireClientAuthorization bool
-	authRequired               []string
 	ReturnParamsInInvoke       bool
 }
 
 var _ tools.Tool = MockTool{}
 
 // NewMockTool creates a new mock prompt for testing.
-func NewMockTool(name, desc string, params []parameters.Parameter, unauthorized, requireClientAuthorization bool) MockTool {
-	pMs := make([]parameters.ParameterManifest, 0, len(params))
-	for _, p := range params {
-		pMs = append(pMs, p.Manifest())
+func NewMockTool(name, desc, source string, params []parameters.Parameter, unauthorized, reqClientAutho bool) MockTool {
+	mockConfig := MockToolConfig{
+		ConfigBase: tools.ConfigBase{
+			Name:        name,
+			Description: desc,
+		},
+		Source:     source,
+		Type:       "mock-tool",
+		Parameters: params,
 	}
-	manifest := tools.Manifest{Description: desc, Parameters: pMs}
-	return MockTool{
-		Name:                       name,
-		Description:                desc,
-		Params:                     params,
-		manifest:                   manifest,
-		unauthorized:               unauthorized,
-		requireClientAuthorization: requireClientAuthorization,
-	}
+	ctx := context.Background()
+	t, _ := mockConfig.Initialize(ctx)
+	mt := t.(MockTool)
+	mt.unauthorized = unauthorized
+	mt.requireClientAuthorization = reqClientAutho
+	return mt
 }
 
-func (t MockTool) Invoke(ctx context.Context, s tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
-	mock := []any{t.Name}
+func (t MockTool) RequiresClientAuthorization(sources.Source) (bool, error) {
+	// defaulted to false
+	return t.requireClientAuthorization, nil
+}
+
+func (t MockTool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
+	mock := []any{t.Cfg.Name}
 	if t.ReturnParamsInInvoke && len(params) > 0 {
 		for _, p := range params {
 			mock = append(mock, p.Value)
@@ -67,62 +122,32 @@ func (t MockTool) Invoke(ctx context.Context, s tools.SourceProvider, params par
 	return mock, nil
 }
 
+func (t MockTool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t MockTool) ToConfig() tools.ToolConfig {
-	return nil
+	return t.Cfg
+}
+
+func (t MockTool) Authorized(verifiedAuthServices []string) bool {
+	// default to true
+	return !t.unauthorized
+}
+
+func (t MockTool) ValidateSource(src sources.Source) error {
+	if src == nil || src.SourceType() == "mock-source" {
+		return nil
+	}
+	return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 }
 
 // claims is a map of user info decoded from an auth token
 func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Params, data, claimsMap)
-}
-
-func (t MockTool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Params, paramValues, embeddingModelsMap, nil)
-}
-
-func (t MockTool) Manifest(map[string]sources.Source) (tools.Manifest, error) {
-	return t.manifest, nil
-}
-
-func (t MockTool) StaticManifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t MockTool) Authorized(verifiedAuthServices []string) bool {
-	// defaulted to true
-	return !t.unauthorized
-}
-
-func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error) {
-	// defaulted to false
-	return t.requireClientAuthorization, nil
-}
-
-func (t MockTool) GetParameters(map[string]sources.Source) (parameters.Parameters, error) {
-	return t.Params, nil
-}
-
-func (t MockTool) GetName() string {
-	return t.Name
-}
-
-func (t MockTool) GetDescription() string {
-	return t.Description
-}
-
-func (t MockTool) GetAuthRequired() []string {
-	return t.authRequired
+	return parameters.ParseParams(t.StaticParameters, data, claimsMap)
 }
 
 func (t MockTool) GetAnnotations() *tools.ToolAnnotations {
-	return nil
-}
-
-func (t MockTool) GetAuthTokenHeaderName(tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t MockTool) GetScopesRequired() []string {
 	return nil
 }
 

@@ -175,7 +175,7 @@ func TestMcpAuth(t *testing.T) {
 		token          string
 		method         string
 		url            string
-		body           []byte
+		body           map[string]any
 		wantStatusCode int
 		checkWWWAuth   func(t *testing.T, authHeader string)
 	}{
@@ -219,20 +219,17 @@ func TestMcpAuth(t *testing.T) {
 			token:  tokenOnlyReadStr,
 			method: http.MethodPost,
 			url:    apiMCP,
-			body: func() []byte {
-				b, _ := json.Marshal(map[string]any{
-					"jsonrpc": "2.0",
-					"id":      1,
-					"method":  "tools/call",
-					"params": map[string]any{
-						"name": "my-tool",
-						"arguments": map[string]any{
-							"sql": "SELECT 1;",
-						},
+			body: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      1,
+				"method":  "tools/call",
+				"params": map[string]any{
+					"name": "my-tool",
+					"arguments": map[string]any{
+						"sql": "SELECT 1;",
 					},
-				})
-				return b
-			}(),
+				},
+			},
 			wantStatusCode: http.StatusForbidden,
 			checkWWWAuth: func(t *testing.T, authHeader string) {
 				if !strings.Contains(authHeader, `error="insufficient_scope"`) || !strings.Contains(authHeader, `scope="execute:sql"`) {
@@ -245,20 +242,17 @@ func TestMcpAuth(t *testing.T) {
 			token:  tokenBothStr,
 			method: http.MethodPost,
 			url:    apiMCP,
-			body: func() []byte {
-				b, _ := json.Marshal(map[string]any{
-					"jsonrpc": "2.0",
-					"id":      1,
-					"method":  "tools/call",
-					"params": map[string]any{
-						"name": "my-tool",
-						"arguments": map[string]any{
-							"sql": "SELECT 1;",
-						},
+			body: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      1,
+				"method":  "tools/call",
+				"params": map[string]any{
+					"name": "my-tool",
+					"arguments": map[string]any{
+						"sql": "SELECT 1;",
 					},
-				})
-				return b
-			}(),
+				},
+			},
 			wantStatusCode: http.StatusOK,
 		},
 	}
@@ -277,7 +271,23 @@ func TestMcpAuth(t *testing.T) {
 			runTest := func(t *testing.T, protocolVersion string) {
 				var body io.Reader
 				if tc.body != nil {
-					body = bytes.NewBuffer(tc.body)
+					if protocolVersion == "2026-07-28" {
+						if params, ok := tc.body["params"].(map[string]any); ok {
+							params["_meta"] = map[string]any{
+								"io.modelcontextprotocol/protocolVersion": protocolVersion,
+								"io.modelcontextprotocol/clientInfo": map[string]string{
+									"name":    "testClient",
+									"version": "0.0.0",
+								},
+								"io.modelcontextprotocol/clientCapabilities": struct{}{},
+							}
+						}
+					}
+					b, err := json.Marshal(tc.body)
+					if err != nil {
+						t.Fatalf("error marshaling body: %s", err)
+					}
+					body = bytes.NewBuffer(b)
 				}
 				req, _ := http.NewRequest(method, url, body)
 				if tc.token != "" {
@@ -287,6 +297,10 @@ func TestMcpAuth(t *testing.T) {
 					req.Header.Set("Content-Type", "application/json")
 					if protocolVersion != "" {
 						req.Header.Set("MCP-Protocol-Version", protocolVersion)
+					}
+					if protocolVersion == "2026-07-28" {
+						req.Header.Set("Mcp-Method", "tools/call")
+						req.Header.Set("Mcp-Name", "my-tool")
 					}
 				}
 				resp, err := http.DefaultClient.Do(req)
@@ -307,7 +321,7 @@ func TestMcpAuth(t *testing.T) {
 			}
 
 			if method == http.MethodPost {
-				versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"}
+				versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
 				for _, v := range versions {
 					t.Run("version_"+v, func(t *testing.T) {
 						runTest(t, v)

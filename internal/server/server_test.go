@@ -41,16 +41,19 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	_ "github.com/googleapis/mcp-toolbox/internal/embeddingmodels/gemini"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/http"
 	"github.com/googleapis/mcp-toolbox/internal/util"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Helper function to create temporary self-signed certs for the test
@@ -215,6 +218,169 @@ func TestServe(t *testing.T) {
 
 }
 
+func TestHealthz(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	addr, port := "127.0.0.1", 0
+	cfg := server.ServerConfig{
+		Version:      "0.0.0",
+		Address:      addr,
+		Port:         port,
+		AllowedHosts: []string{"*"},
+	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	}()
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("unable to initialize server: %v", err)
+	}
+
+	err = s.Listen(ctx, "", "")
+	if err != nil {
+		t.Fatalf("unable to start server: %v", err)
+	}
+
+	errCh := make(chan error)
+	go func() {
+		defer close(errCh)
+		if serveErr := s.Serve(ctx); serveErr != nil {
+			errCh <- serveErr
+		}
+	}()
+
+	url := fmt.Sprintf("http://%s/healthz", s.Addr())
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("error when sending a request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", resp.StatusCode)
+	}
+
+	if ct := resp.Header.Get("Content-Type"); ct != "application/json" {
+		t.Fatalf("expected Content-Type application/json, got %q", ct)
+	}
+
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("error reading from request body: %s", err)
+	}
+
+	var body map[string]string
+	if err := json.Unmarshal(raw, &body); err != nil {
+		t.Fatalf("expected JSON body, got %q: %s", string(raw), err)
+	}
+	if body["status"] != "ok" {
+		t.Fatalf(`expected {"status":"ok"}, got %q`, string(raw))
+	}
+}
+
+// TestHealthzBypassesHostCheck verifies that /healthz is reachable even when
+// AllowedHosts does not include the request host. Container probes (Kubernetes,
+// Docker, Cloud Run) commonly hit the endpoint via the pod IP or localhost,
+// so the strict host validation must not block them.
+func TestHealthzBypassesHostCheck(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	addr, port := "127.0.0.1", 0
+	cfg := server.ServerConfig{
+		Version:      "0.0.0",
+		Address:      addr,
+		Port:         port,
+		AllowedHosts: []string{"toolbox.example.com"},
+	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	defer func() {
+		err := otelShutdown(ctx)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	}()
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("unable to initialize server: %v", err)
+	}
+
+	err = s.Listen(ctx, "", "")
+	if err != nil {
+		t.Fatalf("unable to start server: %v", err)
+	}
+
+	errCh := make(chan error)
+	go func() {
+		defer close(errCh)
+		if serveErr := s.Serve(ctx); serveErr != nil {
+			errCh <- serveErr
+		}
+	}()
+
+	// Hit /healthz via the pod IP (127.0.0.1), which is not in AllowedHosts.
+	url := fmt.Sprintf("http://%s/healthz", s.Addr())
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("error when sending a request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected /healthz to bypass host check and return 200, got %d", resp.StatusCode)
+	}
+
+	// Sanity check: confirm the host check is still active for other paths.
+	rootURL := fmt.Sprintf("http://%s/", s.Addr())
+	rootResp, err := http.Get(rootURL)
+	if err != nil {
+		t.Fatalf("error when sending root request: %s", err)
+	}
+	defer rootResp.Body.Close()
+	if rootResp.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected / to be blocked by host check (403), got %d", rootResp.StatusCode)
+	}
+}
+
 func TestUpdateServer(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -251,24 +417,11 @@ func TestUpdateServer(t *testing.T) {
 	newAuth := map[string]auth.AuthService{"example-auth": nil}
 	newEmbeddingModels := map[string]embeddingmodels.EmbeddingModel{"example-model": nil}
 	newTools := map[string]tools.Tool{"example-tool": nil}
-	newToolsets := map[string]tools.Toolset{
-		"example-toolset": {
-			ToolsetConfig: tools.ToolsetConfig{
-				Name: "example-toolset",
-			},
-			Tools: []*tools.Tool{},
-		},
+	newPrompts := map[string]prompts.Prompt{"example-prompt": testutils.NewMockPrompt("example-prompt", "", prompts.Arguments{})}
+	newGroups := map[string]group.Group{
+		"example-toolset": group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 	}
-	newPrompts := map[string]prompts.Prompt{"example-prompt": nil}
-	newPromptsets := map[string]prompts.Promptset{
-		"example-promptset": {
-			PromptsetConfig: prompts.PromptsetConfig{
-				Name: "example-promptset",
-			},
-			Prompts: []*prompts.Prompt{},
-		},
-	}
-	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
@@ -288,19 +441,18 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
-	gotToolset, _ := s.PrimitiveMgr.GetToolset("example-toolset")
-	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"], cmp.AllowUnexported(tools.Toolset{})); diff != "" {
-		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
+	wantGroup := newGroups["example-toolset"]
+	gotGroup, ok := s.PrimitiveMgr.GetGroup("example-toolset")
+	if !ok {
+		t.Fatal("expected group \"example-toolset\" to exist")
+	}
+	if diff := cmp.Diff(wantGroup, gotGroup, cmp.AllowUnexported(group.Group{})); diff != "" {
+		t.Errorf("error updating server, group (-want +got):\n%s", diff)
 	}
 
 	gotPrompt, _ := s.PrimitiveMgr.GetPrompt("example-prompt")
-	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"]); diff != "" {
+	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
-	}
-
-	gotPromptset, _ := s.PrimitiveMgr.GetPromptset("example-promptset")
-	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"], cmp.AllowUnexported(prompts.Promptset{})); diff != "" {
-		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 }
 
@@ -1337,25 +1489,372 @@ scopesRequired:
 	}
 }
 
-type offlineSourceConfig struct {
-	initialized *bool
+func TestDuplicateResourceConfig(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name string
+		yaml string
+	}{
+		{
+			name: "duplicate source",
+			yaml: `
+kind: source
+name: my_source
+type: alloydb-postgres
+project: my-project
+region: us-central1
+cluster: my-cluster
+instance: my-instance
+database: my-db
+---
+kind: source
+name: my_source
+type: alloydb-postgres
+project: my-project
+region: us-central1
+cluster: my-cluster
+instance: my-instance
+database: my-db
+`,
+		},
+		{
+			name: "duplicate authService",
+			yaml: `
+kind: authService
+name: my_auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+---
+kind: authService
+name: my_auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+`,
+		},
+		{
+			name: "duplicate tool",
+			yaml: `
+kind: tool
+name: my_tool
+type: http
+source: my_source
+path: /a
+method: GET
+---
+kind: tool
+name: my_tool
+type: http
+source: my_source
+path: /b
+method: GET
+`,
+		},
+		{
+			name: "duplicate toolset",
+			yaml: `
+kind: toolset
+name: my_toolset
+tools:
+  - tool_a
+---
+kind: toolset
+name: my_toolset
+tools:
+  - tool_b
+`,
+		},
+		{
+			name: "duplicate embeddingModel",
+			yaml: `
+kind: embeddingModel
+name: my_model
+type: gemini
+model: text-embedding-005
+---
+kind: embeddingModel
+name: my_model
+type: gemini
+model: text-embedding-005
+`,
+		},
+		{
+			name: "duplicate prompt",
+			yaml: `
+kind: prompt
+name: my_prompt
+messages:
+  - role: user
+    content: hello
+---
+kind: prompt
+name: my_prompt
+messages:
+  - role: user
+    content: world
+`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			if err == nil {
+				t.Fatalf("UnmarshalPrimitiveConfig() expected a duplicate error, got nil")
+			}
+			if !strings.Contains(err.Error(), "declared more than once") {
+				t.Fatalf("UnmarshalPrimitiveConfig() error = %v, want it to mention 'declared more than once'", err)
+			}
+		})
+	}
 }
 
-func (c offlineSourceConfig) SourceConfigType() string { return "offline-test-source" }
+func TestGroupConfigParsing(t *testing.T) {
+	ctx := context.Background()
 
-func (c offlineSourceConfig) Initialize(context.Context, trace.Tracer) (sources.Source, error) {
-	*c.initialized = true
-	return nil, fmt.Errorf("source Initialize should not be called during offline init")
+	tests := []struct {
+		name      string
+		yaml      string
+		want      group.GroupConfig
+		wantError bool
+	}{
+		{
+			name: "valid named group",
+			yaml: `
+kind: group
+name: my_group
+description: a group of tools and prompts
+tools:
+  - tool_a
+  - tool_b
+prompts:
+  - prompt_a
+`,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "a group of tools and prompts",
+				ToolNames:   []string{"tool_a", "tool_b"},
+				PromptNames: []string{"prompt_a"},
+			},
+		},
+		{
+			name: "named group with only description",
+			yaml: `
+kind: group
+name: my_group
+description: just a description
+`,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "just a description",
+			},
+		},
+		{
+			name: "default group with only description",
+			yaml: `
+kind: group
+name:
+description: default server instruction
+`,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
+		},
+		{
+			name: "default group omitting name field",
+			yaml: `
+kind: group
+description: default server instruction
+`,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
+		},
+		{
+			name: "kind toolset folds into a tools-only group",
+			yaml: `
+kind: toolset
+name: my_toolset
+tools:
+  - tool_a
+  - tool_b
+`,
+			want: group.GroupConfig{
+				Name:      "my_toolset",
+				ToolNames: []string{"tool_a", "tool_b"},
+			},
+		},
+		{
+			name: "default group declaring tools is an error",
+			yaml: `
+kind: group
+name:
+tools:
+  - tool_a
+`,
+			wantError: true,
+		},
+		{
+			name: "default group declaring prompts is an error",
+			yaml: `
+kind: group
+name:
+prompts:
+  - prompt_a
+`,
+			wantError: true,
+		},
+		{
+			name: "unknown field is an error",
+			yaml: `
+kind: group
+name: my_group
+resources:
+  - res_a
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate default group is an error",
+			yaml: `
+kind: group
+name:
+description: first
+---
+kind: group
+name:
+description: second
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate named group is an error",
+			yaml: `
+kind: group
+name: my_group
+tools:
+  - tool_a
+---
+kind: group
+name: my_group
+tools:
+  - tool_b
+`,
+			wantError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+			if tc.wantError {
+				return
+			}
+			gc, ok := groups[tc.want.Name]
+			if !ok {
+				t.Fatalf("expected group %q to be parsed, got: %v", tc.want.Name, groups)
+			}
+			if diff := cmp.Diff(tc.want, gc); diff != "" {
+				t.Errorf("group mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
 }
 
-type offlineToolConfig struct {
-	name string
+func TestGroupConfigValues(t *testing.T) {
+	ctx := context.Background()
+	yaml := `
+kind: group
+name: my_group
+description: a group
+tools:
+  - tool_a
+  - tool_b
+prompts:
+  - prompt_a
+`
+	_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(yaml))
+	if err != nil {
+		t.Fatalf("UnmarshalPrimitiveConfig() returned unexpected error: %v", err)
+	}
+	gc, ok := groups["my_group"]
+	if !ok {
+		t.Fatalf("expected group %q to be parsed, got: %v", "my_group", groups)
+	}
+	if gc.Name != "my_group" {
+		t.Errorf("group name: got %q, want %q", gc.Name, "my_group")
+	}
+	if gc.Description != "a group" {
+		t.Errorf("group description: got %q, want %q", gc.Description, "a group")
+	}
+	if diff := cmp.Diff([]string{"tool_a", "tool_b"}, gc.ToolNames); diff != "" {
+		t.Errorf("group tools mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]string{"prompt_a"}, gc.PromptNames); diff != "" {
+		t.Errorf("group prompts mismatch (-want +got):\n%s", diff)
+	}
 }
 
-func (c offlineToolConfig) ToolConfigType() string { return "offline-test-tool" }
-
-func (c offlineToolConfig) Initialize(context.Context) (tools.Tool, error) {
-	return testutils.NewMockTool(c.name, "offline tool", nil, false, false), nil
+func TestInitializeConfigs(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+	t.Run("valid initialization", func(t *testing.T) {
+		sourceConfig1 := testutils.MockSourceConfig{Name: "my-source", Type: "mock-source"}
+		source1, _ := sourceConfig1.Initialize(ctx, nil)
+		tools1 := testutils.NewMockTool("my-tool", "mock tool for offline config", "my-source", nil, false, false)
+		validCfg := server.ServerConfig{
+			Version: "0.0.0",
+			SourceConfigs: server.SourceConfigs{
+				"my-source": testutils.MockSourceConfig{Name: "my-source", Type: "mock-source"},
+			},
+			ToolConfigs: server.ToolConfigs{
+				"my-tool": tools1.ToConfig(),
+			},
+		}
+		sourcesMap, _, _, toolsMap, _, _, err := server.InitializeConfigs(ctx, validCfg)
+		if err != nil {
+			t.Fatalf("unexpected error during config initialization: %s", err)
+		}
+		wantSourcesMap := map[string]sources.Source{"my-source": source1}
+		wantToolsMap := map[string]tools.Tool{"my-tool": tools1}
+		if !reflect.DeepEqual(sourcesMap, wantSourcesMap) {
+			t.Fatalf("sources map mismatch: want %s, got %s", wantSourcesMap, sourcesMap)
+		}
+		if !reflect.DeepEqual(toolsMap, wantToolsMap) {
+			t.Fatalf("tools map mismatch: want %s, got %s", wantToolsMap, toolsMap)
+		}
+	})
+	t.Run("invalid initialization", func(t *testing.T) {
+		invalidCfg := server.ServerConfig{
+			Version: "0.0.0",
+			SourceConfigs: server.SourceConfigs{
+				"my-source": testutils.MockSourceConfig{Name: "my-source", Type: "invalid-type"},
+			},
+			ToolConfigs: server.ToolConfigs{
+				"my-invalid-tool": testutils.NewMockTool("my-tool", "mock tool for offline config", "my-source", nil, false, false).ToConfig(),
+			},
+		}
+		_, _, _, _, _, _, err := server.InitializeConfigs(ctx, invalidCfg)
+		if err == nil {
+			t.Fatalf("expected error but got nil")
+		}
+		wantErr := `invalid source for "mock-tool" tool: source "my-source" is not a compatible type`
+		if err.Error() != wantErr {
+			t.Fatalf("unexpected error: want %s, got %s", wantErr, err.Error())
+		}
+	})
 }
 
 func TestInitializeOfflineConfigs(t *testing.T) {
@@ -1369,30 +1868,26 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 	}
 	ctx = util.WithInstrumentation(ctx, instrumentation)
 
-	sourceInitialized := false
 	cfg := server.ServerConfig{
 		Version: "0.0.0",
 		SourceConfigs: server.SourceConfigs{
-			"my-source": offlineSourceConfig{initialized: &sourceInitialized},
+			"my-source": testutils.MockSourceConfig{Name: "my-source"},
 		},
 		ToolConfigs: server.ToolConfigs{
-			"my-tool": offlineToolConfig{name: "my-tool"},
+			"my-tool": testutils.NewMockTool("my-tool", "mock tool for offline config", "non-existance-source", nil, false, false).ToConfig(),
 		},
 	}
 
-	toolsMap, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
+	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
 	if err != nil {
 		t.Fatalf("InitializeOfflineConfigs returned error: %s", err)
-	}
-	if sourceInitialized {
-		t.Error("source Initialize was called during offline init")
 	}
 	if _, ok := toolsMap["my-tool"]; !ok {
 		t.Errorf("expected tool %q in toolsMap, got %v", "my-tool", toolsMap)
 	}
-	// The implicit default ("") toolset should always be present.
-	if _, ok := toolsetsMap[""]; !ok {
-		t.Error("expected default toolset to be present")
+	// The implicit default ("") group should always be present.
+	if _, ok := groupsMap[""]; !ok {
+		t.Error("expected default group to be present")
 	}
 }
 
@@ -1447,5 +1942,41 @@ func TestMCPAuthEnableAPIClash(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "MCP Auth cannot be enabled together with the legacy HTTP API") {
 		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	cfg := server.ServerConfig{
+		Version: "0.0.0",
+		ToolConfigs: server.ToolConfigs{
+			"zoo":    testutils.NewMockTool("zoo", "", "", nil, false, false).ToConfig(),
+			"apple":  testutils.NewMockTool("apple", "", "", nil, false, false).ToConfig(),
+			"banana": testutils.NewMockTool("banana", "", "", nil, false, false).ToConfig(),
+		},
+	}
+
+	_, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
+	if err != nil {
+		t.Fatalf("InitializeOfflineConfigs returned error: %s", err)
+	}
+
+	defaultToolset, ok := toolsetsMap[""]
+	if !ok {
+		t.Fatal("expected default toolset to be present")
+	}
+
+	expectedOrder := []string{"apple", "banana", "zoo"}
+	if diff := cmp.Diff(expectedOrder, defaultToolset.ToolNames); diff != "" {
+		t.Errorf("default toolset ToolNames mismatch (-want +got):\n%s", diff)
 	}
 }
