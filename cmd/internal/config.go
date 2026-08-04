@@ -265,13 +265,12 @@ func hasKindField(input yaml.MapSlice) bool {
 }
 
 // migrateToolsetKind rewrites `kind: toolset` to `kind: group`, preserving field
-// order, and returns docs of any other kind unchanged. Every doc passes through
-// here once it is in flat format, whether it started that way or was flattened
-// from a nested `toolsets:` block, so the two spellings cannot diverge.
+// order, and returns other kinds unchanged. Every flat doc passes through here,
+// so nested and already-flat toolsets cannot diverge.
 //
-// A toolset has no description of its own, so one written on a toolset is
-// dropped rather than promoted; publishing it would give a collection a
-// description it never declared. The drop is warned about rather than silent.
+// A description on a toolset is dropped with a warning rather than promoted: a
+// toolset has none of its own, so publishing it would give the collection a
+// description it never declared.
 func migrateToolsetKind(ctx context.Context, input yaml.MapSlice) yaml.MapSlice {
 	kindIndex, descIndex := -1, -1
 	for i, item := range input {
