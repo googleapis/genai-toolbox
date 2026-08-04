@@ -160,7 +160,7 @@ func (t MockTool) GetScopesRequired() []string {
 }
 
 func (t MockTool) HasSecureParams() bool {
-	for _, p := range t.Params {
+	for _, p := range t.StaticParameters {
 		if p != nil && p.GetSecure() {
 			return true
 		}

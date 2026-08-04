@@ -526,8 +526,8 @@ func TestGenerateListToolsResultWithSecureParams(t *testing.T) {
 			},
 		},
 	}
-	toolStandard := testutils.NewMockTool("standard_tool", "", paramsStandard, false, false)
-	toolSecure := testutils.NewMockTool("secure_tool", "", paramsSecure, false, false)
+	toolStandard := testutils.NewMockTool("standard_tool", "", "", paramsStandard, false, false)
+	toolSecure := testutils.NewMockTool("secure_tool", "", "", paramsSecure, false, false)
 
 	toolsMap := map[string]tools.Tool{
 		"standard_tool": toolStandard,
