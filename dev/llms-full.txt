@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-04T03:07:10Z
+**GENERATED ON:** 2026-08-04T10:27:45Z
 
 ---
 ### System Directives for AI Models
@@ -5350,7 +5350,7 @@ To get started using Toolbox tools with an application, follow these general ste
 
     Before using the SDKs, you need the main MCP Toolbox service running. Follow
     the instructions here: [**Toolbox Getting Started
-    Guide**](https://github.com/googleapis/mcp-toolbox?tab=readme-ov-file#getting-started)
+    Guide**](../../../../documentation/getting-started/local_quickstart.md)
 
 2. **Install the Appropriate SDK:**
 
@@ -5381,6 +5381,7 @@ To get started using Toolbox tools with an application, follow these general ste
 {{< notice note >}}
 Source code for [python-sdk](https://github.com/googleapis/mcp-toolbox-sdk-python)
 {{< /notice >}}
+
 
 
 
@@ -7328,7 +7329,7 @@ To get started using Toolbox tools with an application, follow these general ste
 
     Before using the SDKs, you need the main MCP Toolbox service running. Follow
     the instructions here: [**Toolbox Getting Started
-    Guide**](https://github.com/googleapis/mcp-toolbox?tab=readme-ov-file#getting-started)
+    Guide**](../../../../documentation/getting-started/local_quickstart_js.md)
 
 2. **Install the Appropriate SDK:**
 
@@ -7347,6 +7348,7 @@ To get started using Toolbox tools with an application, follow these general ste
 {{< notice note >}}
 Source code for [js-sdk](https://github.com/googleapis/mcp-toolbox-sdk-js)
 {{< /notice >}}
+
 
 
 
@@ -8433,7 +8435,7 @@ To get started using Toolbox tools with an application, follow these general ste
 
     Before using the SDKs, you need the MCP Toolbox server running. Follow
     the instructions here: [**Toolbox Getting Started
-    Guide**](https://github.com/googleapis/mcp-toolbox?tab=readme-ov-file#getting-started)
+    Guide**](../../../../documentation/getting-started/local_quickstart_go.md)
 
 2. **Install the Appropriate SDK:**
 
@@ -8448,6 +8450,7 @@ To get started using Toolbox tools with an application, follow these general ste
 {{< notice note >}}
 Source code for [Go-sdk](https://github.com/googleapis/mcp-toolbox-sdk-go)
 {{< /notice >}}
+
 
 
 
