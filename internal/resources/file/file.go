@@ -29,24 +29,34 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/resources"
 )
 
-const defaultMaxFileSize = 5 * 1024 * 1024 // 5MB
+const(
+	defaultMaxFileSize = 5 * 1024 * 1024 // 5MB
+	resourceType = "file"
+)
 
 func init() {
-	resources.Register("file", func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
-		var cfg Config
-		if err := decoder.Decode(&cfg); err != nil {
-			return nil, err
-		}
-		cfg.Name = name
-		cfg.Type = "file"
-		return &cfg, nil
-	})
+	if !resources.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("resource type %q already registered", resourceType))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
+	cfg := &Config{
+		BaseConfig: resources.BaseConfig{
+			Name: name,
+			Type: resourceType,
+		},
+	}
+	if err := decoder.DecodeContext(ctx, cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
 
 // Config represents the configuration for a file resource.
 type Config struct {
 	resources.BaseConfig `yaml:",inline"`
-	Path                 string `yaml:"path"`
+	Path                 string `yaml:"path" validate:"required"`
 	MaxSize              *int64 `yaml:"max_size,omitempty"`
 
 	absPath         string
@@ -54,9 +64,12 @@ type Config struct {
 	isRelative      bool
 }
 
+var _ resources.ResourceConfig = &Config{}
+var _ resources.Resource = &FileResource{}
+
 // ResourceConfigType returns the resource type identifier.
 func (c *Config) ResourceConfigType() string {
-	return "file"
+	return resourceType
 }
 
 var allowedExts = map[string]bool{
@@ -72,19 +85,25 @@ func validateExtension(path string) error {
 	return nil
 }
 
+func (c *Config) Validate() error {
+	if c.Path == "" {
+		return fmt.Errorf("Field validation for 'Path' failed: missing required field")
+	}
+	if c.MaxSize != nil {
+		if *c.MaxSize <= 0 {
+			return fmt.Errorf("file resource %q max_size must be greater than 0", c.Name)
+		} else if *c.MaxSize > 1024*1024*1024 {
+			return fmt.Errorf("file resource %q max_size cannot exceed 1GB", c.Name)
+		}
+	}
+	return c.BaseConfig.Validate()
+}
+
 // Initialize validates the configuration and initializes the file resource.
 func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
-	if c.Path == "" {
-		return nil, fmt.Errorf("file resource %q requires a 'path'", c.Name)
-	}
-
 	if c.MaxSize == nil {
 		limit := int64(defaultMaxFileSize)
 		c.MaxSize = &limit
-	} else if *c.MaxSize <= 0 {
-		return nil, fmt.Errorf("file resource %q max_size must be greater than 0", c.Name)
-	} else if *c.MaxSize > 1024*1024*1024 {
-		return nil, fmt.Errorf("file resource %q max_size cannot exceed 1GB", c.Name)
 	}
 
 	if filepath.IsAbs(c.Path) {

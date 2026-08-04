@@ -68,7 +68,8 @@ func TestFileResource_Validation(t *testing.T) {
 		{
 			name:       "missing path",
 			yamlStr:    "type: file",
-			wantErrMsg: "requires a 'path'",
+			wantErrMsg: "missing required field",
+			failDecode: true,
 		},
 		{
 			name:       "path traversal",
@@ -94,16 +95,19 @@ func TestFileResource_Validation(t *testing.T) {
 			name:       "max_size zero",
 			yamlStr:    fmt.Sprintf("type: file\npath: %s\nmax_size: 0", filepath.ToSlash(validPath)),
 			wantErrMsg: "must be greater than 0",
+			failDecode: true,
 		},
 		{
 			name:       "max_size negative",
 			yamlStr:    fmt.Sprintf("type: file\npath: %s\nmax_size: -50", filepath.ToSlash(validPath)),
 			wantErrMsg: "must be greater than 0",
+			failDecode: true,
 		},
 		{
 			name:       "max_size too large",
 			yamlStr:    fmt.Sprintf("type: file\npath: %s\nmax_size: 2000000000", filepath.ToSlash(validPath)),
 			wantErrMsg: "cannot exceed 1GB",
+			failDecode: true,
 		},
 		{
 			name:       "max_size type string",
