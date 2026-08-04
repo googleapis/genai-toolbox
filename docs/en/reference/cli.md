@@ -88,30 +88,6 @@ For more detailed instructions, see [Generate Agent Skills](../documentation/con
 
 </details>
 
-<details>
-<summary><code>migrate</code></summary>
-
-Migrates the provided configuration files to the current flat format, updating deprecated fields and converting toolsets to [groups](../documentation/configuration/groups/_index.md). Both nested `toolsets:` blocks and already-flat `kind: toolset` documents are rewritten to `kind: group`.
-
-By default the original file is renamed to `<file>.bak` and the migrated content is written back in place. Use `--dry-run` to preview the result without modifying any files. Comments (other than top-level comments) are not preserved.
-
-A toolset does not support a `description`, so any description written on one is dropped during migration and a warning naming the toolset is logged. Add it back to the resulting `kind: group` if you want it published.
-
-**Syntax:**
-
-```bash
-toolbox migrate --config <path> [--dry-run]
-```
-
-**Flags:**
-
-- `--config`: File path specifying the tool configuration to migrate.
-- `--configs`: Multiple file paths to migrate. Files are processed independently.
-- `--config-folder`: Directory containing YAML configuration files to migrate.
-- `--dry-run`: (Optional) Preview the converted output without applying any changes.
-
-</details>
-
 ## Examples
 
 ### Hardening Toolbox

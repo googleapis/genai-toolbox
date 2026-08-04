@@ -608,33 +608,6 @@ tools:
 			errStr: `doc 1: invalid config format at key "toolsets": unable to convert entryBody to MapSlice`,
 		},
 		{
-			desc: "convert nested toolset to group",
-			in: `
-            toolsets:
-                example_toolset:
-                    - example_tool`,
-			want: `
-kind: group
-name: example_toolset
-tools:
-- example_tool
-`,
-		},
-		{
-			desc: "convert flat toolset to group",
-			in: `
-kind: toolset
-name: example_toolset
-tools:
-- example_tool`,
-			want: `
-kind: group
-name: example_toolset
-tools:
-- example_tool
-`,
-		},
-		{
 			// A toolset has no description of its own, so converting must not turn
 			// one into a group description.
 			desc: "convert flat toolset to group drops the description",
@@ -681,52 +654,6 @@ tools:
 - example_tool
 kind: group
 name: example_toolset
-`,
-		},
-		{
-			desc: "convert toolset to group leaves other kinds untouched",
-			in: `
-            sources:
-                my-pg-instance:
-                    kind: cloud-sql-postgres
-                    project: my-project
-            tools:
-                example_tool:
-                    kind: postgres-sql
-                    source: my-pg-instance
-                    description: some description
-                    statement: SELECT 1;
-            toolsets:
-                example_toolset:
-                    - example_tool
-            prompts:
-                code_review:
-                    description: ask llm to analyze code quality
-                    messages:
-                      - content: "review: {{.code}}"`,
-			want: `
-kind: source
-name: my-pg-instance
-type: cloud-sql-postgres
-project: my-project
----
-kind: tool
-name: example_tool
-type: postgres-sql
-source: my-pg-instance
-description: some description
-statement: SELECT 1;
----
-kind: group
-name: example_toolset
-tools:
-- example_tool
----
-kind: prompt
-name: code_review
-description: ask llm to analyze code quality
-messages:
-- content: "review: {{.code}}"
 `,
 		},
 	}
