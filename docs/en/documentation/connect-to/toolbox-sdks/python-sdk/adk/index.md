@@ -293,8 +293,8 @@ from toolbox_core import TelemetryAttributes
 
 def get_telemetry_attributes(tool_context):
     return TelemetryAttributes(
-        llm_model="gemini-2.5-pro",
-        user_id=tool_context.state["user_id"],
+        llm_model="gemini-3.6-flash",
+        user_id=tool_context.state.get("user_id"),
         agent_id="agent-abc",
     )
 
