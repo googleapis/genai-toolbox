@@ -237,7 +237,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sql))
 	resp, err := source.RunSQL(ctx, bqClient, sql, statementType, nil, connProps, map[string]string{"mcp-toolbox-tool": resourceType})
 	if err != nil {
-		return nil, util.NewClientServerError("error running sql", http.StatusInternalServerError, err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return resp, nil
 }

@@ -113,8 +113,8 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	return resp, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.StaticParameters, paramValues, embeddingModelsMap, embeddingmodels.FormatVectorForPgvector)
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, pMgr tools.PrimitiveManagerI) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.StaticParameters, paramValues, pMgr, embeddingmodels.FormatVectorForPgvector)
 }
 
 func (t Tool) GetSourceName() string {
