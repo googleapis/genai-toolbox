@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigtable
+package bigtablelistclusters
 
 import (
 	"context"
 	"fmt"
 	"net/http"
 
-	"cloud.google.com/go/bigtable"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -27,7 +26,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "bigtable-sql"
+const resourceType string = "bigtable-list-clusters"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -44,21 +43,16 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	BigtableClient() *bigtable.Client
-	RunSQL(context.Context, string, parameters.Parameters, parameters.ParamValues) (any, error)
+	ListClusters(context.Context, string) (any, error)
 }
 
 type Config struct {
-	tools.ConfigBase   `yaml:",inline"`
-	Type               string                 `yaml:"type" validate:"required"`
-	Source             string                 `yaml:"source" validate:"required"`
-	Statement          string                 `yaml:"statement" validate:"required"`
-	Parameters         parameters.Parameters  `yaml:"parameters"`
-	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
-	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
@@ -67,25 +61,23 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
-		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+		cfg.Description = "List all Bigtable clusters in the instance."
 	}
 
-	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
-	if err != nil {
-		return nil, err
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameter("instance_id", "The ID of the instance"),
 	}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -96,37 +88,29 @@ func (t Tool) GetSourceName() string {
 	return t.Cfg.Source
 }
 
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Cfg
-}
-
-func (t Tool) ValidateSource(source sources.Source) error {
-	_, ok := source.(compatibleSource)
+func (t Tool) ValidateSource(src sources.Source) error {
+	_, ok := src.(compatibleSource)
 	if !ok {
-		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+		return fmt.Errorf("source is not compatible with the tool")
 	}
 	return nil
 }
 
-func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, ok := s.(compatibleSource)
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
+}
+
+func (t Tool) Invoke(ctx context.Context, src sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := src.(compatibleSource)
 	if !ok {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
+
 	paramsMap := params.AsMap()
-	newStatement, err := parameters.ResolveTemplateParams(t.Cfg.TemplateParameters, t.Cfg.Statement, paramsMap)
-	if err != nil {
-		return nil, util.NewAgentError("unable to extract template params", err)
-	}
 
-	newParams, err := parameters.GetParams(t.Cfg.Parameters, paramsMap)
-	if err != nil {
-		return nil, util.NewAgentError("unable to extract standard params", err)
-	}
-
-	resp, err := source.RunSQL(ctx, newStatement, t.Cfg.Parameters, newParams)
+	res, err := source.ListClusters(ctx, paramsMap["instance_id"].(string))
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
-	return resp, nil
+	return res, nil
 }

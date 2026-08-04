@@ -128,7 +128,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		return errMsg
 	}
 
-	parsedParams, err = tool.EmbedParams(ctx, parsedParams, primitiveMgr.GetEmbeddingModelMap())
+	parsedParams, err = tool.EmbedParams(ctx, parsedParams, primitiveMgr)
 	if err != nil {
 		errMsg := fmt.Errorf("error embedding parameters: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
