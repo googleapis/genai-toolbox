@@ -172,7 +172,12 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		}
 		for _, tableID := range parsedTables {
 			projectID, datasetID, ok := splitTableID(tableID)
-			if ok && !source.IsDatasetAllowed(projectID, datasetID) {
+			if !ok {
+				// Fail closed: a table reference that cannot be attributed
+				// to a dataset cannot be checked against the allowlist.
+				return nil, util.NewAgentError(fmt.Sprintf("could not attribute table '%s' to a dataset to validate against allowed datasets", tableID), nil)
+			}
+			if !source.IsDatasetAllowed(projectID, datasetID) {
 				return nil, util.NewAgentError(fmt.Sprintf("query accesses dataset '%s.%s', which is not in the allowed list", projectID, datasetID), nil)
 			}
 		}
