@@ -169,8 +169,8 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	return config, nil
 }
 
-// ConvertConfig converts configuration file to flat format, rewriting toolsets
-// to the group kind in both nested and already-flat inputs.
+// ConvertConfig converts configuration file to flat format and rewrites toolsets
+// to the group kind.
 func ConvertConfig(ctx context.Context, raw []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	// Manually copy top-level comments and empty lines from the source
