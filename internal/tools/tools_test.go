@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -135,7 +134,7 @@ func TestBaseToolEmbedParamsPassthrough(t *testing.T) {
 		parameters.Parameters{parameters.NewStringParameter("p1", "first")},
 	)
 	values := parameters.ParamValues{{Name: "p1", Value: "hello"}}
-	got, err := b.EmbedParams(context.Background(), values, map[string]embeddingmodels.EmbeddingModel{})
+	got, err := b.EmbedParams(context.Background(), values, nil)
 	if err != nil {
 		t.Fatalf("EmbedParams() error = %v", err)
 	}
