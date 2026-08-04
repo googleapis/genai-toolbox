@@ -28,10 +28,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -45,7 +48,7 @@ const protocolVersion20241105 = "2024-11-05"
 const protocolVersion20250326 = "2025-03-26"
 const protocolVersion20250618 = "2025-06-18"
 const protocolVersion20251125 = "2025-11-25"
-const protocolVersionDraft = "DRAFT-2026-v1"
+const protocolVersion20260728 = "2026-07-28"
 const serverName = "Toolbox"
 
 var basicInputSchema = map[string]any{
@@ -116,8 +119,8 @@ var prompt2Args = []any{
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -461,8 +464,8 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5, testutils.MockToolUrlBinding}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets, withEnableDraftSpecs())
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups, withEnableDraftSpecs())
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -559,13 +562,13 @@ func TestMcpEndpoint(t *testing.T) {
 			invalidMethods: []string{"server/discover"},
 		},
 		{
-			name:           "version DRAFT",
-			protocol:       protocolVersionDraft,
+			name:           "version 2026-07-28",
+			protocol:       protocolVersion20260728,
 			idHeader:       false,
 			reqHeader:      []string{"Mcp-Protocol-Version", "Mcp-Method", "Mcp-Name"},
 			invalidMethods: []string{"ping"},
 			meta: map[string]any{
-				"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
+				"io.modelcontextprotocol/protocolVersion": protocolVersion20260728,
 				"io.modelcontextprotocol/clientInfo": map[string]any{
 					"version": "client-temp-version",
 					"name":    "client-name",
@@ -842,7 +845,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"id":      "server-discover",
 						"result": map[string]any{
 							"resultType":        "complete",
-							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "DRAFT-2026-v1"},
+							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 							"capabilities": map[string]any{
 								"tools":   map[string]any{"listChanged": false},
 								"prompts": map[string]any{"listChanged": false},
@@ -1387,15 +1390,15 @@ func TestMcpEndpoint(t *testing.T) {
 func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
 
-	protocol := protocolVersionDraft
+	protocol := "DRAFT"
 	meta := map[string]any{
-		"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
+		"io.modelcontextprotocol/protocolVersion": protocol,
 		"io.modelcontextprotocol/clientInfo": map[string]any{
 			"version": "client-temp-version",
 			"name":    "client-name",
@@ -1419,8 +1422,8 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 		"error": map[string]interface{}{
 			"code": float64(-32022),
 			"data": map[string]interface{}{
-				"requested": "DRAFT-2026-v1",
-				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"},
+				"requested": "DRAFT",
+				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 			},
 			"message": "unsupported protocol version",
 		},
@@ -1471,8 +1474,8 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 func TestInvalidProtocolVersionHeader(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1517,7 +1520,7 @@ func TestInvalidProtocolVersionHeader(t *testing.T) {
 }
 
 func TestDeleteEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1532,7 +1535,7 @@ func TestDeleteEndpoint(t *testing.T) {
 }
 
 func TestGetEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1555,7 +1558,7 @@ func TestGetEndpoint(t *testing.T) {
 }
 
 func TestMcpRequestBodyLimit(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1587,7 +1590,7 @@ func TestMcpRequestBodyLimit(t *testing.T) {
 
 func TestMcpRequestBodyLimitOverride(t *testing.T) {
 	customLimit := int64(1 << 20)
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1617,7 +1620,7 @@ func TestMcpRequestBodyLimitOverride(t *testing.T) {
 }
 
 func TestSseEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1735,7 +1738,7 @@ func TestStdioSession(t *testing.T) {
 
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
 
 	pr, pw, err := os.Pipe()
 	if err != nil {
@@ -1765,7 +1768,7 @@ func TestStdioSession(t *testing.T) {
 
 	sseManager := newSseManager(ctx)
 
-	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	server := &Server{
 		version:         testutils.MockVersionString,
@@ -1956,6 +1959,72 @@ func TestExtractMeta(t *testing.T) {
 
 			if tc.wantProtocolVersion != metaProtocolVersion {
 				t.Fatalf("meta protocol version mismatch: got %s, want %s", metaProtocolVersion, tc.wantProtocolVersion)
+			}
+		})
+	}
+}
+
+// TestMcpPromptScopingByGroup is an end-to-end HTTP test that a `prompts/list`
+// request sent to a group's MCP endpoint returns only the prompts belonging to
+// that group. It stands up the real server with two groups (each scoped to a
+// different prompt) and asserts each route surfaces just its own prompt.
+func TestMcpPromptScopingByGroup(t *testing.T) {
+	toolsMap := map[string]tools.Tool{}
+	promptsMap := map[string]prompts.Prompt{
+		testutils.MockPrompt1.Name: testutils.MockPrompt1,
+		testutils.MockPrompt2.Name: testutils.MockPrompt2,
+	}
+	groupA, err := group.GroupConfig{Name: "group_a", PromptNames: []string{testutils.MockPrompt1.Name}}.Initialize(toolsMap, promptsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize group_a: %s", err)
+	}
+	groupB, err := group.GroupConfig{Name: "group_b", PromptNames: []string{testutils.MockPrompt2.Name}}.Initialize(toolsMap, promptsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize group_b: %s", err)
+	}
+	groups := map[string]group.Group{"group_a": groupA, "group_b": groupB}
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	testCases := []struct {
+		name        string
+		url         string
+		wantPrompts []any
+	}{
+		{
+			name:        "group_a scopes to its own prompt",
+			url:         "/group_a",
+			wantPrompts: []any{map[string]any{"name": "prompt1"}},
+		},
+		{
+			name:        "group_b scopes to its own prompt",
+			url:         "/group_b",
+			wantPrompts: []any{map[string]any{"name": "prompt2", "arguments": prompt2Args}},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBody := jsonrpc.JSONRPCRequest{Jsonrpc: jsonrpcVersion, Id: "prompts-list", Request: jsonrpc.Request{Method: "prompts/list"}}
+			reqMarshal, err := json.Marshal(reqBody)
+			if err != nil {
+				t.Fatalf("unexpected error marshaling body: %s", err)
+			}
+			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), nil)
+			if err != nil {
+				t.Fatalf("unexpected error during request: %s", err)
+			}
+			if resp.StatusCode != http.StatusOK {
+				t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, http.StatusOK)
+			}
+			var got map[string]any
+			if err := json.Unmarshal(body, &got); err != nil {
+				t.Fatalf("unexpected error unmarshalling body: %s", err)
+			}
+			want := map[string]any{"jsonrpc": "2.0", "id": "prompts-list", "result": map[string]any{"prompts": tc.wantPrompts}}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("unexpected response: got %#v, want %#v", got, want)
 			}
 		})
 	}
