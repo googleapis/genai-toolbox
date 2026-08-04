@@ -31,7 +31,13 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
-	cfg := &Config{BaseConfig: resources.BaseConfig{Name: name, Type: resourceType}}
+	cfg := &Config{
+		BaseConfig: resources.BaseConfig{
+			Name:     name,
+			Type:     resourceType,
+			MimeType: "text/plain",
+		},
+	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
 		return nil, err
 	}
@@ -41,30 +47,23 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 // Config represents the uninitialized textual resource configuration from YAML.
 type Config struct {
 	resources.BaseConfig `yaml:",inline"`
-	Text                 string `yaml:"text"`
+	Text                 string `yaml:"text" validate:"required"`
 }
 
-var _ resources.ResourceConfig = (*Config)(nil)
+var _ resources.ResourceConfig = &Config{}
 
 func (c *Config) ResourceConfigType() string {
 	return resourceType
 }
 
-func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
+func (c *Config) Validate() error {
 	if c.Text == "" {
-		return nil, fmt.Errorf("missing required 'text' field for text resource %q", c.Name)
+		return fmt.Errorf("Field validation for 'Text' failed: missing required field")
 	}
+	return c.BaseConfig.Validate()
+}
 
-	// Default MimeType if unset
-	if c.MimeType == "" {
-		c.MimeType = "text/plain"
-	}
-
-	if c.Annotations == nil {
-		c.Annotations = &resources.ResourceAnnotations{}
-	}
-
-	// Initialize size at boot by calculating the byte length of the text string
+func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 	size := int64(len(c.Text))
 	c.Size = &size
 
@@ -76,7 +75,7 @@ type Resource struct {
 	config Config
 }
 
-var _ resources.Resource = (*Resource)(nil)
+var _ resources.Resource = &Resource{}
 
 func (r *Resource) Read(ctx context.Context, params map[string]any) (any, error) {
 	return r.config.Text, nil

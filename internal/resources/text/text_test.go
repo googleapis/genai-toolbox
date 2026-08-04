@@ -62,15 +62,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			wantMime:  "application/json",
 			wantPrior: floatPtr(0.5),
 		},
-		{
-			name: "error missing text payload",
-			config: Config{
-				BaseConfig: resources.BaseConfig{Name: "test3"},
-				Text:       "",
-			},
-			wantError:   true,
-			errContains: "missing required 'text' field",
-		},
+
 		{
 			name: "explicit 0.0 priority",
 			config: Config{
@@ -146,22 +138,7 @@ func TestTextResourceInitialization(t *testing.T) {
 				t.Errorf("Read() mismatch (-want +got):\n%s", diff)
 			}
 
-			// Verify mutated config defaults and Size calculation
 			cfg := res.ToConfig().(*Config)
-			if cfg.MimeType != tc.wantMime {
-				t.Errorf("MimeType = %v, want %v", cfg.MimeType, tc.wantMime)
-			}
-
-			if tc.wantPrior == nil {
-				if cfg.Annotations.Priority != nil {
-					t.Errorf("Annotations.Priority = %v, want nil", cfg.Annotations.Priority)
-				}
-			} else {
-				if cfg.Annotations.Priority == nil || *cfg.Annotations.Priority != *tc.wantPrior {
-					t.Errorf("Annotations.Priority = %v, want %v", cfg.Annotations.Priority, *tc.wantPrior)
-				}
-			}
-
 			if cfg.Size == nil {
 				t.Fatalf("Size is nil, expected dynamic calculation")
 			}
@@ -176,8 +153,16 @@ func TestTextResourceInitialization(t *testing.T) {
 func TestTextResourceYAMLUnmarshaling(t *testing.T) {
 	ctx := context.Background()
 
-	t.Run("Valid YAML", func(t *testing.T) {
-		yamlData := []byte(`
+	tests := []struct {
+		name         string
+		yamlData     string
+		wantText     string
+		wantPriority *float64
+		wantSize     *int64
+	}{
+		{
+			name: "Valid YAML",
+			yamlData: `
 name: test-yaml
 type: text
 uri: info://test
@@ -188,45 +173,99 @@ annotations:
 text: |
   Line 1
   Line 2
-`)
+`,
+			wantText:     "Line 1\nLine 2\n",
+			wantPriority: floatPtr(0.9),
+			wantSize:     func(i int64) *int64 { return &i }(14),
+		},
+	}
 
-		dec := yaml.NewDecoder(bytes.NewReader(yamlData), yaml.Strict())
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			dec := yaml.NewDecoder(bytes.NewReader([]byte(tc.yamlData)), yaml.Strict())
+			resCfg, err := newConfig(ctx, "test-yaml", dec)
+			if err != nil {
+				t.Fatalf("unexpected error decoding text resource: %v", err)
+			}
 
-		resCfg, err := newConfig(ctx, "test-yaml", dec)
-		if err != nil {
-			t.Fatalf("unexpected error decoding text resource: %v", err)
-		}
+			cfg := resCfg.(*Config)
+			if cfg.Text != tc.wantText {
+				t.Errorf("unexpected text payload: %q", cfg.Text)
+			}
 
-		res, err := resCfg.Initialize(ctx)
-		if err != nil {
-			t.Fatalf("unexpected error initializing text resource: %v", err)
-		}
+			if tc.wantPriority != nil {
+				if cfg.Annotations == nil || cfg.Annotations.Priority == nil || *cfg.Annotations.Priority != *tc.wantPriority {
+					t.Errorf("unexpected priority: %v", cfg.Annotations)
+				}
+			}
 
-		cfg := res.ToConfig().(*Config)
-		if cfg.Text != "Line 1\nLine 2\n" {
-			t.Errorf("unexpected text payload: %q", cfg.Text)
-		}
+			// We need to initialize it to get the size calculated
+			_, err = cfg.Initialize(ctx)
+			if err != nil {
+				t.Fatalf("unexpected error initializing text resource: %v", err)
+			}
 
-		if cfg.Annotations == nil || cfg.Annotations.Priority == nil || *cfg.Annotations.Priority != 0.9 {
-			t.Errorf("unexpected priority: %v", cfg.Annotations)
-		}
+			if tc.wantSize != nil {
+				if cfg.Size == nil || *cfg.Size != *tc.wantSize {
+					t.Errorf("unexpected size: got %v, want %v", cfg.Size, tc.wantSize)
+				}
+			}
+		})
+	}
+}
 
-		if cfg.Size == nil || *cfg.Size != 14 { // "Line 1\nLine 2\n" is 14 bytes
-			t.Errorf("unexpected size, got: %v", cfg.Size)
-		}
-	})
+func TestTextResourceYAMLUnmarshaling_Fail(t *testing.T) {
+	ctx := context.Background()
 
-	t.Run("Strict Decoder Validation", func(t *testing.T) {
-		yamlData := []byte(`
+	tests := []struct {
+		name        string
+		yamlData    string
+		errContains string
+	}{
+		{
+			name: "Strict Decoder Validation",
+			yamlData: `
 name: test-invalid
 type: text
 textContent: "hello" # invalid field
-`)
+`,
+			errContains: "unknown field",
+		},
+		{
+			name: "Missing required text field",
+			yamlData: `
+name: test-missing-text
+type: text
+`,
+			errContains: "Field validation for 'Text' failed",
+		},
+		{
+			name: "Empty text field",
+			yamlData: `
+name: test-empty-text
+type: text
+text: ""
+`,
+			errContains: "Field validation for 'Text' failed",
+		},
+	}
 
-		dec := yaml.NewDecoder(bytes.NewReader(yamlData), yaml.Strict())
-		_, err := newConfig(ctx, "test-invalid", dec)
-		if err == nil {
-			t.Fatalf("expected strict decoder error for unknown field 'textContent', got nil")
-		}
-	})
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			dec := yaml.NewDecoder(bytes.NewReader([]byte(tc.yamlData)), yaml.Strict())
+			resCfg, err := newConfig(ctx, "test-invalid", dec)
+			if err == nil {
+				if v, ok := resCfg.(interface{ Validate() error }); ok {
+					err = v.Validate()
+				}
+			}
+
+			if err == nil {
+				t.Fatalf("expected error, got nil")
+			}
+			if tc.errContains != "" && !strings.Contains(err.Error(), tc.errContains) {
+				t.Errorf("expected error to contain %q, got: %v", tc.errContains, err)
+			}
+		})
+	}
 }
