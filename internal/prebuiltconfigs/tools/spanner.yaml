@@ -30,7 +30,7 @@ kind: tool
 name: execute_sql_readonly
 type: spanner-execute-sql
 source: spanner-source
-description: Use this for information_schema table queries as well as any other read only queries.
+description: Use this for information_schema table queries as well as any other read only queries. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
 readOnly: true
 ---
 kind: tool
