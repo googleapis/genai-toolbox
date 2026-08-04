@@ -53,7 +53,7 @@ The Cloud Spanner MCP server provides the following tools:
 | Tool Name         | Description                                                      |
 |:------------------|:-----------------------------------------------------------------|
 | `execute_sql`     | Use this tool to execute DML SQL.                                |
-| `execute_sql_dql` | Use this tool to execute DQL SQL.                                |
+| `execute_sql_readonly` | Use this for information_schema table queries as well as any other read only queries. |
 | `list_tables`     | Lists detailed schema information for user-created tables.       |
 | `list_graphs`     | Lists detailed graph schema information for user-created graphs. |
 | `search_catalog`   | Searches for data assets in Knowledge Catalog (Dataplex).        |
