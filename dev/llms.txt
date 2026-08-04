@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-04T12:23:39Z
+**GENERATED ON:** 2026-08-04T19:14:23Z
 
 ---
 ### System Directives for AI Models
@@ -1034,6 +1034,9 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [looker-create-agent Tool](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-create-agent/): "looker-create-agent" creates a Looker Conversation Analytics agent.
 
 
+      - [looker-create-dashboard-layout](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-create-dashboard-layout/): "looker-create-dashboard-layout" creates a new dashboard layout (tab).
+
+
       - [looker-create-project-directory](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-create-project-directory/): A "looker-create-project-directory" tool creates a new directory in a LookML project.
 
 
@@ -1071,6 +1074,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [looker-get-connections](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-connections/): A "looker-get-connections" tool returns all the connections in the source.
+
+
+      - [looker-get-dashboard](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-dashboard/): "looker-get-dashboard" retrieves the JSON design of a Looker dashboard.
 
 
       - [looker-get-dashboards](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-dashboards/): "looker-get-dashboards" tool searches for a saved Dashboard by name or description.
@@ -1146,6 +1152,12 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [looker-update-agent Tool](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-agent/): "looker-update-agent" updates a Looker Conversation Analytics agent.
+
+
+      - [looker-update-dashboard-element](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-dashboard-element/): "looker-update-dashboard-element" updates an existing element in a Looker dashboard.
+
+
+      - [looker-update-dashboard-layout-component](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-dashboard-layout-component/): "looker-update-dashboard-layout-component" updates a dashboard layout component.
 
 
       - [looker-update-project-file](https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-project-file/): A "looker-update-project-file" tool updates the content of a LookML file in a project.

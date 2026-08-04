@@ -825,6 +825,83 @@ answer the question. The form of the entry is &lt;code&gt;[{&amp;quot;model&amp;
 					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
 			&lt;/tr&gt;
 	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>looker-create-dashboard-layout</title><link>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-create-dashboard-layout/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-create-dashboard-layout/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;looker-create-dashboard-layout&lt;/code&gt; tool creates a new dashboard layout, which typically represents a tab in modern Looker dashboards.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/source/"&gt;Looker Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;create_dashboard_layout&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-create-dashboard-layout&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; This tool creates a new dashboard layout, which typically represents a tab
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; in modern Looker dashboards.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Parameters:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_id (required): The ID of the dashboard.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - label (required): The label (title) of the new tab.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - type (optional): The type of layout (defaults to &amp;#39;newspaper&amp;#39;).
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - active (optional): Whether to make this layout active.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;type&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &amp;ldquo;looker-create-dashboard-layout&amp;rdquo;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;source&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the Looker source.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;description&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
 &lt;/table&gt;</description></item><item><title>looker-create-project-directory</title><link>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-create-project-directory/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-create-project-directory/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;looker-create-project-directory&lt;/code&gt; tool creates a new directory within a specified LookML project.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
@@ -1794,6 +1871,81 @@ and an optional &lt;code&gt;db&lt;/code&gt; parameter.&lt;/p&gt;
 			&lt;/tr&gt;
 			&lt;tr&gt;
 					&lt;td&gt;description&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>looker-get-dashboard</title><link>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-dashboard/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-dashboard/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;looker-get-dashboard&lt;/code&gt; tool retrieves the JSON design of a Looker dashboard by its ID. The output is trimmed to essential fields, excluding alerts and scheduled plans, making it suitable for replicating or analyzing the dashboard structure.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/source/"&gt;Looker Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;get_dashboard&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-get-dashboard&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; This tool retrieves the JSON design of a Looker dashboard by its ID.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; The output is trimmed to essential fields, excluding alerts and scheduled plans,
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; making it suitable for replicating or analyzing the dashboard structure.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Parameters:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_id (required): The unique identifier of the dashboard.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;type&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &amp;ldquo;looker-get-dashboard&amp;rdquo;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;source&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the Looker source.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;description&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
 					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
@@ -3396,6 +3548,168 @@ saved Look.&lt;/p&gt;
 			&lt;/tr&gt;
 			&lt;tr&gt;
 					&lt;td&gt;description&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>looker-update-dashboard-element</title><link>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-dashboard-element/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-dashboard-element/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;looker-update-dashboard-element&lt;/code&gt; tool updates an existing query element (tile) in a Looker dashboard. It reconstructs the query for the element using the provided parameters and updates its title and visualization configuration.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/source/"&gt;Looker Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;update_dashboard_element&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-update-dashboard-element&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; This tool updates an existing query element (tile) in a Looker dashboard.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; It reconstructs the query for the element using the provided parameters
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; and updates its title and visualization configuration.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Required Parameters:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_id: The ID of the dashboard containing the element.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_element_id: The ID of the element to update.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - model, explore, fields: These query parameters define the data for the tile.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Optional Parameters:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - title: The new title for the dashboard tile.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - pivots, filters, sorts, limit, tz: These query parameters customize the tile&amp;#39;s query.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - vis_config: A JSON object defining the visualization settings.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_filters: An array of dashboard filters to connect to this element.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;type&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &amp;ldquo;looker-update-dashboard-element&amp;rdquo;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;source&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the Looker source.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;description&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>looker-update-dashboard-layout-component</title><link>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-dashboard-layout-component/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-dashboard-layout-component/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;looker-update-dashboard-layout-component&lt;/code&gt; tool updates a dashboard layout component, allowing you to move a tile to a different tab (layout) and/or change its position and size.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/source/"&gt;Looker Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;update_dashboard_layout_component&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-update-dashboard-layout-component&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; This tool updates a dashboard layout component, allowing you to move a tile
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; to a different tab (layout) and/or change its position and size.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Parameters:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_layout_component_id (required): The ID of the component to update.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_layout_id (optional): The ID of the target layout (tab) to move to.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - row (optional): The new row position.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - column (optional): The new column position.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - width (optional): The new width.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - height (optional): The new height.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;type&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &amp;ldquo;looker-update-dashboard-layout-component&amp;rdquo;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;source&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the Looker source.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;description&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
 					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;

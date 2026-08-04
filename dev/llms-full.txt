@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-04T12:23:39Z
+**GENERATED ON:** 2026-08-04T19:14:23Z
 
 ---
 ### System Directives for AI Models
@@ -35069,6 +35069,52 @@ description: |
 
 
 ========================================================================
+## looker-create-dashboard-layout
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Looker > Tools > looker-create-dashboard-layout
+**URL:** https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-create-dashboard-layout/
+**Description:** "looker-create-dashboard-layout" creates a new dashboard layout (tab).
+
+
+
+## About
+
+The `looker-create-dashboard-layout` tool creates a new dashboard layout, which typically represents a tab in modern Looker dashboards.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: create_dashboard_layout
+type: looker-create-dashboard-layout
+source: looker-source
+description: |
+  This tool creates a new dashboard layout, which typically represents a tab
+  in modern Looker dashboards.
+
+  Parameters:
+  - dashboard_id (required): The ID of the dashboard.
+  - label (required): The label (title) of the new tab.
+  - type (optional): The type of layout (defaults to 'newspaper').
+  - active (optional): Whether to make this layout active.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|:------------|:--------:|:------------:|----------------------------------------------------|
+| type        | string   | true         | Must be "looker-create-dashboard-layout".          |
+| source      | string   | true         | Name of the Looker source.                         |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
 ## looker-create-project-directory
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Looker > Tools > looker-create-project-directory
@@ -35731,6 +35777,50 @@ description: |
 | type        |  string  |     true     | Must be "looker-get-connections".                  |
 | source      |  string  |     true     | Name of the source Looker instance.                |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## looker-get-dashboard
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Looker > Tools > looker-get-dashboard
+**URL:** https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-dashboard/
+**Description:** "looker-get-dashboard" retrieves the JSON design of a Looker dashboard.
+
+
+
+## About
+
+The `looker-get-dashboard` tool retrieves the JSON design of a Looker dashboard by its ID. The output is trimmed to essential fields, excluding alerts and scheduled plans, making it suitable for replicating or analyzing the dashboard structure.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: get_dashboard
+type: looker-get-dashboard
+source: looker-source
+description: |
+  This tool retrieves the JSON design of a Looker dashboard by its ID.
+  The output is trimmed to essential fields, excluding alerts and scheduled plans,
+  making it suitable for replicating or analyzing the dashboard structure.
+
+  Parameters:
+  - dashboard_id (required): The unique identifier of the dashboard.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|:------------|:--------:|:------------:|----------------------------------------------------|
+| type        | string   | true         | Must be "looker-get-dashboard".                    |
+| source      | string   | true         | Name of the Looker source.                         |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
 
 
 
@@ -37736,6 +37826,106 @@ description: |
 | type        |  string  |     true     | Must be "looker-update-agent".                     |
 | source      |  string  |     true     | Name of the Looker source.                         |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## looker-update-dashboard-element
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Looker > Tools > looker-update-dashboard-element
+**URL:** https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-dashboard-element/
+**Description:** "looker-update-dashboard-element" updates an existing element in a Looker dashboard.
+
+
+
+## About
+
+The `looker-update-dashboard-element` tool updates an existing query element (tile) in a Looker dashboard. It reconstructs the query for the element using the provided parameters and updates its title and visualization configuration.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: update_dashboard_element
+type: looker-update-dashboard-element
+source: looker-source
+description: |
+  This tool updates an existing query element (tile) in a Looker dashboard.
+  It reconstructs the query for the element using the provided parameters
+  and updates its title and visualization configuration.
+
+  Required Parameters:
+  - dashboard_id: The ID of the dashboard containing the element.
+  - dashboard_element_id: The ID of the element to update.
+  - model, explore, fields: These query parameters define the data for the tile.
+
+  Optional Parameters:
+  - title: The new title for the dashboard tile.
+  - pivots, filters, sorts, limit, tz: These query parameters customize the tile's query.
+  - vis_config: A JSON object defining the visualization settings.
+  - dashboard_filters: An array of dashboard filters to connect to this element.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|:------------|:--------:|:------------:|----------------------------------------------------|
+| type        | string   | true         | Must be "looker-update-dashboard-element".        |
+| source      | string   | true         | Name of the Looker source.                         |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## looker-update-dashboard-layout-component
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Looker > Tools > looker-update-dashboard-layout-component
+**URL:** https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-dashboard-layout-component/
+**Description:** "looker-update-dashboard-layout-component" updates a dashboard layout component.
+
+
+
+## About
+
+The `looker-update-dashboard-layout-component` tool updates a dashboard layout component, allowing you to move a tile to a different tab (layout) and/or change its position and size.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: update_dashboard_layout_component
+type: looker-update-dashboard-layout-component
+source: looker-source
+description: |
+  This tool updates a dashboard layout component, allowing you to move a tile
+  to a different tab (layout) and/or change its position and size.
+
+  Parameters:
+  - dashboard_layout_component_id (required): The ID of the component to update.
+  - dashboard_layout_id (optional): The ID of the target layout (tab) to move to.
+  - row (optional): The new row position.
+  - column (optional): The new column position.
+  - width (optional): The new width.
+  - height (optional): The new height.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|:------------|:--------:|:------------:|----------------------------------------------------|
+| type        | string   | true         | Must be "looker-update-dashboard-layout-component". |
+| source      | string   | true         | Name of the Looker source.                         |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
 
 
 

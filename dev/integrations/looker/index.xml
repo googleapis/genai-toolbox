@@ -208,6 +208,22 @@ in the cloud, on GCP, or on premises.&lt;/p&gt;
  
  
  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
 
 
@@ -271,6 +287,12 @@ in the cloud, on GCP, or on premises.&lt;/p&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-create-agent/"&gt;&lt;strong&gt;looker-create-agent Tool&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;&amp;#34;looker-create-agent&amp;#34; creates a Looker Conversation Analytics agent.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-create-dashboard-layout/"&gt;&lt;strong&gt;looker-create-dashboard-layout&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;&amp;#34;looker-create-dashboard-layout&amp;#34; creates a new dashboard layout (tab).
 &lt;/td&gt;
  &lt;/tr&gt;
  
@@ -349,6 +371,12 @@ in the cloud, on GCP, or on premises.&lt;/p&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-connections/"&gt;&lt;strong&gt;looker-get-connections&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;looker-get-connections&amp;#34; tool returns all the connections in the source.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-dashboard/"&gt;&lt;strong&gt;looker-get-dashboard&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;&amp;#34;looker-get-dashboard&amp;#34; retrieves the JSON design of a Looker dashboard.
 &lt;/td&gt;
  &lt;/tr&gt;
  
@@ -499,6 +527,18 @@ in the cloud, on GCP, or on premises.&lt;/p&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-agent/"&gt;&lt;strong&gt;looker-update-agent Tool&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;&amp;#34;looker-update-agent&amp;#34; updates a Looker Conversation Analytics agent.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-dashboard-element/"&gt;&lt;strong&gt;looker-update-dashboard-element&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;&amp;#34;looker-update-dashboard-element&amp;#34; updates an existing element in a Looker dashboard.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-update-dashboard-layout-component/"&gt;&lt;strong&gt;looker-update-dashboard-layout-component&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;&amp;#34;looker-update-dashboard-layout-component&amp;#34; updates a dashboard layout component.
 &lt;/td&gt;
  &lt;/tr&gt;
  
