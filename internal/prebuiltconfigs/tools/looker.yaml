@@ -181,6 +181,9 @@ description: |
   - query_timezone: specific timezone for the query (e.g. `America/Los_Angeles`).
 
   Note: Use `get_dimensions`, `get_measures`, `get_filters`, and `get_parameters` to find valid fields.
+
+  Note: A single query can only target one explore. To combine fields from two or
+  more explores in one result, use the `create_merge_query` tool instead.
 ---
 kind: tool
 name: query_sql
@@ -655,6 +658,55 @@ description: |
   the long_url.
 ---
 kind: tool
+name: create_merge_query
+type: looker-create-merge-query
+source: looker-source
+description: |
+  This tool combines the results of two or more queries from different explores
+  into a single merged result, the API equivalent of Looker's "Merged Results".
+  The merge behaves like a SQL left outer join: the first source query is the
+  primary one, and the results of every later source query are joined onto it.
+
+  Required Parameters:
+  - source_queries: An array of at least two query definitions, one per explore.
+    Order matters — the first entry is the primary query. Each entry is a JSON
+    object with:
+    - model (required): The name of the LookML model (from `get_models`).
+    - explore (required): The name of the explore (from `get_explores`).
+    - fields (required): A list of field names to include in this source query.
+    - merge_fields (optional): How this source query lines up with the merged
+      results, as an array of `{"source_field_name": "<field of this source
+      query>", "field_name": "<field of the primary query it maps onto>"}`
+      objects. Not needed on the primary query. Every field used for joining
+      must also appear in `fields`.
+    - name (optional): A display name for this source query. Defaults to the
+      explore name.
+    - filters, pivots, sorts, limit, filter_expression, dynamic_fields, tz
+      (optional): The same meaning as the equivalent `query` tool parameters,
+      applied to this source query only.
+
+  Optional Parameters (applied to the merged results, not the source queries):
+  - pivots: A list of merged result fields to pivot by.
+  - sorts: A list of merged result fields to sort by (e.g., `["view.field desc"]`).
+  - limit: Row limit of the merged results (default 500).
+  - column_limit: Column limit of the merged results.
+  - total: Whether to include a totals row (default false).
+  - dynamic_fields: Table calculations, custom measures and custom dimensions
+    computed over the merged results, in the same format as the `query` tool.
+  - vis_config: A JSON object controlling the default visualization, in the same
+    format as the `query_url` tool's `vis_config`.
+
+  Output:
+  A JSON object with the merge query `id`, its `result_maker_id`, the
+  `source_queries` that were created (each with `name`, `model`, `explore`,
+  `query_id` and `slug`), and a `url` that opens the merged results in Looker.
+
+  Note: Looker has no API endpoint that runs a merge query, so this tool returns
+  the merge query and a URL to view it rather than rows of data. To get merged
+  data back into the conversation, run each source query with the `query` tool
+  and join the results yourself.
+---
+kind: tool
 name: get_looks
 type: looker-get-looks
 source: looker-source
@@ -866,6 +918,7 @@ tools:
 - query
 - query_sql
 - query_url
+- create_merge_query
 - get_looks
 - run_look
 - make_look

@@ -230,6 +230,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookerconversationalanalytics"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercreateagent"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercreategitbranch"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercreatemergequery"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercreateprojectdirectory"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercreateprojectfile"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercreateviewfromtable"

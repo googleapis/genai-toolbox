@@ -2073,7 +2073,7 @@ func TestPrebuiltTools(t *testing.T) {
 				"looker_tools": group.GroupConfig{
 					Name:        "looker_tools",
 					Description: "These skills are designed for data discovery and business intelligence.",
-					ToolNames:   []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "get_field_value_suggestions", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "add_dashboard_filter", "generate_embed_url"},
+					ToolNames:   []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "get_field_value_suggestions", "query", "query_sql", "query_url", "create_merge_query", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "add_dashboard_filter", "generate_embed_url"},
 				},
 			},
 		},

@@ -30,6 +30,7 @@ description: "Details of the Looker prebuilt configuration."
     *   `query`: Runs a query against the LookML model.
     *   `query_sql`: Generates the SQL for a query.
     *   `query_url`: Generates a URL for a query in Looker.
+    *   `create_merge_query`: Merges the results of queries from different explores.
     *   `get_looks`: Searches for saved looks.
     *   `run_look`: Runs the query associated with a look.
     *   `make_look`: Creates a new look.
