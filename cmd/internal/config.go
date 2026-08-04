@@ -217,12 +217,9 @@ func ConvertConfig(ctx context.Context, raw []byte) ([]byte, error) {
 			}
 			// check if value conversion to yaml.MapSlice successfully
 			if slice, ok := item.Value.(yaml.MapSlice); slices.Contains(nestedFormatKey, key) && ok {
-				// A toolset entry's body is a bare tool list rather than a map, so
-				// transformDocs needs to know the source key even though toolsets
-				// are emitted as groups. srcKey is kept for error messages, which
-				// should name the key the user actually wrote.
+				// srcKey is kept for error messages, which should name the key the
+				// user actually wrote rather than the flat kind it maps to.
 				srcKey := key
-				isToolset := key == "toolsets"
 				switch key {
 				case "authServices":
 					key = "authService"
@@ -232,18 +229,20 @@ func ConvertConfig(ctx context.Context, raw []byte) ([]byte, error) {
 					key = "embeddingModel"
 				case "tools":
 					key = "tool"
-				case "toolsets", "groups":
-					key = "group"
+				case "toolsets":
+					key = "toolset"
 				case "prompts":
 					key = "prompt"
+				case "groups":
+					key = "group"
 				}
-				transformed, err := transformDocs(ctx, key, isToolset, slice)
+				transformed, err := transformDocs(key, slice)
 				if err != nil {
 					return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, srcKey, err)
 				}
 				// encode per-doc
 				for _, doc := range transformed {
-					if err := encoder.Encode(doc); err != nil {
+					if err := encoder.Encode(migrateToolsetKind(ctx, doc)); err != nil {
 						return nil, err
 					}
 				}
@@ -265,16 +264,22 @@ func hasKindField(input yaml.MapSlice) bool {
 	return false
 }
 
-// migrateToolsetKind rewrites a top-level `kind: toolset` to `kind: group` in a
-// flat-format doc, preserving field order. Nested `toolsets:` blocks never reach
-// here; transformDocs rewrites those while flattening them. Docs of any other
-// kind are returned unchanged.
+// migrateToolsetKind rewrites `kind: toolset` to `kind: group`, preserving field
+// order, and returns docs of any other kind unchanged. Every doc passes through
+// here once it is in flat format, whether it started that way or was flattened
+// from a nested `toolsets:` block, so the two spellings cannot diverge.
+//
+// A toolset has no description of its own, so one written on a toolset is
+// dropped rather than promoted; publishing it would give a collection a
+// description it never declared. The drop is warned about rather than silent.
 func migrateToolsetKind(ctx context.Context, input yaml.MapSlice) yaml.MapSlice {
-	kindIndex := -1
+	kindIndex, descIndex := -1, -1
 	for i, item := range input {
-		if key, ok := item.Key.(string); ok && key == "kind" {
+		switch item.Key {
+		case "kind":
 			kindIndex = i
-			break
+		case "description":
+			descIndex = i
 		}
 	}
 	if kindIndex < 0 {
@@ -284,32 +289,21 @@ func migrateToolsetKind(ctx context.Context, input yaml.MapSlice) yaml.MapSlice 
 		return input
 	}
 
-	migrated := make(yaml.MapSlice, len(input))
-	copy(migrated, input)
-	migrated[kindIndex].Value = "group"
+	migrated := make(yaml.MapSlice, 0, len(input))
+	for i, item := range input {
+		if i == descIndex {
+			continue
+		}
+		if i == kindIndex {
+			item.Value = "group"
+		}
+		migrated = append(migrated, item)
+	}
 
-	migrated, dropped := dropDescription(migrated)
-	if dropped {
+	if descIndex >= 0 {
 		warnDescriptionDropped(ctx, mapSliceString(input, "name"))
 	}
 	return migrated
-}
-
-// dropDescription removes a top-level description field, reporting whether one
-// was present. A toolset has no description of its own, so a description
-// written on one is discarded rather than promoted when the toolset is
-// rewritten as a group; promoting it would start publishing a description for a
-// collection that never declared one.
-func dropDescription(items yaml.MapSlice) (yaml.MapSlice, bool) {
-	for i, item := range items {
-		if key, ok := item.Key.(string); ok && key == "description" {
-			filtered := make(yaml.MapSlice, 0, len(items)-1)
-			filtered = append(filtered, items[:i]...)
-			filtered = append(filtered, items[i+1:]...)
-			return filtered, true
-		}
-	}
-	return items, false
 }
 
 // mapSliceString returns the string value of key, or "" if absent.
@@ -334,18 +328,16 @@ func warnDescriptionDropped(ctx context.Context, name string) {
 	logger.WarnContext(ctx, fmt.Sprintf("toolset %q: dropping description, which a toolset does not support; declare the collection as `kind: group` to keep it", name))
 }
 
-// transformDocs transforms the configuration file from nested to flat format.
-// kind is the emitted flat kind; isToolset selects the toolset list-wrapping
-// behavior independently, since toolsets are emitted as groups. yaml.MapSlice
-// preserves map order.
-func transformDocs(ctx context.Context, kind string, isToolset bool, input yaml.MapSlice) ([]yaml.MapSlice, error) {
+// transformDocs transforms the configuration file from nested to flat format
+// yaml.MapSlice will preserve the order in a map
+func transformDocs(kind string, input yaml.MapSlice) ([]yaml.MapSlice, error) {
 	var transformed []yaml.MapSlice
 	for _, entry := range input {
 		entryName, ok := entry.Key.(string)
 		if !ok {
 			return nil, fmt.Errorf("unexpected non-string key for entry in '%s': %v", kind, entry.Key)
 		}
-		entryBody := processValue(entry.Value, isToolset)
+		entryBody := processValue(entry.Value, kind == "toolset")
 
 		currentTransformed := yaml.MapSlice{
 			{Key: "kind", Value: kind},
@@ -354,15 +346,6 @@ func transformDocs(ctx context.Context, kind string, isToolset bool, input yaml.
 
 		// Merge the transformed body into our result
 		if bodySlice, ok := entryBody.(yaml.MapSlice); ok {
-			// A toolset body given as a map can carry a description; the bare
-			// list form cannot. Drop it either way so both spellings convert
-			// to the same group.
-			if isToolset {
-				var dropped bool
-				if bodySlice, dropped = dropDescription(bodySlice); dropped {
-					warnDescriptionDropped(ctx, entryName)
-				}
-			}
 			currentTransformed = append(currentTransformed, bodySlice...)
 		} else {
 			return nil, fmt.Errorf("unable to convert entryBody to MapSlice")
