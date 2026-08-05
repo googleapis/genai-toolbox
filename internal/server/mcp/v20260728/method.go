@@ -96,6 +96,15 @@ func validateMetadata(id jsonrpc.RequestId, params RequestParams, stdio bool) (a
 	return nil, nil
 }
 
+// getSupportedExtensions parses client extensions from request metadata and returns the map
+// of extensions supported by both client and server.
+func getSupportedExtensions(meta *RequestMetaObject) map[string]any {
+	if meta == nil || meta.MetaClientCapabilities == nil {
+		return make(map[string]any)
+	}
+	return ParseSupportedExtensions(meta.MetaClientCapabilities.Extensions)
+}
+
 // validateHeader checks the header of every requests
 // Toolbox do not check for `Mcp-Param-{Name}` header since we are not
 // implementing custom headers from parameters
@@ -196,6 +205,7 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 		},
 		SupportedVersions: mcputil.GetSupportedVersions(enableDraft),
 		Capabilities: ServerCapabilities{
+			Extensions: ServerExtensions,
 			Tools: &ListChanged{
 				ListChanged: &toolsListChanged,
 			},
@@ -226,9 +236,10 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	if err != nil {
 		return validateErr, err
 	}
+	supportedExts := getSupportedExtensions(req.Params.Meta)
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams)
+	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams, supportedExts)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -272,6 +283,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	if err != nil {
 		return validateErr, err
 	}
+	_ = getSupportedExtensions(req.Params.Meta)
 
 	toolName := req.Params.Name
 	toolArgument := req.Params.Arguments
@@ -571,6 +583,7 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr 
 	if err != nil {
 		return validateErr, err
 	}
+	_ = getSupportedExtensions(req.Params.Meta)
 
 	listPromptsResult, err := GenerateListPromptsResult(primitiveMgr, g)
 	if err != nil {
@@ -754,6 +767,7 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	if err != nil {
 		return validateErr, err
 	}
+	supportedExts := getSupportedExtensions(req.Params.Meta)
 
 	groupName := req.Params.Name
 	logger.DebugContext(ctx, fmt.Sprintf("group name: %s", groupName))
@@ -776,7 +790,7 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams)
+	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams, supportedExts)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}

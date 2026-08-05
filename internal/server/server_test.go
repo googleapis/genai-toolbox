@@ -47,6 +47,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	v20260728 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20260728"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
@@ -1978,5 +1979,74 @@ func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
 	expectedOrder := []string{"apple", "banana", "zoo"}
 	if diff := cmp.Diff(expectedOrder, defaultToolset.ToolNames); diff != "" {
 		t.Errorf("default toolset ToolNames mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestNewServer_Extensions(t *testing.T) {
+	orig := v20260728.SupportedExtensions
+	t.Cleanup(func() {
+		v20260728.SupportedExtensions = orig
+	})
+	v20260728.SupportedExtensions = []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"}
+
+	ctx := context.Background()
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	tests := []struct {
+		name       string
+		disableExt []string
+		want       []string
+	}{
+		{
+			name:       "default enables all supported extensions",
+			disableExt: nil,
+			want:       []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"},
+		},
+		{
+			name:       "disable one extension",
+			disableExt: []string{"io.modelcontextprotocol/tasks"},
+			want:       []string{"com.google.cloud/toolbox.v1"},
+		},
+		{
+			name:       "disable all supported extensions",
+			disableExt: []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"},
+			want:       nil,
+		},
+		{
+			name:       "empty strings or unknown extensions in disableExt ignored",
+			disableExt: []string{"", "com.example/unknown"},
+			want:       []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := server.ServerConfig{
+				DisableExt: tt.disableExt,
+			}
+			_, err := server.NewServer(ctx, cfg)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			var got []string
+			for k := range v20260728.ServerExtensions {
+				got = append(got, k)
+			}
+			slices.Sort(got)
+			slices.Sort(tt.want)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("v20260728.ServerExtensions keys = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

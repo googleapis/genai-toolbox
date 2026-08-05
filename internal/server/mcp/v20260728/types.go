@@ -118,7 +118,9 @@ type ResultMetaObject struct {
 // client can define its own, additional capabilities.
 type ClientCapabilities struct {
 	// Experimental, non-standard capabilities that the client supports.
-	Experimental map[string]interface{} `json:"experimental,omitempty"`
+	Experimental map[string]any `json:"experimental,omitempty"`
+	// Standard extensions that the client supports.
+	Extensions map[string]any `json:"extensions,omitempty"`
 	// Present if the client supports listing roots.
 	Roots *ListChanged `json:"roots,omitempty"`
 	// Present if the client supports sampling from an LLM.
@@ -185,8 +187,9 @@ type Implementation struct {
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // server can define its own, additional capabilities.
 type ServerCapabilities struct {
-	Tools   *ListChanged `json:"tools,omitempty"`
-	Prompts *ListChanged `json:"prompts,omitempty"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
+	Tools      *ListChanged           `json:"tools,omitempty"`
+	Prompts    *ListChanged           `json:"prompts,omitempty"`
 }
 
 // ListChange represents whether the server supports notification for changes to the capabilities.
