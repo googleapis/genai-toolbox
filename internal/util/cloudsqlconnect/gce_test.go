@@ -15,7 +15,6 @@
 package cloudsqlconnect
 
 import (
-	"strings"
 	"testing"
 )
 
