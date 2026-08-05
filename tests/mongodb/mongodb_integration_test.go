@@ -21,35 +21,50 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
+	tcmongodb "github.com/testcontainers/testcontainers-go/modules/mongodb"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var (
-	MongoDbSourceType   = "mongodb"
-	MongoDbToolType     = "mongodb-find"
-	MongoDbUri          = os.Getenv("MONGODB_URI")
-	MongoDbDatabase     = os.Getenv("MONGODB_DATABASE")
-	ServiceAccountEmail = os.Getenv("SERVICE_ACCOUNT_EMAIL")
+	MongoDbSourceType = "mongodb"
+	MongoDbToolType   = "mongodb-find"
+	MongoDbDatabase   = "testdb"
 )
 
-func getMongoDBVars(t *testing.T) map[string]any {
-	switch "" {
-	case MongoDbUri:
-		t.Fatal("'MongoDbUri' not set")
-	case MongoDbDatabase:
-		t.Fatal("'MongoDbDatabase' not set")
+func setupMongoDBContainer(ctx context.Context, t *testing.T) (string, func()) {
+	t.Helper()
+
+	mongodbContainer, err := tcmongodb.Run(ctx, "mongo:6")
+	if err != nil {
+		t.Fatalf("failed to start mongodb container: %s", err)
 	}
+
+	cleanup := func() {
+		if err := mongodbContainer.Terminate(ctx); err != nil {
+			t.Logf("failed to terminate mongodb container: %s", err)
+		}
+	}
+
+	endpoint, err := mongodbContainer.ConnectionString(ctx)
+	if err != nil {
+		cleanup()
+		t.Fatalf("failed to get mongodb connection string: %s", err)
+	}
+
+	return endpoint, cleanup
+}
+
+func getMongoDBVars(uri string) map[string]any {
 	return map[string]any{
 		"type": MongoDbSourceType,
-		"uri":  MongoDbUri,
+		"uri":  uri,
 	}
 }
 
@@ -67,13 +82,17 @@ func initMongoDbDatabase(ctx context.Context, uri, database string) (*mongo.Data
 }
 
 func TestMongoDBToolEndpoints(t *testing.T) {
-	sourceConfig := getMongoDBVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
+
+	uri, cleanupContainer := setupMongoDBContainer(ctx, t)
+	defer cleanupContainer()
+
+	sourceConfig := getMongoDBVars(uri)
 
 	args := []string{"--enable-api"}
 
-	database, err := initMongoDbDatabase(ctx, MongoDbUri, MongoDbDatabase)
+	database, err := initMongoDbDatabase(ctx, uri, MongoDbDatabase)
 	if err != nil {
 		t.Fatalf("unable to create MongoDB connection: %s", err)
 	}
@@ -452,7 +471,7 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 	}
 
 	documents := []map[string]any{
-		{"_id": 1, "id": 1, "name": "Alice", "email": ServiceAccountEmail},
+		{"_id": 1, "id": 1, "name": "Alice", "email": tests.ServiceAccountEmail},
 		{"_id": 14, "id": 2, "name": "FakeAlice", "email": "fakeAlice@gmail.com"},
 		{"_id": 2, "id": 2, "name": "Jane"},
 		{"_id": 3, "id": 3, "name": "Sid"},
