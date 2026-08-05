@@ -187,9 +187,9 @@ type Implementation struct {
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // server can define its own, additional capabilities.
 type ServerCapabilities struct {
-	Extensions map[string]interface{} `json:"extensions,omitempty"`
-	Tools      *ListChanged           `json:"tools,omitempty"`
-	Prompts    *ListChanged           `json:"prompts,omitempty"`
+	Extensions map[string]any `json:"extensions,omitempty"`
+	Tools      *ListChanged   `json:"tools,omitempty"`
+	Prompts    *ListChanged   `json:"prompts,omitempty"`
 }
 
 // ListChange represents whether the server supports notification for changes to the capabilities.

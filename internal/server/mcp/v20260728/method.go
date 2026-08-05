@@ -227,6 +227,7 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	if err != nil {
 		return validateErr, err
 	}
+
 	urlParams, _ := util.UrlParamsFromContext(ctx)
 	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams)
 	if err != nil {
