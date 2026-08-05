@@ -17,7 +17,7 @@ package v20260728
 import "slices"
 
 // SupportedExtensions lists all MCP extension URIs supported by Toolbox by default.
-var SupportedExtensions = []string{}
+var SupportedExtensions = map[string]any{}
 
 // ServerExtensions is the map of extension URIs enabled on this server.
 var ServerExtensions map[string]any
@@ -29,29 +29,21 @@ func Initialize(disabledExts []string) {
 
 // InitializeExtensions configures the active ServerExtensions map based on disabled extensions.
 func InitializeExtensions(disabledExts []string) {
-	var enabled []string
-	for _, ext := range SupportedExtensions {
+	ServerExtensions = make(map[string]any)
+	for ext, extConfig := range SupportedExtensions {
 		if ext != "" && !slices.Contains(disabledExts, ext) {
-			enabled = append(enabled, ext)
+			ServerExtensions[ext] = extConfig
 		}
-	}
-
-	ServerExtensions = make(map[string]any, len(enabled))
-	for _, uri := range enabled {
-		ServerExtensions[uri] = map[string]any{}
 	}
 }
 
 // ParseSupportedExtensions returns a map of extension URIs that are supported by both the client and the server.
 func ParseSupportedExtensions(clientExtensions map[string]any) map[string]any {
 	supported := make(map[string]any)
-	if len(clientExtensions) == 0 {
+	if len(clientExtensions) == 0 || len(ServerExtensions) == 0 {
 		return supported
 	}
 	for uri, clientExtVal := range clientExtensions {
-		if clientExtVal == nil {
-			continue
-		}
 		if _, ok := ServerExtensions[uri]; ok {
 			supported[uri] = clientExtVal
 		}

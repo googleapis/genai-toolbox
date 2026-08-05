@@ -1987,7 +1987,7 @@ func TestNewServer_Extensions(t *testing.T) {
 	t.Cleanup(func() {
 		v20260728.SupportedExtensions = orig
 	})
-	v20260728.SupportedExtensions = []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"}
+	v20260728.SupportedExtensions = map[string]any{"com.google.cloud/toolbox.v1": map[string]any{}, "io.modelcontextprotocol/tasks": map[string]any{}}
 
 	ctx := context.Background()
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")

@@ -28,7 +28,7 @@ func TestParseSupportedExtensions(t *testing.T) {
 	tests := []struct {
 		name        string
 		extensions  map[string]any
-		serverExts  []string
+		serverExts  map[string]any
 		expectedUri string
 		expectedVal bool
 	}{
@@ -53,7 +53,7 @@ func TestParseSupportedExtensions(t *testing.T) {
 			extensions: map[string]any{
 				testExtURI: map[string]any{"setting": "val"},
 			},
-			serverExts:  []string{testExtURI},
+			serverExts:  map[string]any{testExtURI: map[string]any{}},
 			expectedUri: testExtURI,
 			expectedVal: true,
 		},
@@ -62,16 +62,25 @@ func TestParseSupportedExtensions(t *testing.T) {
 			extensions: map[string]any{
 				testExtURI: map[string]any{},
 			},
-			serverExts:  []string{"other-extension"},
+			serverExts:  map[string]any{"other-extension": map[string]any{}},
 			expectedUri: testExtURI,
 			expectedVal: false,
 		},
 		{
-			name: "nil value ignored",
+			name: "nil value in client extensions",
 			extensions: map[string]any{
 				testExtURI: nil,
 			},
 			serverExts:  nil,
+			expectedUri: testExtURI,
+			expectedVal: true,
+		},
+		{
+			name: "server extensions empty",
+			extensions: map[string]any{
+				testExtURI: map[string]any{},
+			},
+			serverExts:  map[string]any{},
 			expectedUri: testExtURI,
 			expectedVal: false,
 		},
@@ -86,7 +95,7 @@ func TestParseSupportedExtensions(t *testing.T) {
 			if tc.serverExts != nil {
 				SupportedExtensions = tc.serverExts
 			} else {
-				SupportedExtensions = []string{testExtURI}
+				SupportedExtensions = map[string]any{testExtURI: map[string]any{}}
 			}
 			InitializeExtensions(nil)
 			exts := ParseSupportedExtensions(tc.extensions)

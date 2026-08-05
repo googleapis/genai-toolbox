@@ -1222,25 +1222,3 @@ func TestGetResultMetadata(t *testing.T) {
 		})
 	}
 }
-
-func TestGetSupportedExtensions(t *testing.T) {
-	orig := ServerExtensions
-	t.Cleanup(func() {
-		ServerExtensions = orig
-	})
-	ServerExtensions = map[string]any{
-		"com.google.cloud/test-ext": map[string]any{},
-	}
-
-	meta := &RequestMetaObject{
-		MetaClientCapabilities: &ClientCapabilities{
-			Extensions: map[string]any{
-				"com.google.cloud/test-ext": true,
-			},
-		},
-	}
-	supportedExts := getSupportedExtensions(meta)
-	if !SupportsExtension(supportedExts, "com.google.cloud/test-ext") {
-		t.Errorf("expected extension com.google.cloud/test-ext to be supported")
-	}
-}
