@@ -47,7 +47,7 @@ func setupMongoDBContainer(ctx context.Context, t *testing.T) (string, func()) {
 	}
 
 	cleanup := func() {
-		if err := mongodbContainer.Terminate(ctx); err != nil {
+		if err := mongodbContainer.Terminate(context.Background()); err != nil {
 			t.Logf("failed to terminate mongodb container: %s", err)
 		}
 	}
