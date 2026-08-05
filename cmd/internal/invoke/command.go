@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
+	"github.com/googleapis/mcp-toolbox/internal/piipolicy"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -65,14 +66,14 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 	}
 
 	// Initialize Resources
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, err := server.InitializeConfigs(ctx, opts.Cfg)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, piiPoliciesMap, err := server.InitializeConfigs(ctx, opts.Cfg)
 	if err != nil {
 		errMsg := fmt.Errorf("failed to initialize resources: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 
-	primitiveMgr := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap)
+	primitiveMgr := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, piiPoliciesMap)
 
 	// Execute Tool
 	toolName := args[0]
@@ -153,6 +154,17 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		errMsg := fmt.Errorf("tool execution failed: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
+	}
+
+	if policyName := tool.GetPiiPolicy(); policyName != "" {
+		if policy, ok := primitiveMgr.GetPiiPolicy(policyName); ok {
+			result, err = piipolicy.ApplyPolicy(ctx, policy, nil, result)
+			if err != nil {
+				errMsg := fmt.Errorf("failed to apply pii policy: %w", err)
+				opts.Logger.ErrorContext(ctx, errMsg.Error())
+				return errMsg
+			}
+		}
 	}
 
 	// Print Result

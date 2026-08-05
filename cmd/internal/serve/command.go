@@ -34,6 +34,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 		Long:  "Deploy the toolbox server",
 	}
 	flags := cmd.Flags()
+	internal.ConfigFileFlags(cmd, flags, opts)
 	internal.ServeFlags(flags, opts)
 	cmd.RunE = func(*cobra.Command, []string) error { return runServe(cmd, opts) }
 	return cmd

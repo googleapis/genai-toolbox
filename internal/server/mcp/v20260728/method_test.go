@@ -417,7 +417,7 @@ func TestToolsListHandler(t *testing.T) {
 	// Initialize tools using provided testutils mock instances
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups, nil)
 
 	tests := []struct {
 		name        string
@@ -561,7 +561,7 @@ func TestToolsCallHandler(t *testing.T) {
 		testutils.MockTool5,
 	}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups, nil)
 
 	tests := []struct {
 		name        string
@@ -724,7 +724,7 @@ func TestPromptsListHandler(t *testing.T) {
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, nil, mockPrompts)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups, nil)
 	tests := []struct {
 		name        string
 		body        ListPromptsRequest
@@ -809,7 +809,7 @@ func TestPromptsGetHandler(t *testing.T) {
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, nil, mockPrompts)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups, nil)
 	tests := []struct {
 		name        string
 		body        GetPromptRequest
@@ -941,7 +941,7 @@ func TestGroupsListHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups, nil)
 
 	validMeta := &RequestMetaObject{
 		ProtocolVersion: PROTOCOL_VERSION,
@@ -1041,7 +1041,7 @@ func TestGroupsGetHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups, nil)
 
 	validMeta := &RequestMetaObject{
 		ProtocolVersion: PROTOCOL_VERSION,

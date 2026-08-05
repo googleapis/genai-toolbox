@@ -128,6 +128,7 @@ type Tool interface {
 	GetDescription() string
 	GetAuthRequired() []string
 	GetAnnotations() *ToolAnnotations
+	GetPiiPolicy() string
 	Invoke(context.Context, sources.Source, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, PrimitiveManagerI) (parameters.ParamValues, error)
 	Manifest(sources.Source) (Manifest, error)
@@ -177,6 +178,7 @@ type ToolMeta interface {
 	GetDescription() string
 	GetAuthRequired() []string
 	GetScopesRequired() []string
+	GetPiiPolicy() string
 }
 
 // ConfigBase owns the YAML fields that every tool's Config shares and that
@@ -189,12 +191,14 @@ type ConfigBase struct {
 	Description    string   `yaml:"description"`
 	AuthRequired   []string `yaml:"authRequired"`
 	ScopesRequired []string `yaml:"scopesRequired"`
+	PiiPolicy      string   `yaml:"piiPolicy"`
 }
 
 func (c ConfigBase) GetName() string             { return c.Name }
 func (c ConfigBase) GetDescription() string      { return c.Description }
 func (c ConfigBase) GetAuthRequired() []string   { return c.AuthRequired }
 func (c ConfigBase) GetScopesRequired() []string { return c.ScopesRequired }
+func (c ConfigBase) GetPiiPolicy() string        { return c.PiiPolicy }
 
 // BaseTool provides default implementations of various methods on the Tool
 // interface. Tools embed BaseTool to drop their boilerplate and override
@@ -222,6 +226,7 @@ func (b BaseTool[T]) GetName() string                  { return b.Cfg.GetName() 
 func (b BaseTool[T]) GetDescription() string           { return b.Cfg.GetDescription() }
 func (b BaseTool[T]) GetAuthRequired() []string        { return b.Cfg.GetAuthRequired() }
 func (b BaseTool[T]) GetScopesRequired() []string      { return b.Cfg.GetScopesRequired() }
+func (b BaseTool[T]) GetPiiPolicy() string             { return b.Cfg.GetPiiPolicy() }
 func (b BaseTool[T]) GetAnnotations() *ToolAnnotations { return b.annotations }
 
 // Manifest returns the precomputed metadata. It and GetParameters stay trivial
