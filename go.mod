@@ -62,6 +62,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/cockroachdb v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/couchbase v0.43.0
+	github.com/testcontainers/testcontainers-go/modules/mongodb v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/scylladb v0.43.0
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/trinodb/trino-go-client v0.333.0
@@ -243,7 +244,6 @@ require (
 	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
-	github.com/testcontainers/testcontainers-go/modules/mongodb v0.43.0 // indirect
 	github.com/tidwall/gjson v1.17.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
