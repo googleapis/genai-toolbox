@@ -272,13 +272,15 @@ func hasKindField(input yaml.MapSlice) bool {
 // toolset has none of its own, so publishing it would give the collection a
 // description it never declared.
 func migrateToolsetKind(ctx context.Context, input yaml.MapSlice) yaml.MapSlice {
-	kindIndex, descIndex := -1, -1
+	kindIndex, descIndex, nameIndex := -1, -1, -1
 	for i, item := range input {
 		switch item.Key {
 		case "kind":
 			kindIndex = i
 		case "description":
 			descIndex = i
+		case "name":
+			nameIndex = i
 		}
 	}
 	if kindIndex < 0 {
@@ -288,43 +290,25 @@ func migrateToolsetKind(ctx context.Context, input yaml.MapSlice) yaml.MapSlice 
 		return input
 	}
 
-	migrated := make(yaml.MapSlice, 0, len(input))
-	for i, item := range input {
-		if i == descIndex {
-			continue
-		}
-		if i == kindIndex {
-			item.Value = "group"
-		}
-		migrated = append(migrated, item)
-	}
-
+	// Copy before rewriting: ConvertConfig hands us the slice it is still
+	// ranging over, so editing input in place would shift elements out from
+	// under that loop.
+	migrated := slices.Clone(input)
+	migrated[kindIndex].Value = "group"
 	if descIndex >= 0 {
-		warnDescriptionDropped(ctx, mapSliceString(input, "name"))
+		migrated = slices.Delete(migrated, descIndex, descIndex+1)
+
+		var name string
+		if nameIndex >= 0 {
+			name, _ = input[nameIndex].Value.(string)
+		}
+		// Warning is best effort: a caller without a logger in context still
+		// gets the conversion.
+		if logger, err := util.LoggerFromContext(ctx); err == nil {
+			logger.WarnContext(ctx, fmt.Sprintf("toolset %q: dropping description, which a toolset does not support; declare the collection as `kind: group` to keep it", name))
+		}
 	}
 	return migrated
-}
-
-// mapSliceString returns the string value of key, or "" if absent.
-func mapSliceString(items yaml.MapSlice, key string) string {
-	for _, item := range items {
-		if k, ok := item.Key.(string); ok && k == key {
-			if v, ok := item.Value.(string); ok {
-				return v
-			}
-		}
-	}
-	return ""
-}
-
-// warnDescriptionDropped reports a discarded toolset description. Warning is
-// best effort: a caller without a logger in context still gets the conversion.
-func warnDescriptionDropped(ctx context.Context, name string) {
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return
-	}
-	logger.WarnContext(ctx, fmt.Sprintf("toolset %q: dropping description, which a toolset does not support; declare the collection as `kind: group` to keep it", name))
 }
 
 // transformDocs transforms the configuration file from nested to flat format
