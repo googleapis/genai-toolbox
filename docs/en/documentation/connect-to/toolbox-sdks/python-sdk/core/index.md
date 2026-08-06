@@ -87,6 +87,10 @@ For advanced use cases, you can provide an external `aiohttp.ClientSession` duri
 Closing the `ToolboxClient` also closes the underlying network session shared by all tools loaded from that client. As a result, any tool instances you have loaded will cease to function and will raise an error if you attempt to invoke them after the client is closed.
 {{< /notice >}}
 
+{{< notice note >}}
+If your connection URL contains query parameters (e.g., `http://localhost:5000?foo=bar`), the client automatically preserves them across API requests for parameter binding.
+{{< /notice >}}
+
 ## Transport Protocols
 
 The SDK supports multiple transport protocols for communicating with the Toolbox server. By default, the client uses the latest supported version of the **Model Context Protocol (MCP)**.
@@ -103,10 +107,10 @@ We currently support different versions of the MCP protocol. For a complete and 
 
 | Constant | Description |
 | :--- | :--- |
-| `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-11-25`). |
-| `Protocol.MCP_LATEST` | Alias for the latest stable MCP version (currently `2025-11-25`). |
-| `Protocol.MCP_DRAFT` | Alias for the upcoming draft MCP version (currently `DRAFT-2026-v1`). |
-| `Protocol.MCP_v2026_DRAFT` | MCP Protocol draft version DRAFT-2026-v1. |
+| `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2026-07-28`). |
+| `Protocol.MCP_LATEST` | Alias for the latest stable MCP version (currently `2026-07-28`). |
+| `Protocol.MCP_DRAFT` | Alias for the upcoming draft MCP version (currently `2026-07-28`). |
+| `Protocol.MCP_v20260728` | MCP Protocol version 2026-07-28. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
 | `Protocol.MCP_v20250326` | MCP Protocol version 2025-03-26. |
