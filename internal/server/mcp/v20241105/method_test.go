@@ -177,7 +177,7 @@ func TestPingHandler(t *testing.T) {
 func TestToolsListHandler(t *testing.T) {
 	// Initialize tools using provided testutils mock instances
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
-	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
+	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, mockTools, nil, nil)
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, nil, groups)
 
 	tests := []struct {
@@ -266,7 +266,7 @@ func TestToolsCallHandler(t *testing.T) {
 		testutils.MockTool4,
 		testutils.MockTool5,
 	}
-	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
+	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, mockTools, nil, nil)
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, nil, groups)
 
 	tests := []struct {
@@ -394,7 +394,7 @@ func TestPromptsListHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, promptsMap, groups := testutils.SetUpResources(t, nil, mockPrompts)
+	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, nil, mockPrompts, nil)
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, nil, groups)
 	tests := []struct {
 		name        string
@@ -463,7 +463,7 @@ func TestPromptsGetHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, promptsMap, groups := testutils.SetUpResources(t, nil, mockPrompts)
+	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, nil, mockPrompts, nil)
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 	tests := []struct {
 		name        string

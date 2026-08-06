@@ -119,7 +119,7 @@ var prompt2Args = []any{
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, mockTools, mockPrompts, nil)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -464,7 +464,7 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5, testutils.MockToolUrlBinding}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, mockTools, mockPrompts, nil)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups, withEnableDraftSpecs())
 	defer shutdown()
 	ts := runServer(r, false)
@@ -1390,7 +1390,7 @@ func TestMcpEndpoint(t *testing.T) {
 func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, mockTools, mockPrompts, nil)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -1474,7 +1474,7 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 func TestInvalidProtocolVersionHeader(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1}
-	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, mockTools, mockPrompts, nil)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -1738,7 +1738,7 @@ func TestStdioSession(t *testing.T) {
 
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, mockTools, mockPrompts, nil)
 
 	pr, pw, err := os.Pipe()
 	if err != nil {
