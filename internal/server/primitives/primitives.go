@@ -158,13 +158,3 @@ func (r *PrimitiveManager) GroupsList() []group.Group {
 	return groupsList
 }
 
-// GetResourcesMap returns a copy of the resources map.
-func (r *PrimitiveManager) GetResourcesMap() map[string]resources.Resource {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]resources.Resource, len(r.resources))
-	for k, v := range r.resources {
-		copiedMap[k] = v
-	}
-	return copiedMap
-}
