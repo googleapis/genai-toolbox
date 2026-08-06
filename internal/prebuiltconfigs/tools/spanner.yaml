@@ -24,13 +24,13 @@ kind: tool
 name: execute_sql
 type: spanner-execute-sql
 source: spanner-source
-description: Use this tool to execute DML SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
+description: Execute read-write SQL statements that modify the database (DML), such as INSERT, UPDATE, DELETE, or table alterations. Do not use this tool for standard data queries or SELECT statements. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
 ---
 kind: tool
 name: execute_sql_readonly
 type: spanner-execute-sql
 source: spanner-source
-description: Use this for information_schema table queries as well as any other read only queries. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
+description: Execute read-only SQL queries (DQL) such as SELECT statements, metadata inspections, or information_schema queries. Use this tool as the default for any data retrieval tasks. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
 readOnly: true
 ---
 kind: tool
