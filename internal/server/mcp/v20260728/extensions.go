@@ -24,11 +24,6 @@ var ServerExtensions map[string]any
 
 // Initialize performs version-specific protocol setup for v20260728.
 func Initialize(disabledExts []string) {
-	InitializeExtensions(disabledExts)
-}
-
-// InitializeExtensions configures the active ServerExtensions map based on disabled extensions.
-func InitializeExtensions(disabledExts []string) {
 	ServerExtensions = make(map[string]any)
 	for ext, extConfig := range SupportedExtensions {
 		if ext != "" && !slices.Contains(disabledExts, ext) {
@@ -49,10 +44,4 @@ func ParseSupportedExtensions(clientExtensions map[string]any) map[string]any {
 		}
 	}
 	return supported
-}
-
-// SupportsExtension returns true if both the client and server support the given extension URI.
-func SupportsExtension(supportedExts map[string]any, uri string) bool {
-	_, ok := supportedExts[uri]
-	return ok
 }
