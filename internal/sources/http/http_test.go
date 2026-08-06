@@ -316,6 +316,26 @@ func TestSSRFGuard(t *testing.T) {
 			ip:   net.ParseIP("10.0.0.1"),
 			want: false,
 		},
+		{
+			desc: "CGNAT shared address space blocked",
+			ip:   net.ParseIP("100.64.0.1"),
+			want: true,
+		},
+		{
+			desc: "CGNAT shared address space upper bound blocked",
+			ip:   net.ParseIP("100.127.255.255"),
+			want: true,
+		},
+		{
+			desc: "IP just below CGNAT range allowed",
+			ip:   net.ParseIP("100.63.255.255"),
+			want: false,
+		},
+		{
+			desc: "IP just above CGNAT range allowed",
+			ip:   net.ParseIP("100.128.0.0"),
+			want: false,
+		},
 	}
 
 	for _, tc := range tcs {
@@ -341,6 +361,19 @@ func TestSSRFGuard(t *testing.T) {
 	}
 	if !guardPrivate.IsIPBlocked(net.ParseIP("192.168.1.1")) {
 		t.Error("expected custom blocked IP to remain blocked when AllowPrivateNetworks is true")
+	}
+	if guardPrivate.IsIPBlocked(net.ParseIP("100.64.0.1")) {
+		t.Error("expected CGNAT IP to be allowed when AllowPrivateNetworks is true")
+	}
+
+	// Test that an explicit allowedIpRanges override lets a CGNAT IP through,
+	// preserving the whitelist precedence over the default CGNAT block.
+	guardAllowCGNAT := &SSRFGuard{
+		AllowedRanges:        mustParseCIDRs(t, []string{"100.64.0.0/10"}),
+		AllowPrivateNetworks: false,
+	}
+	if guardAllowCGNAT.IsIPBlocked(net.ParseIP("100.64.0.1")) {
+		t.Error("expected CGNAT IP to be allowed when explicitly whitelisted via AllowedRanges")
 	}
 }
 

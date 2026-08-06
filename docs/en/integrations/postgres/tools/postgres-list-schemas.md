@@ -16,7 +16,7 @@ tool takes the following input parameters:
 
 - `schema_name` (optional): A text to filter results by schema name. Default: `""`
 - `owner` (optional): A text to filter results by owner name. Default: `""`
-- `limit` (optional): The maximum number of rows to return. Default: `50`.
+- `limit` (optional): The maximum number of rows to return. Default: `10`.
 
 ## Compatible Sources
 

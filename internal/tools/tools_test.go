@@ -19,37 +19,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
-	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
-
-// stubConfig and stubTool exercise the path of embedding BaseTool with only
-// the extra methods (Invoke, ToConfig) needed to satisfy the Tool interface.
-// Real tools embed ConfigBase in their Config; the stub does too so it
-// satisfies ToolMeta if/when wired into BaseTool.
-type stubConfig struct {
-	tools.ConfigBase
-}
-
-func (stubConfig) ToolConfigType() string { return "stub" }
-func (stubConfig) Initialize(context.Context) (tools.Tool, error) {
-	return nil, nil
-}
-
-type stubTool struct {
-	tools.BaseTool[stubConfig]
-}
-
-func (stubTool) Invoke(_ context.Context, _ tools.SourceProvider, _ parameters.ParamValues, _ tools.AccessToken) (any, util.ToolboxError) {
-	return nil, nil
-}
-
-func (stubTool) ToConfig() tools.ToolConfig { return stubConfig{} }
-
-// Compile-time check: embedding BaseTool plus Invoke + ToConfig satisfies Tool.
-var _ tools.Tool = stubTool{}
 
 // Compile-time check: ConfigBase satisfies ToolMeta on its own.
 var _ tools.ToolMeta = tools.ConfigBase{}
@@ -162,7 +134,7 @@ func TestBaseToolEmbedParamsPassthrough(t *testing.T) {
 		parameters.Parameters{parameters.NewStringParameter("p1", "first")},
 	)
 	values := parameters.ParamValues{{Name: "p1", Value: "hello"}}
-	got, err := b.EmbedParams(context.Background(), values, map[string]embeddingmodels.EmbeddingModel{})
+	got, err := b.EmbedParams(context.Background(), values, nil)
 	if err != nil {
 		t.Fatalf("EmbedParams() error = %v", err)
 	}

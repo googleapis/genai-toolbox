@@ -26,8 +26,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
-
-
 func mockFailingFactory(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
 	return nil, errors.New("factory error")
 }

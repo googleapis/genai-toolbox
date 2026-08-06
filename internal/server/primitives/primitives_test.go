@@ -20,11 +20,13 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
@@ -40,25 +42,12 @@ func TestUpdateServer(t *testing.T) {
 	newAuth := map[string]auth.AuthService{"example-auth": nil}
 	newEmbeddingModels := map[string]embeddingmodels.EmbeddingModel{"example-model": nil}
 	newTools := map[string]tools.Tool{"example-tool": nil}
-	newToolsets := map[string]tools.Toolset{
-		"example-toolset": {
-			ToolsetConfig: tools.ToolsetConfig{
-				Name: "example-toolset",
-			},
-			Tools: []*tools.Tool{},
-		},
-	}
-	newPrompts := map[string]prompts.Prompt{"example-prompt": nil}
-	newPromptsets := map[string]prompts.Promptset{
-		"example-promptset": {
-			PromptsetConfig: prompts.PromptsetConfig{
-				Name: "example-promptset",
-			},
-			Prompts: []*prompts.Prompt{},
-		},
+	newPrompts := map[string]prompts.Prompt{"example-prompt": testutils.NewMockPrompt("example-prompt", "", prompts.Arguments{})}
+	newGroups := map[string]group.Group{
+		"example-toolset": group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 	}
 	newResources := map[string]resources.Resource{"example-resource": nil}
-	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets, newResources)
+	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newResources, newGroups)
 
 	gotSource, _ := primMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
@@ -80,19 +69,18 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
-	gotToolset, _ := primMgr.GetToolset("example-toolset")
-	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"], cmp.AllowUnexported(tools.Toolset{})); diff != "" {
-		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
+	wantGroup := newGroups["example-toolset"]
+	gotGroup, ok := primMgr.GetGroup("example-toolset")
+	if !ok {
+		t.Fatal("expected group \"example-toolset\" to exist")
+	}
+	if diff := cmp.Diff(wantGroup, gotGroup, cmp.AllowUnexported(group.Group{})); diff != "" {
+		t.Errorf("error updating server, group (-want +got):\n%s", diff)
 	}
 
 	gotPrompt, _ := primMgr.GetPrompt("example-prompt")
-	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"]); diff != "" {
+	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
-	}
-
-	gotPromptset, _ := primMgr.GetPromptset("example-promptset")
-	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"], cmp.AllowUnexported(prompts.Promptset{})); diff != "" {
-		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 
 	updateSource := map[string]sources.Source{
@@ -104,7 +92,7 @@ func TestUpdateServer(t *testing.T) {
 		},
 	}
 
-	primMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets, nil)
+	primMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newResources, newGroups)
 	gotSource, _ = primMgr.GetSource("example-source2")
 	if diff := cmp.Diff(gotSource, updateSource["example-source2"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
