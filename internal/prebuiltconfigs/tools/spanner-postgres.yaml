@@ -30,7 +30,7 @@ kind: tool
 name: execute_sql_readonly
 type: spanner-execute-sql
 source: spanner-source
-description: Execute read-only SQL queries (DQL) such as SELECT statements, metadata inspections, or information_schema queries. Use this tool as the default for any data retrieval tasks. Please use the PostgreSQL interface for Spanner.
+description: Execute read-only SQL queries (DQL) such as SELECT statements, metadata inspections, or information_schema queries. Use this tool as the default for any data retrieval tasks. Use the PostgreSQL interface for Spanner.
 readOnly: true
 ---
 kind: tool
