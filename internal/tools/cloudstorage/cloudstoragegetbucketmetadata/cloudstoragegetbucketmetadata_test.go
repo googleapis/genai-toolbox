@@ -84,10 +84,33 @@ func TestParseFromYamlCloudStorageGetBucketMetadata(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with configurable bucket",
+			in: `
+			kind: tool
+			name: configured_bucket_metadata
+			type: cloud-storage-get-bucket-metadata
+			source: prod-gcs
+			description: Get configured bucket metadata
+			bucket: baked-bucket
+			`,
+			want: server.ToolConfigs{
+				"configured_bucket_metadata": cloudstoragegetbucketmetadata.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_bucket_metadata",
+						Description:  "Get configured bucket metadata",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-get-bucket-metadata",
+					Source: "prod-gcs",
+					Bucket: strPtr("baked-bucket"),
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -96,6 +119,10 @@ func TestParseFromYamlCloudStorageGetBucketMetadata(t *testing.T) {
 			}
 		})
 	}
+}
+
+func strPtr(s string) *string {
+	return &s
 }
 
 type mockSource struct {
@@ -108,15 +135,6 @@ func (m *mockSource) GetBucketMetadata(ctx context.Context, bucket string) (*sto
 	m.called = true
 	m.gotBucket = bucket
 	return &storage.BucketAttrs{Name: bucket, Location: "US"}, nil
-}
-
-type mockSourceProvider struct {
-	tools.SourceProvider
-	source *mockSource
-}
-
-func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.source, true
 }
 
 func TestInvokeValidation(t *testing.T) {
@@ -146,9 +164,8 @@ func TestInvokeValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
 			params := parameters.ParamValues{{Name: "bucket", Value: tc.bucket}}
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), src, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")
@@ -172,4 +189,75 @@ func TestInvokeValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConfiguredBucketHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragegetbucketmetadata.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "bucket_metadata_tool",
+			Description: "Get bucket metadata",
+		},
+		Type:   "cloud-storage-get-bucket-metadata",
+		Source: "my-gcs",
+		Bucket: strPtr("baked-bucket"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	if len(gotNames) != 0 {
+		t.Fatalf("manifest parameters = %v, want none", gotNames)
+	}
+
+	src := &mockSource{}
+	if _, err := tool.Invoke(context.Background(), src, nil, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotBucket != "baked-bucket" {
+		t.Fatalf("bucket forwarded = %q, want baked-bucket", src.gotBucket)
+	}
+}
+
+func TestUnsetBucketRemainsVisible(t *testing.T) {
+	cfg := cloudstoragegetbucketmetadata.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "bucket_metadata_tool",
+			Description: "Get bucket metadata",
+		},
+		Type:   "cloud-storage-get-bucket-metadata",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredBucketRejected(t *testing.T) {
+	cfg := cloudstoragegetbucketmetadata.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "bucket_metadata_tool",
+			Description: "Get bucket metadata",
+		},
+		Type:   "cloud-storage-get-bucket-metadata",
+		Source: "my-gcs",
+		Bucket: strPtr(""),
+	}
+	if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), "bucket") {
+		t.Fatalf("Initialize() error = %v, want bucket error", err)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }

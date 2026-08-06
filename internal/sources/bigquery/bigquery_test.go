@@ -155,6 +155,28 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			},
 		},
 		{
+			desc: "quota project with client auth example",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			useClientOAuth: true
+			quotaProject: billing-project
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Type:           bigquery.SourceType,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: "true",
+					QuotaProject:   "billing-project",
+				},
+			},
+		},
+		{
 			desc: "with allowed datasets example",
 			in: `
 			kind: source
@@ -257,10 +279,28 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with api endpoint",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			apiEndpoint: http://localhost:9050
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:        "my-instance",
+					Type:        bigquery.SourceType,
+					Project:     "my-project",
+					APIEndpoint: "http://localhost:9050",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			got, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -313,7 +353,7 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
@@ -426,6 +466,96 @@ func TestInitialize_MaximumBytesBilled(t *testing.T) {
 			}
 			if bqSrc.MaximumBytesBilled != tc.want {
 				t.Errorf("MaximumBytesBilled = %d, want %d", bqSrc.MaximumBytesBilled, tc.want)
+			}
+		})
+	}
+}
+
+func TestNormalizeEndpoint(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		want string
+	}{
+		{desc: "empty", in: "", want: ""},
+		{desc: "whitespace only", in: "  ", want: ""},
+		{desc: "https with host, no port", in: "https://proxy.example.com", want: "https://proxy.example.com:443"},
+		{desc: "http with localhost and explicit port", in: "http://localhost:9050", want: "http://localhost:9050"},
+		{desc: "bare host defaults to https and port 443", in: "proxy.example.com", want: "https://proxy.example.com:443"},
+		{desc: "bare host with port keeps port and adds https", in: "host:8443", want: "https://host:8443"},
+		{desc: "root trailing slash stripped", in: "https://proxy.example.com/", want: "https://proxy.example.com:443"},
+		{desc: "custom path trailing slash preserved", in: "https://proxy.example.com/custom/path/", want: "https://proxy.example.com:443/custom/path/"},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := bigquery.NormalizeEndpoint(tc.in)
+			if got != tc.want {
+				t.Errorf("NormalizeEndpoint(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestInitialize_APIEndpoint(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithUserAgent(ctx, "test-agent")
+	tracer := noop.NewTracerProvider().Tracer("")
+
+	tcs := []struct {
+		desc         string
+		cfg          bigquery.Config
+		wantEndpoint string
+	}{
+		{
+			desc: "no endpoint — option not added",
+			cfg: bigquery.Config{
+				Name: "test-no-ep", Type: bigquery.SourceType,
+				Project: "proj", UseClientOAuth: "true",
+			},
+			wantEndpoint: "",
+		},
+		{
+			desc: "http emulator endpoint wired through",
+			cfg: bigquery.Config{
+				Name: "test-emulator", Type: bigquery.SourceType,
+				Project: "proj", UseClientOAuth: "true",
+				APIEndpoint: "http://localhost:9050",
+			},
+			wantEndpoint: "http://localhost:9050",
+		},
+		{
+			desc: "https proxy endpoint normalized and wired through",
+			cfg: bigquery.Config{
+				Name: "test-proxy", Type: bigquery.SourceType,
+				Project: "proj", UseClientOAuth: "true",
+				APIEndpoint: "https://proxy.example.com",
+			},
+			wantEndpoint: "https://proxy.example.com:443",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			src, err := tc.cfg.Initialize(ctx, tracer)
+			if err != nil {
+				t.Fatalf("Initialize failed: %v", err)
+			}
+			bqSrc, ok := src.(*bigquery.Source)
+			if !ok {
+				t.Fatalf("expected *bigquery.Source, got %T", src)
+			}
+			// Verify the raw field is preserved on Config.
+			if bqSrc.APIEndpoint != tc.cfg.APIEndpoint {
+				t.Errorf("Config.APIEndpoint = %q, want %q", bqSrc.APIEndpoint, tc.cfg.APIEndpoint)
+			}
+			// Exercise the ClientCreator — it closes over the normalized endpoint
+			// and passes option.WithEndpoint when non-empty. Both bigqueryapi.NewClient
+			// and bigqueryrestapi.NewService accept the option without a network call.
+			_, _, err = bqSrc.ClientCreator("fake-token", false)
+			if err != nil {
+				t.Errorf("ClientCreator unexpectedly failed with endpoint %q: %v", tc.wantEndpoint, err)
 			}
 		})
 	}

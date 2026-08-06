@@ -169,7 +169,12 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 	return params, nil
 }
 
-func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, formatter embeddingmodels.VectorFormatter) (ParamValues, error) {
+// PrimitiveManagerI defines the minimal view of the primitive manager needed by parameters.
+type PrimitiveManagerI interface {
+	GetEmbeddingModel(string) (embeddingmodels.EmbeddingModel, bool)
+}
+
+func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, pMgr PrimitiveManagerI, formatter embeddingmodels.VectorFormatter) (ParamValues, error) {
 
 	type ParamToEmbed struct {
 		OriginalValue string
@@ -199,7 +204,7 @@ func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, em
 
 	// Batch embedding request sent to each model
 	for modelName, params := range parametersToEmbed {
-		model, ok := embeddingModelsMap[modelName]
+		model, ok := pMgr.GetEmbeddingModel(modelName)
 		if !ok {
 			return nil, fmt.Errorf("embedding model does not exist: %s", modelName)
 		}
@@ -364,7 +369,12 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 		return nil, fmt.Errorf("parameter is missing 'type' field")
 	}
 
-	return ParseParameter(ctx, p, t.(string))
+	typeStr, ok := t.(string)
+	if !ok {
+		return nil, fmt.Errorf("parameter 'type' field must be a string, got %T", t)
+	}
+
+	return ParseParameter(ctx, p, typeStr)
 }
 
 // ParseParameter parses a raw map into a Parameter object based on its "type" field.
@@ -1102,7 +1112,7 @@ func (p *ArrayParameter) IsExcludedValues(v []any) bool {
 func (p *ArrayParameter) Parse(v any) (any, error) {
 	arrVal, ok := v.([]any)
 	if !ok {
-		return nil, &ParseTypeError{p.Name, p.Type, arrVal}
+		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
 	if !p.IsAllowedValues(arrVal) {
 		return nil, fmt.Errorf("%s is not an allowed value", arrVal)
@@ -1282,7 +1292,7 @@ func (p *MapParameter) IsExcludedValues(v map[string]any) bool {
 func (p *MapParameter) Parse(v any) (any, error) {
 	m, ok := v.(map[string]any)
 	if !ok {
-		return nil, &ParseTypeError{p.Name, p.Type, m}
+		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
 	if !p.IsAllowedValues(m) {
 		return nil, fmt.Errorf("%s is not an allowed value", m)

@@ -33,6 +33,9 @@ object.
 | content       |  string  |     true     | Text content to write to the Cloud Storage object.                                                    |
 | content_type  |  string  |    false     | MIME type to record on the written object. When empty, Cloud Storage auto-detects from the content.   |
 
+If `bucket` is configured on the tool, it is removed from the parameter list and
+the configured bucket is used for every invocation.
+
 ## Example
 
 ```yaml
@@ -41,6 +44,15 @@ name: write_object
 type: cloud-storage-write-object
 source: my-gcs-source
 description: Use this tool to write text content to Cloud Storage.
+```
+
+```yaml
+kind: tool
+name: write_reports
+type: cloud-storage-write-object
+source: my-gcs-source
+description: Use this tool to write generated reports to Cloud Storage.
+bucket: analytics-exports
 ```
 
 ## Output Format
@@ -61,3 +73,4 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-write-object".                |
 | source      |  string  |     true     | Name of the Cloud Storage source to write objects to. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.   |
+| bucket      |  string  |    false     | Cloud Storage bucket to use for every invocation. When set, `bucket` is hidden from the tool parameters. |

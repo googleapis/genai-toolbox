@@ -18,6 +18,7 @@ require (
 	cloud.google.com/go/geminidataanalytics v1.2.0
 	cloud.google.com/go/logging v1.18.0
 	cloud.google.com/go/longrunning v1.0.0
+	cloud.google.com/go/resourcemanager v1.15.0
 	cloud.google.com/go/spanner v1.92.0
 	cloud.google.com/go/storage v1.62.3
 	github.com/ClickHouse/clickhouse-go/v2 v2.46.0
@@ -46,6 +47,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
+	github.com/googleapis/gax-go/v2 v2.22.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/looker-open-source/sdk-codegen/go v0.26.10
@@ -60,6 +62,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/cockroachdb v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/couchbase v0.43.0
+	github.com/testcontainers/testcontainers-go/modules/mongodb v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/scylladb v0.43.0
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/trinodb/trino-go-client v0.333.0
@@ -75,10 +78,11 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.44.0
 	go.opentelemetry.io/otel/trace v1.44.0
 	golang.org/x/oauth2 v0.36.0
+	golang.org/x/sync v0.21.0
 	google.golang.org/api v0.285.0
 	google.golang.org/genai v1.61.0
 	google.golang.org/genproto v0.0.0-20260519071638-aa98bba5eb94
-	google.golang.org/grpc v1.81.1
+	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.52.0
 )
@@ -117,7 +121,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.6.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.31.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.57.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/PuerkitoBio/goquery v1.10.3 // indirect
@@ -189,7 +193,6 @@ require (
 	github.com/google/flatbuffers v25.2.10+incompatible // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.16 // indirect
-	github.com/googleapis/gax-go/v2 v2.22.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
@@ -255,7 +258,7 @@ require (
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/detectors/gcp v1.42.0 // indirect
+	go.opentelemetry.io/contrib/detectors/gcp v1.43.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0 // indirect
 	go.opentelemetry.io/contrib/propagators/aws v1.44.0 // indirect
@@ -271,7 +274,6 @@ require (
 	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
-	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260508192327-42602be52be6 // indirect
 	golang.org/x/term v0.44.0 // indirect

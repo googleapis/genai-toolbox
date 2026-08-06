@@ -33,6 +33,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
 
       - name: Get Version from Release Tag
         id: get_version
@@ -47,6 +48,8 @@ jobs:
           extended: true
 
       - name: Setup Node
+        # zizmor flags setup-node for cache-poisoning on releases, but since we don't pass `cache: npm`, no caching occurs. Safe to ignore.
+        # zizmor: ignore[cache-poisoning]
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "22"

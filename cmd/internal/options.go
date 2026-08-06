@@ -148,15 +148,6 @@ func (opts *ToolboxOptions) GetCustomConfigFiles(ctx context.Context) ([]string,
 
 	// Load Custom Configurations
 	if isCustomConfigured {
-		// Enforce exclusivity among custom flags (tools-file vs tools-files vs tools-folder)
-		if (opts.Config != "" && len(opts.Configs) > 0) ||
-			(opts.Config != "" && opts.ConfigFolder != "") ||
-			(len(opts.Configs) > 0 && opts.ConfigFolder != "") {
-			errMsg := fmt.Errorf("--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously")
-			logger.ErrorContext(ctx, errMsg.Error())
-			return nil, isCustomConfigured, errMsg
-		}
-
 		if len(opts.Configs) > 0 {
 			// Use tools-files
 			logger.InfoContext(ctx, fmt.Sprintf("retrieving %d tool configuration files", len(opts.Configs)))
@@ -204,6 +195,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 		sourcesList := strings.Join(opts.PrebuiltConfigs, ", ")
 		logMsg := fmt.Sprintf("Using prebuilt tool configurations for: %s", sourcesList)
 		logger.InfoContext(ctx, logMsg)
+		logger.WarnContext(ctx, "These prebuilt configs are intended for 'build-time' use cases, where agents are helping trusted developers build things. They are not secure enough for 'run time' use cases, where the agent will be talking to potentially untrusted developers.")
 
 		for _, configName := range opts.PrebuiltConfigs {
 			if !strings.Contains(configName, "/") {
@@ -236,10 +228,15 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 			}
 
 			if toolsetName != "" {
-				targetToolset, exists := parsed.Toolsets[toolsetName]
+				// Legacy toolsets are folded into groups at unmarshal, so the named
+				// toolset resolves as a group.
+				targetGroup, exists := parsed.Groups[toolsetName]
 				if !exists {
 					var available []string
-					for k := range parsed.Toolsets {
+					for k := range parsed.Groups {
+						if k == "" {
+							continue
+						}
 						available = append(available, k)
 					}
 					slices.Sort(available)
@@ -248,19 +245,19 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 					return isCustomConfigured, errMsg
 				}
 
-				// Filter tools to only include those in the target toolset
+				// Filter tools to only include those in the target group
 				filteredTools := make(server.ToolConfigs)
-				for _, tName := range targetToolset.ToolNames {
+				for _, tName := range targetGroup.ToolNames {
 					if tCfg, tExists := parsed.Tools[tName]; tExists {
 						filteredTools[tName] = tCfg
 					}
 				}
 				parsed.Tools = filteredTools
 
-				// Filter toolsets to only include the target toolset
-				filteredToolsets := make(server.ToolsetConfigs)
-				filteredToolsets[toolsetName] = targetToolset
-				parsed.Toolsets = filteredToolsets
+				// Filter groups to only include the target group
+				filteredGroups := make(server.GroupConfigs)
+				filteredGroups[toolsetName] = targetGroup
+				parsed.Groups = filteredGroups
 			}
 
 			allConfigs = append(allConfigs, parsed)
@@ -302,8 +299,8 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 	opts.Cfg.AuthServiceConfigs = finalConfig.AuthServices
 	opts.Cfg.EmbeddingModelConfigs = finalConfig.EmbeddingModels
 	opts.Cfg.ToolConfigs = finalConfig.Tools
-	opts.Cfg.ToolsetConfigs = finalConfig.Toolsets
 	opts.Cfg.PromptConfigs = finalConfig.Prompts
+	opts.Cfg.GroupConfigs = finalConfig.Groups
 
 	return isCustomConfigured, nil
 }

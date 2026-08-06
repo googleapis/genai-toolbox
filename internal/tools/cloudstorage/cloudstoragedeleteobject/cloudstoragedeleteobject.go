@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudstorage/cloudstoragecommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -56,6 +57,7 @@ type Config struct {
 	Type             string                 `yaml:"type" validate:"required"`
 	Source           string                 `yaml:"source" validate:"required"`
 	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Bucket           *string                `yaml:"bucket,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -68,10 +70,16 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
+	if cfg.Bucket != nil && *cfg.Bucket == "" {
+		return nil, fmt.Errorf("bucket cannot be empty for tool %q", cfg.Name)
+	}
 
-	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket containing the object to delete.")
 	objectParam := parameters.NewStringParameter(objectKey, "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.")
-	allParameters := parameters.Parameters{bucketParam, objectParam}
+	allParameters := parameters.Parameters{}
+	if cfg.Bucket == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket containing the object to delete."))
+	}
+	allParameters = append(allParameters, objectParam)
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -89,19 +97,30 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
+	return nil
+}
 
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
 	mapParams := params.AsMap()
-	bucket, ok := mapParams[bucketKey].(string)
-	if !ok || bucket == "" {
+	bucket := cloudstoragecommon.ResolveString(t.Cfg.Bucket, mapParams, bucketKey)
+	if bucket == "" {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", bucketKey), nil)
 	}
 	object, ok := mapParams[objectKey].(string)
