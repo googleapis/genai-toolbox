@@ -464,7 +464,7 @@ func TestPromptsGetHandler(t *testing.T) {
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, nil, mockPrompts, nil)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, nil, groups)
 	tests := []struct {
 		name        string
 		body        GetPromptRequest
