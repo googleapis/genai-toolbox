@@ -17,6 +17,8 @@ package resources
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 	"sync"
 
 	"github.com/goccy/go-yaml"
@@ -42,6 +44,8 @@ func GetBaseDirFromContext(ctx context.Context) string {
 type ResourceConfig interface {
 	ResourceConfigType() string
 	GetURI() string
+	SetDefaults()
+	Validate() error
 	Initialize(ctx context.Context) (Resource, error)
 }
 
@@ -107,7 +111,21 @@ func (c *BaseConfig) SetDefaults() {
 }
 
 // Validate performs base configuration validation, such as checking for duplicate audiences.
-func (c BaseConfig) Validate() error {
+func (c *BaseConfig) Validate() error {
+	if c.URI == "" {
+		return fmt.Errorf("missing required 'uri' field for resource %q", c.Name)
+	}
+
+	parsed, err := url.Parse(c.URI)
+	if err != nil || parsed.Scheme == "" {
+		return fmt.Errorf("invalid 'uri' field for resource %q: must be a valid RFC-compliant absolute URI with a scheme", c.Name)
+	}
+
+	// Normalize scheme and host to lowercase for consistent comparison and usage
+	parsed.Scheme = strings.ToLower(parsed.Scheme)
+	parsed.Host = strings.ToLower(parsed.Host)
+	c.URI = parsed.String()
+
 	if c.Annotations != nil && len(c.Annotations.Audience) > 0 {
 		seen := make(map[AudienceRole]bool)
 		for _, aud := range c.Annotations.Audience {
@@ -145,8 +163,7 @@ func Register(resourceType string, factory ResourceConfigFactory) bool {
 	return true
 }
 
-// DecodeConfig looks up the registered factory for the given type and uses it
-// to decode the resource configuration.
+// DecodeConfig decodes a YAML document into the appropriate ResourceConfig implementation.
 func DecodeConfig(ctx context.Context, resourceType, name string, decoder *yaml.Decoder) (ResourceConfig, error) {
 	if decoder == nil {
 		return nil, fmt.Errorf("decoder cannot be nil for resource %q", name)
@@ -166,14 +183,10 @@ func DecodeConfig(ctx context.Context, resourceType, name string, decoder *yaml.
 		return nil, fmt.Errorf("factory returned nil config for resource %q as type %q", name, resourceType)
 	}
 
-	if defaulter, ok := config.(interface{ SetDefaults() }); ok {
-		defaulter.SetDefaults()
-	}
+	config.SetDefaults()
 
-	if validatable, ok := config.(interface{ Validate() error }); ok {
-		if err := validatable.Validate(); err != nil {
-			return nil, fmt.Errorf("validation failed for resource %q: %w", name, err)
-		}
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("validation failed for resource %q: %w", name, err)
 	}
 
 	return config, nil
