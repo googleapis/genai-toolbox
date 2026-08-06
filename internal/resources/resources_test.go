@@ -25,7 +25,7 @@ import (
 )
 
 type mockResourceConfig struct {
-	BaseResourceConfig `yaml:",inline"`
+	ResourceConfigBase `yaml:",inline"`
 	CustomProp         string `yaml:"customProp"`
 }
 
@@ -190,9 +190,9 @@ mimeType: text/plain
 annotations:
   priority: 0.5
 `
-	var cfg BaseResourceConfig
+	var cfg ResourceConfigBase
 	if err := yaml.Unmarshal([]byte(yamlStr), &cfg); err != nil {
-		t.Fatalf("Failed to unmarshal BaseResourceConfig: %v", err)
+		t.Fatalf("Failed to unmarshal ResourceConfigBase: %v", err)
 	}
 
 	if cfg.Name != "testName" {

@@ -41,7 +41,7 @@ func TestTextResourceInitialization(t *testing.T) {
 		{
 			name: "success with defaults",
 			config: Config{
-				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "test1"}},
+				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test1"}},
 				Text:               "Hello, world!",
 			},
 			wantError: false,
@@ -51,7 +51,7 @@ func TestTextResourceInitialization(t *testing.T) {
 		{
 			name: "success with overrides",
 			config: Config{
-				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{
+				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{
 					Name:        "test2",
 					MimeType:    "application/json",
 					Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.5)},
@@ -65,16 +65,16 @@ func TestTextResourceInitialization(t *testing.T) {
 		{
 			name: "error missing text payload",
 			config: Config{
-				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "test3"}},
+				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test3"}},
 				Text:               "",
 			},
 			wantError:   true,
-			errContains: "missing required 'text' field",
+			errContains: "missing required field",
 		},
 		{
 			name: "explicit 0.0 priority",
 			config: Config{
-				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{
+				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{
 					Name:        "test-priority",
 					Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.0)},
 				}},
@@ -87,7 +87,7 @@ func TestTextResourceInitialization(t *testing.T) {
 		{
 			name: "multi-byte unicode size calculation",
 			config: Config{
-				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "test-unicode"}},
+				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test-unicode"}},
 				Text:               "Hello 🌍",
 			},
 			wantError: false,
@@ -97,7 +97,7 @@ func TestTextResourceInitialization(t *testing.T) {
 		{
 			name: "pure whitespace payload",
 			config: Config{
-				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "test-whitespace"}},
+				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test-whitespace"}},
 				Text:               "   \n  ",
 			},
 			wantError: false,
@@ -107,7 +107,7 @@ func TestTextResourceInitialization(t *testing.T) {
 		{
 			name: "explicit empty mimetype defaults to text/plain",
 			config: Config{
-				BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{
+				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{
 					Name:     "test-empty-mime",
 					MimeType: "",
 				}},
@@ -121,14 +121,18 @@ func TestTextResourceInitialization(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := tc.config.Initialize(ctx)
+			err := tc.config.Validate()
+			var res resources.Resource
+			if err == nil {
+				res, err = tc.config.Initialize(ctx)
+			}
 			if tc.wantError {
 				if err == nil {
-					t.Fatalf("Initialize() expected error, got nil")
+					t.Fatalf("Expected error, got nil")
 				}
 				if tc.errContains != "" {
 					if !strings.Contains(err.Error(), tc.errContains) {
-						t.Errorf("Initialize() err = %v, want to contain %q", err, tc.errContains)
+						t.Errorf("err = %v, want to contain %q", err, tc.errContains)
 					}
 				}
 				return

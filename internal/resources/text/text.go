@@ -32,8 +32,8 @@ func init() {
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
 	cfg := &Config{
-		BaseResourceConfig: resources.BaseResourceConfig{
-			BaseConfig: resources.BaseConfig{
+		ResourceConfigBase: resources.ResourceConfigBase{
+			ConfigBase: resources.ConfigBase{
 				Name:     name,
 				Type:     resourceType,
 				MimeType: "text/plain",
@@ -48,7 +48,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 
 // Config represents the uninitialized textual resource configuration from YAML.
 type Config struct {
-	resources.BaseResourceConfig `yaml:",inline"`
+	resources.ResourceConfigBase `yaml:",inline"`
 	Text                 string `yaml:"text" validate:"required"`
 }
 
@@ -62,7 +62,7 @@ func (c *Config) Validate() error {
 	if c.Text == "" {
 		return fmt.Errorf("Field validation for 'Text' failed: missing required field")
 	}
-	return c.BaseConfig.Validate()
+	return c.ConfigBase.Validate()
 }
 
 func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {

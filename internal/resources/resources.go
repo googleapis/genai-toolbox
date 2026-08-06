@@ -61,8 +61,8 @@ type ResourceAnnotations struct {
 	LastModified string         `yaml:"lastModified,omitempty"`
 }
 
-// BaseConfig contains the common fields for all resource and template configurations.
-type BaseConfig struct {
+// ConfigBase contains the common fields for all resource and template configurations.
+type ConfigBase struct {
 	Name        string               `yaml:"name"`
 	Type        string               `yaml:"type"`
 	Description string               `yaml:"description,omitempty"`
@@ -71,20 +71,20 @@ type BaseConfig struct {
 	Annotations *ResourceAnnotations `yaml:"annotations,omitempty"`
 }
 
-func (c BaseConfig) GetName() string        { return c.Name }
-func (c BaseConfig) GetTitle() string       { return c.Title }
-func (c BaseConfig) GetDescription() string { return c.Description }
-func (c BaseConfig) GetMimeType() string    { return c.MimeType }
+func (c ConfigBase) GetName() string        { return c.Name }
+func (c ConfigBase) GetTitle() string       { return c.Title }
+func (c ConfigBase) GetDescription() string { return c.Description }
+func (c ConfigBase) GetMimeType() string    { return c.MimeType }
 
-// BaseResourceConfig contains the fields for a specific resource configuration.
-type BaseResourceConfig struct {
-	BaseConfig `yaml:",inline"`
+// ResourceConfigBase contains the fields for a specific resource configuration.
+type ResourceConfigBase struct {
+	ConfigBase `yaml:",inline"`
 	URI        string `yaml:"uri,omitempty"`
 	Size       *int64 `yaml:"-"`
 }
 
 // GetURI returns the URI of the resource configuration.
-func (c BaseResourceConfig) GetURI() string {
+func (c ResourceConfigBase) GetURI() string {
 	return c.URI
 }
 
@@ -110,7 +110,7 @@ func (r *AudienceRole) UnmarshalYAML(b []byte) error {
 }
 
 // SetDefaults applies system defaults (like priority=1.0) for unspecified optional fields.
-func (c *BaseConfig) SetDefaults() {
+func (c *ConfigBase) SetDefaults() {
 	if c.Annotations == nil {
 		c.Annotations = &ResourceAnnotations{}
 	}
@@ -121,7 +121,7 @@ func (c *BaseConfig) SetDefaults() {
 }
 
 // Validate performs base configuration validation, such as checking for duplicate audiences.
-func (c BaseConfig) Validate() error {
+func (c ConfigBase) Validate() error {
 	if c.Annotations != nil && len(c.Annotations.Audience) > 0 {
 		seen := make(map[AudienceRole]bool)
 		for _, aud := range c.Annotations.Audience {
@@ -210,14 +210,14 @@ type ResourceTemplate interface {
 	ToConfig() ResourceTemplateConfig
 }
 
-// BaseResourceTemplateConfig contains the specific fields for resource template configurations.
-type BaseResourceTemplateConfig struct {
-	BaseConfig  `yaml:",inline"`
+// ResourceTemplateConfigBase contains the specific fields for resource template configurations.
+type ResourceTemplateConfigBase struct {
+	ConfigBase  `yaml:",inline"`
 	URITemplate string `yaml:"uriTemplate"`
 }
 
 // GetURITemplate returns the URI template of the resource configuration.
-func (c BaseResourceTemplateConfig) GetURITemplate() string {
+func (c ResourceTemplateConfigBase) GetURITemplate() string {
 	return c.URITemplate
 }
 

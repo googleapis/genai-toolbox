@@ -590,7 +590,7 @@ tools:
 }
 
 type mockResourceConfig struct {
-	resources.BaseResourceConfig `yaml:",inline"`
+	resources.ResourceConfigBase `yaml:",inline"`
 }
 
 func (m mockResourceConfig) ResourceConfigType() string {
@@ -602,7 +602,7 @@ func (m mockResourceConfig) Initialize(ctx context.Context) (resources.Resource,
 }
 
 type mockResourceTemplateConfig struct {
-	resources.BaseResourceTemplateConfig `yaml:",inline"`
+	resources.ResourceTemplateConfigBase `yaml:",inline"`
 }
 
 func (m mockResourceTemplateConfig) ResourceTemplateConfigType() string {
@@ -852,8 +852,8 @@ func TestParseConfig(t *testing.T) {
 				},
 				Resources: server.ResourceConfigs{
 					"my-resource": testutils.MockResourceConfig{
-						BaseResourceConfig: resources.BaseResourceConfig{
-							BaseConfig: resources.BaseConfig{
+						ResourceConfigBase: resources.ResourceConfigBase{
+							ConfigBase: resources.ConfigBase{
 								Name: "my-resource",
 								Type: "mock",
 							},
@@ -911,8 +911,8 @@ func TestParseConfig(t *testing.T) {
 				Prompts:      nil,
 				Resources: server.ResourceConfigs{
 					"my-resource": &file.Config{
-						BaseResourceConfig: resources.BaseResourceConfig{
-							BaseConfig: resources.BaseConfig{
+						ResourceConfigBase: resources.ResourceConfigBase{
+							ConfigBase: resources.ConfigBase{
 								Name:        "my-resource",
 								Type:        "file",
 								Annotations: &resources.ResourceAnnotations{Priority: float64Ptr(1.0)},
@@ -941,8 +941,8 @@ func TestParseConfig(t *testing.T) {
 				Resources:    nil,
 				ResourceTemplates: server.ResourceTemplateConfigs{
 					"my-resource-template": &file.TemplateConfig{
-						BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{
-							BaseConfig: resources.BaseConfig{
+						ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{
+							ConfigBase: resources.ConfigBase{
 								Name:        "my-resource-template",
 								Description: "",
 								Annotations: &resources.ResourceAnnotations{Priority: float64Ptr(1.0)},
@@ -2365,31 +2365,31 @@ func TestMergeConfigs(t *testing.T) {
 		Tools:             server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}},
 		Toolsets:          server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
 		EmbeddingModels:   server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
-		Resources:         server.ResourceConfigs{"res1": mockResourceConfig{BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1"}, URI: "mock://res1"}}},
-		ResourceTemplates: server.ResourceTemplateConfigs{"tmpl1": mockResourceTemplateConfig{BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{BaseConfig: resources.BaseConfig{Name: "tmpl1"}, URITemplate: "file:///{path}"}}},
+		Resources:         server.ResourceConfigs{"res1": mockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res1"}, URI: "mock://res1"}}},
+		ResourceTemplates: server.ResourceTemplateConfigs{"tmpl1": mockResourceTemplateConfig{ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{ConfigBase: resources.ConfigBase{Name: "tmpl1"}, URITemplate: "file:///{path}"}}},
 	}
 	file2 := Config{
 		AuthServices:      server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
 		Tools:             server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 		Toolsets:          server.ToolsetConfigs{"set2": tools.ToolsetConfig{Name: "set2"}},
-		Resources:         server.ResourceConfigs{"res2": mockResourceConfig{BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "res2"}, URI: "mock://res2"}}},
-		ResourceTemplates: server.ResourceTemplateConfigs{"tmpl2": mockResourceTemplateConfig{BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{BaseConfig: resources.BaseConfig{Name: "tmpl2"}, URITemplate: "mock://logs/{path}"}}},
+		Resources:         server.ResourceConfigs{"res2": mockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res2"}, URI: "mock://res2"}}},
+		ResourceTemplates: server.ResourceTemplateConfigs{"tmpl2": mockResourceTemplateConfig{ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{ConfigBase: resources.ConfigBase{Name: "tmpl2"}, URITemplate: "mock://logs/{path}"}}},
 	}
 	fileWithConflicts := Config{
 		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 		Tools:   server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 	}
 	fileWithResourceNameConflict := Config{
-		Resources: server.ResourceConfigs{"res1": mockResourceConfig{BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1"}, URI: "mock://different"}}},
+		Resources: server.ResourceConfigs{"res1": mockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res1"}, URI: "mock://different"}}},
 	}
 	fileWithResourceURIConflict := Config{
-		Resources: server.ResourceConfigs{"res3": mockResourceConfig{BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "res3"}, URI: "mock://res1"}}},
+		Resources: server.ResourceConfigs{"res3": mockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res3"}, URI: "mock://res1"}}},
 	}
 	fileWithTemplateNameConflict := Config{
-		ResourceTemplates: server.ResourceTemplateConfigs{"tmpl1": mockResourceTemplateConfig{BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{BaseConfig: resources.BaseConfig{Name: "tmpl1"}, URITemplate: "mock://different/{path}"}}},
+		ResourceTemplates: server.ResourceTemplateConfigs{"tmpl1": mockResourceTemplateConfig{ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{ConfigBase: resources.ConfigBase{Name: "tmpl1"}, URITemplate: "mock://different/{path}"}}},
 	}
 	fileWithTemplateURIConflict := Config{
-		ResourceTemplates: server.ResourceTemplateConfigs{"tmpl3": mockResourceTemplateConfig{BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{BaseConfig: resources.BaseConfig{Name: "tmpl3"}, URITemplate: "file:///{path}"}}},
+		ResourceTemplates: server.ResourceTemplateConfigs{"tmpl3": mockResourceTemplateConfig{ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{ConfigBase: resources.ConfigBase{Name: "tmpl3"}, URITemplate: "file:///{path}"}}},
 	}
 	fileMcp1 := Config{
 		AuthServices: server.AuthServiceConfigs{"generic1": generic.Config{Name: "generic1", McpEnabled: true}},
@@ -2415,8 +2415,8 @@ func TestMergeConfigs(t *testing.T) {
 				Toolsets:          server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
 				Prompts:           server.PromptConfigs{},
 				EmbeddingModels:   server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
-				Resources:         server.ResourceConfigs{"res1": mockResourceConfig{BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1"}, URI: "mock://res1"}}, "res2": mockResourceConfig{BaseResourceConfig: resources.BaseResourceConfig{BaseConfig: resources.BaseConfig{Name: "res2"}, URI: "mock://res2"}}},
-				ResourceTemplates: server.ResourceTemplateConfigs{"tmpl1": mockResourceTemplateConfig{BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{BaseConfig: resources.BaseConfig{Name: "tmpl1"}, URITemplate: "file:///{path}"}}, "tmpl2": mockResourceTemplateConfig{BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{BaseConfig: resources.BaseConfig{Name: "tmpl2"}, URITemplate: "mock://logs/{path}"}}},
+				Resources:         server.ResourceConfigs{"res1": mockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res1"}, URI: "mock://res1"}}, "res2": mockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res2"}, URI: "mock://res2"}}},
+				ResourceTemplates: server.ResourceTemplateConfigs{"tmpl1": mockResourceTemplateConfig{ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{ConfigBase: resources.ConfigBase{Name: "tmpl1"}, URITemplate: "file:///{path}"}}, "tmpl2": mockResourceTemplateConfig{ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{ConfigBase: resources.ConfigBase{Name: "tmpl2"}, URITemplate: "mock://logs/{path}"}}},
 			},
 			wantErr: false,
 		},

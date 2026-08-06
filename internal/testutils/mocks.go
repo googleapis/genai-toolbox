@@ -195,7 +195,7 @@ func NewMockPrompt(name, desc string, args prompts.Arguments) MockPrompt {
 
 // MockResourceConfig is a mock implementation of resources.ResourceConfig
 type MockResourceConfig struct {
-	resources.BaseResourceConfig `yaml:",inline"`
+	resources.ResourceConfigBase `yaml:",inline"`
 }
 
 func (m MockResourceConfig) ResourceConfigType() string {
@@ -221,7 +221,7 @@ func (m MockResource) ToConfig() resources.ResourceConfig {
 
 // MockResourceTemplateConfig is a mock implementation of resources.ResourceTemplateConfig
 type MockResourceTemplateConfig struct {
-	resources.BaseResourceTemplateConfig `yaml:",inline"`
+	resources.ResourceTemplateConfigBase `yaml:",inline"`
 }
 
 func (m MockResourceTemplateConfig) ResourceTemplateConfigType() string {
@@ -252,8 +252,8 @@ func (m MockResourceTemplate) ToConfig() resources.ResourceTemplateConfig {
 func NewMockResource(name, uri string) MockResource {
 	return MockResource{
 		config: MockResourceConfig{
-			BaseResourceConfig: resources.BaseResourceConfig{
-				BaseConfig: resources.BaseConfig{Name: name},
+			ResourceConfigBase: resources.ResourceConfigBase{
+				ConfigBase: resources.ConfigBase{Name: name},
 				URI:        uri,
 			},
 		},
@@ -264,8 +264,8 @@ func NewMockResource(name, uri string) MockResource {
 func NewMockResourceTemplate(name, uriTemplate string) MockResourceTemplate {
 	return MockResourceTemplate{
 		config: MockResourceTemplateConfig{
-			BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{
-				BaseConfig:  resources.BaseConfig{Name: name},
+			ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{
+				ConfigBase:  resources.ConfigBase{Name: name},
 				URITemplate: uriTemplate,
 			},
 		},

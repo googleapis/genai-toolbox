@@ -129,7 +129,7 @@ func TestPrimitiveManager_GetResourceOrTemplateByURI(t *testing.T) {
 		"static-res": testutils.NewMockResource("static-res", "file:///mock/resource/1"),
 	}
 	templatesMap := map[string]resources.ResourceTemplate{
-		"test-tmpl": testutils.NewMockResourceTemplate("test-tmpl", "file://{path}"),
+		"test-tmpl": testutils.NewMockResourceTemplate("test-tmpl", "file:///logs/{path}"),
 	}
 
 	primMgr.SetPrimitives(nil, nil, nil, nil, nil, nil, nil, resourcesMap, templatesMap)
