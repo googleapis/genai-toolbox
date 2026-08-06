@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"regexp"
 	"strings"
 
@@ -546,43 +545,12 @@ func UnmarshalYAMLResourceConfig(ctx context.Context, name string, r map[string]
 		if !isString {
 			return nil, fmt.Errorf("invalid 'type' field for resource %q (must be a string)", name)
 		}
-		resourceType = strings.ToLower(resourceType)
+
 	} else {
 		return nil, fmt.Errorf("missing required 'type' field for resource %q", name)
 	}
 
-	if uriVal, ok := r["uri"]; ok {
-		if uriStr, isString := uriVal.(string); !isString {
-			return nil, fmt.Errorf("invalid 'uri' field for resource %q (must be a string)", name)
-		} else {
-			parsed, err := url.Parse(uriStr)
-			if err != nil || parsed.Scheme == "" {
-				return nil, fmt.Errorf("invalid 'uri' field for resource %q: must be a valid RFC-compliant absolute URI with a scheme", name)
-			}
 
-			// Normalize scheme and host to lowercase for consistent comparison and usage
-			parsed.Scheme = strings.ToLower(parsed.Scheme)
-			parsed.Host = strings.ToLower(parsed.Host)
-
-			// Scheme whitelisting
-			if resourceType == "file" && parsed.Scheme != "file" {
-				return nil, fmt.Errorf("invalid scheme for file resource %q: must be 'file'", name)
-			}
-
-			// Update the map with the normalized URI so that unmarshaling and
-			// collision detection see the normalized form (e.g. lowercase scheme and host)
-			r["uri"] = parsed.String()
-		}
-	} else {
-		switch resourceType {
-		case "file":
-			r["uri"] = fmt.Sprintf("file://%s", name)
-		case "text":
-			r["uri"] = fmt.Sprintf("text://%s", name)
-		default:
-			return nil, fmt.Errorf("missing required 'uri' field for resource %q", name)
-		}
-	}
 	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %s", err)

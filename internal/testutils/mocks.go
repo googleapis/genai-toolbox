@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
@@ -193,22 +194,35 @@ func NewMockPrompt(name, desc string, args prompts.Arguments) MockPrompt {
 	}
 }
 
+// RegisterMockResource registers the mock resource type with the resources package.
+func RegisterMockResource() {
+	resources.Register("mock", func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
+		var cfg MockResourceConfig
+		cfg.Name = name
+		cfg.Type = "mock"
+		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
+			return nil, err
+		}
+		return &cfg, nil
+	})
+}
+
 // MockResourceConfig is a mock implementation of resources.ResourceConfig
 type MockResourceConfig struct {
 	resources.BaseConfig `yaml:",inline"`
 }
 
-func (m MockResourceConfig) ResourceConfigType() string {
+func (m *MockResourceConfig) ResourceConfigType() string {
 	return "mock"
 }
 
-func (m MockResourceConfig) Initialize(ctx context.Context) (resources.Resource, error) {
+func (m *MockResourceConfig) Initialize(ctx context.Context) (resources.Resource, error) {
 	return MockResource{config: m}, nil
 }
 
 // MockResource is a mock implementation of resources.Resource
 type MockResource struct {
-	config MockResourceConfig
+	config *MockResourceConfig
 }
 
 func (m MockResource) Read(ctx context.Context, params map[string]any) (any, error) {

@@ -1521,15 +1521,6 @@ type: mock
 			wantError: true,
 		},
 		{
-			name: "omitted uri field on file type defaults to file://name without error",
-			yaml: `
-kind: resource
-name: test-file
-type: file
-`,
-			wantError: false,
-		},
-		{
 			name: "invalid uri field (not string) triggers error",
 			yaml: `
 kind: resource
@@ -1548,26 +1539,6 @@ type: mock
 uri: ://missing.scheme
 `,
 			wantError: true,
-		},
-		{
-			name: "invalid scheme for file resource triggers error",
-			yaml: `
-kind: resource
-name: test-resource
-type: file
-uri: info://test
-`,
-			wantError: true,
-		},
-		{
-			name: "custom scheme for text resource allowed without error",
-			yaml: `
-kind: resource
-name: test-text-custom-uri
-type: text
-uri: https://custom/path
-`,
-			wantError: false,
 		},
 		{
 			name: "duplicate resource names triggers error",
@@ -1599,21 +1570,6 @@ uri: mock://duplicate
 `,
 			wantError: true,
 		},
-		{
-			name: "omitted uri field defaults prevent duplicate name collisions",
-			yaml: `
-kind: resource
-name: same-name
-type: file
-path: /test1
----
-kind: resource
-name: same-name
-type: file
-path: /test2
-`,
-			wantError: true,
-		},
 	}
 
 	// Register a mock factory for this test package to use
@@ -1623,11 +1579,9 @@ path: /test2
 		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
 			return nil, err
 		}
-		return cfg, nil
+		return &cfg, nil
 	}
 	resources.Register("mock", mockFactory)
-	resources.Register("file", mockFactory)
-	resources.Register("text", mockFactory)
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1648,7 +1602,7 @@ func TestResourceAnnotationsParsing(t *testing.T) {
 		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
 			return nil, err
 		}
-		return cfg, nil
+		return &cfg, nil
 	}
 	resources.Register("mock", mockFactory)
 
@@ -1675,7 +1629,10 @@ annotations:
 		t.Fatalf("missing parsed config")
 	}
 
-	mockCfg := cfg.(testutils.MockResourceConfig)
+	mockCfg, ok := cfg.(*testutils.MockResourceConfig)
+	if !ok {
+		t.Fatalf("config is not a MockResourceConfig")
+	}
 	if mockCfg.Annotations == nil {
 		t.Fatalf("annotations map is nil")
 	}
