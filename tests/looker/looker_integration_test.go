@@ -2383,7 +2383,7 @@ func TestLooker(t *testing.T) {
 
 	// Verify that the suggestions list contains the expected values
 	wantSuggestions := []string{"api4", "dashboard", "explore", "merge_query", "regenerator", "sqlrunner", "suggest"}
-	testFieldValueSuggestions(t, []byte(`{"model": "system__activity", "explore": "history", "field": "history.source"}`), wantSuggestions)
+	testFieldValueSuggestions(t, "basic", []byte("{\"model\": \"system__activity\", \"explore\": \"history\", \"field\": \"history.source\"}"), wantSuggestions)
 
 	// Verify that search term filtering works
 	wantResult = "{\"suggestions\":[\"api4\"]}"
