@@ -2390,7 +2390,7 @@ func TestLooker(t *testing.T) {
 	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "term": "ap"}`), wantResult)
 
 	// Verify that conditional filtering based on other fields works
-	testFieldValueSuggestions(t, []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "filters": {"history.status": "complete"}}`), wantSuggestions)
+	testFieldValueSuggestions(t, "with_filtering", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "filters": {"history.status": "complete"}}`), wantSuggestions)
 
 	wantResult = "{\"description\":\"\",\"label\":\"API Usage\",\"label_short\":\"API Usage\",\"name\":\"turtle::api_usage\",\"suggestable\":false,\"type\":\"turtle_look\"}"
 	tests.RunToolInvokeParametersTest(t, "get_measures", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
