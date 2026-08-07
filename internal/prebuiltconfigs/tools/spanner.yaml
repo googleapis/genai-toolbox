@@ -24,13 +24,28 @@ kind: tool
 name: execute_sql
 type: spanner-execute-sql
 source: spanner-source
-description: Use this tool to execute DML SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
+description: |
+  Use this tool to execute DML SQL queries on Google Cloud Spanner.
+  Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
+
+  Use this tool for modifying data such as INSERT, UPDATE, and DELETE operations.
+  For read-only queries, use execute_sql_dql.
+  When working with graph data, inspect graph schemas with list_graphs first.
+  For relationship traversal queries, use Spanner Graph query syntax.
+ 
 ---
 kind: tool
 name: execute_sql_dql
 type: spanner-execute-sql
 source: spanner-source
-description: Use this tool to execute DQL SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
+description: |
+  Use this tool to execute read-only DQL SQL queries on Google Cloud Spanner.
+  Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
+
+  Use this tool for SELECT queries and data exploration.
+  For graph schema discovery, use list_graphs.
+  For graph traversal queries, use Spanner Graph query syntax.
+ 
 readOnly: true
 ---
 kind: tool
@@ -43,7 +58,13 @@ kind: tool
 name: list_graphs
 type: spanner-list-graphs
 source: spanner-source
-description: Lists detailed graph schema information (node tables, edge tables, labels and property declarations) as JSON for user-created graphs. Filters by a comma-separated list of graph names. If names are omitted, lists all graphs. The output can be 'simple' (graph names only) or 'detailed' (full schema).
+description: |
+  Lists detailed graph schema information for user-created Spanner graphs,
+  including node tables, edge tables, labels, and property declarations.
+
+  Use this tool before writing graph queries to understand available graph structures.
+  If graph names are omitted, lists all available graphs.
+  The output can be simple (graph names only) or detailed (full schema).
 ---
 kind: tool
 name: search_catalog

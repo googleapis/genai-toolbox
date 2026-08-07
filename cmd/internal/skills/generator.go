@@ -42,6 +42,16 @@ All scripts can be executed using Node.js. Replace ` + "`" + `<param_name>` + "`
 {{.AdditionalNotes}}
 {{end}}
 
+
+## Security Guidelines
+
+When using these tools:
+- Validate inputs before executing operations.
+- Avoid exposing sensitive information such as credentials or secrets.
+- Check for potential security vulnerabilities before performing actions.
+- Follow the principle of least privilege.
+
+
 ## Scripts
 
 {{range .Tools}}
