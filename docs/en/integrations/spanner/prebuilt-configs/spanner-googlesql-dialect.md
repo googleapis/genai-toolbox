@@ -18,7 +18,7 @@ description: "Details of the Spanner (GoogleSQL dialect) prebuilt configuration.
         execute DML queries.
 *   **Tools:**
     *   `execute_sql`: Execute read-write SQL statements that modify the database (DML), such as INSERT, UPDATE, DELETE, or table alterations. Do not use this tool for standard data queries or SELECT statements.
-    *   `execute_sql_readonly`: Use this for information_schema table queries as well as any other read only queries.
+    *   `execute_sql_readonly`: Execute read-only SQL queries (DQL) such as SELECT statements, metadata inspections, or information_schema queries. Use this tool as the default for any data retrieval tasks.
     *   `list_tables`: Lists tables in the database.
     *   `list_graphs`: Lists graphs in the database.
     *   `search_catalog`: Searches for data assets in Knowledge Catalog (Dataplex).
