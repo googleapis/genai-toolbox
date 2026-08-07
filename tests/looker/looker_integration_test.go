@@ -2553,8 +2553,10 @@ func TestLooker(t *testing.T) {
 // least the wanted values. Suggestions are drawn from live System Activity data,
 // which only accumulates — running the LookML tests in this suite, for instance,
 // adds "__lookml_test__" as a history source — so the exact list cannot be pinned.
-func testFieldValueSuggestions(t *testing.T, params []byte, want []string) {
-	t.Run("invoke get_field_value_suggestions", func(t *testing.T) {
+func testFieldValueSuggestions(t *testing.T, name string, params []byte, want []string) {
+	t.Helper()
+	t.Run("invoke get_field_value_suggestions/"+name, func(t *testing.T) {
+		t.Helper()
 		url := "http://127.0.0.1:5000/api/tool/get_field_value_suggestions/invoke"
 		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(params), nil)
 
