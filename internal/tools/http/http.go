@@ -87,7 +87,7 @@ func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 
 	var googleAccessTokenProvider *adcTokenProvider
 	if cfg.SendGoogleAccessToken {
-		googleAccessTokenProvider = &adcTokenProvider{ctx: ctx}
+		googleAccessTokenProvider = &adcTokenProvider{}
 	}
 
 	// Create a slice for all parameters
@@ -280,23 +280,25 @@ func getHeaders(headerParams parameters.Parameters, defaultHeaders map[string]st
 }
 
 type adcTokenProvider struct {
-	ctx         context.Context
 	mu          sync.Mutex
 	tokenSource oauth2.TokenSource
 }
 
-func (p *adcTokenProvider) getTokenSource() (oauth2.TokenSource, error) {
+func (p *adcTokenProvider) getTokenSource(ctx context.Context) (oauth2.TokenSource, error) {
 	if p == nil {
 		return nil, fmt.Errorf("google ADC token provider is not initialized")
 	}
-	if p.ctx == nil {
-		return nil, fmt.Errorf("google ADC token provider context is not initialized")
+	if ctx == nil {
+		return nil, fmt.Errorf("google ADC token provider invocation context is not initialized")
 	}
 
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	if p.tokenSource == nil {
-		credentials, err := google.FindDefaultCredentials(p.ctx, sources.CloudPlatformScope)
+		// ADC token sources may retain this context for later token refreshes.
+		// Keep invocation values, such as a custom HTTP client, while ensuring
+		// completion of the first invocation does not cancel future refreshes.
+		credentials, err := google.FindDefaultCredentials(context.WithoutCancel(ctx), sources.CloudPlatformScope)
 		if err != nil {
 			return nil, fmt.Errorf("unable to initialize Google ADC: %w", err)
 		}
@@ -308,8 +310,8 @@ func (p *adcTokenProvider) getTokenSource() (oauth2.TokenSource, error) {
 	return p.tokenSource, nil
 }
 
-func (p *adcTokenProvider) Token() (*oauth2.Token, error) {
-	tokenSource, err := p.getTokenSource()
+func (p *adcTokenProvider) Token(ctx context.Context) (*oauth2.Token, error) {
+	tokenSource, err := p.getTokenSource(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -321,10 +323,11 @@ func (p *adcTokenProvider) Token() (*oauth2.Token, error) {
 }
 
 func setGoogleAccessToken(
+	ctx context.Context,
 	req *http.Request,
 	tokenProvider *adcTokenProvider,
 ) error {
-	token, err := tokenProvider.Token()
+	token, err := tokenProvider.Token(ctx)
 	if err != nil {
 		return err
 	}
@@ -375,7 +378,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		req.Header.Set(k, v)
 	}
 	if t.Cfg.SendGoogleAccessToken {
-		if err := setGoogleAccessToken(req, t.googleAccessTokenProvider); err != nil {
+		if err := setGoogleAccessToken(ctx, req, t.googleAccessTokenProvider); err != nil {
 			return nil, util.NewClientServerError("error authenticating HTTP request with Google ADC", http.StatusInternalServerError, err)
 		}
 	}

@@ -49,10 +49,14 @@ func TestHttpToolSendsGoogleAccessToken(t *testing.T) {
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
+			expiresIn := 3600
+			if tokenRequests.Load() == 1 {
+				expiresIn = 11
+			}
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"access_token": accessToken,
 				"token_type":   "Bearer",
-				"expires_in":   3600,
+				"expires_in":   expiresIn,
 			})
 		case "/protected":
 			if got, want := r.Header.Get("Authorization"), "Bearer "+accessToken; got != want {
@@ -124,6 +128,12 @@ func TestHttpToolSendsGoogleAccessToken(t *testing.T) {
 	}
 
 	for invocation := 1; invocation <= 2; invocation++ {
+		if invocation == 2 {
+			// The OAuth library treats tokens expiring within ten seconds as
+			// invalid. Let the first token enter that window so this invocation
+			// exercises refresh after the first request context is cancelled.
+			time.Sleep(2 * time.Second)
+		}
 		req, err := http.NewRequest(
 			http.MethodPost,
 			"http://127.0.0.1:5000/api/tool/my-google-api-tool/invoke",
@@ -162,7 +172,7 @@ func TestHttpToolSendsGoogleAccessToken(t *testing.T) {
 		}
 	}
 
-	if got, want := tokenRequests.Load(), int32(1); got != want {
+	if got, want := tokenRequests.Load(), int32(2); got != want {
 		t.Fatalf("unexpected OAuth token request count: got %d, want %d", got, want)
 	}
 }
