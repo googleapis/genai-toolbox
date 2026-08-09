@@ -26,10 +26,10 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mongodb/mongodbcommon"
 )
 
 const resourceType string = "mongodb-delete-many"
-const collectionKey string = "collection"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -76,20 +76,10 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	allParameters := slices.Concat(cfg.FilterParams)
 
-	// If no collection is set in the config, expose it as a runtime parameter so
-	// the agent can pick the collection when invoking the tool.
-	if cfg.Collection == "" {
-		opts := []parameters.StringParameterOption{parameters.WithStringRequired(true)}
-		if len(cfg.CollectionAllowedValues) > 0 {
-			allowed := make([]any, len(cfg.CollectionAllowedValues))
-			for i, v := range cfg.CollectionAllowedValues {
-				allowed[i] = v
-			}
-			opts = append(opts, parameters.WithStringAllowedValues(allowed))
-		}
-		collectionParam := parameters.NewStringParameter(collectionKey, "The name of the collection to operate on.", opts...)
-		allParameters = append(allParameters, collectionParam)
+	if err := mongodbcommon.ValidateCollectionConfig(cfg.Collection, cfg.CollectionAllowedValues); err != nil {
+		return nil, err
 	}
+	allParameters = mongodbcommon.WithRuntimeCollectionParam(cfg.Collection, cfg.CollectionAllowedValues, allParameters)
 
 	if err := parameters.CheckDuplicateParameters(allParameters); err != nil {
 		return nil, err
@@ -140,13 +130,9 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	}
 	paramsMap := params.AsMap()
 
-	collection := t.Cfg.Collection
-	if collection == "" {
-		c, ok := paramsMap[collectionKey].(string)
-		if !ok || c == "" {
-			return nil, util.NewAgentError("collection must be set in the tool config or provided as a parameter", nil)
-		}
-		collection = c
+	collection, tbErr := mongodbcommon.ResolveCollection(t.Cfg.Collection, paramsMap)
+	if tbErr != nil {
+		return nil, tbErr
 	}
 
 	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBDeleteManyFilter", t.Cfg.FilterPayload, paramsMap)

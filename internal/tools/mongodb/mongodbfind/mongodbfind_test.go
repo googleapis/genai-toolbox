@@ -166,54 +166,13 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 
 }
 
-func findCollectionParam(params []parameters.ParameterManifest) *parameters.ParameterManifest {
-	for i := range params {
-		if params[i].Name == "collection" {
-			return &params[i]
+func collectionParam(params parameters.Parameters) *parameters.StringParameter {
+	for _, p := range params {
+		if sp, ok := p.(*parameters.StringParameter); ok && sp.GetName() == "collection" {
+			return sp
 		}
 	}
 	return nil
-}
-
-func TestRuntimeCollectionParam(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-
-	// A config that omits collection should still parse, since it is no longer required.
-	if _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(noCollectionConfig)); err != nil {
-		t.Fatalf("expected config without collection to parse, got: %s", err)
-	}
-
-	// When collection is omitted, it is exposed as a required runtime parameter.
-	runtimeCfg := mongodbfind.Config{
-		ConfigBase: tools.ConfigBase{Name: "example_tool", Description: "some description"},
-		Limit:      1,
-	}
-	runtimeTool, err := runtimeCfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("unable to initialize tool: %s", err)
-	}
-	if p := findCollectionParam(runtimeTool.StaticManifest().Parameters); p == nil {
-		t.Error("expected a runtime collection parameter when collection is omitted from config")
-	} else if !p.Required {
-		t.Error("expected the runtime collection parameter to be required")
-	}
-
-	// When collection is set in the config, no runtime parameter is exposed.
-	staticCfg := mongodbfind.Config{
-		ConfigBase: tools.ConfigBase{Name: "example_tool", Description: "some description"},
-		Collection: "test_coll",
-		Limit:      1,
-	}
-	staticTool, err := staticCfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("unable to initialize tool: %s", err)
-	}
-	if p := findCollectionParam(staticTool.StaticManifest().Parameters); p != nil {
-		t.Error("did not expect a collection parameter when collection is set in the config")
-	}
 }
 
 var noCollectionConfig = `
@@ -227,37 +186,68 @@ var noCollectionConfig = `
                 { name: {{json .name}} }
 `
 
-func TestRuntimeCollectionAllowedValues(t *testing.T) {
+func TestRuntimeCollection(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	// collectionAllowedValues should restrict the injected runtime collection parameter.
-	cfg := mongodbfind.Config{
-		ConfigBase:              tools.ConfigBase{Name: "example_tool", Description: "some description"},
-		Limit:                   1,
-		CollectionAllowedValues: []string{"orders", "customers"},
-	}
-	tool, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("unable to initialize tool: %s", err)
-	}
-	params, err := tool.GetParameters(nil)
-	if err != nil {
-		t.Fatalf("unable to get parameters: %s", err)
+	// collection is optional now, so a config without it should still parse.
+	if _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(noCollectionConfig)); err != nil {
+		t.Fatalf("expected config without collection to parse, got: %s", err)
 	}
 
-	var collectionParam *parameters.StringParameter
-	for _, p := range params {
-		if sp, ok := p.(*parameters.StringParameter); ok && sp.GetName() == "collection" {
-			collectionParam = sp
-		}
+	tcs := []struct {
+		desc          string
+		collection    string
+		allowedValues []string
+		wantParam     bool
+		wantAllowed   int
+		wantErr       bool
+	}{
+		{"omitted exposes a required runtime param", "", nil, true, 0, false},
+		{"omitted with allowed values restricts the param", "", []string{"orders", "customers"}, true, 2, false},
+		{"set in config exposes no runtime param", "test_coll", nil, false, 0, false},
+		{"collection and allowedValues together is an error", "test_coll", []string{"orders"}, false, 0, true},
 	}
-	if collectionParam == nil {
-		t.Fatal("expected an injected collection parameter")
-	}
-	if len(collectionParam.AllowedValues) != 2 {
-		t.Fatalf("expected 2 allowed values on the collection parameter, got %d", len(collectionParam.AllowedValues))
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			cfg := mongodbfind.Config{
+				ConfigBase:              tools.ConfigBase{Name: "example_tool", Description: "some description"},
+				Collection:              tc.collection,
+				CollectionAllowedValues: tc.allowedValues,
+				Limit:                   1,
+			}
+			tool, err := cfg.Initialize(ctx)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected an error when collection and collectionAllowedValues are both set")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unable to initialize tool: %s", err)
+			}
+			params, err := tool.GetParameters(nil)
+			if err != nil {
+				t.Fatalf("unable to get parameters: %s", err)
+			}
+			p := collectionParam(params)
+			if !tc.wantParam {
+				if p != nil {
+					t.Error("did not expect a collection parameter when collection is set in config")
+				}
+				return
+			}
+			if p == nil {
+				t.Fatal("expected a runtime collection parameter when collection is omitted")
+			}
+			if p.Required == nil || !*p.Required {
+				t.Error("expected the runtime collection parameter to be required")
+			}
+			if len(p.AllowedValues) != tc.wantAllowed {
+				t.Errorf("expected %d allowed values, got %d", tc.wantAllowed, len(p.AllowedValues))
+			}
+		})
 	}
 }
