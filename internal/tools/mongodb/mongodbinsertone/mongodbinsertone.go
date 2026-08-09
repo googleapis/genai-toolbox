@@ -21,6 +21,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mongodb/mongodbcommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -29,7 +30,6 @@ import (
 const resourceType string = "mongodb-insert-one"
 
 const dataParamsKey = "data"
-const collectionKey = "collection"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -77,20 +77,10 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	allParameters := parameters.Parameters{payloadParams}
 
-	// If no collection is set in the config, expose it as a runtime parameter so
-	// the agent can pick the collection when invoking the tool.
-	if cfg.Collection == "" {
-		opts := []parameters.StringParameterOption{parameters.WithStringRequired(true)}
-		if len(cfg.CollectionAllowedValues) > 0 {
-			allowed := make([]any, len(cfg.CollectionAllowedValues))
-			for i, v := range cfg.CollectionAllowedValues {
-				allowed[i] = v
-			}
-			opts = append(opts, parameters.WithStringAllowedValues(allowed))
-		}
-		collectionParam := parameters.NewStringParameter(collectionKey, "The name of the collection to operate on.", opts...)
-		allParameters = append(allParameters, collectionParam)
+	if err := mongodbcommon.ValidateCollectionConfig(cfg.Collection, cfg.CollectionAllowedValues); err != nil {
+		return nil, err
 	}
+	allParameters = mongodbcommon.WithRuntimeCollectionParam(cfg.Collection, cfg.CollectionAllowedValues, allParameters)
 
 	paramManifest := allParameters.Manifest()
 	if paramManifest == nil {
@@ -144,13 +134,9 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		return nil, util.NewAgentError("no input found or invalid type for data", nil)
 	}
 
-	collection := t.Cfg.Collection
-	if collection == "" {
-		c, ok := params.AsMap()[collectionKey].(string)
-		if !ok || c == "" {
-			return nil, util.NewAgentError("collection must be set in the tool config or provided as a parameter", nil)
-		}
-		collection = c
+	collection, tbErr := mongodbcommon.ResolveCollection(t.Cfg.Collection, params.AsMap())
+	if tbErr != nil {
+		return nil, tbErr
 	}
 
 	resp, err := source.InsertOne(ctx, jsonData, t.Cfg.Canonical, t.Cfg.Database, collection)
