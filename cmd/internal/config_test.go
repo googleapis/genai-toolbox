@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -240,7 +241,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -338,7 +339,7 @@ name: my-google-auth
 type: google
 clientId: testing-id
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -460,7 +461,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -504,14 +505,14 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset2
 tools:
 - example_tool
 ---
 tools:
 - example_tool
-kind: toolset
+kind: group
 name: example_toolset3
 ---
 kind: prompt
@@ -529,7 +530,7 @@ type: gemini
 `,
 		},
 		{
-			desc: "no convertion needed",
+			desc: "flat format only rewrites the toolset kind",
 			in: `
 kind: source
 name: my-pg-instance
@@ -578,7 +579,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -596,10 +597,69 @@ tools:
 			isErr:  true,
 			errStr: `doc 1: invalid config format at key "toolsets": expected nested format keys and type map`,
 		},
+		{
+			// Toolsets are emitted as groups, but the error must still name the
+			// key the user wrote.
+			desc: "invalid toolset entry",
+			in: `
+            toolsets:
+                example_toolset: not-a-list`,
+			isErr:  true,
+			errStr: `doc 1: invalid config format at key "toolsets": unable to convert entryBody to MapSlice`,
+		},
+		{
+			// A toolset has no description of its own, so converting must not turn
+			// one into a group description.
+			desc: "convert flat toolset to group drops the description",
+			in: `
+kind: toolset
+name: example_toolset
+description: some description
+tools:
+- example_tool`,
+			want: `
+kind: group
+name: example_toolset
+tools:
+- example_tool
+`,
+		},
+		{
+			// A nested toolset body may be written as a map rather than a bare
+			// list, in which case it can carry a description too. Both
+			// spellings must produce the same group.
+			desc: "convert nested map-form toolset to group drops the description",
+			in: `
+toolsets:
+    example_toolset:
+        description: some description
+        tools:
+        - example_tool`,
+			want: `
+kind: group
+name: example_toolset
+tools:
+- example_tool
+`,
+		},
+		{
+			desc: "convert flat toolset to group with kind not first",
+			in: `
+tools:
+- example_tool
+kind: toolset
+name: example_toolset`,
+			want: `
+tools:
+- example_tool
+kind: group
+name: example_toolset
+`,
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			output, err := ConvertConfig([]byte(tc.in))
+			output, err := ConvertConfig(context.Background(), []byte(tc.in))
 			if tc.isErr {
 				if err == nil {
 					t.Fatalf("expected error")
@@ -941,6 +1001,36 @@ func TestParseConfigFailure(t *testing.T) {
 			statement: SELECT *;
 			`,
 			wantError: "invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed",
+		},
+		{
+			// Toolsets are parsed as groups, so unknown fields are now rejected by
+			// the group's strict decoder instead of being silently dropped.
+			description: "unknown field in toolset",
+			in: `
+			kind: toolset
+			name: my_toolset
+			tools:
+			- example_tool
+			descriptoin: typo
+			`,
+			wantError: "unable to unmarshal group",
+		},
+		{
+			// Toolsets are parsed as groups, so a toolset and a group of the same
+			// name now collide instead of the group silently winning.
+			description: "toolset and group share a name",
+			in: `
+			kind: toolset
+			name: my_collection
+			tools:
+			- example_tool
+---
+			kind: group
+			name: my_collection
+			tools:
+			- example_tool
+			`,
+			wantError: `group "my_collection" declared more than once`,
 		},
 	}
 	for _, tc := range tcs {
@@ -2131,11 +2221,11 @@ func TestPrebuiltTools(t *testing.T) {
 				"data": group.GroupConfig{
 					Name:        "data",
 					Description: "Use these skills when you need to explore the database structure, discover schema objects like tables and graphs, and execute custom SQL queries to interact with your data.",
-					ToolNames:   []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
+					ToolNames:   []string{"execute_sql", "execute_sql_readonly", "list_tables", "list_graphs"},
 				},
 				"data_with_discovery": group.GroupConfig{
 					Name:      "data_with_discovery",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs", "search_catalog"},
+					ToolNames: []string{"execute_sql", "execute_sql_readonly", "list_tables", "list_graphs", "search_catalog"},
 				},
 			},
 		},
@@ -2145,11 +2235,11 @@ func TestPrebuiltTools(t *testing.T) {
 			wantGroups: server.GroupConfigs{
 				"data": group.GroupConfig{
 					Name:      "data",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+					ToolNames: []string{"execute_sql", "execute_sql_readonly", "list_tables"},
 				},
 				"data_with_discovery": group.GroupConfig{
 					Name:      "data_with_discovery",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "search_catalog"},
+					ToolNames: []string{"execute_sql", "execute_sql_readonly", "list_tables", "search_catalog"},
 				},
 			},
 		},
@@ -2246,12 +2336,14 @@ func TestPrebuiltTools(t *testing.T) {
 			in:   cloudstorage_config,
 			wantGroups: server.GroupConfigs{
 				"cloud-storage-buckets": group.GroupConfig{
-					Name:      "cloud-storage-buckets",
-					ToolNames: []string{"list_buckets", "create_bucket", "get_bucket_metadata", "get_bucket_iam_policy", "delete_bucket"},
+					Name:        "cloud-storage-buckets",
+					Description: "Use these tools when you need to administer cloud storage buckets, including listing and creating buckets, inspecting bucket metadata and access control policies, and deleting buckets.",
+					ToolNames:   []string{"list_buckets", "create_bucket", "get_bucket_metadata", "get_bucket_iam_policy", "delete_bucket"},
 				},
 				"cloud-storage-objects": group.GroupConfig{
-					Name:      "cloud-storage-objects",
-					ToolNames: []string{"list_objects", "get_object_metadata", "read_object", "download_object", "write_object", "upload_object", "copy_object", "move_object", "delete_object"},
+					Name:        "cloud-storage-objects",
+					Description: "Use these tools when you need to manage files and objects in cloud storage — listing, reading, writing, copying, moving, or deleting objects and retrieving their metadata.",
+					ToolNames:   []string{"list_objects", "get_object_metadata", "read_object", "download_object", "write_object", "upload_object", "copy_object", "move_object", "delete_object"},
 				},
 			},
 		},
