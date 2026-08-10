@@ -120,6 +120,7 @@ func TestPopulateUrlParams(t *testing.T) {
 		toolParams   parameters.Parameters
 		expected     map[string]any
 		expectedLogs []logEntry
+		wantErr      bool
 	}{
 		{
 			name: "no URL params in context",
@@ -136,7 +137,7 @@ func TestPopulateUrlParams(t *testing.T) {
 			expectedLogs: nil,
 		},
 		{
-			name: "URL params present but key already exists in data",
+			name: "URL params present and key already exists in data - returns error",
 			setupCtx: func(ctx context.Context, logger log.Logger) context.Context {
 				ctx = util.WithLogger(ctx, logger)
 				return util.WithUrlParams(ctx, map[string]string{
@@ -149,10 +150,9 @@ func TestPopulateUrlParams(t *testing.T) {
 			toolParams: parameters.Parameters{
 				mockParameter{name: "param1", typ: "string"},
 			},
-			expected: map[string]any{
-				"param1": "existingValue",
-			},
+			expected:     nil,
 			expectedLogs: nil,
+			wantErr:      true,
 		},
 		{
 			name: "URL params present and key not in data - string type",
@@ -460,7 +460,10 @@ func TestPopulateUrlParams(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			logger := &mockLogger{}
 			ctx := tc.setupCtx(context.Background(), logger)
-			actual := PopulateUrlParams(ctx, tc.initial, tc.toolParams)
+			actual, err := PopulateUrlParams(ctx, tc.initial, tc.toolParams)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("PopulateUrlParams() error = %v, wantErr %v", err, tc.wantErr)
+			}
 			if !reflect.DeepEqual(actual, tc.expected) {
 				t.Errorf("PopulateUrlParams() = %v, want %v", actual, tc.expected)
 			}
