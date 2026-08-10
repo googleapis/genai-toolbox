@@ -324,6 +324,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantBodyMCP:       "[]",
 			wantStatusCode:    http.StatusOK,
 			wantStatusCodeMCP: http.StatusOK,
+			wantContentErr:    `parameter "id" is required`,
 		},
 		{
 			name:              "Invoke my-tool with insufficient parameters",
@@ -335,6 +336,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantBodyMCP:       "[]",
 			wantStatusCode:    http.StatusOK,
 			wantStatusCodeMCP: http.StatusOK,
+			wantContentErr:    `parameter "name" is required`,
 		},
 		{
 			name:              "invoke my-array-tool",
@@ -367,6 +369,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantBodyMCP:       "[]",
 			wantStatusCode:    http.StatusUnauthorized,
 			wantStatusCodeMCP: http.StatusOK,
+			wantContentErr:    "missing or invalid authentication header",
 		},
 		{
 			name:              "Invoke my-auth-tool without auth token",
@@ -378,6 +381,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantBodyMCP:       "[]",
 			wantStatusCode:    http.StatusUnauthorized,
 			wantStatusCodeMCP: http.StatusOK,
+			wantContentErr:    "missing or invalid authentication header",
 		},
 		{
 			name:              "Invoke my-auth-required-tool with auth token",
