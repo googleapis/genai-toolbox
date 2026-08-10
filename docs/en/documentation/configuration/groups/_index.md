@@ -61,8 +61,22 @@ At startup, Toolbox validates groups:
 - **Unique names.** A named group must have a unique name that satisfies the standard name rules (alphanumeric characters, underscores, and hyphens).
 - **One default group.** Declaring more than one nameless group is an error.
 - **Default group restrictions.** The default group may set only a `description`; declaring `tools`, `prompts`, or any other primitive list on it is an error.
-- **Group wins over a same-named toolset.** If a name is defined by both a `kind: toolset` and a `kind: group`, the group takes precedence and Toolbox logs a warning naming the shadowed toolset.
+- **No duplicate names across toolsets and groups.** A `kind: toolset` is parsed as a group, so defining the same name as both a `kind: toolset` and a `kind: group` is a duplicate-name error.
 
 ## Relationship to toolsets
 
-Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations continue to work unchanged — they are treated as groups with tools and no other primitives, so no migration is required. That said, we recommend migrating to a `kind: group` even for tools-only collections: a group lets you attach a `description` and scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.
+Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations still load — Toolbox parses every toolset as a group — but that parity is not exact, so review the differences below before assuming a toolset behaves as it did:
+
+- A toolset has no `description` of its own, so one written on a `kind: toolset` is dropped rather than promoted, and Toolbox logs a warning. To give a collection a description, declare it as a `kind: group`.
+- Unrecognized fields on a toolset are rejected at startup instead of being silently ignored.
+- Declaring the same name as both a `kind: toolset` and a `kind: group` is a duplicate-name error; previously the group silently took precedence.
+
+We recommend migrating to a `kind: group` even for tools-only collections, so the configuration matches what Toolbox actually loads and can grow to scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.
+
+To convert existing toolsets to groups automatically, run the `migrate` command. It rewrites both nested `toolsets:` blocks and already-flat `kind: toolset` documents to `kind: group`:
+
+```bash
+toolbox migrate --config tools.yaml
+```
+
+Use `--dry-run` to preview the changes without writing them.
