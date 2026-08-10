@@ -1999,10 +1999,10 @@ func TestFailParametersUnmarshal(t *testing.T) {
 			name: "both secure and authServices",
 			in: []map[string]any{
 				{
-					"name":         "my_string",
-					"type":         "string",
-					"description":  "this param",
-					"secure":       true,
+					"name":        "my_string",
+					"type":        "string",
+					"description": "this param",
+					"secure":      true,
 					"authServices": []map[string]any{
 						{"name": "service_one"},
 					},

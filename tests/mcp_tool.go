@@ -637,7 +637,7 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 		if supportsSecure {
 			meta["io.modelcontextprotocol/clientCapabilities"] = map[string]any{
 				"experimental": map[string]any{
-					"com.google.cloud/secure-params": true,
+					"com.google.cloud/toolbox.v1": true,
 				},
 			}
 		}
@@ -688,7 +688,7 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 			secureArguments: map[string]any{"name": "Alice"},
 			supportsSecure:  false,
 			wantError:       true,
-			wantErrorMsg:    "requires com.google.cloud/secure-params extension which is not supported by the client",
+			wantErrorMsg:    "requires com.google.cloud/toolbox.v1 extension which is not supported by the client",
 		},
 		{
 			name:            "secure parameter passed in standard arguments",

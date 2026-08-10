@@ -56,4 +56,3 @@ func SupportsExtension(supportedExts map[string]any, uri string) bool {
 	_, ok := supportedExts[uri]
 	return ok
 }
-

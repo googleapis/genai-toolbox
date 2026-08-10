@@ -431,7 +431,6 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-
 	// Auto-populate arguments from URL parameters
 	data, err = mcputil.PopulateUrlParams(ctx, data, toolParams)
 	if err != nil {
@@ -811,7 +810,7 @@ func getSupportedExtensions(meta *RequestMetaObject) map[string]any {
 	return ParseSupportedExtensions(meta.MetaClientCapabilities.Extensions)
 }
 
-// supportsSecureParams checks if the client declared support for the com.google.cloud/secure-params extension.
+// supportsSecureParams checks if the client declared support for the com.google.cloud/toolbox.v1 extension.
 func supportsSecureParams(meta *RequestMetaObject) bool {
 	supportedExts := getSupportedExtensions(meta)
 	if SupportsExtension(supportedExts, SecureParamsURI) {

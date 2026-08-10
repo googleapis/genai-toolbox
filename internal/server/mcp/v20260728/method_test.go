@@ -1351,7 +1351,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						},
 						"io.modelcontextprotocol/clientCapabilities": {
 							"experimental": {
-								"com.google.cloud/secure-params": true
+								"com.google.cloud/toolbox.v1": true
 							}
 						}
 					}
@@ -1381,7 +1381,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						},
 						"io.modelcontextprotocol/clientCapabilities": {
 							"experimental": {
-								"com.google.cloud/secure-params": true
+								"com.google.cloud/toolbox.v1": true
 							}
 						}
 					}
@@ -1412,7 +1412,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						},
 						"io.modelcontextprotocol/clientCapabilities": {
 							"experimental": {
-								"com.google.cloud/secure-params": true
+								"com.google.cloud/toolbox.v1": true
 							}
 						}
 					}
@@ -1442,7 +1442,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						},
 						"io.modelcontextprotocol/clientCapabilities": {
 							"extensions": {
-								"com.google.cloud/secure-params": {}
+								"com.google.cloud/toolbox.v1": {}
 							}
 						}
 					}
@@ -1472,7 +1472,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						},
 						"io.modelcontextprotocol/clientCapabilities": {
 							"experimental": {
-								"com.google.cloud/secure-params": true
+								"com.google.cloud/toolbox.v1": true
 							}
 						}
 					}
@@ -1505,7 +1505,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						},
 						"io.modelcontextprotocol/clientCapabilities": {
 							"experimental": {
-								"com.google.cloud/secure-params": true
+								"com.google.cloud/toolbox.v1": true
 							}
 						}
 					}
@@ -1541,4 +1541,3 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 		})
 	}
 }
-
