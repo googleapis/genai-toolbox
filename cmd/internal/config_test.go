@@ -2246,12 +2246,14 @@ func TestPrebuiltTools(t *testing.T) {
 			in:   cloudstorage_config,
 			wantGroups: server.GroupConfigs{
 				"cloud-storage-buckets": group.GroupConfig{
-					Name:      "cloud-storage-buckets",
-					ToolNames: []string{"list_buckets", "create_bucket", "get_bucket_metadata", "get_bucket_iam_policy", "delete_bucket"},
+					Name:        "cloud-storage-buckets",
+					Description: "Use these tools when you need to administer cloud storage buckets, including listing and creating buckets, inspecting bucket metadata and access control policies, and deleting buckets.",
+					ToolNames:   []string{"list_buckets", "create_bucket", "get_bucket_metadata", "get_bucket_iam_policy", "delete_bucket"},
 				},
 				"cloud-storage-objects": group.GroupConfig{
-					Name:      "cloud-storage-objects",
-					ToolNames: []string{"list_objects", "get_object_metadata", "read_object", "download_object", "write_object", "upload_object", "copy_object", "move_object", "delete_object"},
+					Name:        "cloud-storage-objects",
+					Description: "Use these tools when you need to manage files and objects in cloud storage — listing, reading, writing, copying, moving, or deleting objects and retrieving their metadata.",
+					ToolNames:   []string{"list_objects", "get_object_metadata", "read_object", "download_object", "write_object", "upload_object", "copy_object", "move_object", "delete_object"},
 				},
 			},
 		},
