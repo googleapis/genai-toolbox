@@ -39,16 +39,22 @@ func testFixtures() (map[string]tools.Tool, map[string]prompts.Prompt) {
 	return toolsMap, promptsMap
 }
 
+func intPtr(v int) *int {
+	return &v
+}
+
 func TestGroupConfig_Initialize(t *testing.T) {
 	t.Parallel()
 	toolsMap, promptsMap := testFixtures()
 
 	testCases := []struct {
-		name        string
-		config      group.GroupConfig
-		wantTools   []string
-		wantPrompts []string
-		wantErr     string
+		name        	string
+		config      	group.GroupConfig
+		wantTools   	[]string
+		wantPrompts 	[]string
+		wantErr     	string
+		wantTTLMs		*int
+		wantCacheScope 	string
 	}{
 		{
 			name: "tools and prompts",
@@ -113,6 +119,60 @@ func TestGroupConfig_Initialize(t *testing.T) {
 			},
 			wantErr: "prompt does not exist: \"nope\"",
 		},
+		{
+			name: "valid ttlMs",
+			config: group.GroupConfig{
+				Name:      "g",
+				TTLMs:     intPtr(10000),
+			},
+			wantTTLMs: intPtr(10000),
+		},
+		{
+			name: "empty ttlMs",
+			config: group.GroupConfig{
+				Name:      "g",
+			},
+			wantTTLMs: intPtr(300000),
+		},
+		{
+			name: "negative ttlMs",
+			config: group.GroupConfig{
+				Name:      "g",
+				TTLMs:     intPtr(-1000),
+			},
+			wantErr: "invalid ttlMs value: -1000; must be non-negative",
+		},
+		{
+			name: "public cacheScope",
+			config: group.GroupConfig{
+				Name:       "g",
+				CacheScope: "public",
+			},
+			wantCacheScope: "public",
+		},
+		{
+			name: "private cacheScope",
+			config: group.GroupConfig{
+				Name:       "g",
+				CacheScope: "private",
+			},
+			wantCacheScope: "private",
+		},
+		{
+			name: "empty cacheScope",
+			config: group.GroupConfig{
+				Name:       "g",
+			},
+			wantCacheScope: "public",
+		},
+		{
+			name: "invalid cacheScope",
+			config: group.GroupConfig{
+				Name:       "g",
+				CacheScope: "secret",
+			},
+			wantErr: "invalid cacheScope value: \"secret\"; must be 'public' or 'private'",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -146,6 +206,22 @@ func TestGroupConfig_Initialize(t *testing.T) {
 				if !g.ContainsPrompt(name) {
 					t.Errorf("group missing prompt %q", name)
 				}
+			}
+
+			expectedScope := tc.wantCacheScope
+			if expectedScope == "" {
+				expectedScope = group.DefaultCacheScope
+			}
+			if g.GetCacheScope() != expectedScope {
+				t.Errorf("CacheScope = %q, want %q", g.GetCacheScope(), expectedScope)
+			}
+			
+			expectedTTL := group.DefaultTTLMs
+			if tc.wantTTLMs != nil {
+				expectedTTL = *tc.wantTTLMs
+			}
+			if g.GetTTLMs() != expectedTTL {
+				t.Errorf("TTLMs = %d, want %d", g.GetTTLMs(), expectedTTL)
 			}
 		})
 	}
