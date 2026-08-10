@@ -97,10 +97,11 @@ func TestParseSupportedExtensions(t *testing.T) {
 			} else {
 				SupportedExtensions = map[string]any{testExtURI: map[string]any{}}
 			}
-			InitializeExtensions(nil)
+			Initialize(nil)
 			exts := ParseSupportedExtensions(tc.extensions)
-			if SupportsExtension(exts, tc.expectedUri) != tc.expectedVal {
-				t.Errorf("SupportsExtension() value for %s = %v, want %v", tc.expectedUri, SupportsExtension(exts, tc.expectedUri), tc.expectedVal)
+			_, ok := exts[tc.expectedUri]
+			if ok != tc.expectedVal {
+				t.Errorf("ParseSupportedExtensions() value for %s = %v, want %v", tc.expectedUri, ok, tc.expectedVal)
 			}
 		})
 	}
