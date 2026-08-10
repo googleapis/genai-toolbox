@@ -10512,7 +10512,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode502s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode230s0hbhb"&gt;
 
 
 
@@ -14270,7 +14270,33 @@ allowing tools to execute SQL queries against it.&lt;/p&gt;
  &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/&gt;
 &lt;/svg&gt;
 
- &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>Data Lineage Source</title><link>https://mcp-toolbox.dev/dev/integrations/datalineage/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/datalineage/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>Database Insights Source</title><link>https://mcp-toolbox.dev/dev/integrations/databaseinsights/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/databaseinsights/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;databaseinsights&lt;/code&gt; source provides a client to interact with the Google Cloud Database Insights API (&lt;code&gt;databaseinsights.googleapis.com&lt;/code&gt;). This source supports the Advanced Query Insights tools that are available via the remote &lt;a href="https://docs.cloud.google.com/alloydb/docs/reference/mcp/databaseinsights/mcp"&gt;Database Insights MCP Server&lt;/a&gt;, allowing tools to retrieve query performance statistics, wait event metrics, time-series trends, and index recommendations for Google Cloud databases like AlloyDB.&lt;/p&gt;
+&lt;p&gt;Authentication is handled via Application Default Credentials (ADC) using OAuth 2.0 access tokens.&lt;/p&gt;
+&lt;h2 id="available-tools"&gt;Available Tools&lt;/h2&gt;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ &lt;p&gt;&lt;em&gt;No tools found to display.&lt;/em&gt;&lt;/p&gt;</description></item><item><title>Data Lineage Source</title><link>https://mcp-toolbox.dev/dev/integrations/datalineage/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/datalineage/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The Data Lineage integration allows the MCP Toolbox to connect to the Google Cloud Data Lineage API. It enables large language models to query and analyze data lineage, representing the flow of data between source (upstream) and target (downstream) assets.&lt;/p&gt;
 &lt;p&gt;This integration supports:&lt;/p&gt;
 &lt;ul&gt;
