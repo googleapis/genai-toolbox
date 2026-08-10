@@ -16,6 +16,7 @@ package util
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"reflect"
 	"testing"
@@ -336,7 +337,7 @@ func TestPopulateUrlParams(t *testing.T) {
 				mockParameter{name: "param1", typ: "array"},
 			},
 			expected: map[string]any{
-				"param1": []any{"foo", "bar", float64(123)},
+				"param1": []any{"foo", "bar", json.Number("123")},
 			},
 			expectedLogs: nil,
 		},
@@ -382,7 +383,7 @@ func TestPopulateUrlParams(t *testing.T) {
 			expected: map[string]any{
 				"param1": map[string]any{
 					"nested": "value",
-					"num":    float64(123),
+					"num":    json.Number("123"),
 				},
 			},
 			expectedLogs: nil,

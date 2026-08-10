@@ -16,9 +16,9 @@ package util
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -69,14 +69,14 @@ func PopulateUrlParams(ctx context.Context, data map[string]any, toolParams para
 					}
 				case "array":
 					var arr []any
-					if err := json.Unmarshal([]byte(val), &arr); err == nil {
+					if err := util.DecodeJSON(strings.NewReader(val), &arr); err == nil {
 						data[name] = arr
 					} else if logger != nil {
 						logger.WarnContext(ctx, "failed to convert URL parameter to array", "parameter", name, "value", val, "error", err)
 					}
 				case "map":
 					var m map[string]any
-					if err := json.Unmarshal([]byte(val), &m); err == nil {
+					if err := util.DecodeJSON(strings.NewReader(val), &m); err == nil {
 						data[name] = m
 					} else if logger != nil {
 						logger.WarnContext(ctx, "failed to convert URL parameter to map", "parameter", name, "value", val, "error", err)
