@@ -102,6 +102,10 @@ type Source struct {
 	Driver neo4j.Driver
 }
 
+func (s *Source) IsReadOnly() bool {
+	return false
+}
+
 func (s *Source) SourceType() string {
 	return SourceType
 }
