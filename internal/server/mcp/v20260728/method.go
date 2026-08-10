@@ -802,18 +802,26 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}, nil
 }
 
-// supportsSecureParams checks if the client declared support for the com.google.cloud/secure-params extension
-// in the request's experimental client capabilities (io.modelcontextprotocol/clientCapabilities.experimental).
+// getSupportedExtensions parses client extensions from request metadata and returns the map
+// of extensions supported by both client and server.
+func getSupportedExtensions(meta *RequestMetaObject) map[string]any {
+	if meta == nil || meta.MetaClientCapabilities == nil {
+		return make(map[string]any)
+	}
+	return ParseSupportedExtensions(meta.MetaClientCapabilities.Extensions)
+}
+
+// supportsSecureParams checks if the client declared support for the com.google.cloud/secure-params extension.
 func supportsSecureParams(meta *RequestMetaObject) bool {
-	if meta == nil {
-		return false
+	supportedExts := getSupportedExtensions(meta)
+	if SupportsExtension(supportedExts, SecureParamsURI) {
+		return true
 	}
-	caps := meta.MetaClientCapabilities
-	if caps == nil || caps.Experimental == nil {
-		return false
+	if meta != nil && meta.MetaClientCapabilities != nil && meta.MetaClientCapabilities.Experimental != nil {
+		val, ok := meta.MetaClientCapabilities.Experimental[SecureParamsURI].(bool)
+		return ok && val
 	}
-	val, ok := caps.Experimental["com.google.cloud/secure-params"].(bool)
-	return ok && val
+	return false
 }
 
 // validateAndMergeSecureParams validates and merges standard and secure arguments based on secure parameter definitions.

@@ -16,9 +16,12 @@ package v20260728
 
 import "slices"
 
+const ToolboxV1URI = "com.google.cloud/toolbox.v1"
+const SecureParamsURI = ToolboxV1URI
+
 // SupportedExtensions lists all MCP extension URIs supported by Toolbox by default.
 var SupportedExtensions = map[string]any{
-	"com.google.cloud/toolbox.v1": map[string]any{},
+	ToolboxV1URI: map[string]any{},
 }
 
 // ServerExtensions is the map of extension URIs enabled on this server.
@@ -47,3 +50,10 @@ func ParseSupportedExtensions(clientExtensions map[string]any) map[string]any {
 	}
 	return supported
 }
+
+// SupportsExtension returns true if the given extension URI is present in supportedExts map.
+func SupportsExtension(supportedExts map[string]any, uri string) bool {
+	_, ok := supportedExts[uri]
+	return ok
+}
+

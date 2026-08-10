@@ -293,7 +293,12 @@ func TestValidateHeader(t *testing.T) {
 }
 
 func TestServerDiscoverHandler(t *testing.T) {
+	origExts := ServerExtensions
+	t.Cleanup(func() {
+		ServerExtensions = origExts
+	})
 	Initialize(nil)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	ctx = util.WithEnableDraftSpecs(ctx, true)
 	defer cancel()
@@ -413,6 +418,17 @@ func TestServerDiscoverHandler(t *testing.T) {
 							t.Errorf("expected com.google.cloud/toolbox.v1 in discover capabilities extensions, got %v", discoverRes.Capabilities.Extensions)
 						}
 					}
+				}
+				res, ok := got.(jsonrpc.JSONRPCResponse)
+				if !ok {
+					t.Fatalf("expected response of type jsonrpc.JSONRPCResponse, got %T", got)
+				}
+				discoverResult, ok := res.Result.(DiscoverResult)
+				if !ok {
+					t.Fatalf("expected result of type DiscoverResult, got %T", res.Result)
+				}
+				if discoverResult.Capabilities.Extensions == nil || discoverResult.Capabilities.Extensions[SecureParamsURI] == nil {
+					t.Errorf("expected %s in Extensions capabilities, got %v", SecureParamsURI, discoverResult.Capabilities.Extensions)
 				}
 			}
 		})
@@ -1233,6 +1249,12 @@ func TestGetResultMetadata(t *testing.T) {
 }
 
 func TestToolsCallHandlerWithSecureParams(t *testing.T) {
+	origExts := ServerExtensions
+	t.Cleanup(func() {
+		ServerExtensions = origExts
+	})
+	Initialize(nil)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	ctx = util.WithToolboxVersionKey(ctx, "v0.0.0")
@@ -1369,7 +1391,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 			errContains: "parameter \"query\" is not secure and must not be passed in secureArguments",
 		},
 		{
-			desc: "Successful invocation with correct routing",
+			desc: "Successful invocation with correct routing (experimental)",
 			body: `{
 				"jsonrpc": "2.0",
 				"id": 1,
@@ -1391,6 +1413,36 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						"io.modelcontextprotocol/clientCapabilities": {
 							"experimental": {
 								"com.google.cloud/secure-params": true
+							}
+						}
+					}
+				}
+			}`,
+			wantErr: false,
+		},
+		{
+			desc: "Successful invocation with correct routing (extensions)",
+			body: `{
+				"jsonrpc": "2.0",
+				"id": 1,
+				"method": "tools/call",
+				"params": {
+					"name": "secure_tool",
+					"arguments": {
+						"query": "hello"
+					},
+					"secureArguments": {
+						"api_key": "secret"
+					},
+					"_meta": {
+						"io.modelcontextprotocol/protocolVersion": "2026-07-28",
+						"io.modelcontextprotocol/clientInfo": {
+							"name": "TestClient",
+							"version": "1.0"
+						},
+						"io.modelcontextprotocol/clientCapabilities": {
+							"extensions": {
+								"com.google.cloud/secure-params": {}
 							}
 						}
 					}
