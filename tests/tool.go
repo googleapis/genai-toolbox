@@ -1055,7 +1055,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"id\" is required"}}`,
+			wantBody:       `{"jsonrpc":"2.0","id":"invoke-without-parameter","result":{"content":[{"type":"text","text":"provided parameters were invalid: parameter \"id\" is required"}],"isError":true}}`,
 		},
 		{
 			name:          "MCP Invoke my-tool with insufficient parameters",
@@ -1074,7 +1074,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"name\" is required"}}`,
+			wantBody:       `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","result":{"content":[{"type":"text","text":"provided parameters were invalid: parameter \"name\" is required"}],"isError":true}}`,
 		},
 		{
 			name:          "MCP Invoke my-auth-required-tool",
