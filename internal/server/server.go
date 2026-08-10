@@ -39,6 +39,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -468,6 +469,10 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	if limit <= 0 {
 		limit = DefaultHTTPMaxRequestBytes
 	}
+
+	mcp.InitializeProtocols(mcp.ProtocolOptions{
+		DisableExt: cfg.DisableExt,
+	})
 
 	s := &Server{
 		version:             cfg.Version,
