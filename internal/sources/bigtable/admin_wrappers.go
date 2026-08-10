@@ -16,6 +16,7 @@ package bigtable
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -68,6 +69,10 @@ func (s *Source) DeleteInstance(ctx context.Context, instanceId string) (any, er
 func (s *Source) ListInstances(ctx context.Context) (any, error) {
 	instances, err := s.InstanceAdmin.Instances(ctx)
 	if err != nil {
+		var partialErr bigtable.ErrPartiallyUnavailable
+		if errors.As(err, &partialErr) {
+			return instances, nil
+		}
 		return nil, fmt.Errorf("failed to list instances: %w", err)
 	}
 	return instances, nil
@@ -84,6 +89,10 @@ func (s *Source) GetCluster(ctx context.Context, instanceId, clusterId string) (
 func (s *Source) ListClusters(ctx context.Context, instanceId string) (any, error) {
 	clusters, err := s.InstanceAdmin.Clusters(ctx, instanceId)
 	if err != nil {
+		var partialErr bigtable.ErrPartiallyUnavailable
+		if errors.As(err, &partialErr) {
+			return clusters, nil
+		}
 		return nil, fmt.Errorf("failed to list clusters: %w", err)
 	}
 	return clusters, nil
