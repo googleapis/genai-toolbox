@@ -435,7 +435,16 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.JSONRPCResponse{
 			Jsonrpc: jsonrpc.JSONRPC_VERSION,
 			Id:      id,
-			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+			Result: CallToolResult{
+				Result: Result{
+					ResultType: resultTypeComplete,
+					Result: jsonrpc.Result{
+						Meta: meta,
+					},
+				},
+				Content: []TextContent{text},
+				IsError: true,
+			},
 		}, nil
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
@@ -449,7 +458,16 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.JSONRPCResponse{
 			Jsonrpc: jsonrpc.JSONRPC_VERSION,
 			Id:      id,
-			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+			Result: CallToolResult{
+				Result: Result{
+					ResultType: resultTypeComplete,
+					Result: jsonrpc.Result{
+						Meta: meta,
+					},
+				},
+				Content: []TextContent{text},
+				IsError: true,
+			},
 		}, nil
 	}
 
