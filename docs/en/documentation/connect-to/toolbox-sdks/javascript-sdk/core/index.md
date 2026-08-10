@@ -81,6 +81,10 @@ Closing the `ToolboxClient` also closes the underlying network session shared by
 For advanced use cases, you can provide an external `AxiosInstance` during initialization (e.g., `ToolboxClient(url, my_session)`).
 {{< /notice >}}
 
+{{< notice note >}}
+If your connection URL contains query parameters (e.g., `http://localhost:5000?foo=bar`), the client automatically preserves them across API requests for parameter binding.
+{{< /notice >}}
+
 ## Transport Protocols
 
 The SDK supports multiple transport protocols to communicate with the Toolbox server. You can specify the protocol version during client initialization.
@@ -90,14 +94,14 @@ The SDK supports multiple transport protocols to communicate with the Toolbox se
 We currently support different versions of the MCP protocol. For a complete and up-to-date list, see the [`Protocol` enum definition on GitHub](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/src/toolbox_core/protocol.ts).
 
 
-- `Protocol.MCP`: The default protocol version (currently aliases to `MCP_v20251125`).
-- `Protocol.MCP_LATEST`: Alias for the latest stable MCP version (currently aliases to `MCP_v20251125`).
-- `Protocol.MCP_DRAFT`: Alias for the upcoming draft MCP version (currently aliases to `MCP_v2026_DRAFT`).
-- `Protocol.MCP_v2026_DRAFT`: Draft version 2026.
-- `Protocol.MCP_v20241105`: Use this for compatibility with older MCP servers (November 2024 version).
-- `Protocol.MCP_v20250326`: March 2025 version.
-- `Protocol.MCP_v20250618`: June 2025 version.
+- `Protocol.MCP`: The default protocol version (currently aliases to `MCP_v20260728`).
+- `Protocol.MCP_LATEST`: Alias for the latest stable MCP version (currently aliases to `MCP_v20260728`).
+- `Protocol.MCP_DRAFT`: Alias for the upcoming draft MCP version (currently aliases to `MCP_v20260728`).
+- `Protocol.MCP_v20260728`: July 2026 version (2026-07-28).
 - `Protocol.MCP_v20251125`: November 2025 version.
+- `Protocol.MCP_v20250618`: June 2025 version.
+- `Protocol.MCP_v20250326`: March 2025 version.
+- `Protocol.MCP_v20241105`: Use this for compatibility with older MCP servers (November 2024 version).
 
 ### Specifying a Protocol
 

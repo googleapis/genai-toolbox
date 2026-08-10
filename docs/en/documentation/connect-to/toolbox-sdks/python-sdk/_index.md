@@ -68,7 +68,7 @@ To get started using Toolbox tools with an application, follow these general ste
 
     Before using the SDKs, you need the main MCP Toolbox service running. Follow
     the instructions here: [**Toolbox Getting Started
-    Guide**](https://github.com/googleapis/mcp-toolbox?tab=readme-ov-file#getting-started)
+    Guide**](../../../../documentation/getting-started/local_quickstart.md)
 
 2. **Install the Appropriate SDK:**
 
