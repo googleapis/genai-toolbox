@@ -11,6 +11,7 @@ description: >
 | Flag (Short) | Flag (Long)                | Description                                                                                                                                                               | Default     |
 |--------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
 | `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                       | `127.0.0.1` |
+|              | `--disable-ext`            | Specifies MCP extension URIs disabled on this server.                                                                                                                     |             |
 |              | `--disable-reload`         | Disables dynamic reloading config.                                                                                                                                        |             |
 | `-h`         | `--help`                   | help for toolbox                                                                                                                                                          |             |
 |              | `--http-max-request-bytes` | Maximum MCP HTTP request body size in bytes.                                                                                                                              | `10485760`  |
@@ -217,3 +218,13 @@ reloading, use the `--disable-reload` flag.
 To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test
 tools and toolsets with features such as authorized parameters. To learn more,
 visit [Toolbox UI](../documentation/configuration/toolbox-ui/index.md).
+
+### Disabling MCP Extensions
+
+By default, Toolbox enables all supported MCP extensions (such as `com.google.cloud/toolbox.v1`). To disable specific extensions on the server, pass their URIs via the `--disable-ext` flag:
+
+```bash
+# Disable the Toolbox v1 extension
+./toolbox --disable-ext com.google.cloud/toolbox.v1
+```
+
