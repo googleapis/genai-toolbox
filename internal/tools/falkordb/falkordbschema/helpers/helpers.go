@@ -33,7 +33,9 @@ func Rows(result any) []map[string]any {
 }
 
 // FirstColumnStrings extracts the single string column of a procedure call
-// result such as `CALL db.labels()`, regardless of the column's name.
+// result such as `CALL db.labels()`, regardless of the column's name. The
+// order FalkorDB returned the rows in is preserved; callers that need a
+// particular order sort the values they derive from it.
 func FirstColumnStrings(result any) []string {
 	var out []string
 	for _, row := range Rows(result) {
@@ -43,7 +45,6 @@ func FirstColumnStrings(result any) []string {
 			}
 		}
 	}
-	sort.Strings(out)
 	return out
 }
 

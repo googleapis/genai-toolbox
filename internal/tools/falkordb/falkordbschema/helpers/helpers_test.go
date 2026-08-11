@@ -26,7 +26,8 @@ func TestFirstColumnStrings(t *testing.T) {
 		{"label": "Person"},
 		{"label": "City"},
 	})
-	want := []string{"City", "Person"}
+	// The rows are returned in the order FalkorDB produced them.
+	want := []string{"Person", "City"}
 	if diff := cmp.Diff(want, FirstColumnStrings(in)); diff != "" {
 		t.Fatalf("incorrect result: diff %v", diff)
 	}
