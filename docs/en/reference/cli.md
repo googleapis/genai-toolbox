@@ -66,6 +66,8 @@ For more detailed instructions, see [Invoke Tools via CLI](../documentation/conf
 
 Rewrites configuration files from the legacy nested format (top-level `sources:`, `tools:`, `toolsets:` maps) into the flat format, where each resource is its own YAML document with a `kind` field.
 
+This subcommand also converts `toolset` primitive into `group` primitive.
+
 **Syntax:**
 
 ```bash
