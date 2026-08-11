@@ -48,13 +48,13 @@ func TestGroupConfig_Initialize(t *testing.T) {
 	toolsMap, promptsMap := testFixtures()
 
 	testCases := []struct {
-		name        	string
-		config      	group.GroupConfig
-		wantTools   	[]string
-		wantPrompts 	[]string
-		wantErr     	string
-		wantTTLMs		*int
-		wantCacheScope 	string
+		name           string
+		config         group.GroupConfig
+		wantTools      []string
+		wantPrompts    []string
+		wantErr        string
+		wantTTLMs      *int
+		wantCacheScope string
 	}{
 		{
 			name: "tools and prompts",
@@ -122,15 +122,15 @@ func TestGroupConfig_Initialize(t *testing.T) {
 		{
 			name: "valid ttlMs",
 			config: group.GroupConfig{
-				Name:      "g",
-				TTLMs:     intPtr(10000),
+				Name:  "g",
+				TTLMs: intPtr(10000),
 			},
 			wantTTLMs: intPtr(10000),
 		},
 		{
 			name: "empty ttlMs",
 			config: group.GroupConfig{
-				Name:      "g",
+				Name: "g",
 			},
 			wantTTLMs: intPtr(300000),
 		},
@@ -153,7 +153,7 @@ func TestGroupConfig_Initialize(t *testing.T) {
 		{
 			name: "empty cacheScope",
 			config: group.GroupConfig{
-				Name:       "g",
+				Name: "g",
 			},
 			wantCacheScope: "public",
 		},
@@ -199,7 +199,7 @@ func TestGroupConfig_Initialize(t *testing.T) {
 			if g.GetCacheScope() != expectedScope {
 				t.Errorf("CacheScope = %q, want %q", g.GetCacheScope(), expectedScope)
 			}
-			
+
 			expectedTTL := group.DefaultTTLMs
 			if tc.wantTTLMs != nil {
 				expectedTTL = *tc.wantTTLMs

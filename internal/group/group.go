@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	DefaultTTLMs = 300000 // default TTL for groups in milliseconds (5 minutes)
+	DefaultTTLMs      = 300000   // default TTL for groups in milliseconds (5 minutes)
 	DefaultCacheScope = "public" // default cache scope for groups
 )
 
@@ -36,7 +36,7 @@ type GroupConfig struct {
 	ToolNames   []string `yaml:"tools"`
 	PromptNames []string `yaml:"prompts"`
 	CacheScope  string   `yaml:"cacheScope" validate:"omitempty,oneof=public private"`
-	TTLMs	  	*int     `yaml:"ttlMs" validate:"omitempty,gte=0"`
+	TTLMs       *int     `yaml:"ttlMs" validate:"omitempty,gte=0"`
 }
 
 // Group is an initialized group: the source of truth for a named collection of
@@ -112,7 +112,7 @@ func (g Group) GetTTLMs() int {
 // GetCacheScope returns the cache scope for the group
 func (g Group) GetCacheScope() string {
 	if g.CacheScope == "" {
-		return DefaultCacheScope 
+		return DefaultCacheScope
 	}
 	return g.CacheScope
 }
