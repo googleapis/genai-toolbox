@@ -127,3 +127,43 @@ func TestSnakeFromCamelCase(t *testing.T) {
 		})
 	}
 }
+
+func TestIsProbablyJSON(t *testing.T) {
+	tests := []struct {
+		in   string
+		want bool
+	}{
+		// Valid prefixes
+		{in: `{"key": "value"}`, want: true},
+		{in: `[1, 2, 3]`, want: true},
+		{in: `"string"`, want: true},
+		{in: `true`, want: true},
+		{in: `false`, want: true},
+		{in: `null`, want: true},
+		{in: `123`, want: true},
+		{in: `-123.45`, want: true},
+		{in: `  {"key": "value"}  `, want: true}, // whitespace padded
+
+		// Invalid prefixes (normal text that shouldn't be parsed)
+		{in: `the quick brown fox`, want: false},
+		{in: `from address`, want: false},
+		{in: `not a json string`, want: false},
+		{in: `hello "world"`, want: false},
+		{in: `[unclosed array`, want: false},
+		{in: `{unclosed object`, want: false},
+		{in: `"unclosed string`, want: false},
+		{in: `123a`, want: false}, // invalid number
+		{in: `trueish`, want: false},
+		{in: ``, want: false},
+		{in: `   `, want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			got := IsProbablyJSON(tt.in)
+			if got != tt.want {
+				t.Errorf("IsProbablyJSON(%q) = %v, want %v", tt.in, got, tt.want)
+			}
+		})
+	}
+}
