@@ -72,6 +72,14 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	lastIndex := 0
 	for _, match := range matches {
 		start, end := match[0], match[1]
+
+		// Skip substitution if the line is a comment
+		lineStart := strings.LastIndex(input[:start], "\n") + 1
+		linePrefix := input[lineStart:start]
+		if strings.HasPrefix(strings.TrimSpace(linePrefix), "#") {
+			continue
+		}
+
 		output.WriteString(input[lastIndex:start])
 
 		variableName := input[match[2]:match[3]]

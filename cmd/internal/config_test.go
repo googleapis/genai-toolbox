@@ -92,7 +92,26 @@ func TestParseEnv(t *testing.T) {
 			want: "bar",
 		},
 		{
-			desc:         "with empty default",
+			desc: "skip commented out env var",
+			in:   "# ${FOO}",
+			want: "# ${FOO}",
+		},
+		{
+			desc: "skip commented out env var with preceding whitespace",
+			in:   "  # ${FOO}",
+			want: "  # ${FOO}",
+		},
+		{
+			desc: "skip commented out env var but parse non-commented ones",
+			in:   "foo: ${BAR}\n# ${FOO}\nbaz: ${QUX}",
+			env: map[string]string{
+				"BAR": "bar_val",
+				"QUX": "qux_val",
+			},
+			want: "foo: bar_val\n# ${FOO}\nbaz: qux_val",
+		},
+		{
+			desc:         "with default without env",
 			in:           "${FOO:}",
 			want:         "",
 			wantOptional: []string{"FOO"},
