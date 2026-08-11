@@ -130,6 +130,43 @@ func TestParseEnv(t *testing.T) {
 			want:         "project_req: my_project, project_opt: my_project",
 			wantOptional: []string{}, // Because it was marked required at least once
 		},
+		{
+			desc:         "environment variables in YAML comments are ignored",
+			in:           "# ${TEST_COMMENTED_ENV_3793}\n  # ${TEST_INDENTED_COMMENTED_ENV_3793}\nvalue: ${TEST_ACTIVE_ENV_3793:active} # ${TEST_INLINE_COMMENTED_ENV_3793}\n",
+			want:         "# ${TEST_COMMENTED_ENV_3793}\n  # ${TEST_INDENTED_COMMENTED_ENV_3793}\nvalue: active # ${TEST_INLINE_COMMENTED_ENV_3793}\n",
+			wantOptional: []string{"TEST_ACTIVE_ENV_3793"},
+		},
+		{
+			desc: "hash signs in quoted scalars are not comments",
+			env: map[string]string{
+				"TEST_QUOTED_ENV_3793": "expanded",
+			},
+			in:   `value: "# ${TEST_QUOTED_ENV_3793}"`,
+			want: `value: "# expanded"`,
+		},
+		{
+			desc: "hash signs in block scalars are not comments",
+			env: map[string]string{
+				"TEST_BLOCK_ENV_3793": "expanded",
+			},
+			in:   "description: |\n  # ${TEST_BLOCK_ENV_3793}\n",
+			want: "description: |\n  # expanded\n",
+		},
+		{
+			desc: "hash signs without preceding whitespace are not comments",
+			env: map[string]string{
+				"TEST_URL_FRAGMENT_ENV_3793": "expanded",
+			},
+			in:   "url: https://example.com/#${TEST_URL_FRAGMENT_ENV_3793}",
+			want: "url: https://example.com/#expanded",
+		},
+		{
+			desc:      "comments do not shift active variable locations",
+			in:        "# 注释 ${TEST_COMMENTED_ENV_3793}\r\n值: ${TEST_REQUIRED_ENV_3793}",
+			want:      "# 注释 ${TEST_COMMENTED_ENV_3793}\r\n值: ",
+			err:       true,
+			errString: `environment variable not found: "TEST_REQUIRED_ENV_3793" (line 2, column 4)`,
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -160,6 +197,35 @@ func TestParseEnv(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestParseConfigIgnoresEnvPlaceholdersInComments(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	parser := ConfigParser{}
+	config, err := parser.ParseConfig(ctx, []byte(`
+kind: source
+name: my-http-instance
+type: http
+baseUrl: https://example.com
+# headers:
+#   Authorization: ${TEST_COMMENTED_CONFIG_ENV_3793}
+`))
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	if _, ok := config.Sources["my-http-instance"]; !ok {
+		t.Fatal("expected source config to be parsed")
+	}
+	if _, ok := parser.EnvVars["TEST_COMMENTED_CONFIG_ENV_3793"]; ok {
+		t.Fatal("commented environment variable should not be tracked")
+	}
+	if len(parser.requiredEnvVars) != 0 || len(parser.OptionalEnvVars) != 0 {
+		t.Fatalf("commented environment variable should not be required or optional: required=%v optional=%v", parser.requiredEnvVars, parser.OptionalEnvVars)
 	}
 }
 

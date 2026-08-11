@@ -27,6 +27,8 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/lexer"
+	"github.com/goccy/go-yaml/token"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/server"
@@ -60,6 +62,10 @@ type ConfigParser struct {
 // also support ${ENV_NAME:default_value}.
 func (p *ConfigParser) parseEnv(input string) (string, error) {
 	re := regexp.MustCompile(`\$\{(\w+)(:([^}]*))?\}`)
+	var commentColumns map[int][]int
+	if strings.Contains(input, "#") {
+		commentColumns = yamlCommentColumns(input)
+	}
 
 	if p.EnvVars == nil {
 		p.EnvVars = make(map[string]string)
@@ -73,6 +79,11 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	for _, match := range matches {
 		start, end := match[0], match[1]
 		output.WriteString(input[lastIndex:start])
+		if isYAMLComment(input, start, commentColumns) {
+			output.WriteString(input[start:end])
+			lastIndex = end
+			continue
+		}
 
 		variableName := input[match[2]:match[3]]
 		defaultValue := ""
@@ -127,6 +138,29 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	}
 
 	return output.String(), err
+}
+
+// yamlCommentColumns records the first column after each real YAML comment
+// marker. The lexer keeps quoted and block-scalar hash signs out of this set.
+func yamlCommentColumns(input string) map[int][]int {
+	comments := make(map[int][]int)
+	for _, tk := range lexer.Tokenize(input) {
+		if tk.Type != token.CommentType || tk.Position == nil {
+			continue
+		}
+		comments[tk.Position.Line] = append(comments[tk.Position.Line], tk.Position.Column)
+	}
+	return comments
+}
+
+func isYAMLComment(input string, index int, commentColumns map[int][]int) bool {
+	line, column := lineColumnAt(input, index)
+	for _, commentColumn := range commentColumns[line] {
+		if column >= commentColumn {
+			return true
+		}
+	}
+	return false
 }
 
 // ParseConfig parses the provided yaml into appropriate configs.
