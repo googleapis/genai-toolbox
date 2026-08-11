@@ -62,6 +62,30 @@ For more detailed instructions, see [Invoke Tools via CLI](../documentation/conf
 </details>
 
 <details>
+<summary><code>migrate</code></summary>
+
+Rewrites configuration files from the legacy nested format (top-level `sources:`, `tools:`, `toolsets:` maps) into the flat format, where each resource is its own YAML document with a `kind` field.
+
+This subcommand also converts `toolset` primitive into `group` primitive.
+
+**Syntax:**
+
+```bash
+toolbox migrate --config <path>
+```
+
+**Flags:**
+
+- `--config`: (Optional) Path to a configuration file to migrate. Defaults to `tools.yaml` when no other config flag is set.
+- `--configs`: (Optional) Comma-separated list of configuration files to migrate.
+- `--config-folder`: (Optional) Path to a folder whose `.yaml` and `.yml` files should be migrated.
+- `--dry-run`: (Optional) Print the migrated configuration to stdout instead of writing it.
+
+`--config`, `--configs`, and `--config-folder` are mutually exclusive. Each file is rewritten in place, with the original kept alongside it with `.bak` appended (e.g., `tools.yaml.bak`); a file that needs no changes is left as is. Comments other than top-level ones are not preserved, so review the result before deleting the backup.
+
+</details>
+
+<details>
 <summary><code>skills-generate</code></summary>
 
 Generates a skill package from a specified toolset or group. Each tool in the collection will have a corresponding Node.js execution script in the generated skill.
