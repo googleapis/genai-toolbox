@@ -23,6 +23,7 @@ import (
 	falkordb "github.com/FalkorDB/falkordb-go/v2"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -66,7 +67,29 @@ func (r Config) SourceConfigType() string {
 	return SourceType
 }
 
+// validateTLS rejects a TLS configuration whose settings contradict each
+// other. Without TLS there is no certificate to verify, so insecureSkipVerify
+// would otherwise be accepted and silently ignored.
+func (r Config) validateTLS() error {
+	if !r.TLS.Enabled && r.TLS.InsecureSkipVerify {
+		return fmt.Errorf("tls.insecureSkipVerify is set on source %q but tls.enabled is false; enable TLS or remove the setting", r.Name)
+	}
+	return nil
+}
+
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	if err := r.validateTLS(); err != nil {
+		return nil, err
+	}
+
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+	}
+	if r.TLS.InsecureSkipVerify {
+		logger.WarnContext(ctx, fmt.Sprintf("TLS certificate verification is skipped (insecureSkipVerify: true) for FalkorDB source %s. This exposes traffic for this source to man-in-the-middle attacks. Do not use in production.", r.Name))
+	}
+
 	client, err := initFalkorDBClient(ctx, tracer, r)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create client: %w", err)
