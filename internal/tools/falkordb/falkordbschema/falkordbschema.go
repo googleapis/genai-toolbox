@@ -23,13 +23,11 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/goccy/go-yaml"
 
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
-	"github.com/googleapis/mcp-toolbox/internal/tools/falkordb/falkordbschema/cache"
 	"github.com/googleapis/mcp-toolbox/internal/tools/falkordb/falkordbschema/helpers"
 	"github.com/googleapis/mcp-toolbox/internal/tools/falkordb/falkordbschema/types"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -62,11 +60,10 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	tools.ConfigBase   `yaml:",inline"`
-	Type               string                 `yaml:"type" validate:"required"`
-	Source             string                 `yaml:"source" validate:"required"`
-	CacheExpireMinutes *int                   `yaml:"cacheExpireMinutes,omitempty"`
-	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -83,11 +80,6 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	params := parameters.Parameters{}
 
-	if cfg.CacheExpireMinutes == nil {
-		defaultExpiration := cache.DefaultExpiration // Default to 60 minutes
-		cfg.CacheExpireMinutes = &defaultExpiration
-	}
-
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
@@ -95,7 +87,6 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 			params,
 		),
-		cache: cache.NewCache(),
 	}, nil
 }
 
@@ -104,7 +95,6 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	tools.BaseTool[Config]
-	cache *cache.Cache
 }
 
 func (t Tool) GetSourceName() string {
@@ -129,19 +119,10 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
 
-	if cachedSchema, ok := t.cache.Get("schema"); ok {
-		if schema, ok := cachedSchema.(*types.SchemaInfo); ok {
-			return schema, nil
-		}
-	}
-
 	schema, err := t.extractSchema(ctx, source)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
-
-	expiration := time.Duration(*t.Cfg.CacheExpireMinutes) * time.Minute
-	t.cache.Set("schema", schema, expiration)
 
 	return schema, nil
 }

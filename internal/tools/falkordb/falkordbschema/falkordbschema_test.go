@@ -28,7 +28,6 @@ func TestParseFromYamlFalkorDB(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
-	cacheExpire := 10
 	tcs := []struct {
 		desc string
 		in   string
@@ -52,29 +51,6 @@ func TestParseFromYamlFalkorDB(t *testing.T) {
 					},
 					Type:   "falkordb-schema",
 					Source: "my-falkordb-instance",
-				},
-			},
-		},
-		{
-			desc: "with cache expiration",
-			in: `
-            kind: tool
-            name: example_tool
-            type: falkordb-schema
-            source: my-falkordb-instance
-            description: some tool description
-            cacheExpireMinutes: 10
-			`,
-			want: server.ToolConfigs{
-				"example_tool": Config{
-					ConfigBase: tools.ConfigBase{
-						Name:         "example_tool",
-						Description:  "some tool description",
-						AuthRequired: []string{},
-					},
-					Type:               "falkordb-schema",
-					Source:             "my-falkordb-instance",
-					CacheExpireMinutes: &cacheExpire,
 				},
 			},
 		},
