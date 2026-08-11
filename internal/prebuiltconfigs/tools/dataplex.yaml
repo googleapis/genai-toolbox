@@ -48,6 +48,60 @@ source: dataplex-source
 description: Use this tool to search for data quality scans in Dataplex.
 ---
 kind: tool
+name: list_data_products
+type: dataplex-list-data-products
+source: dataplex-source
+description: Lists Data Products across all locations.
+---
+kind: tool
+name: get_data_product
+type: dataplex-get-data-product
+source: dataplex-source
+description: Retrieves specific metadata regarding a Data Product.
+---
+kind: tool
+name: list_data_assets
+type: dataplex-list-data-assets
+source: dataplex-source
+description: Lists Data Assets under a Data Product.
+---
+kind: tool
+name: get_data_asset
+type: dataplex-get-data-asset
+source: dataplex-source
+description: Retrieves specific metadata regarding a Data Asset.
+---
+kind: tool
+name: create_data_product
+type: dataplex-create-data-product
+source: dataplex-source
+description: Creates a new Data Product.
+---
+kind: tool
+name: update_data_product
+type: dataplex-update-data-product
+source: dataplex-source
+description: Updates an existing Data Product.
+---
+kind: tool
+name: create_data_asset
+type: dataplex-create-data-asset
+source: dataplex-source
+description: Creates a new Data Asset under a Data Product.
+---
+kind: tool
+name: update_data_asset
+type: dataplex-update-data-asset
+source: dataplex-source
+description: Updates an existing Data Asset under a Data Product.
+---
+kind: tool
+name: update_data_product_aspects
+type: dataplex-update-data-product-aspects
+source: dataplex-source
+description: Updates metadata aspects (like overview or contacts) on an existing Data Product Entry.
+---
+kind: tool
 name: generate_data_insights
 type: dataplex-generate-data-insights
 source: dataplex-source
@@ -86,12 +140,8 @@ name: get_operation
 type: dataplex-get-operation
 source: dataplex-source
 description: >-
-  Retrieves the status of a Dataplex long-running operation (LRO) like scan creation.
-  Poll this tool until the 'done' field from the tool's response is true. Once completed, the 'response' field will
-  contain the created DataScan resource, from which you can extract the 'scanId'
-  (the last part of the 'name' field, e.g. 'nq-doc-1234') to pass to get_run_status
-  and get_data_insights. WARNING: This only tracks the creation of the scan, NOT
-  its execution.
+  Retrieves the status of a Dataplex long-running operation (LRO) (such as scan creation, data product creation/update, or data asset creation/update).
+  Poll this tool until the 'done' field from the tool's response is true. Once completed, the 'response' field contains the details of the created or updated resource (such as DataScan, DataProduct, or DataAsset). For scan template creation, you can extract the 'scanId' from the returned DataScan resource to pass to get_run_status. WARNING: For scans, this only tracks the creation of the scan template, NOT its background execution.
 ---
 kind: tool
 name: get_run_status
@@ -230,6 +280,24 @@ tools:
 - search_aspect_types
 - lookup_context
 - search_dq_scans
+---
+kind: toolset
+name: data-products
+tools:
+- search_entries
+- lookup_entry
+- search_aspect_types
+- lookup_context
+- list_data_products
+- get_data_product
+- list_data_assets
+- get_data_asset
+- create_data_product
+- update_data_product
+- create_data_asset
+- update_data_asset
+- update_data_product_aspects
+- get_operation
 ---
 kind: toolset
 name: enrich

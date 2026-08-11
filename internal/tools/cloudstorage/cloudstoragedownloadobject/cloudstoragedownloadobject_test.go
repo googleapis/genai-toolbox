@@ -84,10 +84,37 @@ func TestParseFromYamlCloudStorageDownloadObject(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with configurable parameters",
+			in: `
+			kind: tool
+			name: configured_download
+			type: cloud-storage-download-object
+			source: prod-gcs
+			description: Download configured object
+			bucket: baked-bucket
+			destination_dir: /tmp/downloads
+			overwrite: false
+			`,
+			want: server.ToolConfigs{
+				"configured_download": cloudstoragedownloadobject.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_download",
+						Description:  "Download configured object",
+						AuthRequired: []string{},
+					},
+					Type:           "cloud-storage-download-object",
+					Source:         "prod-gcs",
+					Bucket:         strPtr("baked-bucket"),
+					DestinationDir: strPtr("/tmp/downloads"),
+					Overwrite:      boolPtr(false),
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -98,27 +125,30 @@ func TestParseFromYamlCloudStorageDownloadObject(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
+func boolPtr(b bool) *bool {
+	return &b
+}
+
 type mockSource struct {
 	sources.Source
 	called       bool
+	gotBucket    string
+	gotObject    string
 	gotDest      string
 	gotOverwrite bool
 }
 
 func (m *mockSource) DownloadObject(ctx context.Context, bucket, object, destination string, overwrite bool) (map[string]any, error) {
 	m.called = true
+	m.gotBucket = bucket
+	m.gotObject = object
 	m.gotDest = destination
 	m.gotOverwrite = overwrite
 	return map[string]any{"destination": destination, "bytes": int64(11), "contentType": "text/plain"}, nil
-}
-
-type mockSourceProvider struct {
-	tools.SourceProvider
-	source *mockSource
-}
-
-func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.source, true
 }
 
 func TestInvokeValidation(t *testing.T) {
@@ -130,7 +160,7 @@ func TestInvokeValidation(t *testing.T) {
 		Type:   "cloud-storage-download-object",
 		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -156,7 +186,6 @@ func TestInvokeValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
 			ov := false
 			if b, ok := tc.overwrite.(bool); ok {
 				ov = b
@@ -167,7 +196,7 @@ func TestInvokeValidation(t *testing.T) {
 				{Name: "destination", Value: tc.dest},
 				{Name: "overwrite", Value: ov},
 			}
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), src, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")
@@ -194,4 +223,130 @@ func TestInvokeValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConfiguredParametersHiddenAndForwarded(t *testing.T) {
+	destDir := t.TempDir()
+	cfg := cloudstoragedownloadobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "download_tool",
+			Description: "Download",
+		},
+		Type:           "cloud-storage-download-object",
+		Source:         "my-gcs",
+		Bucket:         strPtr("baked-bucket"),
+		DestinationDir: strPtr(destDir),
+		Overwrite:      boolPtr(false),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"object", "destination"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "object", Value: "path/to/object.txt"},
+		{Name: "destination", Value: filepath.Join("nested", "out.txt")},
+	}
+	if _, err := tool.Invoke(context.Background(), src, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	wantDest := filepath.Join(destDir, "nested", "out.txt")
+	if src.gotBucket != "baked-bucket" || src.gotObject != "path/to/object.txt" || src.gotDest != wantDest || src.gotOverwrite {
+		t.Fatalf("forwarded params = bucket %q object %q dest %q overwrite %v, want baked-bucket/path/to/object.txt/%s/false", src.gotBucket, src.gotObject, src.gotDest, src.gotOverwrite, wantDest)
+	}
+}
+
+func TestUnsetParametersRemainVisible(t *testing.T) {
+	cfg := cloudstoragedownloadobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "download_tool",
+			Description: "Download",
+		},
+		Type:   "cloud-storage-download-object",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket", "object", "destination", "overwrite"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestConfiguredParameterValidation(t *testing.T) {
+	tcs := []struct {
+		desc       string
+		bucket     *string
+		destDir    *string
+		wantSubstr string
+	}{
+		{desc: "empty bucket", bucket: strPtr(""), wantSubstr: "bucket"},
+		{desc: "empty destination dir", destDir: strPtr(""), wantSubstr: "destination_dir"},
+		{desc: "relative destination dir", destDir: strPtr("relative/dir"), wantSubstr: "destination_dir"},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			cfg := cloudstoragedownloadobject.Config{
+				ConfigBase: tools.ConfigBase{
+					Name:        "download_tool",
+					Description: "Download",
+				},
+				Type:           "cloud-storage-download-object",
+				Source:         "my-gcs",
+				Bucket:         tc.bucket,
+				DestinationDir: tc.destDir,
+			}
+			if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), tc.wantSubstr) {
+				t.Fatalf("Initialize() error = %v, want %q", err, tc.wantSubstr)
+			}
+		})
+	}
+}
+
+func TestConfiguredDestinationDirRejectsEscapingDestination(t *testing.T) {
+	destDir := t.TempDir()
+	cfg := cloudstoragedownloadobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "download_tool",
+			Description: "Download",
+		},
+		Type:           "cloud-storage-download-object",
+		Source:         "my-gcs",
+		Bucket:         strPtr("baked-bucket"),
+		DestinationDir: strPtr(destDir),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "object", Value: "o"},
+		{Name: "destination", Value: filepath.Join("..", "escape.txt")},
+		{Name: "overwrite", Value: false},
+	}
+	_, toolErr := tool.Invoke(context.Background(), src, params, "")
+	if toolErr == nil || !strings.Contains(toolErr.Error(), "destination") {
+		t.Fatalf("Invoke() error = %v, want destination error", toolErr)
+	}
+	if src.called {
+		t.Fatalf("source called despite invalid destination")
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }

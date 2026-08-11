@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -51,6 +52,7 @@ type compatibleSource interface {
 	GetAuthTokenHeaderName() string
 	LookerApiSettings() *rtl.ApiSettings
 	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
+	GetHostURL(context.Context, *v4.LookerSDK) (string, error)
 }
 
 type Config struct {
@@ -67,7 +69,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -76,9 +78,9 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 
 	titleParameter := parameters.NewStringParameter("title", "The title of the Dashboard")
 	allParameters = append(allParameters, titleParameter)
-	descParameter := parameters.NewStringParameterWithDefault("description", "", "The description of the Dashboard")
+	descParameter := parameters.NewStringParameter("description", "The description of the Dashboard", parameters.WithStringDefault(""))
 	allParameters = append(allParameters, descParameter)
-	folderParameter := parameters.NewStringParameterWithDefault("folder", "", "The folder id where the Dashboard will be created. Leave blank to use the user's personal folder")
+	folderParameter := parameters.NewStringParameter("folder", "The folder id where the Dashboard will be created. Leave blank to use the user's personal folder", parameters.WithStringDefault(""))
 	allParameters = append(allParameters, folderParameter)
 
 	// finish tool setup
@@ -99,16 +101,27 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
+	return nil
+}
 
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
@@ -166,9 +179,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
-	setting, err := sdk.GetSetting("host_url", source.LookerApiSettings())
+	hostURL, err := source.GetHostURL(ctx, sdk)
 	if err != nil {
-		logger.ErrorContext(ctx, "error getting settings: %s", err)
+		logger.WarnContext(ctx, "failed to dynamically resolve public host URL, utilizing fallback", "error", err)
 	}
 
 	data := make(map[string]any)
@@ -176,8 +189,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		data["id"] = *resp.Id
 	}
 	if resp.Url != nil {
-		if setting.HostUrl != nil {
-			data["url"] = *setting.HostUrl + *resp.Url
+		if hostURL != "" {
+			data["url"] = hostURL + *resp.Url
 		} else {
 			data["url"] = *resp.Url
 		}
@@ -187,18 +200,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return data, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return false, err
+func (t Tool) RequiresClientAuthorization(source sources.Source) (bool, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.UseClientAuthorization(), nil
+	return s.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return "", err
+func (t Tool) GetAuthTokenHeaderName(source sources.Source) (string, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return "", fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.GetAuthTokenHeaderName(), nil
+	return s.GetAuthTokenHeaderName(), nil
 }

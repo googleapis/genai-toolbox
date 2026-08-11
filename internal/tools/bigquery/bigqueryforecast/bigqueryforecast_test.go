@@ -15,6 +15,7 @@
 package bigqueryforecast_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -24,7 +25,6 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
@@ -68,7 +68,7 @@ func TestParseFromYamlBigQueryForecast(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -88,11 +88,7 @@ func TestInvoke(t *testing.T) {
 		Type:   "bigquery-forecast",
 		Source: "my-bq-source",
 	}
-	src := &bigquerycommon.MockSource{RunSQLResult: "mocked_forecast_result"}
-	sourcesMap := map[string]sources.Source{
-		"my-bq-source": src,
-	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -159,8 +155,6 @@ func TestInvoke(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &bigquerycommon.MockSource{RunSQLResult: "mocked_forecast_result"}
-			provider := &bigquerycommon.MockSourceProvider{Source: src}
-
 			data := map[string]any{}
 			if tc.historyData != nil {
 				data["history_data"] = tc.historyData
@@ -178,7 +172,7 @@ func TestInvoke(t *testing.T) {
 				data["id_cols"] = tc.idCols
 			}
 
-			params, err := forecastTool.GetParameters(sourcesMap)
+			params, err := forecastTool.GetParameters(src)
 			if err != nil {
 				t.Fatalf("failed to get parameters: %v", err)
 			}
@@ -198,7 +192,7 @@ func TestInvoke(t *testing.T) {
 				t.Fatalf("failed to create context with logger: %v", err)
 			}
 
-			resp, err := tool.Invoke(ctx, provider, paramVals, "")
+			resp, err := tool.Invoke(ctx, src, paramVals, "")
 			if tc.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
@@ -312,10 +306,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 		Type:   "bigquery-forecast",
 		Source: "my-bq-source",
 	}
-	sourcesMap := map[string]sources.Source{
-		"my-bq-source": testSrc,
-	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(ctx)
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -334,7 +325,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 		"horizon":       5,
 	}
 
-	params, err := forecastTool.GetParameters(sourcesMap)
+	params, err := forecastTool.GetParameters(testSrc)
 	if err != nil {
 		t.Fatalf("failed to get parameters: %v", err)
 	}
@@ -344,8 +335,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	}
 
 	// 5. Invoke the tool and assert it fails with the dataset permission check error
-	provider := &bigquerycommon.MockSourceProvider{Source: testSrc}
-	_, err = tool.Invoke(ctx, provider, paramVals, "")
+	_, err = tool.Invoke(ctx, testSrc, paramVals, "")
 	if err == nil {
 		t.Fatal("expected Invoke to return an error due to out-of-allowlist dataset reference, but got nil")
 	}

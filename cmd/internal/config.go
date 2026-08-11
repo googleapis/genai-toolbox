@@ -30,6 +30,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 type Config struct {
@@ -37,8 +38,8 @@ type Config struct {
 	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
 	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
 	Tools           server.ToolConfigs           `yaml:"tools"`
-	Toolsets        server.ToolsetConfigs        `yaml:"toolsets"`
 	Prompts         server.PromptConfigs         `yaml:"prompts"`
+	Groups          server.GroupConfigs          `yaml:"groups"`
 }
 
 type ConfigParser struct {
@@ -64,7 +65,8 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		p.EnvVars = make(map[string]string)
 	}
 
-	var err error
+	var missing []string
+	seenMissing := make(map[string]bool)
 	matches := re.FindAllStringSubmatchIndex(input, -1)
 	var output strings.Builder
 	lastIndex := 0
@@ -95,9 +97,10 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 			if p.AllowMissingEnvVars {
 				p.EnvVars[variableName] = variableName
 				output.WriteString(variableName)
-			} else if err == nil {
+			} else if !seenMissing[variableName] {
+				seenMissing[variableName] = true
 				line, column := lineColumnAt(input, start)
-				err = fmt.Errorf("environment variable not found: %q (line %d, column %d)", variableName, line, column)
+				missing = append(missing, fmt.Sprintf("%q (line %d, column %d)", variableName, line, column))
 			}
 		}
 
@@ -113,6 +116,15 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		}
 	}
 	p.OptionalEnvVars = finalOptional
+
+	var err error
+	if len(missing) > 0 {
+		if len(missing) == 1 {
+			err = fmt.Errorf("environment variable not found: %s", missing[0])
+		} else {
+			err = fmt.Errorf("environment variables not found:\n  - %s", strings.Join(missing, "\n  - "))
+		}
+	}
 
 	return output.String(), err
 }
@@ -144,21 +156,22 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 	raw = []byte(output)
 
-	raw, err = ConvertConfig(raw)
+	raw, err = ConvertConfig(ctx, raw)
 	if err != nil {
 		return config, fmt.Errorf("error converting config file: %s", err)
 	}
 
 	// Parse contents
-	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, err = server.UnmarshalResourceConfig(ctx, raw)
+	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Prompts, config.Groups, err = server.UnmarshalPrimitiveConfig(ctx, raw)
 	if err != nil {
 		return config, err
 	}
 	return config, nil
 }
 
-// ConvertConfig converts configuration file to flat format.
-func ConvertConfig(raw []byte) ([]byte, error) {
+// ConvertConfig converts configuration file to flat format and rewrites toolsets
+// to the group kind.
+func ConvertConfig(ctx context.Context, raw []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	// Manually copy top-level comments and empty lines from the source
 	scanner := bufio.NewScanner(bytes.NewReader(raw))
@@ -180,7 +193,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 	encoder := yaml.NewEncoder(&buf, yaml.UseLiteralStyleIfMultiline(true))
 
-	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts", "groups"}
 	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
@@ -197,13 +210,16 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 			}
 			if hasKindField(input) {
 				// this doc is already in flat format, encode to buf
-				if err := encoder.Encode(input); err != nil {
+				if err := encoder.Encode(migrateToolsetKind(ctx, input)); err != nil {
 					return nil, err
 				}
 				break
 			}
 			// check if value conversion to yaml.MapSlice successfully
 			if slice, ok := item.Value.(yaml.MapSlice); slices.Contains(nestedFormatKey, key) && ok {
+				// srcKey is kept for error messages, which should name the key the
+				// user actually wrote rather than the flat kind it maps to.
+				srcKey := key
 				switch key {
 				case "authServices":
 					key = "authService"
@@ -217,14 +233,16 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					key = "toolset"
 				case "prompts":
 					key = "prompt"
+				case "groups":
+					key = "group"
 				}
 				transformed, err := transformDocs(key, slice)
 				if err != nil {
-					return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, key, err)
+					return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, srcKey, err)
 				}
 				// encode per-doc
 				for _, doc := range transformed {
-					if err := encoder.Encode(doc); err != nil {
+					if err := encoder.Encode(migrateToolsetKind(ctx, doc)); err != nil {
 						return nil, err
 					}
 				}
@@ -244,6 +262,53 @@ func hasKindField(input yaml.MapSlice) bool {
 		}
 	}
 	return false
+}
+
+// migrateToolsetKind rewrites `kind: toolset` to `kind: group`, preserving field
+// order, and returns other kinds unchanged. Every flat doc passes through here,
+// so nested and already-flat toolsets cannot diverge.
+//
+// A description on a toolset is dropped with a warning rather than promoted: a
+// toolset has none of its own, so publishing it would give the collection a
+// description it never declared.
+func migrateToolsetKind(ctx context.Context, input yaml.MapSlice) yaml.MapSlice {
+	kindIndex, descIndex, nameIndex := -1, -1, -1
+	for i, item := range input {
+		switch item.Key {
+		case "kind":
+			kindIndex = i
+		case "description":
+			descIndex = i
+		case "name":
+			nameIndex = i
+		}
+	}
+	if kindIndex < 0 {
+		return input
+	}
+	if val, ok := input[kindIndex].Value.(string); !ok || val != "toolset" {
+		return input
+	}
+
+	// Copy before rewriting: ConvertConfig hands us the slice it is still
+	// ranging over, so editing input in place would shift elements out from
+	// under that loop.
+	migrated := slices.Clone(input)
+	migrated[kindIndex].Value = "group"
+	if descIndex >= 0 {
+		migrated = slices.Delete(migrated, descIndex, descIndex+1)
+
+		var name string
+		if nameIndex >= 0 {
+			name, _ = input[nameIndex].Value.(string)
+		}
+		// Warning is best effort: a caller without a logger in context still
+		// gets the conversion.
+		if logger, err := util.LoggerFromContext(ctx); err == nil {
+			logger.WarnContext(ctx, fmt.Sprintf("toolset %q: dropping description, which a toolset does not support; declare the collection as `kind: group` to keep it", name))
+		}
+	}
+	return migrated
 }
 
 // transformDocs transforms the configuration file from nested to flat format
@@ -306,16 +371,16 @@ func processValue(v any, isToolset bool) any {
 }
 
 // mergeConfigs merges multiple Config structs into one.
-// Detects and raises errors for resource conflicts in sources, authServices, tools, and toolsets.
-// All resource names (sources, authServices, tools, toolsets) must be unique across all files.
+// Detects and raises errors for resource conflicts in sources, authServices, tools, and groups.
+// All resource names (sources, authServices, tools, groups) must be unique across all files.
 func mergeConfigs(files ...Config) (Config, error) {
 	merged := Config{
 		Sources:         make(server.SourceConfigs),
 		AuthServices:    make(server.AuthServiceConfigs),
 		EmbeddingModels: make(server.EmbeddingModelConfigs),
 		Tools:           make(server.ToolConfigs),
-		Toolsets:        make(server.ToolsetConfigs),
 		Prompts:         make(server.PromptConfigs),
+		Groups:          make(server.GroupConfigs),
 	}
 
 	var conflicts []string
@@ -359,15 +424,6 @@ func mergeConfigs(files ...Config) (Config, error) {
 			}
 		}
 
-		// Check for conflicts and merge toolsets
-		for name, toolset := range file.Toolsets {
-			if _, exists := merged.Toolsets[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("toolset '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				merged.Toolsets[name] = toolset
-			}
-		}
-
 		// Check for conflicts and merge prompts
 		for name, prompt := range file.Prompts {
 			if _, exists := merged.Prompts[name]; exists {
@@ -376,11 +432,20 @@ func mergeConfigs(files ...Config) (Config, error) {
 				merged.Prompts[name] = prompt
 			}
 		}
+
+		// Check for conflicts and merge groups
+		for name, grp := range file.Groups {
+			if _, exists := merged.Groups[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("group '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.Groups[name] = grp
+			}
+		}
 	}
 
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
-		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset and prompt has a unique name across all files", strings.Join(conflicts, "\n  - "))
+		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, prompt and group has a unique name across all files", strings.Join(conflicts, "\n  - "))
 	}
 
 	// Ensure only one authService has mcpEnabled = true

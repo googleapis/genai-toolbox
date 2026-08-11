@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -102,10 +103,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("role_name", "", "Optional: a text to filter results by role name. The input is used within a LIKE clause."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return. Default is 10"),
+		parameters.NewStringParameter("role_name", "Optional: a text to filter results by role name. The input is used within a LIKE clause.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return. Default is 50", parameters.WithIntDefault(50)),
 	}
 
 	if cfg.Description == "" {
@@ -127,12 +128,11 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
-
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.StaticParameters, paramsMap)
@@ -147,6 +147,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
+}
+
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return nil
 }

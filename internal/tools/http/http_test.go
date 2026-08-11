@@ -120,9 +120,9 @@ func TestParseFromYamlHTTP(t *testing.T) {
 					Method: "GET",
 					Path:   "{{.pathParam}}?name=alice&pet=cat",
 					QueryParams: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 					PathParams: parameters.Parameters{
 						&parameters.StringParameter{
@@ -144,7 +144,7 @@ func TestParseFromYamlHTTP(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -213,7 +213,7 @@ func TestFailParseFromYamlHTTP(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

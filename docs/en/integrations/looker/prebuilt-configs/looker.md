@@ -26,6 +26,7 @@ description: "Details of the Looker prebuilt configuration."
     *   `get_measures`: Retrieves the list of measures in an explore.
     *   `get_filters`: Retrieves the list of filters in an explore.
     *   `get_parameters`: Retrieves the list of parameters in an explore.
+    *   `get_field_value_suggestions`: Retrieves distinct value suggestions for a field.
     *   `query`: Runs a query against the LookML model.
     *   `query_sql`: Generates the SQL for a query.
     *   `query_url`: Generates a URL for a query in Looker.
