@@ -135,14 +135,6 @@ func TestGroupConfig_Initialize(t *testing.T) {
 			wantTTLMs: intPtr(300000),
 		},
 		{
-			name: "negative ttlMs",
-			config: group.GroupConfig{
-				Name:      "g",
-				TTLMs:     intPtr(-1000),
-			},
-			wantErr: "invalid ttlMs value: -1000; must be non-negative",
-		},
-		{
 			name: "public cacheScope",
 			config: group.GroupConfig{
 				Name:       "g",
@@ -164,14 +156,6 @@ func TestGroupConfig_Initialize(t *testing.T) {
 				Name:       "g",
 			},
 			wantCacheScope: "public",
-		},
-		{
-			name: "invalid cacheScope",
-			config: group.GroupConfig{
-				Name:       "g",
-				CacheScope: "secret",
-			},
-			wantErr: "invalid cacheScope value: \"secret\"; must be 'public' or 'private'",
 		},
 	}
 

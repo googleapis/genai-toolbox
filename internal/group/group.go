@@ -35,8 +35,8 @@ type GroupConfig struct {
 	Description string   `yaml:"description"`
 	ToolNames   []string `yaml:"tools"`
 	PromptNames []string `yaml:"prompts"`
-	CacheScope  string   `yaml:"cacheScope"`
-	TTLMs	  	*int     `yaml:"ttlMs"`
+	CacheScope  string   `yaml:"cacheScope" validate:"omitempty,oneof=public private"`
+	TTLMs	  	*int     `yaml:"ttlMs" validate:"omitempty,gte=0"`
 }
 
 // Group is an initialized group: the source of truth for a named collection of
@@ -58,9 +58,9 @@ type GroupManager interface {
 	GetTool(string) (tools.Tool, bool)
 }
 
-// Initialize validates the group name, ttlMs, and cache scope, and 
-// checks that every declared tool and prompt exists in the provided maps,
-// building the membership sets used by ContainsTool and ContainsPrompt.
+// Initialize validates the group name and checks that every declared tool and
+// prompt exists in the provided maps, building the membership sets used by
+// ContainsTool and ContainsPrompt.
 func (gc GroupConfig) Initialize(toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt) (Group, error) {
 	if !tools.IsValidName(gc.Name) {
 		return Group{}, fmt.Errorf("invalid group name: %q", gc.Name)
@@ -80,14 +80,6 @@ func (gc GroupConfig) Initialize(toolsMap map[string]tools.Tool, promptsMap map[
 			return Group{}, fmt.Errorf("prompt does not exist: %q", name)
 		}
 		promptNameSet[name] = struct{}{}
-	}
-
-	if (gc.TTLMs != nil && *gc.TTLMs < 0) {
-		return Group{}, fmt.Errorf("invalid ttlMs value: %d; must be non-negative", *gc.TTLMs)
-	}
-
-	if gc.CacheScope != "" && gc.CacheScope != "public" && gc.CacheScope != "private" {
-		return Group{}, fmt.Errorf("invalid cacheScope value: %q; must be 'public' or 'private'", gc.CacheScope)
 	}
 
 	return Group{GroupConfig: gc, toolNameSet: toolNameSet, promptNameSet: promptNameSet}, nil
