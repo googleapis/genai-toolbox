@@ -36,9 +36,10 @@ import (
 
 const resourceType string = "falkordb-schema"
 
-// sampleSize is the number of entities sampled per label or relationship
-// type when deriving property shapes.
-const sampleSize = 100
+// defaultSampleSize is the number of entities sampled per label or
+// relationship type when deriving property shapes, used when the tool does
+// not configure a sampleSize.
+const defaultSampleSize = 100
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -63,6 +64,7 @@ type Config struct {
 	tools.ConfigBase `yaml:",inline"`
 	Type             string                 `yaml:"type" validate:"required"`
 	Source           string                 `yaml:"source" validate:"required"`
+	SampleSize       int                    `yaml:"sampleSize"`
 	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
@@ -79,6 +81,10 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	params := parameters.Parameters{}
+
+	if cfg.SampleSize <= 0 {
+		cfg.SampleSize = defaultSampleSize
+	}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -289,7 +295,7 @@ func (t Tool) extractNodeLabels(ctx context.Context, source compatibleSource) ([
 			return nil, fmt.Errorf("failed to count label %q: %w", label, err)
 		}
 
-		sampleResult, err := runReadQuery(ctx, source, fmt.Sprintf("MATCH (n:`%s`) RETURN n LIMIT %d", escaped, sampleSize))
+		sampleResult, err := runReadQuery(ctx, source, fmt.Sprintf("MATCH (n:`%s`) RETURN n LIMIT %d", escaped, t.Cfg.SampleSize))
 		if err != nil {
 			return nil, fmt.Errorf("failed to sample label %q: %w", label, err)
 		}
@@ -333,7 +339,7 @@ func (t Tool) extractRelationships(ctx context.Context, source compatibleSource)
 		}
 
 		sampleResult, err := runReadQuery(ctx, source, fmt.Sprintf(
-			"MATCH (a)-[r:`%s`]->(b) RETURN labels(a) AS startLabels, labels(b) AS endLabels, r LIMIT %d", escaped, sampleSize))
+			"MATCH (a)-[r:`%s`]->(b) RETURN labels(a) AS startLabels, labels(b) AS endLabels, r LIMIT %d", escaped, t.Cfg.SampleSize))
 		if err != nil {
 			return nil, fmt.Errorf("failed to sample relationship type %q: %w", relType, err)
 		}

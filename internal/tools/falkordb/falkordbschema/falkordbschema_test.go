@@ -54,6 +54,29 @@ func TestParseFromYamlFalkorDB(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with sample size",
+			in: `
+            kind: tool
+            name: example_tool
+            type: falkordb-schema
+            source: my-falkordb-instance
+            description: some tool description
+            sampleSize: 25
+			`,
+			want: server.ToolConfigs{
+				"example_tool": Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{},
+					},
+					Type:       "falkordb-schema",
+					Source:     "my-falkordb-instance",
+					SampleSize: 25,
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

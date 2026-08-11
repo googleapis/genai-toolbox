@@ -10,8 +10,9 @@ description: >
 
 A `falkordb-schema` tool extracts a complete schema description of the graph
 configured on a FalkorDB source: node labels and relationship types with
-their observed property shapes (derived from sampling up to 100 entities per
-label or type), indexes (including vector and full-text indexes),
+their observed property shapes (derived from sampling up to `sampleSize`
+entities per label or type, 100 by default), indexes (including vector and
+full-text indexes),
 constraints, and graph statistics.
 
 ## Compatible Sources
@@ -52,3 +53,4 @@ description: Use this tool to get the schema of the graph.
 | type               |  string  |     true     | Must be "falkordb-schema".                                            |
 | source             |  string  |     true     | Name of the source to extract the schema from.                        |
 | description        |  string  |     true     | Description of the tool that is passed to the LLM.                    |
+| sampleSize         |   int    |    false     | Entities sampled per label or type to derive property shapes. Defaults to 100. |
