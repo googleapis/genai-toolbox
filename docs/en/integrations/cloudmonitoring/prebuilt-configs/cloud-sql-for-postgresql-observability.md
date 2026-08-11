@@ -16,3 +16,7 @@ description: "Details of the Cloud SQL for PostgreSQL Observability prebuilt con
     *   `get_query_metrics`: Fetches query level cloud monitoring data
         (timeseries metrics) for queries running in Postgres instance using a
         PromQL query.
+
+*   **Toolsets:**
+    *   `cloud_sql_postgres_cloud_monitoring_tools`: Tools for retrieving cloud monitoring and system metrics for Cloud SQL PostgreSQL.
+        *   **Tools:** `get_system_metrics`, `get_query_metrics`

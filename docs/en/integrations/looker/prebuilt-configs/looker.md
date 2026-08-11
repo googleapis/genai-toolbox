@@ -39,3 +39,7 @@ description: "Details of the Looker prebuilt configuration."
     *   `add_dashboard_element`: Adds a tile to a dashboard.
     *   `add_dashboard_filter`: Adds a filter to a dashboard.
     *   `generate_embed_url`: Generate an embed url for content.
+
+*   **Toolsets:**
+    *   `looker_tools`: Tools for querying, listing models, explores, and dashboards in Looker.
+        *   **Tools:** `get_models`, `get_explores`, `get_dimensions`, `get_measures`, `get_filters`, `get_parameters`, `query`, `query_sql`, `query_url`, `get_looks`, `run_look`, `make_look`, `get_dashboards`, `run_dashboard`, `make_dashboard`, `add_dashboard_element`, `add_dashboard_filter`, `generate_embed_url`

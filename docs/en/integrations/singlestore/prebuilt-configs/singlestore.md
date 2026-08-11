@@ -16,3 +16,7 @@ description: "Details of the SingleStore prebuilt configuration."
 *   **Tools:**
     *   `execute_sql`: Use this tool to execute SQL.
     *   `list_tables`: Lists detailed schema information for user-created tables.
+
+*   **Toolsets:**
+    *   `singlestore-database-tools`: Tools for executing SQL and listing tables in SingleStore databases.
+        *   **Tools:** `execute_sql`, `list_tables`

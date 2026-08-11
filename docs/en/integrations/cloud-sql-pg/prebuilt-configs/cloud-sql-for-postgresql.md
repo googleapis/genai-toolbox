@@ -57,3 +57,21 @@ description: "Details of the Cloud SQL for PostgreSQL prebuilt configuration."
         each database in the postgreSQL instance.
     *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
     *   `list_stored_procedure`: Lists stored procedures.
+
+*   **Toolsets:**
+    *   `admin`: Tools for administering instances, databases, clusters, and users.
+        *   **Tools:** `create_instance`, `get_instance`, `list_instances`, `create_database`, `list_databases`, `create_user`, `wait_for_operation`, `clone_instance`
+    *   `lifecycle`: Tools for managing the lifecycle of instances, including backups, restores, and upgrades.
+        *   **Tools:** `create_backup`, `restore_backup`, `postgres_upgrade_precheck`, `wait_for_operation`, `database_overview`, `get_instance`, `list_instances`
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `execute_sql`, `list_tables`, `list_views`, `list_schemas`, `list_triggers`, `list_indexes`, `list_sequences`, `list_stored_procedure`
+    *   `monitor`: Tools for checking system metrics, tracking active queries, identifying locks, and monitoring performance.
+        *   **Tools:** `get_system_metrics`, `get_query_metrics`, `list_query_stats`, `get_query_plan`, `list_database_stats`, `list_active_queries`, `long_running_transactions`, `list_locks`
+    *   `health`: Tools for auditing database health, identifying bloat, vacuum configurations, and analyzing tables/indexes.
+        *   **Tools:** `list_top_bloated_tables`, `list_invalid_indexes`, `list_table_stats`, `get_column_cardinality`, `list_autovacuum_configurations`, `list_tablespaces`, `database_overview`, `list_pg_settings`
+    *   `view-config`: Tools for viewing and managing system-level configurations and parameters.
+        *   **Tools:** `list_available_extensions`, `list_installed_extensions`, `list_memory_configurations`, `list_pg_settings`, `database_overview`, `get_instance`
+    *   `replication`: Tools for monitoring replication health, replication slots, publication tables, and cluster synchronization.
+        *   **Tools:** `replication_stats`, `list_replication_slots`, `list_publication_tables`, `list_roles`, `list_pg_settings`, `database_overview`
+    *   `vectorassist`: Tools for setting up, managing, and optimizing vector search and vector databases.
+        *   **Tools:** `execute_sql`, `define_spec`, `modify_spec`, `apply_spec`, `generate_query`, `improve_query_recall`, `list_specs`, `get_spec`, `delete_spec`

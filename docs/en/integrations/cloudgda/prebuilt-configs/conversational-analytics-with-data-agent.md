@@ -26,3 +26,7 @@ description: "Details of the Conversational Analytics with Data Agent prebuilt c
         documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
     *   `get_data_agent_info`: Retrieve details about a specific data agent.
     *   `list_accessible_data_agents`: List data agents that are accessible.
+
+*   **Toolsets:**
+    *   `conversational_analytics_tools`: Tools for conversational analytics with data agents.
+        *   **Tools:** `list_accessible_data_agents`, `get_data_agent_info`, `ask_data_agent`

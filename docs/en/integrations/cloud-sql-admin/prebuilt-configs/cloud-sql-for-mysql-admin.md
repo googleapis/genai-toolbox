@@ -38,3 +38,7 @@ description: "Details of the Cloud SQL for MySQL Admin prebuilt configuration."
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL instance.
     *   `create_backup`: Creates a backup on a Cloud SQL instance.
     *   `restore_backup`: Restores a backup of a Cloud SQL instance.
+
+*   **Toolsets:**
+    *   `cloud_sql_mysql_admin_tools`: Tools for instance provisioning, lifecycle management, and administration in Cloud SQL MySQL.
+        *   **Tools:** `create_instance`, `get_instance`, `list_instances`, `create_database`, `list_databases`, `create_user`, `wait_for_operation`, `clone_instance`, `create_backup`, `restore_backup`

@@ -33,3 +33,13 @@ description: "Details of the Cloud SQL for MySQL prebuilt configuration."
     *   `list_all_locks`: Lists all current locks on the database.
     *   `show_query_stats`: Show query execution statistics.
     *   `list_table_stats`: Displays table statistics in MySQL.
+
+*   **Toolsets:**
+    *   `admin`: Tools for administering instances, databases, clusters, and users.
+        *   **Tools:** `create_instance`, `get_instance`, `list_instances`, `create_database`, `list_databases`, `create_user`, `wait_for_operation`
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `execute_sql`, `list_tables`, `get_query_plan`, `list_active_queries`
+    *   `monitor`: Tools for checking system metrics, tracking active queries, identifying locks, and monitoring performance.
+        *   **Tools:** `get_query_plan`, `list_active_queries`, `get_query_metrics`, `get_system_metrics`, `list_table_fragmentation`, `list_table_stats`, `list_tables_missing_unique_indexes`
+    *   `lifecycle`: Tools for managing the lifecycle of instances, including backups, restores, and upgrades.
+        *   **Tools:** `create_backup`, `restore_backup`, `clone_instance`, `list_instances`, `get_instance`, `wait_for_operation`

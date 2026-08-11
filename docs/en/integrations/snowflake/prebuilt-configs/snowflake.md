@@ -18,3 +18,7 @@ description: "Details of the Snowflake prebuilt configuration."
 *   **Tools:**
     *   `execute_sql`: Use this tool to execute SQL.
     *   `list_tables`: Lists detailed schema information for user-created tables.
+
+*   **Toolsets:**
+    *   `snowflake_tools`: Tools for executing queries and listing tables in Snowflake.
+        *   **Tools:** `execute_sql`, `list_tables`

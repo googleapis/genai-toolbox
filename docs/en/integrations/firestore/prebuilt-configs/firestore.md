@@ -27,3 +27,9 @@ description: "Details of the Firestore prebuilt configuration."
     *   `get_rules`: Retrieves the active Firestore security rules.
     *   `validate_rules`: Checks the provided Firestore Rules source for syntax
         and validation errors.
+
+*   **Toolsets:**
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `get_documents`, `add_documents`, `update_document`, `delete_documents`, `query_collection`, `list_collections`
+    *   `security`: Tools for managing database security rules and verifying policies.
+        *   **Tools:** `get_rules`, `validate_rules`

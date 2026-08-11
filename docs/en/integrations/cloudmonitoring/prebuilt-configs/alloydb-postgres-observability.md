@@ -16,3 +16,7 @@ description: "Details of the AlloyDB Postgres Observability prebuilt configurati
     *   `get_query_metrics`: Fetches query level cloud monitoring data
         (timeseries metrics) for queries running in an AlloyDB instance using a
         PromQL query.
+
+*   **Toolsets:**
+    *   `alloydb_postgres_cloud_monitoring_tools`: Tools for retrieving cloud monitoring and system metrics for AlloyDB Postgres.
+        *   **Tools:** `get_system_metrics`, `get_query_metrics`

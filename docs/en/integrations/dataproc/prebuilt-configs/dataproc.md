@@ -17,3 +17,7 @@ description: "Details of the Dataproc prebuilt configuration."
     *   `get_cluster`: Gets a Dataproc cluster.
     *   `list_jobs`: Lists Dataproc jobs.
     *   `get_job`: Gets a Dataproc job.
+
+*   **Toolsets:**
+    *   `dataproc_tools`: Tools for managing and monitoring Dataproc clusters and jobs.
+        *   **Tools:** `list_clusters`, `get_cluster`, `list_jobs`, `get_job`

@@ -18,3 +18,7 @@ description: "Details of the ClickHouse prebuilt configuration."
     *   `execute_sql`: Use this tool to execute SQL.
     *   `list_databases`: Use this tool to list all databases in ClickHouse.
     *   `list_tables`: Use this tool to list all tables in a specific ClickHouse database.
+
+*   **Toolsets:**
+    *   `clickhouse_database_tools`: Tools for executing SQL and listing databases/tables in ClickHouse.
+        *   **Tools:** `execute_sql`, `list_databases`, `list_tables`

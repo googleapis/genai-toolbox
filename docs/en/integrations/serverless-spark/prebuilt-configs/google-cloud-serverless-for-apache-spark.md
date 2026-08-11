@@ -24,3 +24,7 @@ description: "Details of the Google Cloud Serverless for Apache Spark prebuilt c
     *   `list_sessions`: Lists Spark sessions.
     *   `get_session`: Gets a Spark session.
     *   `get_session_template`: Gets a Spark session template.
+
+*   **Toolsets:**
+    *   `serverless_spark_tools`: Tools for managing and executing Serverless Spark batches and sessions.
+        *   **Tools:** `list_batches`, `get_batch`, `cancel_batch`, `create_pyspark_batch`, `create_spark_batch`, `get_session_template`, `list_sessions`, `get_session`

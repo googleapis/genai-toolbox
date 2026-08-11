@@ -38,8 +38,9 @@ description: "Details of the Cloud Storage prebuilt configuration."
     *   `copy_object`: Copies an object to a destination object.
     *   `move_object`: Atomically renames an object within the same bucket.
     *   `delete_object`: Deletes an object.
+
 *   **Toolsets:**
-    *   `cloud-storage-buckets`: Bucket administration (list, create, inspect
-        metadata and IAM policy, delete).
-    *   `cloud-storage-objects`: Object management (list, read, write, copy,
-        move, delete, retrieve metadata).
+    *   `cloud-storage-buckets`: Tools for listing, creating, and managing Google Cloud Storage buckets.
+        *   **Tools:** `list_buckets`, `create_bucket`, `get_bucket_metadata`, `get_bucket_iam_policy`, `delete_bucket`
+    *   `cloud-storage-objects`: Tools for reading, writing, uploading, downloading, and managing GCS objects.
+        *   **Tools:** `list_objects`, `get_object_metadata`, `read_object`, `download_object`, `write_object`, `upload_object`, `copy_object`, `move_object`, `delete_object`

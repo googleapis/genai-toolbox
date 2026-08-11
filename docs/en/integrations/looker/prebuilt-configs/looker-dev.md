@@ -48,3 +48,7 @@ description: "Details of the Looker Dev prebuilt configuration."
     *   `create_git_branch`: Create a new git branch for a LookML project.
     *   `switch_git_branch`: Switch the git branch of a LookML project.
     *   `delete_git_branch`: Delete a git branch of a LookML project.
+
+*   **Toolsets:**
+    *   `looker_dev_tools`: Tools for Looker development, project file management, and Git branching.
+        *   **Tools:** `health_pulse`, `health_analyze`, `health_vacuum`, `dev_mode`, `get_projects`, `get_project_files`, `get_project_file`, `create_project_file`, `update_project_file`, `delete_project_file`, `get_project_directories`, `create_project_directory`, `delete_project_directory`, `validate_project`, `get_connections`, `get_connection_schemas`, `get_connection_databases`, `get_connection_tables`, `get_connection_table_columns`, `get_lookml_tests`, `run_lookml_tests`, `create_view_from_table`, `list_git_branches`, `get_git_branch`, `create_git_branch`, `switch_git_branch`, `delete_git_branch`

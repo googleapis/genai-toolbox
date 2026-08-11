@@ -19,3 +19,7 @@ description: "Details of the OceanBase prebuilt configuration."
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+
+*   **Toolsets:**
+    *   `oceanbase_database_tools`: Tools for executing SQL and listing tables in OceanBase.
+        *   **Tools:** `execute_sql`, `list_tables`

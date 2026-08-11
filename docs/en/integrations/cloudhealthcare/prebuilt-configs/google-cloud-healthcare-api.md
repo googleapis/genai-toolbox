@@ -33,3 +33,11 @@ description: "Details of the Google Cloud Healthcare API prebuilt configuration.
     *   `search_dicom_series`: Searches for DICOM series.
     *   `search_dicom_instances`: Searches for DICOM instances.
     *   `retrieve_rendered_dicom_instance`: Retrieves a rendered DICOM instance.
+
+*   **Toolsets:**
+    *   `cloud_healthcare_dataset_tools`: Tools for managing datasets and listing stores in the Google Cloud Healthcare API.
+        *   **Tools:** `get_dataset`, `list_dicom_stores`, `list_fhir_stores`
+    *   `cloud_healthcare_fhir_tools`: Tools for interacting with FHIR stores and resources in the Cloud Healthcare API.
+        *   **Tools:** `get_fhir_store`, `get_fhir_store_metrics`, `get_fhir_resource`, `fhir_patient_search`, `fhir_patient_everything`, `fhir_fetch_page`
+    *   `cloud_healthcare_dicom_tools`: Tools for managing DICOM stores and retrieving DICOM instances in the Cloud Healthcare API.
+        *   **Tools:** `get_dicom_store`, `get_dicom_store_metrics`, `search_dicom_studies`, `search_dicom_series`, `search_dicom_instances`, `retrieve_rendered_dicom_instance`

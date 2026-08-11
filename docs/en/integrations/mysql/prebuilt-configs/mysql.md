@@ -28,3 +28,9 @@ description: "Details of the MySQL prebuilt configuration."
     *   `list_all_locks`: Lists all current locks on the database.
     *   `show_query_stats`: Show query execution statistics.
     *   `list_table_stats`: Displays table statistics in MySQL.
+
+*   **Toolsets:**
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `execute_sql`, `list_tables`, `get_query_plan`, `list_active_queries`
+    *   `monitor`: Tools for checking system metrics, tracking active queries, identifying locks, and monitoring performance.
+        *   **Tools:** `get_query_plan`, `list_active_queries`, `list_table_fragmentation`, `list_table_stats`, `list_tables_missing_unique_indexes`

@@ -24,3 +24,7 @@ description: "Details of the AlloyDB Postgres Admin prebuilt configuration."
         AlloyDB cluster.
     *   `wait_for_operation`: Polls the operations API to track the status of
         long-running operations.
+
+*   **Toolsets:**
+    *   `alloydb_postgres_admin_tools`: Tools for instance provisioning, lifecycle management, and administration in AlloyDB Postgres.
+        *   **Tools:** `create_cluster`, `wait_for_operation`, `create_instance`, `list_clusters`, `list_instances`, `list_users`, `create_user`, `get_cluster`, `get_instance`, `get_user`
