@@ -634,9 +634,6 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "FALKORDB_HOST=$_FALKORDB_HOST"
-      - "FALKORDB_PORT=$_FALKORDB_PORT"
-      - "FALKORDB_GRAPH=$_FALKORDB_GRAPH"
     secretEnv: ["API_KEY"]
     volumes:
       - name: "go"
@@ -1724,9 +1721,6 @@ substitutions:
   _POSTGRES_PORT: "5432"
   _SPANNER_INSTANCE: "spanner-testing"
   _NEO4J_DATABASE: "neo4j"
-  _FALKORDB_HOST: 127.0.0.1
-  _FALKORDB_PORT: "6379"
-  _FALKORDB_GRAPH: "toolbox_test_graph"
   _CLOUD_SQL_MSSQL_INSTANCE: "cloud-sql-mssql-testing"
   _CLOUD_SQL_MYSQL_INSTANCE: "cloud-sql-mysql-testing"
   _MYSQL_HOST: 127.0.0.1

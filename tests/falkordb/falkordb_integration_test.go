@@ -30,10 +30,15 @@ import (
 	"time"
 
 	falkordb "github.com/FalkorDB/falkordb-go/v2"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 )
+
+// falkorDBImage is the image used for the ephemeral test container.
+const falkorDBImage = "falkordb/falkordb:v4.18.0"
 
 var (
 	FalkorDBSourceType = "falkordb"
@@ -43,6 +48,46 @@ var (
 	FalkorDBPassword   = os.Getenv("FALKORDB_PASSWORD")
 	FalkorDBGraph      = os.Getenv("FALKORDB_GRAPH")
 )
+
+// setupFalkorDBContainer starts an ephemeral FalkorDB container and returns
+// its host and mapped port, along with a cleanup function that terminates it.
+func setupFalkorDBContainer(ctx context.Context, t *testing.T) (string, string, func()) {
+	t.Helper()
+
+	req := testcontainers.ContainerRequest{
+		Image:        falkorDBImage,
+		ExposedPorts: []string{"6379/tcp"},
+		WaitingFor:   wait.ForLog("Ready to accept connections").WithStartupTimeout(120 * time.Second),
+	}
+
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		t.Fatalf("failed to start FalkorDB container: %s", err)
+	}
+
+	cleanup := func() {
+		if err := container.Terminate(context.Background()); err != nil {
+			t.Fatalf("failed to terminate container: %s", err)
+		}
+	}
+
+	host, err := container.Host(ctx)
+	if err != nil {
+		cleanup()
+		t.Fatalf("failed to get container host: %s", err)
+	}
+
+	port, err := container.MappedPort(ctx, "6379")
+	if err != nil {
+		cleanup()
+		t.Fatalf("failed to get container mapped port 6379: %s", err)
+	}
+
+	return host, port.Port(), cleanup
+}
 
 // getFalkorDBVars retrieves the FalkorDB connection details from environment
 // variables. Username and password are optional; the rest are required.
@@ -85,9 +130,19 @@ func newFalkorDBClient(t *testing.T) *falkordb.FalkorDB {
 // execution (including read-only enforcement, dry runs, and graph override),
 // schema extraction, and graph listing.
 func TestFalkorDBToolEndpoints(t *testing.T) {
-	sourceConfig := getFalkorDBVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
+
+	// Default to an ephemeral container; the FALKORDB_* environment variables
+	// take precedence when pointing the suite at an external instance.
+	if FalkorDBHost == "" {
+		host, port, cleanup := setupFalkorDBContainer(ctx, t)
+		t.Cleanup(cleanup)
+		FalkorDBHost, FalkorDBPort = host, port
+		FalkorDBGraph = "toolbox_test_graph"
+	}
+
+	sourceConfig := getFalkorDBVars(t)
 
 	args := []string{"--enable-api"}
 
