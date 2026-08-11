@@ -594,6 +594,8 @@ github.com/testcontainers/testcontainers-go/modules/cockroachdb v0.43.0 h1:WD1xV
 github.com/testcontainers/testcontainers-go/modules/cockroachdb v0.43.0/go.mod h1:Y68nC09QC+RmnOyh2WLfAS3VR3/EPkcKoKcn6a8BRFQ=
 github.com/testcontainers/testcontainers-go/modules/couchbase v0.43.0 h1:jmn8aYThX+xAmNh1n5ErFT7ju2EvKbXD6nWXLM71AME=
 github.com/testcontainers/testcontainers-go/modules/couchbase v0.43.0/go.mod h1:6lKST1Z6/281hrMDKB37P/v30PNICU9CQVGnW8w5Hcg=
+github.com/testcontainers/testcontainers-go/modules/mongodb v0.43.0 h1:RJlAAz8dv61icyHvFmrr1xZHJEWZdvBfVBAU6wnmGPM=
+github.com/testcontainers/testcontainers-go/modules/mongodb v0.43.0/go.mod h1:1zaDEZyV1SK+mpz83tmB2KthF6DHaS4Y+lRvy3d2XiE=
 github.com/testcontainers/testcontainers-go/modules/scylladb v0.43.0 h1:0CxAoATVlXC45GSzaJFChR1wqIj8v0XetWhGUdBEPC8=
 github.com/testcontainers/testcontainers-go/modules/scylladb v0.43.0/go.mod h1:07IhPfqcWw2RArDcuNUKAl+CCHe+/a9trUr+ZvVWVig=
 github.com/thlib/go-timezone-local v0.0.7 h1:fX8zd3aJydqLlTs/TrROrIIdztzsdFV23OzOQx31jII=

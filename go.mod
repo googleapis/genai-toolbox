@@ -63,6 +63,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/cockroachdb v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/couchbase v0.43.0
+	github.com/testcontainers/testcontainers-go/modules/mongodb v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/scylladb v0.43.0
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/trinodb/trino-go-client v0.333.0
