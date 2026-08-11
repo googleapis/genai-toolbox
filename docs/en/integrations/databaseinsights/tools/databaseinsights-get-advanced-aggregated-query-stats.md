@@ -18,7 +18,9 @@ The `databaseinsights-get-advanced-aggregated-query-stats` tool fetches aggregat
 
 ### IAM Permissions
 
-- `databaseinsights.queryStats.fetch` on the target location/project.
+- `databaseinsights.queryStats.fetch` on the target location/project, which is granted by:
+  - **Database Insights Viewer** (`roles/databaseinsights.viewer`)
+  - **Monitoring Viewer** (`roles/monitoring.viewer`)
 
 ## Parameters
 
@@ -60,6 +62,7 @@ Token for fetching subsequent pages of results.
 
 ## Example
 
+**YAML Configuration:**
 ```yaml
 kind: tool
 name: get_aggregated_query_stats
@@ -67,9 +70,43 @@ type: databaseinsights-get-advanced-aggregated-query-stats
 source: database-insights-source
 ```
 
+**Sample CLI Invocation:**
+```bash
+./toolbox invoke get_advanced_aggregated_query_stats \
+  --prebuilt alloydb-postgres-observability \
+  '{"parent":"projects/PROJECT_ID/locations/REGION","full_resource_name":"//alloydb.googleapis.com/projects/PROJECT_ID/locations/REGION/clusters/CLUSTER_ID/instances/INSTANCE_ID","page_size":10}'
+```
+
 ## Output Format
 
-Returns a structured object containing `results` (rows of metrics) and `metadata` (schema columns).
+Returns a structured JSON object containing `results` (an array of row values) and `metadata` (field schema descriptors):
+
+```json
+{
+  "results": [
+    [
+      "1106633582131931382",
+      "postgres",
+      40324,
+      20162,
+      2,
+      0,
+      "SELECT BATCH_ID, ... FROM information_schema.schemata ..."
+    ]
+  ],
+  "metadata": {
+    "fields": [
+      {"name": "query_id", "type": "STRING"},
+      {"name": "database", "type": "STRING"},
+      {"name": "sum(execution_time)", "type": "DOUBLE"},
+      {"name": "avg(execution_time)", "type": "DOUBLE"},
+      {"name": "sum(count)", "type": "DOUBLE"},
+      {"name": "sum(wait_time)", "type": "DOUBLE"},
+      {"name": "min(normalized_query_text)", "type": "STRING"}
+    ]
+  }
+}
+```
 
 ## Reference
 
@@ -78,3 +115,9 @@ Returns a structured object containing `results` (rows of metrics) and `metadata
 | type        |  string  |     true     | Must be "databaseinsights-get-advanced-aggregated-query-stats". |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |    false     | Optional description override.                     |
+
+## Additional Resources
+
+*   [OneMCP Reference: get_advanced_aggregated_query_stats](https://docs.cloud.google.com/alloydb/docs/reference/mcp/databaseinsights/mcp/tools_list/get_advanced_aggregated_query_stats)
+*   [Use Database Insights with Model Context Protocol (MCP)](https://cloud.google.com/alloydb/docs/ai/use-database-insights-mcp)
+
