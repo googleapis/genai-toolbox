@@ -69,6 +69,10 @@ instance, database and users:
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
+{{< tab header="linux/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/linux/arm64/toolbox
+{{< /tab >}}
+
 {{< tab header="darwin/arm64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/darwin/arm64/toolbox
 {{< /tab >}}

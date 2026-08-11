@@ -8,7 +8,7 @@ if [ -z "${VERSION}" ]; then
 fi
 
 
-FILES=("linux.amd64" "darwin.arm64" "darwin.amd64" "windows.amd64" "windows.arm64")
+FILES=("linux.amd64" "linux.arm64" "darwin.arm64" "darwin.amd64" "windows.amd64" "windows.arm64")
 
 echo "Waiting for Kokoro to sign and upload binaries to gs://mcp-toolbox-for-databases..."
 
@@ -30,13 +30,15 @@ for file_key in "${FILES[@]}"; do
     echo "Found signed binary: ${URL}!"
 done
 
-# Wait for the Linux GPG signature
-LINUX_SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/amd64/toolbox.asc"
-until curl --fail --silent --head "${LINUX_SIG_URL}" > /dev/null 2>&1; do
-    echo "Waiting for Linux GPG signature: ${LINUX_SIG_URL}..."
-    sleep 30
+# Wait for the Linux GPG signatures
+for LINUX_ARCH in amd64 arm64; do
+    LINUX_SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/$LINUX_ARCH/toolbox.asc"
+    until curl --fail --silent --head "${LINUX_SIG_URL}" > /dev/null 2>&1; do
+        echo "Waiting for Linux GPG signature: ${LINUX_SIG_URL}..."
+        sleep 30
+    done
+    echo "Found Linux GPG signature: ${LINUX_SIG_URL}!"
 done
-echo "Found Linux GPG signature: ${LINUX_SIG_URL}!"
 
 
 output_string=""
@@ -44,6 +46,7 @@ output_string=""
 # Define the descriptions - ensure this array's order matches FILES
 DESCRIPTIONS=(
     "For **Linux** systems running on **Intel/AMD 64-bit processors**."
+    "For **Linux** systems running on **ARM 64-bit processors**."
     "For **macOS** systems running on **Apple Silicon** (M1, M2, M3, etc.) processors."
     "For **macOS** systems running on **Intel processors**."
     "For **Windows** systems running on **Intel/AMD 64-bit processors**."
@@ -81,7 +84,7 @@ do
 
     # Write the table row
     if [ "$OS" = 'linux' ]; then
-        SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/amd64/toolbox.asc"
+        SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/$ARCH/toolbox.asc"
         output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL) ([Signature]($SIG_URL))" "$description_text" "$SHA256")$'\n'
     else
         output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL)" "$description_text" "$SHA256")$'\n'

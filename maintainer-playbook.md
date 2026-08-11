@@ -266,6 +266,7 @@ The following operating systems and architectures are supported for binary
 releases:
 
 * linux/amd64
+* linux/arm64
 * darwin/arm64
 * darwin/amd64
 * windows/amd64
@@ -299,7 +300,7 @@ MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.np
 >
 > **PyPI releases** are automated through the same Exit Gate via the
 > `publish-pypi-to-ar` and `trigger-exit-gate-pypi` steps. Each release
-> builds five platform-tagged wheels (one per OS/arch) via
+> builds six platform-tagged wheels (one per OS/arch) via
 > [pypi/setup.py](pypi/setup.py) with `TOOLBOX_PLATFORM` set per wheel,
 > uploads them all to `us-python.pkg.dev/oss-exit-gate-prod/mcp-toolbox--pypi`,
 > then drops a manifest at
@@ -324,13 +325,14 @@ To release a new version manually, follow these steps:
 - You will be publishing packages for the following OS/Architecture combinations:
   - `darwin/arm64` -> `server-darwin-arm64`
   - `darwin/x64` -> `server-darwin-x64`
+  - `linux/arm64` -> `server-linux-arm64`
   - `linux/x64` -> `server-linux-x64`
   - `win32/arm64` -> `server-win32-arm64`
   - `win32/x64` -> `server-win32-x64`
 
 **Phase A: Release Platform-Specific Packages**
 
-_Repeat the following steps for each of the 5 combinations listed above._
+_Repeat the following steps for each of the 6 combinations listed above._
 
 1. **Navigate to the package directory:**
    ```bash
@@ -364,8 +366,8 @@ Once all platform-specific packages are live, release the main wrapper package.
    ```
 2. **Verify Versioning:**
    - Open `package.json` and verify the `"version"` field reflects the target version.
-   - Verify that versions for dependencies in `"optionalDependencies"` match the new version for all 5 packages.
-3. **Sync Lockfile:** (Before this step, all 5 dep packages need to be published to npm)
+   - Verify that versions for dependencies in `"optionalDependencies"` match the new version for all 6 packages.
+3. **Sync Lockfile:** (Before this step, all 6 dep packages need to be published to npm)
    ```bash
    npm install --package-lock-only
    ```

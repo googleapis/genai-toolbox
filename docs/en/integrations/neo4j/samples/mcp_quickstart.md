@@ -40,7 +40,7 @@ The simplest way to get started is to download the latest binary for your operat
 \+
 
 ```bash
-export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
+export OS="linux/amd64" # one of linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
 curl -O [https://storage.googleapis.com/mcp-toolbox-for-databases/v0.16.0/$OS/toolbox](https://storage.googleapis.com/mcp-toolbox-for-databases/v0.16.0/$OS/toolbox)
 ```
 

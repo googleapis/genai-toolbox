@@ -114,6 +114,57 @@ steps:
         export VERSION=$(cat ./cmd/version.txt)
         go build -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.linux.amd64
 
+  - id: "build-linux-arm64"
+    name: golang:1
+    waitFor:
+      - "install-dependencies"
+      - "install-zig"
+    env:
+      - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=linux'
+      - 'GOARCH=arm64'
+      - 'CC=/zig-tools/zig cc -target aarch64-linux-gnu'
+      - 'CXX=/zig-tools/zig c++ -target aarch64-linux-gnu'
+    volumes:
+      - name: 'go'
+        path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
+    script: |
+        #!/usr/bin/env bash
+        go build -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.linux.arm64
+
+  - id: "store-linux-arm64"
+    name: "gcr.io/cloud-builders/gcloud:latest"
+    waitFor:
+      - "build-linux-arm64"
+    script: |
+        #!/usr/bin/env bash
+        gcloud storage cp toolbox.linux.arm64 gs://$_BUCKET_NAME/$REF_NAME/linux/arm64/toolbox
+
+  - id: "build-linux-arm64-geminicli"
+    name: golang:1
+    waitFor:
+      - "install-dependencies"
+      - "install-zig"
+    env:
+      - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=linux'
+      - 'GOARCH=arm64'
+      - 'CC=/zig-tools/zig cc -target aarch64-linux-gnu'
+      - 'CXX=/zig-tools/zig c++ -target aarch64-linux-gnu'
+    volumes:
+      - name: 'go'
+        path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
+    script: |
+        #!/usr/bin/env bash
+        export VERSION=$(cat ./cmd/version.txt)
+        go build -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.linux.arm64
+
   - id: "build-darwin-arm64"
     name: golang:1
     waitFor:
