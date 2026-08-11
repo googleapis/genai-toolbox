@@ -74,12 +74,14 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	var missing []string
 	seenMissing := make(map[string]bool)
 	matches := re.FindAllStringSubmatchIndex(input, -1)
+	locations := lineColumnsAt(input, matches)
 	var output strings.Builder
 	lastIndex := 0
-	for _, match := range matches {
+	for i, match := range matches {
 		start, end := match[0], match[1]
+		location := locations[i]
 		output.WriteString(input[lastIndex:start])
-		if isYAMLComment(input, start, commentColumns) {
+		if isYAMLComment(location.line, location.column, commentColumns) {
 			output.WriteString(input[start:end])
 			lastIndex = end
 			continue
@@ -110,8 +112,7 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 				output.WriteString(variableName)
 			} else if !seenMissing[variableName] {
 				seenMissing[variableName] = true
-				line, column := lineColumnAt(input, start)
-				missing = append(missing, fmt.Sprintf("%q (line %d, column %d)", variableName, line, column))
+				missing = append(missing, fmt.Sprintf("%q (line %d, column %d)", variableName, location.line, location.column))
 			}
 		}
 
@@ -153,8 +154,7 @@ func yamlCommentColumns(input string) map[int][]int {
 	return comments
 }
 
-func isYAMLComment(input string, index int, commentColumns map[int][]int) bool {
-	line, column := lineColumnAt(input, index)
+func isYAMLComment(line, column int, commentColumns map[int][]int) bool {
 	for _, commentColumn := range commentColumns[line] {
 		if column >= commentColumn {
 			return true
@@ -163,24 +163,35 @@ func isYAMLComment(input string, index int, commentColumns map[int][]int) bool {
 	return false
 }
 
-// ParseConfig parses the provided yaml into appropriate configs.
-func lineColumnAt(input string, index int) (int, int) {
-	line := 1
-	column := 1
-	for i, r := range input {
-		if i >= index {
-			break
-		}
-		if r == '\n' {
-			line++
-			column = 1
-		} else {
-			column++
-		}
-	}
-	return line, column
+type sourceLocation struct {
+	line   int
+	column int
 }
 
+// lineColumnsAt computes source positions for the ordered regex matches in a
+// single pass over input. Regex indexes are byte offsets, while YAML columns
+// count runes, so range is used to preserve Unicode column reporting.
+func lineColumnsAt(input string, matches [][]int) []sourceLocation {
+	locations := make([]sourceLocation, len(matches))
+	line := 1
+	column := 1
+	lastIndex := 0
+	for i, match := range matches {
+		for _, r := range input[lastIndex:match[0]] {
+			if r == '\n' {
+				line++
+				column = 1
+			} else {
+				column++
+			}
+		}
+		locations[i] = sourceLocation{line: line, column: column}
+		lastIndex = match[0]
+	}
+	return locations
+}
+
+// ParseConfig parses the provided yaml into appropriate configs.
 func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, error) {
 	var config Config
 	// Replace environment variables if found
