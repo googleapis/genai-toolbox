@@ -102,6 +102,35 @@ func TestParseEnv(t *testing.T) {
 			want: "  # ${FOO}",
 		},
 		{
+			desc: "skip commented out env var in inline comment",
+			in:   "port: 8080 # default is ${DEFAULT_PORT}",
+			want: "port: 8080 # default is ${DEFAULT_PORT}",
+		},
+		{
+			desc: "skip commented out env var in inline comment but parse active env var",
+			in:   "port: ${PORT} # default is ${DEFAULT_PORT}",
+			env: map[string]string{
+				"PORT": "9090",
+			},
+			want: "port: 9090 # default is ${DEFAULT_PORT}",
+		},
+		{
+			desc: "do not skip env var with hash inside double quotes",
+			in:   `url: "http://example.com/#${ANCHOR}"`,
+			env: map[string]string{
+				"ANCHOR": "section1",
+			},
+			want: `url: "http://example.com/#section1"`,
+		},
+		{
+			desc: "do not skip env var with hash inside single quotes",
+			in:   `url: 'http://example.com/#${ANCHOR}'`,
+			env: map[string]string{
+				"ANCHOR": "section1",
+			},
+			want: `url: 'http://example.com/#section1'`,
+		},
+		{
 			desc: "skip commented out env var but parse non-commented ones",
 			in:   "foo: ${BAR}\n# ${FOO}\nbaz: ${QUX}",
 			env: map[string]string{

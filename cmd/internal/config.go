@@ -73,10 +73,10 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	for _, match := range matches {
 		start, end := match[0], match[1]
 
-		// Skip substitution if the line is a comment
+		// Skip substitution if the variable is inside a comment
 		lineStart := strings.LastIndex(input[:start], "\n") + 1
 		linePrefix := input[lineStart:start]
-		if strings.HasPrefix(strings.TrimSpace(linePrefix), "#") {
+		if isCommented(linePrefix) {
 			continue
 		}
 
@@ -135,6 +135,49 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	}
 
 	return output.String(), err
+}
+
+// isCommented checks if the position following linePrefix is within a YAML comment.
+func isCommented(linePrefix string) bool {
+	inSingleQuote := false
+	inDoubleQuote := false
+	escaped := false
+
+	for i := 0; i < len(linePrefix); i++ {
+		ch := linePrefix[i]
+
+		if inDoubleQuote {
+			if escaped {
+				escaped = false
+			} else if ch == '\\' {
+				escaped = true
+			} else if ch == '"' {
+				inDoubleQuote = false
+			}
+			continue
+		}
+
+		if inSingleQuote {
+			if ch == '\'' {
+				inSingleQuote = false
+			}
+			continue
+		}
+
+		switch ch {
+		case '"':
+			inDoubleQuote = true
+		case '\'':
+			inSingleQuote = true
+		case '#':
+			// In YAML, # starts a comment if at the start of the line or preceded by whitespace
+			if i == 0 || linePrefix[i-1] == ' ' || linePrefix[i-1] == '\t' {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // ParseConfig parses the provided yaml into appropriate configs.
