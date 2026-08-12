@@ -669,7 +669,7 @@ func (s *Server) Listen(ctx context.Context, certFile, keyFile string) error {
 	ln, err := lc.Listen(ctx, "tcp", s.srv.Addr)
 	if err != nil {
 		if strings.Contains(err.Error(), "address already in use") {
-			return fmt.Errorf("failed to open listener for %q. Please try starting with a different port using the `--port` flag: %w", s.srv.Addr, err)
+			return fmt.Errorf("failed to open listener for %q. Use `--port=<number>` to specify a different port: %w", s.srv.Addr, err)
 		}
 		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
 	}
