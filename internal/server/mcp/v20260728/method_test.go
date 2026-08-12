@@ -1329,7 +1329,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 				}
 			}`,
 			wantErr:     true,
-			errContains: "method not found: tool \"secure_tool\" requires secure parameters which are not supported by the client",
+			errContains: "missing required client capability: tool \"secure_tool\" requires secure parameters which are not supported by the client",
 		},
 		{
 			desc: "Secure parameter passed in standard arguments",
