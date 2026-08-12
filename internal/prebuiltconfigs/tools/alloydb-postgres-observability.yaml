@@ -277,10 +277,10 @@ description: |
     - Targeted Optimization: "I found a slow query with ID <query_id> in my 'sales' database. What index should I add to fix it?"
     - Multi-Database Tuning: "Analyze performance recommendations for query <id_1> in the 'orders' database and query <id_2> in the 'shipping' database."
     - ROI Validation: "How much faster will my query become if I apply the suggested index, and how much storage will it consume?"
-  **REQUIRED PARAMETERS (Mandatory):**
-    1. 'parent': Project and location. Format: projects/{project_id}/locations/{location}
-    2. 'full_resource_name': The full identifier for the AlloyDB instance. Provide the full resource name ONLY in the following format: //alloydb.googleapis.com/projects/{project_id}/locations/{location}/clusters/{cluster_id}/instances/{instance_id}
-    3. 'database_query_ids': A list of objects used to target specific queries. Example schema: [{'database': 'dbname', 'query_ids': [12345]}]
+  **PARAMETERS:**
+    1. 'parent': Project and location. Format: projects/{project_id}/locations/{location} (Required)
+    2. 'full_resource_name': The full identifier for the AlloyDB instance. Provide the full resource name ONLY in the following format: //alloydb.googleapis.com/projects/{project_id}/locations/{location}/clusters/{cluster_id}/instances/{instance_id} (Required)
+    3. 'database_query_ids': Optional. A list of objects used to target specific queries. Example schema: [{'database': 'dbname', 'query_ids': [12345]}]. If omitted or empty, provides aggregated instance-level recommendations.
   Response Fields:
     The response is structured under 'database_index_recommendations', which includes:
     1. **index_recommendations (List of Objects)**:

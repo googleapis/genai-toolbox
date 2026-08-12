@@ -149,41 +149,44 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		return nil, util.NewAgentError("invalid or missing 'full_resource_name' parameter; expected a non-empty string", nil)
 	}
 
-	rawDatabaseQueryIds, ok := paramsMap["database_query_ids"].([]any)
-	if !ok || len(rawDatabaseQueryIds) == 0 {
-		return nil, util.NewAgentError("invalid or missing 'database_query_ids' parameter; expected a non-empty list of database-query configurations", nil)
-	}
-
 	var dbQueryIds []databaseinsights.DatabaseQueryIds
-	for i, rawItem := range rawDatabaseQueryIds {
-		itemMap, ok := rawItem.(map[string]any)
+	if rawDbQueryIdsVal, exists := paramsMap["database_query_ids"]; exists && rawDbQueryIdsVal != nil {
+		rawDatabaseQueryIds, ok := rawDbQueryIdsVal.([]any)
 		if !ok {
-			return nil, util.NewAgentError(fmt.Sprintf("invalid item at index %d in 'database_query_ids'; expected a map", i), nil)
+			return nil, util.NewAgentError("invalid 'database_query_ids' parameter; expected a list of database-query configurations", nil)
 		}
 
-		database, ok := itemMap["database"].(string)
-		if !ok || database == "" {
-			return nil, util.NewAgentError(fmt.Sprintf("invalid or missing 'database' field in 'database_query_ids' item at index %d", i), nil)
-		}
-
-		rawQids, ok := itemMap["query_ids"].([]any)
-		if !ok || len(rawQids) == 0 {
-			return nil, util.NewAgentError(fmt.Sprintf("invalid or missing 'query_ids' field in 'database_query_ids' item at index %d; expected a list of query IDs", i), nil)
-		}
-
-		var qids []string
-		for j, rawQid := range rawQids {
-			qid, err := parseQueryID(rawQid)
-			if err != nil {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid query ID at index %d under 'query_ids' at item %d: %v", j, i, err), nil)
+		for i, rawItem := range rawDatabaseQueryIds {
+			itemMap, ok := rawItem.(map[string]any)
+			if !ok {
+				return nil, util.NewAgentError(fmt.Sprintf("invalid item at index %d in 'database_query_ids'; expected a map", i), nil)
 			}
-			qids = append(qids, qid)
-		}
 
-		dbQueryIds = append(dbQueryIds, databaseinsights.DatabaseQueryIds{
-			Database: database,
-			QueryIDs: qids,
-		})
+			database, ok := itemMap["database"].(string)
+			if !ok || database == "" {
+				return nil, util.NewAgentError(fmt.Sprintf("invalid or missing 'database' field in 'database_query_ids' item at index %d", i), nil)
+			}
+
+			var qids []string
+			if rawQidsVal, exists := itemMap["query_ids"]; exists && rawQidsVal != nil {
+				rawQids, ok := rawQidsVal.([]any)
+				if !ok {
+					return nil, util.NewAgentError(fmt.Sprintf("invalid 'query_ids' field in 'database_query_ids' item at index %d; expected a list of query IDs", i), nil)
+				}
+				for j, rawQid := range rawQids {
+					qid, err := parseQueryID(rawQid)
+					if err != nil {
+						return nil, util.NewAgentError(fmt.Sprintf("invalid query ID at index %d under 'query_ids' at item %d: %v", j, i, err), nil)
+					}
+					qids = append(qids, qid)
+				}
+			}
+
+			dbQueryIds = append(dbQueryIds, databaseinsights.DatabaseQueryIds{
+				Database: database,
+				QueryIDs: qids,
+			})
+		}
 	}
 
 	req := &databaseinsights.BatchQueryIndexRecommendationsRequest{
@@ -223,9 +226,9 @@ func buildParams() parameters.Parameters {
 		parameters.NewStringParameter("full_resource_name", "Required. The full identifier for the AlloyDB instance. Provide the full resource name ONLY in the following format: //alloydb.googleapis.com/projects/{project_id}/locations/{location}/clusters/{cluster_id}/instances/{instance_id}", parameters.WithStringRequired(true)),
 		parameters.NewArrayParameter(
 			"database_query_ids",
-			"Required. A list of objects used to target specific queries. Example schema: [{'database': 'dbname', 'query_ids': [12345]}]",
+			"Optional. A list of objects used to target specific queries. Example schema: [{'database': 'dbname', 'query_ids': [12345]}]",
 			parameters.NewMapParameter("", "", ""),
-			parameters.WithArrayRequired(true),
+			parameters.WithArrayRequired(false),
 		),
 	}
 }

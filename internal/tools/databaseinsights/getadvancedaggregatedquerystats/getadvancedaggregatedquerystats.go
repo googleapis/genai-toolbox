@@ -158,6 +158,8 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		switch val := pageSizeVal.(type) {
 		case int:
 			req.PageSize = int32(val)
+		case int64:
+			req.PageSize = int32(val)
 		case float64:
 			req.PageSize = int32(val)
 		case json.Number:

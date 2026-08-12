@@ -32,9 +32,9 @@ Project and location in the format `projects/{project_id}/locations/{location}`.
 
 The full resource identifier for the database instance (e.g., `//alloydb.googleapis.com/projects/{project_id}/locations/{location}/clusters/{cluster_id}/instances/{instance_id}`).
 
-### `database_query_ids` (Array of Objects, Required)
+### `database_query_ids` (Array of Objects, Optional)
 
-A list of objects specifying database names and target query IDs (e.g., `[{"database": "postgres", "query_ids": ["1106633582131931382"]}]`). Must not be an empty array `[]`.
+A list of objects specifying database names and target query IDs (e.g., `[{"database": "postgres", "query_ids": ["1106633582131931382"]}]`).
 
 ## Example
 

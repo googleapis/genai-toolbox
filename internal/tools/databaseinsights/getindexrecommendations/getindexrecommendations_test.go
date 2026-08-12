@@ -163,3 +163,100 @@ func TestInvoke(t *testing.T) {
 		t.Fatalf("Unexpected response from Invoke: diff %v", diff)
 	}
 }
+
+func TestInvoke_OmittedDatabaseQueryIDs(t *testing.T) {
+	ctx := context.Background()
+
+	cfg := getrecs.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "get_index_recs",
+			Description: "fetches index recommendations",
+		},
+		Type:   "databaseinsights-get-index-recommendations",
+		Source: "my-db-insights-source",
+	}
+
+	tool, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	mockSrc := &mockSource{
+		t: t,
+		expectedReq: &databaseinsights.BatchQueryIndexRecommendationsRequest{
+			Parent:           "projects/mock-project/locations/us-central1",
+			FullResourceName: "//alloydb.googleapis.com/clusters/my-cluster/instances/my-instance",
+			DatabaseQueryIds: nil,
+		},
+		resp: &databaseinsights.BatchQueryIndexRecommendationsResponse{},
+	}
+
+	params := parameters.ParamValues{
+		{Name: "parent", Value: "projects/mock-project/locations/us-central1"},
+		{Name: "full_resource_name", Value: "//alloydb.googleapis.com/clusters/my-cluster/instances/my-instance"},
+	}
+
+	got, tErr := tool.Invoke(ctx, mockSrc, params, "")
+	if tErr != nil {
+		t.Fatalf("Invoke failed: %v", tErr)
+	}
+
+	if diff := cmp.Diff(mockSrc.resp, got, cmpopts.IgnoreUnexported(databaseinsights.BatchQueryIndexRecommendationsResponse{})); diff != "" {
+		t.Fatalf("Unexpected response from Invoke: diff %v", diff)
+	}
+}
+
+func TestInvoke_EmptyQueryIDs(t *testing.T) {
+	ctx := context.Background()
+
+	cfg := getrecs.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "get_index_recs",
+			Description: "fetches index recommendations",
+		},
+		Type:   "databaseinsights-get-index-recommendations",
+		Source: "my-db-insights-source",
+	}
+
+	tool, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	mockSrc := &mockSource{
+		t: t,
+		expectedReq: &databaseinsights.BatchQueryIndexRecommendationsRequest{
+			Parent:           "projects/mock-project/locations/us-central1",
+			FullResourceName: "//alloydb.googleapis.com/clusters/my-cluster/instances/my-instance",
+			DatabaseQueryIds: []databaseinsights.DatabaseQueryIds{
+				{
+					Database: "my-db",
+					QueryIDs: nil,
+				},
+			},
+		},
+		resp: &databaseinsights.BatchQueryIndexRecommendationsResponse{},
+	}
+
+	params := parameters.ParamValues{
+		{Name: "parent", Value: "projects/mock-project/locations/us-central1"},
+		{Name: "full_resource_name", Value: "//alloydb.googleapis.com/clusters/my-cluster/instances/my-instance"},
+		{
+			Name: "database_query_ids",
+			Value: []any{
+				map[string]any{
+					"database": "my-db",
+				},
+			},
+		},
+	}
+
+	got, tErr := tool.Invoke(ctx, mockSrc, params, "")
+	if tErr != nil {
+		t.Fatalf("Invoke failed: %v", tErr)
+	}
+
+	if diff := cmp.Diff(mockSrc.resp, got, cmpopts.IgnoreUnexported(databaseinsights.BatchQueryIndexRecommendationsResponse{})); diff != "" {
+		t.Fatalf("Unexpected response from Invoke: diff %v", diff)
+	}
+}
