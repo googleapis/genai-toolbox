@@ -79,7 +79,6 @@ type BaseConfig struct {
 	Title       string               `yaml:"title,omitempty"`
 	MimeType    string               `yaml:"mimeType,omitempty"`
 	Annotations *ResourceAnnotations `yaml:"annotations,omitempty"`
-	Size        *int64               `yaml:"-"`
 }
 
 func (c BaseConfig) GetName() string        { return c.Name }
