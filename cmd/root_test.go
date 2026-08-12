@@ -63,6 +63,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.UserAgentMetadata == nil {
 		c.UserAgentMetadata = []string{}
 	}
+	if c.DisableExt == nil {
+		c.DisableExt = []string{}
+	}
 	if c.HttpMaxRequestBytes == 0 {
 		c.HttpMaxRequestBytes = server.DefaultHTTPMaxRequestBytes
 	}
@@ -254,6 +257,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--tls-key", "key.pem"},
 			want: withDefaults(server.ServerConfig{
 				KeyFile: "key.pem",
+			}),
+		},
+		{
+			desc: "disable ext",
+			args: []string{"--disable-ext", "io.modelcontextprotocol/tasks"},
+			want: withDefaults(server.ServerConfig{
+				DisableExt: []string{"io.modelcontextprotocol/tasks"},
 			}),
 		},
 	}
