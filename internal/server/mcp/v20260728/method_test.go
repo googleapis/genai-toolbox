@@ -1480,40 +1480,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 			}`,
 			wantErr: false,
 		},
-		{
-			desc: "Error when parameter is already specified via URL params and passed in secureArguments",
-			urlParams: map[string]string{
-				"api_key": "secret",
-			},
-			body: `{
-				"jsonrpc": "2.0",
-				"id": 1,
-				"method": "tools/call",
-				"params": {
-					"name": "secure_tool",
-					"arguments": {
-						"query": "hello"
-					},
-					"secureArguments": {
-						"api_key": "secret"
-					},
-					"_meta": {
-						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
-						"io.modelcontextprotocol/clientInfo": {
-							"name": "TestClient",
-							"version": "1.0"
-						},
-						"io.modelcontextprotocol/clientCapabilities": {
-							"experimental": {
-								"com.google.cloud/toolbox.v1": true
-							}
-						}
-					}
-				}
-			}`,
-			wantErr:     true,
-			errContains: "is already specified as a URL parameter and must not be passed in arguments",
-		},
+
 	}
 
 	for _, tt := range tests {
