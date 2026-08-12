@@ -253,9 +253,7 @@ text: ""
 			dec := yaml.NewDecoder(bytes.NewReader([]byte(tc.yamlData)), yaml.Strict(), yaml.Validator(validator.New()))
 			resCfg, err := newConfig(ctx, "test-invalid", dec)
 			if err == nil {
-				if v, ok := resCfg.(interface{ Validate() error }); ok {
-					err = v.Validate()
-				}
+				err = resCfg.Validate()
 			}
 
 			if err == nil {
