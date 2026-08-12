@@ -221,7 +221,9 @@ visit [Toolbox UI](../documentation/configuration/toolbox-ui/index.md).
 
 ### Disabling MCP Extensions
 
-By default, Toolbox enables all supported MCP extensions (such as `com.google.cloud/toolbox.v1`). To disable specific extensions on the server, pass their URIs via the `--disable-ext` flag:
+By default, Toolbox advertises support for its own custom MCP extensions (e.g., `com.google.cloud/toolbox.v1`) during the client discovery phase. This extension signals to clients that they can leverage Toolbox-specific features that fall outside the official MCP specification (see the [Extension README](https://github.com/googleapis/mcp-toolbox/blob/main/extensions/2026-07-28/README.md) for a list of currently supported capabilities).
+
+Disabling an extension removes it from the server's advertised capabilities. To disable specific extensions on the server, pass their URIs via the `--disable-ext` flag:
 
 ```bash
 # Disable the Toolbox v1 extension
