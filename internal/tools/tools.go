@@ -129,7 +129,7 @@ type Tool interface {
 	GetAuthRequired() []string
 	GetAnnotations() *ToolAnnotations
 	Invoke(context.Context, sources.Source, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
-	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
+	EmbedParams(context.Context, parameters.ParamValues, PrimitiveManagerI) (parameters.ParamValues, error)
 	Manifest(sources.Source) (Manifest, error)
 	StaticManifest() Manifest
 	Authorized([]string) bool
@@ -141,11 +141,12 @@ type Tool interface {
 	ValidateSource(sources.Source) error
 }
 
-// SourceManager defines the minimal view of the primitives.PrimitiveManager
+// PrimitiveManagerI defines the minimal view of the primitives.PrimitiveManager
 // that the Tool package needs.
 // This is implemented to prevent import cycles.
-type SourceManager interface {
-	GetSource(sourceName string) (sources.Source, bool)
+type PrimitiveManagerI interface {
+	GetSource(string) (sources.Source, bool)
+	GetEmbeddingModel(string) (embeddingmodels.EmbeddingModel, bool)
 }
 
 // Manifest is the representation of tools sent to Client SDKs.
@@ -254,6 +255,6 @@ func (b BaseTool[T]) GetAuthTokenHeaderName(_ sources.Source) (string, error) {
 	return "Authorization", nil
 }
 
-func (b BaseTool[T]) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, b.StaticParameters, paramValues, embeddingModelsMap, nil)
+func (b BaseTool[T]) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, pMgr PrimitiveManagerI) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, b.StaticParameters, paramValues, pMgr, nil)
 }

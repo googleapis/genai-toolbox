@@ -852,6 +852,68 @@ description: |
     - For dashboards and looks, use the numeric ID (e.g., "123").
     - For explores, use the format "model_name/explore_name".
 ---
+kind: tool
+name: get_dashboard
+type: looker-get-dashboard
+source: looker-source
+description: |
+  This tool retrieves the JSON design of a Looker dashboard by its ID.
+  The output is trimmed to essential fields, excluding alerts and scheduled plans,
+  making it suitable for replicating or analyzing the dashboard structure.
+
+  Parameters:
+  - dashboard_id (required): The unique identifier of the dashboard.
+---
+kind: tool
+name: update_dashboard_element
+type: looker-update-dashboard-element
+source: looker-source
+description: |
+  This tool updates an existing query element (tile) in a Looker dashboard.
+  It reconstructs the query for the element using the provided parameters
+  and updates its title and visualization configuration.
+
+  Required Parameters:
+  - dashboard_id: The ID of the dashboard containing the element.
+  - dashboard_element_id: The ID of the element to update.
+  - model, explore, fields: These query parameters define the data for the tile.
+
+  Optional Parameters:
+  - title: The new title for the dashboard tile.
+  - pivots, filters, sorts, limit, tz: These query parameters customize the tile's query.
+  - vis_config: A JSON object defining the visualization settings.
+  - dashboard_filters: An array of dashboard filters to connect to this element.
+---
+kind: tool
+name: create_dashboard_layout
+type: looker-create-dashboard-layout
+source: looker-source
+description: |
+  This tool creates a new dashboard layout, which typically represents a tab
+  in modern Looker dashboards.
+
+  Parameters:
+  - dashboard_id (required): The ID of the dashboard.
+  - label (required): The label (title) of the new tab.
+  - type (optional): The type of layout (defaults to 'newspaper').
+  - active (optional): Whether to make this layout active.
+---
+kind: tool
+name: update_dashboard_layout_component
+type: looker-update-dashboard-layout-component
+source: looker-source
+description: |
+  This tool updates a dashboard layout component, allowing you to move a tile
+  to a different tab (layout) and/or change its position and size.
+
+  Parameters:
+  - dashboard_layout_component_id (required): The ID of the component to update.
+  - dashboard_layout_id (optional): The ID of the target layout (tab) to move to.
+  - row (optional): The new row position.
+  - column (optional): The new column position.
+  - width (optional): The new width.
+  - height (optional): The new height.
+---
 kind: group
 name: looker_tools
 description: These skills are designed for data discovery and business intelligence.
@@ -875,3 +937,7 @@ tools:
 - add_dashboard_element
 - add_dashboard_filter
 - generate_embed_url
+- get_dashboard
+- update_dashboard_element
+- create_dashboard_layout
+- update_dashboard_layout_component
