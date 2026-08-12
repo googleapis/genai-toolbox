@@ -27,6 +27,8 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/lexer"
+	"github.com/goccy/go-yaml/token"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/server"
@@ -65,6 +67,8 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		p.EnvVars = make(map[string]string)
 	}
 
+	tokens := lexer.Tokenize(input)
+
 	var missing []string
 	seenMissing := make(map[string]bool)
 	matches := re.FindAllStringSubmatchIndex(input, -1)
@@ -74,9 +78,7 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		start, end := match[0], match[1]
 
 		// Skip substitution if the variable is inside a comment
-		lineStart := strings.LastIndex(input[:start], "\n") + 1
-		linePrefix := input[lineStart:start]
-		if isCommented(linePrefix) {
+		if isInsideComment(tokens, start) {
 			continue
 		}
 
@@ -137,46 +139,15 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	return output.String(), err
 }
 
-// isCommented checks if the position following linePrefix is within a YAML comment.
-func isCommented(linePrefix string) bool {
-	inSingleQuote := false
-	inDoubleQuote := false
-	escaped := false
-
-	for i := 0; i < len(linePrefix); i++ {
-		ch := linePrefix[i]
-
-		if inDoubleQuote {
-			if escaped {
-				escaped = false
-			} else if ch == '\\' {
-				escaped = true
-			} else if ch == '"' {
-				inDoubleQuote = false
-			}
-			continue
-		}
-
-		if inSingleQuote {
-			if ch == '\'' {
-				inSingleQuote = false
-			}
-			continue
-		}
-
-		switch ch {
-		case '"':
-			inDoubleQuote = true
-		case '\'':
-			inSingleQuote = true
-		case '#':
-			// In YAML, # starts a comment if at the start of the line or preceded by whitespace
-			if i == 0 || linePrefix[i-1] == ' ' || linePrefix[i-1] == '\t' {
+// isInsideComment checks if the given byte offset in the YAML input is within a comment token.
+func isInsideComment(tokens token.Tokens, offset int) bool {
+	for _, t := range tokens {
+		if t.Type == token.CommentType && t.Position != nil {
+			if offset >= t.Position.Offset && offset < t.Position.Offset+len(t.Origin) {
 				return true
 			}
 		}
 	}
-
 	return false
 }
 
