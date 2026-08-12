@@ -36,6 +36,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 			Name:     name,
 			Type:     resourceType,
 			MimeType: "text/plain",
+			URI:      fmt.Sprintf("text://%s", name),
 		},
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
@@ -56,31 +57,24 @@ func (c *Config) ResourceConfigType() string {
 	return resourceType
 }
 
-func (c *Config) Validate() error {
-	if c.Text == "" {
-		return fmt.Errorf("Field validation for 'Text' failed: missing required field")
-	}
-	return c.BaseConfig.Validate()
-}
-
 func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 	size := int64(len(c.Text))
-	c.Size = &size
 
-	return &Resource{config: *c}, nil
+	return &Resource{Config: *c, Size: size}, nil
 }
 
 // Resource represents the initialized textual resource that returns plain text payloads.
 type Resource struct {
-	config Config
+	Config
+	Size   int64
 }
 
 var _ resources.Resource = &Resource{}
 
 func (r *Resource) Read(ctx context.Context, params map[string]any) (any, error) {
-	return r.config.Text, nil
+	return r.Text, nil
 }
 
 func (r *Resource) ToConfig() resources.ResourceConfig {
-	return &r.config
+	return &r.Config
 }

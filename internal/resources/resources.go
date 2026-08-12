@@ -70,7 +70,6 @@ type BaseConfig struct {
 	Title       string               `yaml:"title,omitempty"`
 	MimeType    string               `yaml:"mimeType,omitempty"`
 	Annotations *ResourceAnnotations `yaml:"annotations,omitempty"`
-	Size        *int64               `yaml:"-"`
 }
 
 // GetURI returns the URI of the resource configuration.

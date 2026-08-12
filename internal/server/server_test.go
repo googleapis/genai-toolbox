@@ -48,6 +48,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
+	_ "github.com/googleapis/mcp-toolbox/internal/resources/text"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
@@ -423,7 +424,7 @@ func TestUpdateServer(t *testing.T) {
 	newGroups := map[string]group.Group{
 		"example-toolset": group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 	}
-	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
+	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, nil, newGroups)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
@@ -1825,7 +1826,7 @@ func TestInitializeConfigs(t *testing.T) {
 				"my-tool": tools1.ToConfig(),
 			},
 		}
-		sourcesMap, _, _, toolsMap, _, _, err := server.InitializeConfigs(ctx, validCfg)
+		sourcesMap, _, _, toolsMap, _, _, _, err := server.InitializeConfigs(ctx, validCfg)
 		if err != nil {
 			t.Fatalf("unexpected error during config initialization: %s", err)
 		}
@@ -1848,7 +1849,7 @@ func TestInitializeConfigs(t *testing.T) {
 				"my-invalid-tool": testutils.NewMockTool("my-tool", "mock tool for offline config", "my-source", nil, false, false).ToConfig(),
 			},
 		}
-		_, _, _, _, _, _, err := server.InitializeConfigs(ctx, invalidCfg)
+		_, _, _, _, _, _, _, err := server.InitializeConfigs(ctx, invalidCfg)
 		if err == nil {
 			t.Fatalf("expected error but got nil")
 		}
@@ -1955,6 +1956,15 @@ func TestResourceConfigValidation(t *testing.T) {
 		yaml      string
 		wantError bool
 	}{
+		{
+			name: "missing required text field for text resource triggers validation error",
+			yaml: `
+kind: resource
+name: test-resource
+type: text
+`,
+			wantError: true,
+		},
 		{
 			name: "unknown field triggers strict decoder error",
 			yaml: `
@@ -2114,7 +2124,7 @@ annotations:
     - assistant
   lastModified: 2024-01-01T00:00:00Z
 `)
-	_, _, _, _, _, _, resConfigs, err := server.UnmarshalPrimitiveConfig(ctx, yamlBytes)
+	_, _, _, _, _, resConfigs, _, err := server.UnmarshalPrimitiveConfig(ctx, yamlBytes)
 	if err != nil {
 		t.Fatalf("unexpected error parsing valid config: %v", err)
 	}

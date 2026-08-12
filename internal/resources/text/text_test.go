@@ -20,6 +20,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
@@ -138,13 +139,10 @@ func TestTextResourceInitialization(t *testing.T) {
 				t.Errorf("Read() mismatch (-want +got):\n%s", diff)
 			}
 
-			cfg := res.ToConfig().(*Config)
-			if cfg.Size == nil {
-				t.Fatalf("Size is nil, expected dynamic calculation")
-			}
+			textRes := res.(*Resource)
 			expectedSize := int64(len(tc.config.Text))
-			if *cfg.Size != expectedSize {
-				t.Errorf("Size = %d, want %d", *cfg.Size, expectedSize)
+			if textRes.Size != expectedSize {
+				t.Errorf("Size = %d, want %d", textRes.Size, expectedSize)
 			}
 		})
 	}
@@ -182,7 +180,7 @@ text: |
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			dec := yaml.NewDecoder(bytes.NewReader([]byte(tc.yamlData)), yaml.Strict())
+			dec := yaml.NewDecoder(bytes.NewReader([]byte(tc.yamlData)), yaml.Strict(), yaml.Validator(validator.New()))
 			resCfg, err := newConfig(ctx, "test-yaml", dec)
 			if err != nil {
 				t.Fatalf("unexpected error decoding text resource: %v", err)
@@ -200,14 +198,14 @@ text: |
 			}
 
 			// We need to initialize it to get the size calculated
-			_, err = cfg.Initialize(ctx)
+			res, err := cfg.Initialize(ctx)
 			if err != nil {
 				t.Fatalf("unexpected error initializing text resource: %v", err)
 			}
 
 			if tc.wantSize != nil {
-				if cfg.Size == nil || *cfg.Size != *tc.wantSize {
-					t.Errorf("unexpected size: got %v, want %v", cfg.Size, tc.wantSize)
+				if res.(*Resource).Size != *tc.wantSize {
+					t.Errorf("unexpected size: got %v, want %v", res.(*Resource).Size, tc.wantSize)
 				}
 			}
 		})
@@ -252,12 +250,10 @@ text: ""
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			dec := yaml.NewDecoder(bytes.NewReader([]byte(tc.yamlData)), yaml.Strict())
+			dec := yaml.NewDecoder(bytes.NewReader([]byte(tc.yamlData)), yaml.Strict(), yaml.Validator(validator.New()))
 			resCfg, err := newConfig(ctx, "test-invalid", dec)
 			if err == nil {
-				if v, ok := resCfg.(interface{ Validate() error }); ok {
-					err = v.Validate()
-				}
+				err = resCfg.Validate()
 			}
 
 			if err == nil {
