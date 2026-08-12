@@ -427,8 +427,8 @@ func TestServerDiscoverHandler(t *testing.T) {
 				if !ok {
 					t.Fatalf("expected result of type DiscoverResult, got %T", res.Result)
 				}
-				if discoverResult.Capabilities.Extensions == nil || discoverResult.Capabilities.Extensions[SecureParamsURI] == nil {
-					t.Errorf("expected %s in Extensions capabilities, got %v", SecureParamsURI, discoverResult.Capabilities.Extensions)
+				if discoverResult.Capabilities.Extensions == nil || discoverResult.Capabilities.Extensions["com.google.cloud/toolbox.v1"] == nil {
+					t.Errorf("expected %s in Extensions capabilities, got %v", "com.google.cloud/toolbox.v1", discoverResult.Capabilities.Extensions)
 				}
 			}
 		})
@@ -1329,7 +1329,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 				}
 			}`,
 			wantErr:     true,
-			errContains: "missing required client capability: tool \"secure_tool\" requires secure parameters which are not supported by the client",
+			errContains: "missing required client capability: tool \"secure_tool\" requires com.google.cloud/toolbox.v1 extension which is not supported by the client",
 		},
 		{
 			desc: "Secure parameter passed in standard arguments",
@@ -1350,8 +1350,8 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 							"version": "1.0"
 						},
 						"io.modelcontextprotocol/clientCapabilities": {
-							"experimental": {
-								"com.google.cloud/toolbox.v1": true
+							"extensions": {
+								"com.google.cloud/toolbox.v1": {}
 							}
 						}
 					}
@@ -1380,8 +1380,8 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 							"version": "1.0"
 						},
 						"io.modelcontextprotocol/clientCapabilities": {
-							"experimental": {
-								"com.google.cloud/toolbox.v1": true
+							"extensions": {
+								"com.google.cloud/toolbox.v1": {}
 							}
 						}
 					}
@@ -1390,36 +1390,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 			wantErr:     true,
 			errContains: "parameter \"query\" is not secure and must not be passed in secureArguments",
 		},
-		{
-			desc: "Successful invocation with correct routing (experimental)",
-			body: `{
-				"jsonrpc": "2.0",
-				"id": 1,
-				"method": "tools/call",
-				"params": {
-					"name": "secure_tool",
-					"arguments": {
-						"query": "hello"
-					},
-					"secureArguments": {
-						"api_key": "secret"
-					},
-					"_meta": {
-						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
-						"io.modelcontextprotocol/clientInfo": {
-							"name": "TestClient",
-							"version": "1.0"
-						},
-						"io.modelcontextprotocol/clientCapabilities": {
-							"experimental": {
-								"com.google.cloud/toolbox.v1": true
-							}
-						}
-					}
-				}
-			}`,
-			wantErr: false,
-		},
+
 		{
 			desc: "Successful invocation with correct routing (extensions)",
 			body: `{
@@ -1471,8 +1442,8 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 							"version": "1.0"
 						},
 						"io.modelcontextprotocol/clientCapabilities": {
-							"experimental": {
-								"com.google.cloud/toolbox.v1": true
+							"extensions": {
+								"com.google.cloud/toolbox.v1": {}
 							}
 						}
 					}
@@ -1480,7 +1451,6 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 			}`,
 			wantErr: false,
 		},
-
 	}
 
 	for _, tt := range tests {

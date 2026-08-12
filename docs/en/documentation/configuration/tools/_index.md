@@ -199,10 +199,11 @@ result = await auth_tool()
 
 #### Unsupported Extension Behavior
 
+- **Protocol Version Support**: The secure parameter feature is strictly tied to the latest `v20260728` MCP protocol and the Toolbox experimental extension (`com.google.cloud/toolbox.v1`). For earlier protocol versions, tools with secure parameters will not be listed and will return a "tool not found" error if invoked.
 - **Automatic Tool Filtering (`tools/list`)**: If a client does not declare support for the `com.google.cloud/toolbox.v1` extension, any tool configured with secure parameters is automatically filtered out from `tools/list` responses so AI agents cannot discover or attempt to call tools they cannot invoke securely.
-- **Invocation Rejection (`tools/call`)**: If a client attempts to call a tool requiring secure parameters without supporting the extension, the server blocks execution and returns an error:
+- **Invocation Rejection (`tools/call`)**: If a client attempts to call a tool requiring secure parameters without supporting the extension, the server blocks execution and returns a `400 Bad Request` (`MISSING_REQUIRED_CLIENT_CAPABILITY`) error:
   ```
-  tool "<name>" requires com.google.cloud/toolbox.v1 extension which is not supported by the client
+  missing required client capability: tool "<name>" requires com.google.cloud/toolbox.v1 extension which is not supported by the client
   ```
 - **Actionable Guidance**: If callers encounter missing tools or extension errors, ensure that the calling client/SDK is upgraded to a version supporting `com.google.cloud/toolbox.v1`. If a parameter does not require transport-level hiding from the LLM agent, omit `secure: true` so standard clients can access the tool.
 

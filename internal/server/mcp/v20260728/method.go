@@ -230,7 +230,8 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	hasSecureParamsSupport := supportsSecureParams(req.Params.Meta)
+	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
+	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
 	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams, hasSecureParamsSupport)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
@@ -299,8 +300,10 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
-	if tool.HasSecureParams() && !supportsSecureParams(req.Params.Meta) {
-		err = fmt.Errorf("missing required client capability: tool %q requires secure parameters which are not supported by the client", toolName)
+	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
+	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
+	if tool.HasSecureParams() && !hasSecureParamsSupport {
+		err = fmt.Errorf("missing required client capability: tool %q requires com.google.cloud/toolbox.v1 extension which is not supported by the client", toolName)
 		return jsonrpc.NewError(id, jsonrpc.MISSING_REQUIRED_CLIENT_CAPABILITY, err.Error(), nil), err
 	}
 
@@ -785,7 +788,8 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	hasSecureParamsSupport := supportsSecureParams(req.Params.Meta)
+	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
+	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
 	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams, hasSecureParamsSupport)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -796,28 +800,6 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 		Id:      id,
 		Result:  result,
 	}, nil
-}
-
-// getSupportedExtensions parses client extensions from request metadata and returns the map
-// of extensions supported by both client and server.
-func getSupportedExtensions(meta *RequestMetaObject) map[string]any {
-	if meta == nil || meta.MetaClientCapabilities == nil {
-		return make(map[string]any)
-	}
-	return ParseSupportedExtensions(meta.MetaClientCapabilities.Extensions)
-}
-
-// supportsSecureParams checks if the client declared support for the com.google.cloud/toolbox.v1 extension.
-func supportsSecureParams(meta *RequestMetaObject) bool {
-	supportedExts := getSupportedExtensions(meta)
-	if SupportsExtension(supportedExts, SecureParamsURI) {
-		return true
-	}
-	if meta != nil && meta.MetaClientCapabilities != nil && meta.MetaClientCapabilities.Experimental != nil {
-		val, ok := meta.MetaClientCapabilities.Experimental[SecureParamsURI].(bool)
-		return ok && val
-	}
-	return false
 }
 
 // validateAndMergeSecureParams validates and merges standard and secure arguments based on secure parameter definitions.
