@@ -1032,26 +1032,6 @@ func TestParseConfigFailure(t *testing.T) {
 			`,
 			wantError: `group "my_collection" declared more than once`,
 		},
-		{
-			description: "invalid cache scope in group",
-			in: `
-			kind: group
-			name: invalid_group
-			description: some description
-			cacheScope: invalid_scope
-			`,
-			wantError: "validation for 'CacheScope' failed on the 'oneof' tag",
-		},
-		{
-			description: "negative ttlMs in group config",
-			in: `
-            kind: group
-            name: my-group
-            description: "Some group"
-            ttlMs: -100
-			`,
-			wantError: "validation for 'TTLMs' failed on the 'gte' tag",
-		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {

@@ -15,12 +15,15 @@
 package group_test
 
 import (
+	"context"
 	"slices"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -275,5 +278,82 @@ func TestGroup_Contains(t *testing.T) {
 	}
 	if g.ContainsPrompt("prompt3") {
 		t.Errorf("group reports an absent prompt")
+	}
+}
+
+func TestParseFromYamlGroup(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		want server.GroupConfigs
+	}{
+		{
+			desc: "basic group",
+			in: `
+			kind: group
+			name: my-group
+			ttlMs: 60000
+			cacheScope: private
+			`,
+			want: map[string]group.GroupConfig{
+				"my-group": {
+					Name:       "my-group",
+					TTLMs:      intPtr(60000),
+					CacheScope: "private",
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Parse contents
+			_, _, _, _, _, got, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestFailParseFromYaml(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "invalid cacheScope",
+			in: `
+			kind: group
+			name: my-group
+			cacheScope: secret
+			`,
+			err: "Field validation for 'CacheScope' failed on the 'oneof' tag",
+		},
+		{
+			desc: "invalid ttlMs",
+			in: `
+			kind: group
+			name: my-group
+			ttlMs: -100
+			`,
+			err: "Field validation for 'TTLMs' failed on the 'gte' tag",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Parse contents
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if !strings.Contains(errStr, tc.err) {
+				t.Fatalf("unexpected error: got %q, want it to contain %q", errStr, tc.err)
+			}
+		})
 	}
 }
