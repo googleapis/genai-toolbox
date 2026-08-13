@@ -27,7 +27,7 @@ failures in the repo.
 |---|---|---|
 | Build | No test output; the job dies early | Compile error before the test step. Read the **first** error, not the last: they cascade |
 | Unit coverage gate | All pass, Linux job red, log says coverage below 40% | The gate drops `internal/server/config.go` from `coverage.out`, then fails under 40% |
-| Lint | Tests green, red on a job that ran no tests | `.github/workflows/lint.yaml` is separate: `go mod tidy` with `git diff --exit-code`, then `golangci-lint`. Fix with `goimports -w . && go mod tidy && golangci-lint run`. There is no standalone `gofmt` or `go vet` step |
+| Lint | Tests green, red on a job that ran no tests | `.github/workflows/lint.yml` is separate: `go mod tidy` with `git diff --exit-code`, then `golangci-lint`. Fix with `goimports -w . && go mod tidy && golangci-lint run`. There is no standalone `gofmt` or `go vet` step |
 | Integration coverage gate | All pass, shard still red | Most shards call `.ci/test_with_coverage.sh`, which fails below 50% |
 | Skipped shard | Green but suspiciously fast; "No relevant changes ... Skipping shard" | The shard opted out via `detect-changes`. It never ran, so green is not a signal |
 | Silently skipped suite | Suite passes, but a required secret was missing | Some suites `t.Skip` on missing env where most `t.Fatal`. A green shard can mean zero coverage |
