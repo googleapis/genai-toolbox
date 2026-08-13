@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigtablecreatetable
+package bigtablecreatematerializedview
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "bigtable-create-table"
+const resourceType string = "bigtable-create-materialized-view"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -43,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	CreateTable(context.Context, string, string) (any, error)
+	CreateMaterializedView(context.Context, string, string, string) (any, error)
 }
 
 type Config struct {
@@ -61,12 +61,13 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
-		cfg.Description = "Create a new Bigtable table."
+		cfg.Description = "Create a new Bigtable materialized view."
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameter("table_id", "The ID of the table to create"),
-		parameters.NewStringParameter("column_family", "Optional column family name to create with the table", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("instance_id", "The ID of the instance"),
+		parameters.NewStringParameter("materialized_view_id", "The ID of the materialized view"),
+		parameters.NewStringParameter("query", "The materialized view query"),
 	}
 
 	return Tool{
@@ -109,15 +110,7 @@ func (t Tool) Invoke(ctx context.Context, src sources.Source, params parameters.
 
 	paramsMap := params.AsMap()
 
-	tableID := paramsMap["table_id"].(string)
-	var columnFamily string
-	if cf, ok := paramsMap["column_family"]; ok && cf != nil {
-		if cfStr, ok := cf.(string); ok {
-			columnFamily = cfStr
-		}
-	}
-
-	res, err := source.CreateTable(ctx, tableID, columnFamily)
+	res, err := source.CreateMaterializedView(ctx, paramsMap["instance_id"].(string), paramsMap["materialized_view_id"].(string), paramsMap["query"].(string))
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
