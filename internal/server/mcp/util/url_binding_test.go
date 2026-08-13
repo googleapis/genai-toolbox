@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
@@ -122,6 +123,7 @@ func TestPopulateUrlParams(t *testing.T) {
 		expected     map[string]any
 		expectedLogs []logEntry
 		wantErr      bool
+		errContains  string
 	}{
 		{
 			name: "no URL params in context",
@@ -154,6 +156,7 @@ func TestPopulateUrlParams(t *testing.T) {
 			expected:     nil,
 			expectedLogs: nil,
 			wantErr:      true,
+			errContains:  `parameter "param1" is bound by URL and cannot be provided in client arguments`,
 		},
 		{
 			name: "URL params present and key not in data - string type",
@@ -464,6 +467,9 @@ func TestPopulateUrlParams(t *testing.T) {
 			actual, err := PopulateUrlParams(ctx, tc.initial, tc.toolParams)
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("PopulateUrlParams() error = %v, wantErr %v", err, tc.wantErr)
+			}
+			if tc.wantErr && tc.errContains != "" && (err == nil || !strings.Contains(err.Error(), tc.errContains)) {
+				t.Errorf("PopulateUrlParams() error = %v, want error containing %q", err, tc.errContains)
 			}
 			if !reflect.DeepEqual(actual, tc.expected) {
 				t.Errorf("PopulateUrlParams() = %v, want %v", actual, tc.expected)
