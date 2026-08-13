@@ -14,7 +14,7 @@
   [bug/issue](https://github.com/googleapis/mcp-toolbox/issues/new/choose)
   before writing your code! That way we can discuss the change, evaluate
   designs, and agree on the general idea
-- [ ] I have manually reviewed the entire diff myself before requesting a
+- [ ] Ensure you have manually reviewed the entire diff before requesting a
   review
 - [ ] Ensure the tests and linter pass
 - [ ] Code coverage does not decrease (if any source code was changed)
