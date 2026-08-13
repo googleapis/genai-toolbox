@@ -47,7 +47,7 @@ full.
 - **Did a test fail at all?** Some red jobs contain zero failing tests: a
   compile error before the test step, a coverage threshold, a separate lint job,
   or a shard that skipped itself. Confirm a real test failure before debugging
-  one. `references/ci-map.md` lists the jobs that go red with everything green.
+  one. [references/ci-map.md](references/ci-map.md) lists the jobs that go red with everything green.
 - **Which error is the cause?** Compile errors cascade, so the first is the
   cause and the rest are consequences. Assertion failures do not cascade, so
   read them all: three unrelated ones mean something different from thirty
