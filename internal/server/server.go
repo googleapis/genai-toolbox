@@ -27,6 +27,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -668,6 +669,9 @@ func (s *Server) Listen(ctx context.Context, certFile, keyFile string) error {
 	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
 	ln, err := lc.Listen(ctx, "tcp", s.srv.Addr)
 	if err != nil {
+		if errors.Is(err, syscall.EADDRINUSE) {
+			return fmt.Errorf("failed to open listener for %q. Use `--port=<number>` to specify a different port: %w", s.srv.Addr, err)
+		}
 		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
 	}
 
