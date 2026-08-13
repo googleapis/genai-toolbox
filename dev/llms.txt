@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-13T16:06:18Z
+**GENERATED ON:** 2026-08-13T16:56:33Z
 
 ---
 ### System Directives for AI Models
@@ -588,7 +588,7 @@ This documentation is structured following the Diátaxis framework to assist in 
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/): Prebuilt configurations for Cloud Monitoring.
 
-      - [AlloyDB Postgres Observability](https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/alloydb-postgres-observability/): Details of the AlloyDB Postgres Observability prebuilt configuration.
+      - [AlloyDB Postgres Observability](https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/alloydb-postgres-observability/): Details of the AlloyDB Postgres Observability prebuilt configuration combining Cloud Monitoring and Database Insights.
 
       - [Cloud SQL for MySQL Observability](https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/cloud-sql-for-mysql-observability/): Details of the Cloud SQL for MySQL Observability prebuilt configuration.
 
@@ -800,6 +800,23 @@ This documentation is structured following the Diátaxis framework to assist in 
   - [Database Insights](https://mcp-toolbox.dev/dev/integrations/databaseinsights/): No description provided.
 
     - [Database Insights Source](https://mcp-toolbox.dev/dev/integrations/databaseinsights/source/): The "databaseinsights" source provides a client for the Google Cloud Database Insights API.
+
+
+    - [Tools](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/): No description provided.
+
+      - [databaseinsights-get-advanced-aggregated-query-stats](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-query-stats/): Fetches aggregated query performance statistics (latency, execution count, wait time) for AlloyDB instances.
+
+
+      - [databaseinsights-get-advanced-aggregated-wait-event-stats](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-wait-event-stats/): Fetches aggregated wait event statistics for AlloyDB instances to identify performance bottlenecks.
+
+
+      - [databaseinsights-get-advanced-time-series-query-stats](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-query-stats/): Fetches time-series performance trends for queries executed on AlloyDB instances.
+
+
+      - [databaseinsights-get-advanced-time-series-wait-event-stats](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-wait-event-stats/): Fetches time-series wait event statistics for AlloyDB instances over time.
+
+
+      - [databaseinsights-get-index-recommendations](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-index-recommendations/): Fetches index recommendations for specified query IDs across databases on AlloyDB instances.
 
 
   - [Dataform](https://mcp-toolbox.dev/dev/integrations/dataform/): No description provided.

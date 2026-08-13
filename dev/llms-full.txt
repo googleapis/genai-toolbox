@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-13T16:06:18Z
+**GENERATED ON:** 2026-08-13T16:56:33Z
 
 ---
 ### System Directives for AI Models
@@ -23154,21 +23154,37 @@ description: |
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Cloud Monitoring > Prebuilt Configs > AlloyDB Postgres Observability
 **URL:** https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/alloydb-postgres-observability/
-**Description:** Details of the AlloyDB Postgres Observability prebuilt configuration.
+**Description:** Details of the AlloyDB Postgres Observability prebuilt configuration combining Cloud Monitoring and Database Insights.
 
 
 ## AlloyDB Postgres Observability
 
 *   `--prebuilt` value: `alloydb-postgres-observability`
 *   **Permissions:**
-    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the
-        project to view monitoring data.
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the project to view system and query time-series metrics.
+    *   **Database Insights Viewer** (`roles/databaseinsights.viewer`) is required to retrieve aggregated query statistics, wait events, historical trends, and index advisor recommendations.
 *   **Tools:**
-    *   `get_system_metrics`: Fetches system level cloud monitoring data
-        (timeseries metrics) for an AlloyDB instance using a PromQL query.
-    *   `get_query_metrics`: Fetches query level cloud monitoring data
-        (timeseries metrics) for queries running in an AlloyDB instance using a
-        PromQL query.
+    *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for an AlloyDB instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data (timeseries metrics) for queries running in an AlloyDB instance using a PromQL query.
+    *   `get_advanced_aggregated_query_stats`: Fetches aggregated query execution statistics for a requested AlloyDB instance within a specified time period. Supports filtering by database name, database user, and a specific query ID, as well as pagination. Returns statistics including query ID, database name, total execution time (`sum(execution_time)`), average execution time (`avg(execution_time)`), total execution count (`sum(count)`), total wait time (`sum(wait_time)`), and normalized query text. Requires Advanced Query Insights to be enabled.
+    *   `get_advanced_aggregated_wait_event_stats`: Fetches aggregated wait event statistics to identify performance bottlenecks for a requested AlloyDB instance within a specified time period. Supports filtering by database name, database user, and a specific query ID, selecting the aggregation level (by wait class or granular wait event), as well as pagination. Returns statistics including wait class or event name, total time spent (`sum(time_spent)`), average time spent (`avg(time_spent)`), and total wait count (`sum(count)`). Requires Advanced Query Insights to be enabled.
+    *   `get_advanced_time_series_query_stats`: Fetches time-series history of query execution statistics to analyze trends and spikes for a requested AlloyDB instance within a specified time period. Supports filtering by database name, database user, and a specific query ID. Returns time-series data including rates of execution time (`rate(execution_time)`) and wait time (`rate(wait_time)`). Requires Advanced Query Insights to be enabled.
+    *   `get_advanced_time_series_wait_event_stats`: Fetches time-series history of wait event statistics to analyze contention trends for a requested AlloyDB instance within a specified time period. Supports filtering by database name, database user, and a specific query ID, as well as selecting the aggregation level (by wait class or granular wait event). Returns time-series data including rate of time spent (`rate(time_spent)`) grouped by wait class or event. Requires Advanced Query Insights to be enabled.
+    *   `get_index_recommendations`: Fetches index advisor suggestions to optimize performance for a requested AlloyDB instance. Supports requesting recommendations for specific databases and a list of query IDs. Returns index recommendations including SQL commands (`CREATE INDEX`), target schema, relation, and columns, estimated storage size, and predicted query performance improvements (current vs estimated execution duration).
+*   **Available Toolsets (Filtered Groups):**
+    *   `alloydb_postgres_cloud_monitoring_tools`: Exposes only the 2 Cloud Monitoring metrics tools (`get_system_metrics`, `get_query_metrics`).
+    *   `alloydb_postgres_database_insights_tools`: Exposes only the 5 Database Insights diagnostic tools (`get_advanced_...` and `get_index_recommendations`).
+    *   `alloydb_postgres_observability_tools`: Exposes all 7 observability tools.
+
+## Additional Resources
+
+These tools are also available via the remote Google Cloud OneMCP server for AlloyDB. For detailed reference documentation on remote OneMCP integration and index advisor capabilities, see:
+
+*   [Monitor AlloyDB using the Database Insights MCP server](https://cloud.google.com/alloydb/docs/ai/use-database-insights-mcp)
+*   [AlloyDB Database Insights MCP Reference](https://cloud.google.com/alloydb/docs/reference/mcp/databaseinsights/mcp)
+
+
+
 
 
 
@@ -28648,6 +28664,30 @@ Authentication is handled via Application Default Credentials (ADC) using OAuth 
 
 {{< list-tools >}}
 
+## Requirements
+
+### API Enablement
+
+Enable the required Google Cloud APIs on your target project:
+*   **AlloyDB API** (`alloydb.googleapis.com`)
+*   **Database Insights API** (`databaseinsights.googleapis.com`)
+
+**Roles required to enable APIs:**
+To enable APIs, you need the `serviceusage.services.enable` permission. If you created the project, you likely already have this permission through the **Owner** role (`roles/owner`). Otherwise, you can obtain this permission through the **Service Usage Admin** role (`roles/serviceusage.serviceUsageAdmin`).
+
+### IAM Roles & Permissions
+
+To query performance metrics, wait events, and index recommendations, grant the appropriate IAM roles on the target project or database location:
+*   **View Cloud Monitoring data:** Monitoring Viewer (`roles/monitoring.viewer`)
+*   **View Database Insights data:** Database Insights Viewer (`roles/databaseinsights.viewer`)
+
+**Fine-grained Database Insights permissions:**
+*   **Get advanced aggregated query statistics:** `databaseinsights.queryStats.fetch`
+*   **Get advanced time series query statistics:** `databaseinsights.queryTimeSeries.fetch`
+*   **Get advanced aggregated wait event statistics:** `databaseinsights.waitEventStats.fetch`
+*   **Get advanced time series wait event statistics:** `databaseinsights.waitEventTimeSeries.fetch`
+*   **Get index recommendations:** `databaseinsights.indexRecommendations.batchQuery`, `databaseinsights.recommendations.query`, `databaseinsights.resourceRecommendations.query`
+
 ## Example
 
 ```yaml
@@ -28668,6 +28708,620 @@ project: my-quota-project
 | type | string | true | Must be "databaseinsights". |
 | project | string | false | The Google Cloud project ID to use as a fallback billing/quota project for API calls if not extracted from the resource path. |
 | endpoint | string | false | Override API endpoint URL (e.g., for staging or testing environments). Defaults to `https://databaseinsights.googleapis.com`. |
+
+## Additional Resources
+
+*   [Use Database Insights with Model Context Protocol (MCP)](https://cloud.google.com/alloydb/docs/ai/use-database-insights-mcp)
+*   [AlloyDB Database Insights MCP Reference](https://cloud.google.com/alloydb/docs/reference/mcp/databaseinsights/mcp)
+
+
+
+
+
+========================================================================
+## Tools
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Database Insights > Tools
+**URL:** https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/
+**Description:** None
+
+
+
+
+
+========================================================================
+## databaseinsights-get-advanced-aggregated-query-stats
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Database Insights > Tools > databaseinsights-get-advanced-aggregated-query-stats
+**URL:** https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-query-stats/
+**Description:** Fetches aggregated query performance statistics (latency, execution count, wait time) for AlloyDB instances.
+
+
+
+## About
+
+The `databaseinsights-get-advanced-aggregated-query-stats` tool fetches aggregated performance metrics for queries executed on AlloyDB instances with Advanced Query Insights enabled. It ranks queries by total execution time (`sum(execution_time) desc`) to help identify top resource-consuming queries.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+- `databaseinsights.queryStats.fetch` on the target location/project, which is granted by:
+  - **Database Insights Viewer** (`roles/databaseinsights.viewer`)
+  - **Monitoring Viewer** (`roles/monitoring.viewer`)
+
+## Parameters
+
+### `parent` (String, Required)
+
+Project and location in the format `projects/{project_id}/locations/{location}`.
+
+### `full_resource_name` (String, Required)
+
+The full resource identifier for the database instance (e.g., `//alloydb.googleapis.com/projects/{project_id}/locations/{location}/clusters/{cluster_id}/instances/{instance_id}`).
+
+### `start_time` (String, Optional)
+
+Beginning of the time interval in RFC3339 format.
+
+### `end_time` (String, Optional)
+
+End of the time interval in RFC3339 format.
+
+### `database` (String, Optional)
+
+Filter stats to a specific database.
+
+### `username` (String, Optional)
+
+Filter stats to a specific database user.
+
+### `query_id` (String, Optional)
+
+Fetch stats for a single specific query hash.
+
+### `page_size` (Integer, Optional)
+
+Maximum number of query stats to return (Default: `20`).
+
+### `page_token` (String, Optional)
+
+Token for fetching subsequent pages of results.
+
+## Example
+
+**YAML Configuration:**
+```yaml
+kind: tool
+name: get_aggregated_query_stats
+type: databaseinsights-get-advanced-aggregated-query-stats
+source: database-insights-source
+```
+
+**Sample CLI Invocation:**
+```bash
+./toolbox invoke get_advanced_aggregated_query_stats \
+  --prebuilt alloydb-postgres-observability \
+  '{"parent":"projects/PROJECT_ID/locations/REGION","full_resource_name":"//alloydb.googleapis.com/projects/PROJECT_ID/locations/REGION/clusters/CLUSTER_ID/instances/INSTANCE_ID","page_size":10}'
+```
+
+## Output Format
+
+Returns a structured JSON object containing `results` (an array of row values) and `metadata` (field schema descriptors):
+
+```json
+{
+  "results": [
+    [
+      "1106633582131931382",
+      "postgres",
+      40324,
+      20162,
+      2,
+      0,
+      "SELECT BATCH_ID, ... FROM information_schema.schemata ..."
+    ]
+  ],
+  "metadata": {
+    "fields": [
+      {"name": "query_id", "type": "STRING"},
+      {"name": "database", "type": "STRING"},
+      {"name": "sum(execution_time)", "type": "DOUBLE"},
+      {"name": "avg(execution_time)", "type": "DOUBLE"},
+      {"name": "sum(count)", "type": "DOUBLE"},
+      {"name": "sum(wait_time)", "type": "DOUBLE"},
+      {"name": "min(normalized_query_text)", "type": "STRING"}
+    ]
+  }
+}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| :---------- | :------: | :----------: | :------------------------------------------------- |
+| type        |  string  |     true     | Must be "databaseinsights-get-advanced-aggregated-query-stats". |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |    false     | Optional description override.                     |
+
+## Additional Resources
+
+*   [OneMCP Reference: get_advanced_aggregated_query_stats](https://docs.cloud.google.com/alloydb/docs/reference/mcp/databaseinsights/mcp/tools_list/get_advanced_aggregated_query_stats)
+*   [Use Database Insights with Model Context Protocol (MCP)](https://cloud.google.com/alloydb/docs/ai/use-database-insights-mcp)
+
+
+
+
+
+========================================================================
+## databaseinsights-get-advanced-aggregated-wait-event-stats
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Database Insights > Tools > databaseinsights-get-advanced-aggregated-wait-event-stats
+**URL:** https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-wait-event-stats/
+**Description:** Fetches aggregated wait event statistics for AlloyDB instances to identify performance bottlenecks.
+
+
+
+## About
+
+The `databaseinsights-get-advanced-aggregated-wait-event-stats` tool retrieves aggregated wait event metrics (IO, Lock, CPU contention) to help diagnose database performance bottlenecks.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+- `databaseinsights.waitEventStats.fetch` on the target location/project, which is granted by:
+  - **Database Insights Viewer** (`roles/databaseinsights.viewer`)
+  - **Monitoring Viewer** (`roles/monitoring.viewer`)
+
+## Parameters
+
+### `parent` (String, Required)
+
+Project and location in the format `projects/{project_id}/locations/{location}`.
+
+### `full_resource_name` (String, Required)
+
+The full resource identifier for the database instance (e.g., `//alloydb.googleapis.com/projects/{project_id}/locations/{location}/clusters/{cluster_id}/instances/{instance_id}`).
+
+### `start_time` (String, Optional)
+
+Beginning of the time interval in RFC3339 format.
+
+### `end_time` (String, Optional)
+
+End of the time interval in RFC3339 format.
+
+### `database` (String, Optional)
+
+Filter wait event stats to a specific database.
+
+### `username` (String, Optional)
+
+Filter wait event stats to a specific database user.
+
+### `query_id` (String, Optional)
+
+Breakdown wait events for a specific query hash.
+
+### `page_size` (Integer, Optional)
+
+Maximum number of results to return (Default: `20`).
+
+### `page_token` (String, Optional)
+
+Token for fetching subsequent pages of results.
+
+### `view` (String, Optional)
+
+Aggregation level (`WAIT_CLASS` or `WAIT_EVENT`). Defaults to `WAIT_CLASS`.
+
+## Example
+
+**YAML Configuration:**
+```yaml
+kind: tool
+name: get_aggregated_wait_event_stats
+type: databaseinsights-get-advanced-aggregated-wait-event-stats
+source: database-insights-source
+```
+
+**Sample CLI Invocation:**
+```bash
+./toolbox invoke get_advanced_aggregated_wait_event_stats \
+  --prebuilt alloydb-postgres-observability \
+  '{"parent":"projects/PROJECT_ID/locations/REGION","full_resource_name":"//alloydb.googleapis.com/projects/PROJECT_ID/locations/REGION/clusters/CLUSTER_ID/instances/INSTANCE_ID","view":"WAIT_CLASS","page_size":10}'
+```
+
+## Output Format
+
+Returns a structured JSON object containing `results` (wait event categories and metrics) and `metadata` (schema columns):
+
+```json
+{
+  "results": [],
+  "metadata": {
+    "fields": [
+      {"name": "wait_class", "type": "STRING"},
+      {"name": "sum(time_spent)", "type": "DOUBLE"},
+      {"name": "avg(time_spent)", "type": "DOUBLE"},
+      {"name": "sum(count)", "type": "DOUBLE"}
+    ]
+  }
+}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| :---------- | :------: | :----------: | :------------------------------------------------- |
+| type        |  string  |     true     | Must be "databaseinsights-get-advanced-aggregated-wait-event-stats". |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |    false     | Optional description override.                     |
+
+## Additional Resources
+
+*   [OneMCP Reference: get_advanced_aggregated_wait_event_stats](https://docs.cloud.google.com/alloydb/docs/reference/mcp/databaseinsights/mcp/tools_list/get_advanced_aggregated_wait_event_stats)
+*   [Use Database Insights with Model Context Protocol (MCP)](https://cloud.google.com/alloydb/docs/ai/use-database-insights-mcp)
+
+
+
+
+
+========================================================================
+## databaseinsights-get-advanced-time-series-query-stats
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Database Insights > Tools > databaseinsights-get-advanced-time-series-query-stats
+**URL:** https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-query-stats/
+**Description:** Fetches time-series performance trends for queries executed on AlloyDB instances.
+
+
+
+## About
+
+The `databaseinsights-get-advanced-time-series-query-stats` tool retrieves historical time-series performance metrics for AlloyDB queries to help analyze latency trends over time and identify performance spikes.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+- `databaseinsights.queryTimeSeries.fetch` on the target location/project, which is granted by:
+  - **Database Insights Viewer** (`roles/databaseinsights.viewer`)
+  - **Monitoring Viewer** (`roles/monitoring.viewer`)
+
+## Parameters
+
+### `parent` (String, Required)
+
+Project and location in the format `projects/{project_id}/locations/{location}`.
+
+### `full_resource_name` (String, Required)
+
+The full resource identifier for the database instance (e.g., `//alloydb.googleapis.com/projects/{project_id}/locations/{location}/clusters/{cluster_id}/instances/{instance_id}`).
+
+### `start_time` (String, Optional)
+
+Beginning of the time interval in RFC3339 format.
+
+### `end_time` (String, Optional)
+
+End of the time interval in RFC3339 format.
+
+### `database` (String, Optional)
+
+Filter results to a specific database.
+
+### `username` (String, Optional)
+
+Filter results to a specific database user.
+
+### `query_id` (String, Optional)
+
+Fetch history for a single specific query hash.
+
+## Example
+
+**YAML Configuration:**
+```yaml
+kind: tool
+name: get_query_time_series
+type: databaseinsights-get-advanced-time-series-query-stats
+source: database-insights-source
+```
+
+**Sample CLI Invocation:**
+```bash
+./toolbox invoke get_advanced_time_series_query_stats \
+  --prebuilt alloydb-postgres-observability \
+  '{"parent":"projects/PROJECT_ID/locations/REGION","full_resource_name":"//alloydb.googleapis.com/projects/PROJECT_ID/locations/REGION/clusters/CLUSTER_ID/instances/INSTANCE_ID"}'
+```
+
+## Output Format
+
+Returns a structured JSON object containing a `timeseries` array of interval data points and schema `metadata`:
+
+```json
+{
+  "timeseries": [
+    {
+      "groupbyFieldValues": [""],
+      "values": [
+        {
+          "interval": {
+            "endTime": "2026-08-11T18:46:30Z"
+          },
+          "value": [796.93, 0]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "fields": [
+      {"name": "rate(execution_time)", "type": "DOUBLE"},
+      {"name": "rate(wait_time)", "type": "DOUBLE"}
+    ]
+  }
+}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| :---------- | :------: | :----------: | :------------------------------------------------- |
+| type        |  string  |     true     | Must be "databaseinsights-get-advanced-time-series-query-stats". |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |    false     | Optional description override.                     |
+
+## Additional Resources
+
+*   [OneMCP Reference: get_advanced_time_series_query_stats](https://docs.cloud.google.com/alloydb/docs/reference/mcp/databaseinsights/mcp/tools_list/get_advanced_time_series_query_stats)
+*   [Use Database Insights with Model Context Protocol (MCP)](https://cloud.google.com/alloydb/docs/ai/use-database-insights-mcp)
+
+
+
+
+
+========================================================================
+## databaseinsights-get-advanced-time-series-wait-event-stats
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Database Insights > Tools > databaseinsights-get-advanced-time-series-wait-event-stats
+**URL:** https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-wait-event-stats/
+**Description:** Fetches time-series wait event statistics for AlloyDB instances over time.
+
+
+
+## About
+
+The `databaseinsights-get-advanced-time-series-wait-event-stats` tool retrieves time-series wait event metrics (IO, Lock, CPU) for an AlloyDB instance over a specified period to visualize how contention evolves.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+- `databaseinsights.waitEventTimeSeries.fetch` on the target location/project, which is granted by:
+  - **Database Insights Viewer** (`roles/databaseinsights.viewer`)
+  - **Monitoring Viewer** (`roles/monitoring.viewer`)
+
+## Parameters
+
+### `parent` (String, Required)
+
+Project and location in the format `projects/{project_id}/locations/{location}`.
+
+### `full_resource_name` (String, Required)
+
+The full resource identifier for the database instance (e.g., `//alloydb.googleapis.com/projects/{project_id}/locations/{location}/clusters/{cluster_id}/instances/{instance_id}`).
+
+### `start_time` (String, Optional)
+
+Beginning of the time interval in RFC3339 format.
+
+### `end_time` (String, Optional)
+
+End of the time interval in RFC3339 format.
+
+### `database` (String, Optional)
+
+Filter wait event history to a specific database.
+
+### `username` (String, Optional)
+
+Filter wait event history to a specific database user.
+
+### `query_id` (String, Optional)
+
+Breakdown wait events over time for a specific query hash.
+
+### `view` (String, Optional)
+
+Aggregation level (`WAIT_CLASS` or `WAIT_EVENT`). Defaults to `WAIT_CLASS`.
+
+## Example
+
+**YAML Configuration:**
+```yaml
+kind: tool
+name: get_wait_event_time_series
+type: databaseinsights-get-advanced-time-series-wait-event-stats
+source: database-insights-source
+```
+
+**Sample CLI Invocation:**
+```bash
+./toolbox invoke get_advanced_time_series_wait_event_stats \
+  --prebuilt alloydb-postgres-observability \
+  '{"parent":"projects/PROJECT_ID/locations/REGION","full_resource_name":"//alloydb.googleapis.com/projects/PROJECT_ID/locations/REGION/clusters/CLUSTER_ID/instances/INSTANCE_ID","view":"WAIT_CLASS"}'
+```
+
+## Output Format
+
+Returns a structured JSON object containing a `timeseries` dataset of time-series wait event points and `metadata`:
+
+```json
+{
+  "timeseries": [
+    {
+      "groupbyFieldValues": [""]
+    }
+  ],
+  "metadata": {
+    "fields": [
+      {"name": "rate(time_spent)", "type": "DOUBLE"}
+    ]
+  }
+}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| :---------- | :------: | :----------: | :------------------------------------------------- |
+| type        |  string  |     true     | Must be "databaseinsights-get-advanced-time-series-wait-event-stats". |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |    false     | Optional description override.                     |
+
+## Additional Resources
+
+*   [OneMCP Reference: get_advanced_time_series_wait_event_stats](https://docs.cloud.google.com/alloydb/docs/reference/mcp/databaseinsights/mcp/tools_list/get_advanced_time_series_wait_event_stats)
+*   [Use Database Insights with Model Context Protocol (MCP)](https://cloud.google.com/alloydb/docs/ai/use-database-insights-mcp)
+
+
+
+
+
+========================================================================
+## databaseinsights-get-index-recommendations
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Database Insights > Tools > databaseinsights-get-index-recommendations
+**URL:** https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-index-recommendations/
+**Description:** Fetches index recommendations for specified query IDs across databases on AlloyDB instances.
+
+
+
+## About
+
+The `databaseinsights-get-index-recommendations` tool retrieves index advisor recommendations for specified query IDs across databases. It identifies missing indexes, provides exact SQL creation commands, and calculates estimated performance gains.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+- `databaseinsights.indexRecommendations.batchQuery`, `databaseinsights.recommendations.query`, and `databaseinsights.resourceRecommendations.query` on the target location/project, which are granted by:
+  - **Database Insights Viewer** (`roles/databaseinsights.viewer`)
+  - **Monitoring Viewer** (`roles/monitoring.viewer`)
+
+## Parameters
+
+### `parent` (String, Required)
+
+Project and location in the format `projects/{project_id}/locations/{location}`.
+
+### `full_resource_name` (String, Required)
+
+The full resource identifier for the database instance (e.g., `//alloydb.googleapis.com/projects/{project_id}/locations/{location}/clusters/{cluster_id}/instances/{instance_id}`).
+
+### `database_query_ids` (Array of Objects, Optional)
+
+A list of objects specifying database names and target query IDs (e.g., `[{"database": "postgres", "query_ids": ["1106633582131931382"]}]`).
+
+## Example
+
+**YAML Configuration:**
+```yaml
+kind: tool
+name: get_index_recommendations
+type: databaseinsights-get-index-recommendations
+source: database-insights-source
+```
+
+**Sample CLI Invocation:**
+```bash
+./toolbox invoke get_index_recommendations \
+  --prebuilt alloydb-postgres-observability \
+  '{"parent":"projects/PROJECT_ID/locations/REGION","full_resource_name":"//alloydb.googleapis.com/projects/PROJECT_ID/locations/REGION/clusters/CLUSTER_ID/instances/INSTANCE_ID","database_query_ids":[{"database":"postgres","query_ids":["1106633582131931382"]}]}'
+```
+
+## Output Format
+
+Returns index advisor recommendations (`sql_command`, `schema`, `relation`, `columns`, `estimated_storage_size_bytes`) and predicted query performance improvements:
+
+```json
+{
+  "full_resource_name": "//alloydb.googleapis.com/clusters/mg-obs/instances/mg-obs-primary",
+  "database_index_recommendations": [
+    {
+      "database": "postgres",
+      "index_recommendations": [
+        {
+          "sql_command": "CREATE INDEX ON \"public\".\"orders\"(\"o_orderdate\")",
+          "schema": "\"public\"",
+          "relation": "\"orders\"",
+          "columns": [
+            "\"o_orderdate\""
+          ],
+          "estimated_storage_size_bytes": "26124288",
+          "impacted_query_ids": [],
+          "impacted_queries_count": 2
+        }
+      ],
+      "recommendation_time": {
+        "seconds": "1773214452"
+      },
+      "query_improvements": [
+        {
+          "key": "-9180744549948249982",
+          "value": {
+            "query_id": "-9180744549948249982",
+            "index_recommendation_ids": [
+              "0"
+            ],
+            "current_total_execution_duration": {
+              "nanos": 25125664
+            },
+            "estimated_new_total_execution_duration": {
+              "nanos": 17142
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| :---------- | :------: | :----------: | :------------------------------------------------- |
+| type        |  string  |     true     | Must be "databaseinsights-get-index-recommendations". |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |    false     | Optional description override.                     |
+
+## Additional Resources
+
+*   [OneMCP Reference: get_index_recommendations](https://docs.cloud.google.com/alloydb/docs/reference/mcp/databaseinsights/mcp/tools_list/get_index_recommendations)
+*   [Use Database Insights with Model Context Protocol (MCP)](https://cloud.google.com/alloydb/docs/ai/use-database-insights-mcp)
+
 
 
 

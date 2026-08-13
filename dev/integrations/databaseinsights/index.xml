@@ -10,6 +10,77 @@
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+ &lt;h3&gt;Database Insights Source Tools&lt;/h3&gt;
+ 
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Tool Name&lt;/th&gt;
+ &lt;th&gt;Description&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-query-stats/"&gt;&lt;strong&gt;databaseinsights-get-advanced-aggregated-query-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Fetches aggregated query performance statistics (latency, execution count, wait time) for AlloyDB instances.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-wait-event-stats/"&gt;&lt;strong&gt;databaseinsights-get-advanced-aggregated-wait-event-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Fetches aggregated wait event statistics for AlloyDB instances to identify performance bottlenecks.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-query-stats/"&gt;&lt;strong&gt;databaseinsights-get-advanced-time-series-query-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Fetches time-series performance trends for queries executed on AlloyDB instances.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-wait-event-stats/"&gt;&lt;strong&gt;databaseinsights-get-advanced-time-series-wait-event-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Fetches time-series wait event statistics for AlloyDB instances over time.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-index-recommendations/"&gt;&lt;strong&gt;databaseinsights-get-index-recommendations&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Fetches index recommendations for specified query IDs across databases on AlloyDB instances.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
 
 
 
@@ -19,9 +90,6 @@
 
 
 
-
-
-
-
-
- &lt;p&gt;&lt;em&gt;No tools found to display.&lt;/em&gt;&lt;/p&gt;</description></item></channel></rss>
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="api-enablement"&gt;API Enablement&lt;/h3&gt;
+&lt;p&gt;Enable the required Google Cloud APIs on your target project:&lt;/p&gt;</description></item></channel></rss>
