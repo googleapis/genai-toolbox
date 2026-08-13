@@ -14,7 +14,7 @@ is unusual and normally means shared state, time dependence, or a goroutine leak
 caught by `-race`. Integration tests are slow and share live infrastructure
 between concurrent builds, so intermittent failures there are ordinary.
 
-`tests.yaml` runs `go build -v ./...` before any test step, and a job stops at
+`tests.yml` runs `go build -v ./...` before any test step, and a job stops at
 its first failing step. A compile error therefore produces a red job with no
 test output at all.
 
