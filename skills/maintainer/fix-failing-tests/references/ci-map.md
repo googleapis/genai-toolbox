@@ -6,7 +6,7 @@ Read this in step 1, when you need the real error.
 
 | Tier | Where | Runner | Run it locally |
 |---|---|---|---|
-| **unit** | `internal/`, `cmd/` | GitHub Actions, `.github/workflows/tests.yaml`, matrix of ubuntu + macos + windows, `-race` on all three, `fail-fast: false` | `go test -race -v ./cmd/... ./internal/...` |
+| **unit** | `internal/`, `cmd/` | GitHub Actions, `.github/workflows/tests.yml`, matrix of ubuntu + macos + windows, `-race` on all three, `fail-fast: false` | `go test -race -v ./cmd/... ./internal/...` |
 | **integration** | `tests/` | Cloud Build, `.ci/integration.cloudbuild.yaml`, change-gated shards against real cloud infrastructure | usually not reproducible without credentials |
 
 Unit tests are fast, hermetic and deterministic, so an intermittent unit failure
