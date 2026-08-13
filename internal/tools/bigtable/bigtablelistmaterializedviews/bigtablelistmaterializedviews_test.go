@@ -12,19 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigtablecreatetable_test
+package bigtablelistmaterializedviews_test
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
+	"cloud.google.com/go/bigtable"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
-	"github.com/googleapis/mcp-toolbox/internal/tools/bigtable/bigtablecreatetable"
+	"github.com/googleapis/mcp-toolbox/internal/tools/bigtable/bigtablelistmaterializedviews"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -43,19 +45,19 @@ func TestParseFromYamlBigtable(t *testing.T) {
 			in: `
 			kind: tool
 			name: example_tool
-			type: bigtable-create-table
-			source: my-bq-instance
+			type: bigtable-list-materialized-views
+			source: my-bt-instance
 			description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": bigtablecreatetable.Config{
+				"example_tool": bigtablelistmaterializedviews.Config{
 					ConfigBase: tools.ConfigBase{
 						Name:         "example_tool",
 						Description:  "some description",
 						AuthRequired: []string{},
 					},
-					Type:   "bigtable-create-table",
-					Source: "my-bq-instance",
+					Type:   "bigtable-list-materialized-views",
+					Source: "my-bt-instance",
 				},
 			},
 		},
@@ -64,22 +66,22 @@ func TestParseFromYamlBigtable(t *testing.T) {
 			in: `
 			kind: tool
 			name: example_tool
-			type: bigtable-create-table
-			source: my-bq-instance
+			type: bigtable-list-materialized-views
+			source: my-bt-instance
 			description: some description
 			authRequired: 
 			- my-google-auth-service
 			- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": bigtablecreatetable.Config{
+				"example_tool": bigtablelistmaterializedviews.Config{
 					ConfigBase: tools.ConfigBase{
 						Name:         "example_tool",
 						Description:  "some description",
 						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					},
-					Type:   "bigtable-create-table",
-					Source: "my-bq-instance",
+					Type:   "bigtable-list-materialized-views",
+					Source: "my-bt-instance",
 				},
 			},
 		},
@@ -95,7 +97,6 @@ func TestParseFromYamlBigtable(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 type mockSource struct {
@@ -103,17 +104,24 @@ type mockSource struct {
 	err error
 }
 
-func (m *mockSource) CreateTable(ctx context.Context, tableID, columnFamily string) (any, error) {
+func (m *mockSource) ListMaterializedViews(ctx context.Context, instanceID string) (any, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
-	return map[string]string{"status": "table created successfully"}, nil
+	if instanceID != "inst-1" {
+		return nil, fmt.Errorf("unexpected argument: instanceID=%q", instanceID)
+	}
+	return []bigtable.MaterializedViewInfo{{MaterializedViewID: "mview-1", Query: "SELECT _key FROM t"}}, nil
+}
+
+type incompatibleMockSource struct {
+	sources.Source
 }
 
 func TestInvoke(t *testing.T) {
-	cfg := bigtablecreatetable.Config{
+	cfg := bigtablelistmaterializedviews.Config{
 		ConfigBase: tools.ConfigBase{Name: "test_tool"},
-		Type:       "bigtable-create-table",
+		Type:       "bigtable-list-materialized-views",
 		Source:     "test-source",
 	}
 	tool, err := cfg.Initialize(context.Background())
@@ -124,29 +132,13 @@ func TestInvoke(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		src := &mockSource{}
 		params := parameters.ParamValues{
-			{Name: "table_id", Value: "t1"},
+			{Name: "instance_id", Value: "inst-1"},
 		}
 		got, err := tool.Invoke(context.Background(), src, params, "")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		want := any(map[string]string{"status": "table created successfully"})
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("unexpected output (-want +got):\n%s", diff)
-		}
-	})
-
-	t.Run("success_with_column_family", func(t *testing.T) {
-		src := &mockSource{}
-		params := parameters.ParamValues{
-			{Name: "table_id", Value: "t1"},
-			{Name: "column_family", Value: "cf1"},
-		}
-		got, err := tool.Invoke(context.Background(), src, params, "")
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		want := any(map[string]string{"status": "table created successfully"})
+		want := any([]bigtable.MaterializedViewInfo{{MaterializedViewID: "mview-1", Query: "SELECT _key FROM t"}})
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("unexpected output (-want +got):\n%s", diff)
 		}
@@ -155,11 +147,22 @@ func TestInvoke(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		src := &mockSource{err: errors.New("gcp error")}
 		params := parameters.ParamValues{
-			{Name: "table_id", Value: "t1"},
+			{Name: "instance_id", Value: "inst-1"},
 		}
 		_, err := tool.Invoke(context.Background(), src, params, "")
 		if err == nil {
 			t.Fatalf("expected error, got nil")
+		}
+	})
+
+	t.Run("incompatible_source", func(t *testing.T) {
+		src := &incompatibleMockSource{}
+		params := parameters.ParamValues{
+			{Name: "instance_id", Value: "inst-1"},
+		}
+		_, err := tool.Invoke(context.Background(), src, params, "")
+		if err == nil {
+			t.Fatalf("expected error for incompatible source, got nil")
 		}
 	})
 }
