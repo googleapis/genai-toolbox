@@ -96,4 +96,3 @@ func TestIsSameVPC(t *testing.T) {
 		})
 	}
 }
-
