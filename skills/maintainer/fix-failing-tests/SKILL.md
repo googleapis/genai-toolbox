@@ -10,7 +10,7 @@ description: >-
 
 # Diagnose and Fix Failing Tests
 
-Scope: `googleapis/mcp-toolbox` (the `genai-toolbox` checkout).
+Scope: `googleapis/mcp-toolbox`
 
 Debug the way a careful developer does. Read the real error, find out what
 changed, reproduce it, shrink it until the cause is forced into the open, then
