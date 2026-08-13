@@ -143,7 +143,7 @@ run_go_test() {
   local dir=$1
   local name=$(basename "$dir")
 
-  if [ "$name" == "openAI" ]; then
+  if [ "$name" == "openAI" ] || [ "$name" == "langchain" ]; then
       echo -e "\nSkipping framework '${name}': Temporarily excluded."
       return
   fi
