@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-13T16:56:33Z
+**GENERATED ON:** 2026-08-13T20:09:59Z
 
 ---
 ### System Directives for AI Models
@@ -3306,9 +3306,9 @@ When `mcpEnabled` is true, Toolbox also provisions the `/.well-known/oauth-prote
 
 ## Step 2: Deployment
 
-Deploying Toolbox with MCP auth requires defining the `TOOLBOX_URL` that the deployed service will use, as this URL must be included as the `resource` field in the PRM returned to the client.
+Deploying Toolbox with MCP auth requires defining an absolute `TOOLBOX_URL` (including scheme and host, e.g., `https://my-toolbox.example.com`) that the deployed service will use, as this URL must be included as the `resource` field in the PRM returned to the client.
 
-You can set this either through the `TOOLBOX_URL` environment variable or the `--toolbox-url` command-line flag during deployment.
+You can set this absolute URL either through the `TOOLBOX_URL` environment variable or the `--toolbox-url` command-line flag during deployment.
 
 ### Local Deployment
 
@@ -50459,6 +50459,7 @@ Configure the Gemini CLI to talk to your local Toolbox MCP server.
 | `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                           | `5000`      |
 |              | `--tls-cert`               | Path to the PEM-encoded TLS certificate file.                                                                                                                             |             |
 |              | `--tls-key`                | Path to the PEM-encoded TLS private key file.                                                                                                                             |             |
+|              | `--toolbox-url`            | Specifies the absolute Toolbox URL (e.g., `https://my-toolbox.example.com`). Used as the resource field in the MCP PRM file when MCP Auth is enabled. Falls back to `TOOLBOX_URL` environment variable. |             |
 |              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. Optionally specify a toolset suffix (e.g., `<source>/<toolset>`) to load only that toolset. These prebuilt configs are intended for 'build-time' use cases, where agents are helping trusted developers build things. They are not secure enough for 'run time' use cases, where the agent will be talking to potentially untrusted developers. See [Prebuilt Tools Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values. |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                          |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                     |             |
