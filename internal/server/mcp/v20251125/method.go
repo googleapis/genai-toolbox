@@ -307,15 +307,29 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 
 	params, err := parameters.ParseParams(toolParams, data, claimsFromAuth)
 	if err != nil {
-		err = fmt.Errorf("provided parameters were invalid: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		text := TextContent{
+			Type: "text",
+			Text: fmt.Sprintf("provided parameters were invalid: %s", err),
+		}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+		}, nil
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
 	params, err = tool.EmbedParams(ctx, params, primitiveMgr)
 	if err != nil {
-		err = fmt.Errorf("error embedding parameters: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		text := TextContent{
+			Type: "text",
+			Text: fmt.Sprintf("error embedding parameters: %s", err),
+		}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+		}, nil
 	}
 
 	// Get instrumentation for recording tool execution duration
