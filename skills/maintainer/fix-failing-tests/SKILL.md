@@ -189,5 +189,5 @@ a hedged claim, because the next person will trust it.
 
 ## Reference
 
-`references/ci-map.md` covers where tests run, how to get the logs, and the jobs
+[references/ci-map.md](references/ci-map.md) covers where tests run, how to get the logs, and the jobs
 that go red with every test passing. Read it in step 1.
