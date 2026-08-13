@@ -140,6 +140,23 @@ func TestParseEnv(t *testing.T) {
 			want: "foo: bar_val\n# ${FOO}\nbaz: qux_val",
 		},
 		{
+			desc: "multiline yaml with mixed comments and env vars",
+			in: "database: my-db # Another comment in line ${SHOULD_BE_IGNORED}\n" +
+				"host: \"localhost\"\n" +
+				"# This is a comment, ${SHOULD_BE_IGNORED} won't be replaced!\n" +
+				"port: ${DB_PORT:5432}\n" +
+				"user: ${DB_USER}\n",
+			env: map[string]string{
+				"DB_USER": "my_user",
+			},
+			want: "database: my-db # Another comment in line ${SHOULD_BE_IGNORED}\n" +
+				"host: \"localhost\"\n" +
+				"# This is a comment, ${SHOULD_BE_IGNORED} won't be replaced!\n" +
+				"port: 5432\n" +
+				"user: my_user\n",
+			wantOptional: []string{"DB_PORT"},
+		},
+		{
 			desc:         "with default without env",
 			in:           "${FOO:}",
 			want:         "",

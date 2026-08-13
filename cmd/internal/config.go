@@ -79,6 +79,8 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 
 		// Skip substitution if the variable is inside a comment
 		if isInsideComment(tokens, start) {
+			output.WriteString(input[lastIndex:end])
+			lastIndex = end
 			continue
 		}
 
