@@ -2111,8 +2111,6 @@ func TestShouldSuppressTool(t *testing.T) {
 	readOnlySource := &testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{Name: "readonly-db", ReadOnly: true}}
 	readWriteSource := &testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{Name: "readwrite-db", ReadOnly: false}}
 
-	boolPtr := func(b bool) *bool { return &b }
-
 	initTool := func(cfg testutils.MockToolConfig) tools.Tool {
 		t, err := cfg.Initialize(ctx)
 		if err != nil {
@@ -2142,19 +2140,19 @@ func TestShouldSuppressTool(t *testing.T) {
 		{
 			desc:   "write tool on read-write source (readOnlyHint: false) -> not suppressed",
 			source: readWriteSource,
-			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "write-tool"}, Source: "readwrite-db", Annotations: &tools.ToolAnnotations{ReadOnlyHint: boolPtr(false)}}),
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "write-tool"}, Source: "readwrite-db", Annotations: tools.NewWriteAnnotations()}),
 			want:   false,
 		},
 		{
 			desc:   "write tool on read-only source (readOnlyHint: false) -> suppressed",
 			source: readOnlySource,
-			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "write-tool"}, Source: "readonly-db", Annotations: &tools.ToolAnnotations{ReadOnlyHint: boolPtr(false)}}),
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "write-tool"}, Source: "readonly-db", Annotations: tools.NewWriteAnnotations()}),
 			want:   true,
 		},
 		{
 			desc:   "read-only tool on read-only source (readOnlyHint: true) -> not suppressed",
 			source: readOnlySource,
-			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "readonly-tool"}, Source: "readonly-db", Annotations: &tools.ToolAnnotations{ReadOnlyHint: boolPtr(true)}}),
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "readonly-tool"}, Source: "readonly-db", Annotations: tools.NewReadOnlyAnnotations()}),
 			want:   false,
 		},
 		{
@@ -2170,7 +2168,7 @@ func TestShouldSuppressTool(t *testing.T) {
 			want:   false,
 		},
 		{
-			desc:   "mysql-execute-sql on read-only source -> not suppressed (session locked at DB layer)",
+			desc:   "mysql-execute-sql on read-only source -> not suppressed (dynamically reports readOnlyHint: true)",
 			source: readOnlySource,
 			tool: func() tools.Tool {
 				t, err := mysqlexecutesql.Config{
@@ -2186,7 +2184,7 @@ func TestShouldSuppressTool(t *testing.T) {
 			want: false,
 		},
 		{
-			desc:   "postgres-execute-sql on read-only source -> not suppressed (session locked at DB layer)",
+			desc:   "postgres-execute-sql on read-only source -> not suppressed (dynamically reports readOnlyHint: true)",
 			source: readOnlySource,
 			tool: func() tools.Tool {
 				t, err := postgresexecutesql.Config{
@@ -2205,16 +2203,13 @@ func TestShouldSuppressTool(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			if tc.tool == nil {
-				return
-			}
-			got := tc.tool.ShouldSuppress(ctx, tc.source)
+			got := tools.ShouldSuppress(ctx, tc.tool, tc.source)
 			if got != tc.want {
-				t.Errorf("Tool.ShouldSuppress(ctx) = %v, want %v", got, tc.want)
+				t.Errorf("ShouldSuppress(ctx) = %v, want %v", got, tc.want)
 			}
-			gotNilLogger := tc.tool.ShouldSuppress(context.Background(), tc.source)
+			gotNilLogger := tools.ShouldSuppress(context.Background(), tc.tool, tc.source)
 			if gotNilLogger != tc.want {
-				t.Errorf("Tool.ShouldSuppress(nil logger) = %v, want %v", gotNilLogger, tc.want)
+				t.Errorf("ShouldSuppress(nil logger) = %v, want %v", gotNilLogger, tc.want)
 			}
 		})
 	}
@@ -2231,8 +2226,6 @@ func TestInitializeGroups(t *testing.T) {
 	}
 	ctx = util.WithInstrumentation(ctx, instrumentation)
 
-	boolPtr := func(b bool) *bool { return &b }
-
 	t.Run("suppressed tool is pruned from group", func(t *testing.T) {
 		cfg := server.ServerConfig{
 			SourceConfigs: server.SourceConfigs{
@@ -2242,12 +2235,12 @@ func TestInitializeGroups(t *testing.T) {
 				"allowed_read_tool": &testutils.MockToolConfig{
 					ConfigBase:  tools.ConfigBase{Name: "allowed_read_tool"},
 					Source:      "readonly-db",
-					Annotations: &tools.ToolAnnotations{ReadOnlyHint: boolPtr(true)},
+					Annotations: tools.NewReadOnlyAnnotations(),
 				},
 				"suppressed_write_tool": &testutils.MockToolConfig{
 					ConfigBase:  tools.ConfigBase{Name: "suppressed_write_tool"},
 					Source:      "readonly-db",
-					Annotations: &tools.ToolAnnotations{ReadOnlyHint: boolPtr(false)},
+					Annotations: tools.NewWriteAnnotations(),
 				},
 			},
 			GroupConfigs: server.GroupConfigs{
@@ -2294,12 +2287,12 @@ func TestInitializeGroups(t *testing.T) {
 				"write_tool_1": &testutils.MockToolConfig{
 					ConfigBase:  tools.ConfigBase{Name: "write_tool_1"},
 					Source:      "readonly-db",
-					Annotations: &tools.ToolAnnotations{ReadOnlyHint: boolPtr(false)},
+					Annotations: tools.NewWriteAnnotations(),
 				},
 				"write_tool_2": &testutils.MockToolConfig{
 					ConfigBase:  tools.ConfigBase{Name: "write_tool_2"},
 					Source:      "readonly-db",
-					Annotations: &tools.ToolAnnotations{ReadOnlyHint: boolPtr(false)},
+					Annotations: tools.NewWriteAnnotations(),
 				},
 			},
 			GroupConfigs: server.GroupConfigs{
@@ -2334,12 +2327,12 @@ func TestInitializeGroups(t *testing.T) {
 				"tool_1": &testutils.MockToolConfig{
 					ConfigBase:  tools.ConfigBase{Name: "tool_1"},
 					Source:      "readwrite-db",
-					Annotations: &tools.ToolAnnotations{ReadOnlyHint: boolPtr(false)},
+					Annotations: tools.NewWriteAnnotations(),
 				},
 				"tool_2": &testutils.MockToolConfig{
 					ConfigBase:  tools.ConfigBase{Name: "tool_2"},
 					Source:      "readwrite-db",
-					Annotations: &tools.ToolAnnotations{ReadOnlyHint: boolPtr(true)},
+					Annotations: tools.NewReadOnlyAnnotations(),
 				},
 			},
 			GroupConfigs: server.GroupConfigs{

@@ -308,7 +308,7 @@ func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[strin
 			return nil, err
 		}
 
-		if t.ShouldSuppress(ctx, src) {
+		if tools.ShouldSuppress(ctx, t, src) {
 			continue
 		}
 
