@@ -471,20 +471,22 @@ func TestMcpEndpoint(t *testing.T) {
 	defer ts.Close()
 
 	versTestCases := []struct {
-		name                      string
-		protocol                  string
-		idHeader                  bool
-		reqHeader                 []string
-		initWant                  map[string]any
-		invalidMethods            []string
-		meta                      map[string]any
-		wantToolsList             map[string]any
-		wantPromptsList           map[string]any
-		wantPromptsGet            map[string]any
-		wantToolsListOnTool1      map[string]any
-		wantToolsCallOnTool1      map[string]any
-		wantToolsListWithURLParam map[string]any
-		wantToolsCallWithURLParam map[string]any
+		name                                   string
+		protocol                               string
+		idHeader                               bool
+		reqHeader                              []string
+		initWant                               map[string]any
+		invalidMethods                         []string
+		meta                                   map[string]any
+		wantToolsList                          map[string]any
+		wantPromptsList                        map[string]any
+		wantPromptsGet                         map[string]any
+		wantToolsListOnTool1                   map[string]any
+		wantToolsCallOnTool1                   map[string]any
+		wantToolsListWithURLParam              map[string]any
+		wantToolsCallWithURLParam              map[string]any
+		wantToolsCallWithURLParamOverrideError map[string]any
+		wantToolsCallWithParamError            map[string]any
 	}{
 		{
 			name:     "version 2024-11-05",
@@ -774,6 +776,40 @@ func TestMcpEndpoint(t *testing.T) {
 							"text": `{"k":"v"}`,
 						},
 					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantToolsCallWithURLParamOverrideError: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-url-binding-override",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `parameter "param1" is bound by URL and cannot be provided in client arguments`,
+						},
+					},
+					"isError": true,
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantToolsCallWithParamError: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-param-error",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `provided parameters were invalid: parameter "param1" is required`,
+						},
+					},
+					"isError": true,
 					"_meta": map[string]any{
 						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 					},
@@ -1300,6 +1336,71 @@ func TestMcpEndpoint(t *testing.T) {
 						},
 					},
 					wantOverwrite: vtc.wantToolsCallWithURLParam,
+				},
+				{
+					name: "tools/call with URL param override returns error",
+					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14&param6=%5B%22a%22%2C%22b%22%5D&param7=%7B%22k%22%3A%22v%22%7D",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-url-binding-override",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "url_binding_tool",
+							"arguments": map[string]any{
+								"param1": "client-override",
+								"param5": "unbound-value",
+							},
+						},
+					},
+					methodName:     "tools/call",
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-url-binding-override",
+						"result": map[string]any{
+							"content": []any{
+								map[string]any{
+									"type": "text",
+									"text": `parameter "param1" is bound by URL and cannot be provided in client arguments`,
+								},
+							},
+							"isError": true,
+						},
+					},
+					wantOverwrite: vtc.wantToolsCallWithURLParamOverrideError,
+				},
+				{
+					name: "tools/call with insufficient parameters returns tool error",
+					url:  "/",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-param-error",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "some_params",
+							"arguments": map[string]any{},
+						},
+					},
+					methodName:     "tools/call",
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-param-error",
+						"result": map[string]any{
+							"content": []any{
+								map[string]any{
+									"type": "text",
+									"text": `provided parameters were invalid: parameter "param1" is required`,
+								},
+							},
+							"isError": true,
+						},
+					},
+					wantOverwrite: vtc.wantToolsCallWithParamError,
 				},
 			}
 			for i := range testCases {
