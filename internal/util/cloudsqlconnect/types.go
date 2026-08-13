@@ -206,9 +206,10 @@ func BuildConnectionStrings(method ConnectionMethod, dbType DatabaseType, sqlInf
 	case MethodUnixSocket:
 		cs.SocketPath = fmt.Sprintf("/cloudsql/%s", connName)
 		// Unix sockets are only meaningful for Postgres/MySQL on Cloud Run.
-		if dbType == PostgreSQL {
+		switch dbType {
+		case PostgreSQL:
 			cs.DSN = fmt.Sprintf("postgresql://USER:PASS@/%s?host=%s", dbName, cs.SocketPath)
-		} else if dbType == MySQL {
+		case MySQL:
 			cs.DSN = fmt.Sprintf("mysql://USER:PASS@unix(%s)/%s", cs.SocketPath, dbName)
 		}
 	}
