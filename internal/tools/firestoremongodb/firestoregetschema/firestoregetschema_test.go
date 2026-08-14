@@ -252,8 +252,8 @@ func TestInvoke(t *testing.T) {
 		}
 
 		params := parameters.ParamValues{
-			"collection": "orders",
-			"sampleSize": 100,
+			{Name: "collection", Value: "orders"},
+			{Name: "sampleSize", Value: 100},
 		}
 		got, toolErr := tool.Invoke(ctx, mock, params, "")
 		if toolErr != nil {

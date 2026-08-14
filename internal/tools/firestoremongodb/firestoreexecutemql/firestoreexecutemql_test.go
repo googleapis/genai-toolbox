@@ -220,7 +220,7 @@ func TestInvoke(t *testing.T) {
 			},
 		}
 
-		params := parameters.ParamValues{"query": "db.orders.find({})"}
+		params := parameters.ParamValues{{Name: "query", Value: "db.orders.find({})"}}
 		got, toolErr := tool.Invoke(ctx, mock, params, "")
 		if toolErr != nil {
 			t.Fatalf("unexpected invoke error: %v", toolErr)
@@ -242,7 +242,7 @@ func TestInvoke(t *testing.T) {
 			},
 		}
 
-		params := parameters.ParamValues{"query": pipelineQuery}
+		params := parameters.ParamValues{{Name: "query", Value: pipelineQuery}}
 		got, toolErr := tool.Invoke(ctx, mock, params, "")
 		if toolErr != nil {
 			t.Fatalf("unexpected invoke error: %v", toolErr)
@@ -264,7 +264,7 @@ func TestInvoke(t *testing.T) {
 			},
 		}
 
-		params := parameters.ParamValues{"query": pipelineObj}
+		params := parameters.ParamValues{{Name: "query", Value: pipelineObj}}
 		got, toolErr := tool.Invoke(ctx, mock, params, "")
 		if toolErr != nil {
 			t.Fatalf("unexpected invoke error: %v", toolErr)
@@ -285,7 +285,7 @@ func TestInvoke(t *testing.T) {
 
 	t.Run("incompatible source", func(t *testing.T) {
 		incompat := &incompatibleSource{}
-		params := parameters.ParamValues{"query": "db.orders.find({})"}
+		params := parameters.ParamValues{{Name: "query", Value: "db.orders.find({})"}}
 		_, toolErr := tool.Invoke(ctx, incompat, params, "")
 		if toolErr == nil {
 			t.Fatal("expected error for incompatible source")
