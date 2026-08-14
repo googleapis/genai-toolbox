@@ -597,9 +597,8 @@ func (s *Source) ValidateRules(ctx context.Context, sourceParam string) (any, er
 
 // FieldSchema represents metadata about a document field
 type FieldSchema struct {
-	Name        string   `json:"name"`
-	Types       []string `json:"types"`
-	SampleValue any      `json:"sampleValue,omitempty"`
+	Name  string   `json:"name"`
+	Types []string `json:"types"`
 }
 
 // CollectionSchema represents metadata for a Firestore collection
@@ -647,11 +646,10 @@ func (s *Source) GetSchema(ctx context.Context, collection string, sampleSize in
 		}
 
 		fieldsMap := make(map[string]map[string]bool)
-		samplesMap := make(map[string]any)
 
 		for _, doc := range docs {
 			data := doc.Data()
-			extractFieldTypes("", data, fieldsMap, samplesMap)
+			extractFieldTypes("", data, fieldsMap)
 		}
 
 		fields := make([]FieldSchema, 0, len(fieldsMap))
@@ -661,9 +659,8 @@ func (s *Source) GetSchema(ctx context.Context, collection string, sampleSize in
 				typesList = append(typesList, t)
 			}
 			fields = append(fields, FieldSchema{
-				Name:        fieldName,
-				Types:       typesList,
-				SampleValue: samplesMap[fieldName],
+				Name:  fieldName,
+				Types: typesList,
 			})
 		}
 
@@ -821,7 +818,7 @@ func flattenFieldsFromMap(prefix string, fieldsMap map[string]any) []FieldSchema
 	return result
 }
 
-func extractFieldTypes(prefix string, data map[string]any, fieldsMap map[string]map[string]bool, samplesMap map[string]any) {
+func extractFieldTypes(prefix string, data map[string]any, fieldsMap map[string]map[string]bool) {
 	for k, v := range data {
 		fullKey := k
 		if prefix != "" {
@@ -832,12 +829,9 @@ func extractFieldTypes(prefix string, data map[string]any, fieldsMap map[string]
 			fieldsMap[fullKey] = make(map[string]bool)
 		}
 		fieldsMap[fullKey][typeName] = true
-		if _, exists := samplesMap[fullKey]; !exists && v != nil {
-			samplesMap[fullKey] = FirestoreValueToJSON(v)
-		}
 
 		if nestedMap, ok := v.(map[string]any); ok {
-			extractFieldTypes(fullKey, nestedMap, fieldsMap, samplesMap)
+			extractFieldTypes(fullKey, nestedMap, fieldsMap)
 		}
 	}
 }

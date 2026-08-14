@@ -228,9 +228,8 @@ func TestExtractFieldTypes(t *testing.T) {
 		},
 	}
 	fieldsMap := make(map[string]map[string]bool)
-	samplesMap := make(map[string]any)
 
-	extractFieldTypes("", data, fieldsMap, samplesMap)
+	extractFieldTypes("", data, fieldsMap)
 
 	if !fieldsMap["username"]["string"] {
 		t.Errorf("expected fieldsMap[username] to have 'string'")
@@ -243,8 +242,5 @@ func TestExtractFieldTypes(t *testing.T) {
 	}
 	if !fieldsMap["profile.website"]["string"] {
 		t.Errorf("expected fieldsMap[profile.website] to have 'string'")
-	}
-	if samplesMap["username"] != "alice" {
-		t.Errorf("expected samplesMap[username] = 'alice', got %v", samplesMap["username"])
 	}
 }
