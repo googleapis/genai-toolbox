@@ -613,6 +613,8 @@ type CollectionSchema struct {
 func (s *Source) GetSchema(ctx context.Context, collection string, sampleSize int) (any, error) {
 	if sampleSize <= 0 {
 		sampleSize = 50
+	} else if sampleSize > 1000 {
+		sampleSize = 1000
 	}
 
 	var collectionsToInspect []string
@@ -676,7 +678,14 @@ func (s *Source) GetSchema(ctx context.Context, collection string, sampleSize in
 }
 
 func (s *Source) getSchemaFromPipeline(ctx context.Context, collection string) (CollectionSchema, error) {
-	getSchemaQuery := fmt.Sprintf(`{ "collection": "%s", "semantics": "mongodb" }`, collection)
+	getSchemaQueryBytes, err := json.Marshal(map[string]string{
+		"collection": collection,
+		"semantics":  "mongodb",
+	})
+	if err != nil {
+		return CollectionSchema{}, fmt.Errorf("failed to marshal schema query: %w", err)
+	}
+
 	payload := map[string]any{
 		"structuredPipeline": map[string]any{
 			"pipeline": map[string]any{
@@ -685,7 +694,7 @@ func (s *Source) getSchemaFromPipeline(ctx context.Context, collection string) (
 						"name": "get_schema",
 						"args": []map[string]any{
 							{
-								"stringValue": getSchemaQuery,
+								"stringValue": string(getSchemaQueryBytes),
 							},
 						},
 					},
@@ -724,13 +733,13 @@ func (s *Source) getSchemaFromPipeline(ctx context.Context, collection string) (
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return CollectionSchema{}, fmt.Errorf("get_schema API error (status %d)", resp.StatusCode)
-	}
-
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return CollectionSchema{}, err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return CollectionSchema{}, fmt.Errorf("get_schema API error (status %d): %s", resp.StatusCode, string(respBody))
 	}
 
 	var rawResult any

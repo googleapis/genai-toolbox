@@ -135,25 +135,22 @@ func TestParseFromYamlFirestoreExecuteMQL(t *testing.T) {
 }
 
 func TestAnnotations(t *testing.T) {
-	t.Run("default destructive annotations", func(t *testing.T) {
-		annotations := tools.GetAnnotationsOrDefault(nil, tools.NewDestructiveAnnotations)
+	t.Run("default read only annotations", func(t *testing.T) {
+		annotations := tools.GetAnnotationsOrDefault(nil, tools.NewReadOnlyAnnotations)
 		if annotations == nil {
 			t.Fatal("expected non-nil annotations")
 		}
-		if annotations.ReadOnlyHint == nil || *annotations.ReadOnlyHint != false {
-			t.Error("expected readOnlyHint to be false")
-		}
-		if annotations.DestructiveHint == nil || *annotations.DestructiveHint != true {
-			t.Error("expected destructiveHint to be true")
+		if annotations.ReadOnlyHint == nil || *annotations.ReadOnlyHint != true {
+			t.Error("expected readOnlyHint to be true")
 		}
 	})
 
 	t.Run("custom annotations override", func(t *testing.T) {
-		readOnly := true
+		readOnly := false
 		custom := &tools.ToolAnnotations{ReadOnlyHint: &readOnly}
-		annotations := tools.GetAnnotationsOrDefault(custom, tools.NewDestructiveAnnotations)
-		if annotations.ReadOnlyHint == nil || *annotations.ReadOnlyHint != true {
-			t.Error("expected custom readOnlyHint to be true")
+		annotations := tools.GetAnnotationsOrDefault(custom, tools.NewReadOnlyAnnotations)
+		if annotations.ReadOnlyHint == nil || *annotations.ReadOnlyHint != false {
+			t.Error("expected custom readOnlyHint to be false")
 		}
 	})
 }
