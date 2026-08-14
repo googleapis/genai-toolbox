@@ -16,17 +16,22 @@ package internal
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"slices"
 	"strings"
+	"time"
+	"net/http"
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/util"
+
+	"golang.org/x/mod/semver"
 )
 
 type IOStreams struct {
@@ -49,6 +54,10 @@ type ToolboxOptions struct {
 
 // Option defines a function that modifies the ToolboxOptions struct.
 type Option func(*ToolboxOptions)
+
+type githubRelease struct {
+	TagName string `json:"tag_name"`
+}
 
 // NewToolboxOptions creates a new instance with defaults, then applies any
 // provided options.
@@ -100,6 +109,8 @@ func (opts *ToolboxOptions) Setup(ctx context.Context) (context.Context, func(co
 
 	ctx = util.WithLogger(ctx, logger)
 	opts.Logger = logger
+
+	opts.checkVersion(ctx)
 
 	ctx = util.WithIgnoreUnknownTools(ctx, opts.Cfg.IgnoreUnknownTools)
 
@@ -303,4 +314,50 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 	opts.Cfg.GroupConfigs = finalConfig.Groups
 
 	return isCustomConfigured, nil
+}
+
+// checkVersion checks the current version of the Toolbox against the latest release on GitHub 
+// and logs a warning if a newer version is available.
+func (opts *ToolboxOptions) checkVersion(ctx context.Context) {
+
+	if opts.VersionNum == "" {
+		opts.Logger.DebugContext(ctx, "Unable to determine current Toolbox version (skipping version check)")
+		return
+	}
+
+	reqCtx, cancel := context.WithTimeout(ctx, time.Second*3)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(reqCtx, "GET", "https://api.github.com/repos/googleapis/mcp-toolbox/releases/latest", nil)
+	if err != nil {
+		opts.Logger.DebugContext(ctx, fmt.Sprintf("Unable to query latest Toolbox version: %v (skipping version check)", err))
+		return
+	}
+
+	req.Header.Set("User-Agent", "mcp-toolbox")
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		opts.Logger.DebugContext(ctx, fmt.Sprintf("Unable to query latest Toolbox version: %v (skipping version check)", err))
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		opts.Logger.DebugContext(ctx, fmt.Sprintf("Unable to query latest Toolbox version: received status code %d (skipping version check)", resp.StatusCode))
+		return
+	}
+	
+	var rel githubRelease
+	if err := json.NewDecoder(resp.Body).Decode(&rel); err != nil {
+		opts.Logger.DebugContext(ctx, fmt.Sprintf("Unable to query latest Toolbox version: %v (skipping version check)", err))
+		return
+	}
+	latest := rel.TagName
+	current := "v" + opts.VersionNum
+
+	if semver.Compare(latest, current) > 0 {
+		opts.Logger.WarnContext(ctx, fmt.Sprintf("A newer version of MCP Toolbox is available: (%s -> %s). Download the latest version from https://github.com/googleapis/mcp-toolbox/releases", current, latest))
+	}
 }
