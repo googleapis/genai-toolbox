@@ -5,16 +5,15 @@
 
 ### Features
 
-* **bigtable:** Add admin lifecycle and listing tools ([#3596](https://github.com/googleapis/mcp-toolbox/issues/3596)) ([801d589](https://github.com/googleapis/mcp-toolbox/commit/801d5899665c120200d64bac45172741a785ae5d))
-* **bigtable:** Bigtable-list-schemas MCP tool ([#3683](https://github.com/googleapis/mcp-toolbox/issues/3683)) ([9228c61](https://github.com/googleapis/mcp-toolbox/commit/9228c61518a8828ad51bb83ad7eb820208104859))
 * **groups:** Add ttlMs and cacheScope customization to config ([#3805](https://github.com/googleapis/mcp-toolbox/issues/3805)) ([a5d4947](https://github.com/googleapis/mcp-toolbox/commit/a5d49472bad85e8955dc83852e65c5cd92f351a3))
-* Improve error messaging on missing envrionment variables ([#3718](https://github.com/googleapis/mcp-toolbox/issues/3718)) ([11ae3b5](https://github.com/googleapis/mcp-toolbox/commit/11ae3b5254dfc5bdda1f71d330cbc7d813119111))
 * **migrate:** Convert toolset to group kind during migration ([#3704](https://github.com/googleapis/mcp-toolbox/issues/3704)) ([0adeaa5](https://github.com/googleapis/mcp-toolbox/commit/0adeaa51c4e132fe36553b24f88e8f62df90bfaa))
 * **server/mcp:** Introduce generic client extension registry ([#3723](https://github.com/googleapis/mcp-toolbox/issues/3723)) ([016245c](https://github.com/googleapis/mcp-toolbox/commit/016245c21c254a05409a41845e0a8799518363a0))
 * **skill:** Add review-prs skill for mcp-toolbox ([#3743](https://github.com/googleapis/mcp-toolbox/issues/3743)) ([5b7bacc](https://github.com/googleapis/mcp-toolbox/commit/5b7bacc73b9284160b73c4c3f7a53214c653e64a))
 * **source/bigquery:** Add apiEndpoint field to override BigQuery API host ([#3437](https://github.com/googleapis/mcp-toolbox/issues/3437)) ([4da1600](https://github.com/googleapis/mcp-toolbox/commit/4da1600df9971789a0970d174be3c2ed1368f7c1))
 * **source/databaseinsights:** Add databaseinsights source ([#3461](https://github.com/googleapis/mcp-toolbox/issues/3461)) ([3b9615d](https://github.com/googleapis/mcp-toolbox/commit/3b9615d020f0f7ba1d971f8c94ea7d6bc79f8468))
 * **sources/spanner:** Rename execute_sql_dql to execute_sql_readonly ([#3776](https://github.com/googleapis/mcp-toolbox/issues/3776)) ([cf5a0c8](https://github.com/googleapis/mcp-toolbox/commit/cf5a0c8fbf52f1e09fc565109682cf52b6ebd553))
+* **tools/bigtable:** Add admin lifecycle and listing tools ([#3596](https://github.com/googleapis/mcp-toolbox/issues/3596)) ([801d589](https://github.com/googleapis/mcp-toolbox/commit/801d5899665c120200d64bac45172741a785ae5d))
+* **tools/bigtable:** Bigtable-list-schemas MCP tool ([#3683](https://github.com/googleapis/mcp-toolbox/issues/3683)) ([9228c61](https://github.com/googleapis/mcp-toolbox/commit/9228c61518a8828ad51bb83ad7eb820208104859))
 * **tools/databaseinsights:** Add Advanced Query Insights tools for AlloyDB ([#3722](https://github.com/googleapis/mcp-toolbox/issues/3722)) ([74d18ae](https://github.com/googleapis/mcp-toolbox/commit/74d18ae0b3c4009436e0727bf7e16d714b9c41a4))
 * **tools/looker:** Add additional tools to allow dashboards to be modified, and their layouts altered. ([#3597](https://github.com/googleapis/mcp-toolbox/issues/3597)) ([b2b80fb](https://github.com/googleapis/mcp-toolbox/commit/b2b80fbea64b6284f68b49c0ad3270ed79655282))
 * **tools:** Add cloud-sql-connect-gce for pg, mysql, mssql ([#3740](https://github.com/googleapis/mcp-toolbox/issues/3740)) ([ca58fa4](https://github.com/googleapis/mcp-toolbox/commit/ca58fa4b525d6726b9792a9f6303fbcc26c9ca3f))
