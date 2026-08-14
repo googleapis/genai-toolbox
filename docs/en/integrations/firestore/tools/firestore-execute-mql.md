@@ -10,7 +10,7 @@ description: >
 
 A `firestore-execute-mql` tool executes MongoDB Query Language (MQL) statements or aggregation pipelines against Firestore.
 
-This tool allows data agents and LLMs to run dynamic MQL queries such as aggregation pipelines or document queries directly against Firestore backend instances.
+This tool allows data agents and LLMs to run dynamic MQL queries such as aggregation pipelines or document queries directly against Firestore databases.
 
 ## Compatible Sources
 

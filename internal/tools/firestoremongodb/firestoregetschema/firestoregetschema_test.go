@@ -32,7 +32,7 @@ import (
 
 type mockSource struct {
 	sources.SourceConfig
-	getSchemaFunc func(ctx context.Context, collection string, sampleSize int) (any, error)
+	getSchemaFunc func(ctx context.Context, collection string) (any, error)
 }
 
 func (m *mockSource) SourceType() string {
@@ -47,9 +47,9 @@ func (m *mockSource) FirestoreClient() *firestoreapi.Client {
 	return nil
 }
 
-func (m *mockSource) GetSchema(ctx context.Context, collection string, sampleSize int) (any, error) {
+func (m *mockSource) GetSchema(ctx context.Context, collection string) (any, error) {
 	if m.getSchemaFunc != nil {
-		return m.getSchemaFunc(ctx, collection, sampleSize)
+		return m.getSchemaFunc(ctx, collection)
 	}
 	return nil, nil
 }
@@ -82,7 +82,7 @@ func TestParseFromYamlFirestoreGetSchema(t *testing.T) {
 			kind: tool
 			name: get_schema_tool
 			type: firestore-get-schema
-			source: my-firestore-instance
+			source: my-firestore-database
 			description: Get schema from Firestore collections
 			`,
 			want: server.ToolConfigs{
@@ -93,7 +93,7 @@ func TestParseFromYamlFirestoreGetSchema(t *testing.T) {
 						AuthRequired: []string{},
 					},
 					Type:   "firestore-get-schema",
-					Source: "my-firestore-instance",
+					Source: "my-firestore-database",
 				},
 			},
 		},
@@ -214,12 +214,9 @@ func TestInvoke(t *testing.T) {
 			{"collection": "users", "fields": []map[string]any{{"name": "email", "types": []string{"string"}}}},
 		}
 		mock := &mockSource{
-			getSchemaFunc: func(ctx context.Context, collection string, sampleSize int) (any, error) {
+			getSchemaFunc: func(ctx context.Context, collection string) (any, error) {
 				if collection != "" {
 					return nil, errors.New("expected empty collection for all")
-				}
-				if sampleSize != 50 {
-					return nil, errors.New("expected default sampleSize 50")
 				}
 				return wantResult, nil
 			},
@@ -235,17 +232,14 @@ func TestInvoke(t *testing.T) {
 		}
 	})
 
-	t.Run("successful invocation specific collection and sampleSize", func(t *testing.T) {
+	t.Run("successful invocation specific collection", func(t *testing.T) {
 		wantResult := []map[string]any{
 			{"collection": "orders", "fields": []map[string]any{{"name": "total", "types": []string{"integer"}}}},
 		}
 		mock := &mockSource{
-			getSchemaFunc: func(ctx context.Context, collection string, sampleSize int) (any, error) {
+			getSchemaFunc: func(ctx context.Context, collection string) (any, error) {
 				if collection != "orders" {
 					return nil, errors.New("expected orders collection")
-				}
-				if sampleSize != 100 {
-					return nil, errors.New("expected sampleSize 100")
 				}
 				return wantResult, nil
 			},
@@ -253,7 +247,6 @@ func TestInvoke(t *testing.T) {
 
 		params := parameters.ParamValues{
 			{Name: "collection", Value: "orders"},
-			{Name: "sampleSize", Value: 100},
 		}
 		got, toolErr := tool.Invoke(ctx, mock, params, "")
 		if toolErr != nil {

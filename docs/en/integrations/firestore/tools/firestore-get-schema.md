@@ -10,7 +10,7 @@ description: >
 
 A `firestore-get-schema` tool retrieves schema information and inferred document structures for Firestore collections.
 
-This tool samples documents within collections to detect field names, nested maps, and data types (such as string, integer, double, boolean, timestamp, geopoint, and reference), returning structured schema definitions.
+This tool introspects collections to detect field names, nested maps, and data types (such as string, integer, double, boolean, timestamp, geopoint, and reference), returning structured schema definitions.
 
 ## Compatible Sources
 
@@ -20,8 +20,7 @@ This tool samples documents within collections to detect field names, nested map
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `collection` | string | false | Optional name or relative path of a specific collection. If omitted, all root collections are sampled. |
-| `sampleSize` | integer | false | Optional number of documents to sample per collection (defaults to 50). |
+| `collection` | string | false | Optional name or relative path of a specific collection. If omitted, schemas for all root collections are returned. |
 
 ## Example
 

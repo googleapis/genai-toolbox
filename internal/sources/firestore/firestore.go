@@ -603,19 +603,12 @@ type FieldSchema struct {
 
 // CollectionSchema represents metadata for a Firestore collection
 type CollectionSchema struct {
-	Collection      string        `json:"collection"`
-	Fields          []FieldSchema `json:"fields"`
-	SampledDocCount int           `json:"sampledDocCount,omitempty"`
+	Collection string        `json:"collection"`
+	Fields     []FieldSchema `json:"fields"`
 }
 
 // GetSchema returns schema information for the specified collection or all root collections.
-func (s *Source) GetSchema(ctx context.Context, collection string, sampleSize int) (any, error) {
-	if sampleSize <= 0 {
-		sampleSize = 50
-	} else if sampleSize > 1000 {
-		sampleSize = 1000
-	}
-
+func (s *Source) GetSchema(ctx context.Context, collection string) (any, error) {
 	var collectionsToInspect []string
 	if collection != "" {
 		collectionsToInspect = []string{collection}
@@ -640,7 +633,7 @@ func (s *Source) GetSchema(ctx context.Context, collection string, sampleSize in
 
 		// Fallback: sample documents directly if get_schema pipeline stage is not available
 		collRef := s.FirestoreClient().Collection(collName)
-		docs, err := collRef.Limit(sampleSize).Documents(ctx).GetAll()
+		docs, err := collRef.Limit(50).Documents(ctx).GetAll()
 		if err != nil {
 			return nil, fmt.Errorf("failed to sample documents from collection %q: %w", collName, err)
 		}
@@ -665,9 +658,8 @@ func (s *Source) GetSchema(ctx context.Context, collection string, sampleSize in
 		}
 
 		result = append(result, CollectionSchema{
-			Collection:      collName,
-			Fields:          fields,
-			SampledDocCount: len(docs),
+			Collection: collName,
+			Fields:     fields,
 		})
 	}
 

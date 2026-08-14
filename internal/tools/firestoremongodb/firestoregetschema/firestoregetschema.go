@@ -29,7 +29,6 @@ import (
 
 const resourceType string = "firestore-get-schema"
 const collectionKey string = "collection"
-const sampleSizeKey string = "sampleSize"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -47,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
-	GetSchema(context.Context, string, int) (any, error)
+	GetSchema(context.Context, string) (any, error)
 }
 
 type Config struct {
@@ -71,8 +70,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	emptyString := ""
 	collectionParam := parameters.NewStringParameter(collectionKey, "Optional name or path of a specific collection to get schema for. If omitted, schemas for all root collections are returned.", parameters.WithStringDefault(emptyString))
-	sampleSizeParam := parameters.NewIntParameter(sampleSizeKey, "Optional number of documents to sample per collection to infer schema. Defaults to 50.", parameters.WithIntDefault(50))
-	params := parameters.Parameters{collectionParam, sampleSizeParam}
+	params := parameters.Parameters{collectionParam}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -116,25 +114,13 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 
 	collection, _ := mapParams[collectionKey].(string)
 
-	sampleSize := 50
-	if val, exists := mapParams[sampleSizeKey]; exists && val != nil {
-		switch v := val.(type) {
-		case int:
-			sampleSize = v
-		case int64:
-			sampleSize = int(v)
-		case float64:
-			sampleSize = int(v)
-		}
-	}
-
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool for collection: %q with sampleSize: %d", resourceType, collection, sampleSize))
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool for collection: %q", resourceType, collection))
 
-	resp, err := source.GetSchema(ctx, collection, sampleSize)
+	resp, err := source.GetSchema(ctx, collection)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

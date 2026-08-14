@@ -82,7 +82,7 @@ func TestParseFromYamlFirestoreExecuteMQL(t *testing.T) {
 			kind: tool
 			name: execute_mql_tool
 			type: firestore-execute-mql
-			source: my-firestore-instance
+			source: my-firestore-database
 			description: Execute MQL query in Firestore
 			`,
 			want: server.ToolConfigs{
@@ -93,7 +93,7 @@ func TestParseFromYamlFirestoreExecuteMQL(t *testing.T) {
 						AuthRequired: []string{},
 					},
 					Type:   "firestore-execute-mql",
-					Source: "my-firestore-instance",
+					Source: "my-firestore-database",
 				},
 			},
 		},
