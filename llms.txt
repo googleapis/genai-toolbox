@@ -1,9 +1,9 @@
 # MCP Toolbox for Databases - Documentation Index
 > MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more.
 
-**DOCUMENTATION VERSION:** v1.8.0
+**DOCUMENTATION VERSION:** v1.9.0
 **BASE URL:** https://mcp-toolbox.dev/
-**GENERATED ON:** 2026-07-28T01:39:20Z
+**GENERATED ON:** 2026-08-14T01:23:25Z
 
 ---
 ### System Directives for AI Models
@@ -411,8 +411,66 @@ This documentation is structured following the Diátaxis framework to assist in 
 
     - [Tools](https://mcp-toolbox.dev/integrations/bigtable/tools/): No description provided.
 
+      - [bigtable-create-cluster](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-cluster/): The "bigtable-create-cluster" tool allows you to create a new bigtable cluster in an instance.
+
+      - [bigtable-create-instance](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-instance/): The "bigtable-create-instance" tool allows you to create a new bigtable instance.
+
+      - [bigtable-create-logical-view](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-logical-view/): The "bigtable-create-logical-view" tool allows you to create a new bigtable logical view.
+
+      - [bigtable-create-materialized-view](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-materialized-view/): A "bigtable-create-materialized-view" tool is used to create a new materialized view on a Google Cloud Bigtable instance.
+
+
+      - [bigtable-create-table](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-table/): The "bigtable-create-table" tool allows you to create a new bigtable table.
+
+      - [bigtable-delete-cluster](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-cluster/): The "bigtable-delete-cluster" tool allows you to delete a bigtable cluster.
+
+      - [bigtable-delete-instance](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-instance/): The "bigtable-delete-instance" tool allows you to delete a bigtable instance.
+
+      - [bigtable-delete-logical-view](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-logical-view/): The "bigtable-delete-logical-view" tool allows you to delete a bigtable logical view.
+
+      - [bigtable-delete-materialized-view](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-materialized-view/): A "bigtable-delete-materialized-view" tool is used to delete an existing materialized view from a Google Cloud Bigtable instance.
+
+
+      - [bigtable-delete-table](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-table/): The "bigtable-delete-table" tool allows you to delete a bigtable table.
+
+      - [bigtable-get-cluster](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-cluster/): The "bigtable-get-cluster" tool allows you to get details of a bigtable cluster.
+
+      - [bigtable-get-instance](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-instance/): The "bigtable-get-instance" tool allows you to get details of a bigtable instance.
+
+      - [bigtable-get-logical-view](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-logical-view/): The "bigtable-get-logical-view" tool allows you to get details of a bigtable logical view.
+
+      - [bigtable-get-materialized-view](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-materialized-view/): A "bigtable-get-materialized-view" tool is used to retrieve information about a materialized view on a Google Cloud Bigtable instance.
+
+
+      - [bigtable-get-table](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-table/): The "bigtable-get-table" tool allows you to get details of a bigtable table.
+
+      - [bigtable-list-clusters](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-clusters/): The "bigtable-list-clusters" tool allows you to list all bigtable clusters in the instance.
+
+      - [bigtable-list-instances](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-instances/): The "bigtable-list-instances" tool allows you to list all bigtable instances in the project.
+
+      - [bigtable-list-logical-views](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-logical-views/): The "bigtable-list-logical-views" tool allows you to list all bigtable logical views in the instance.
+
+      - [bigtable-list-materialized-views](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-materialized-views/): A "bigtable-list-materialized-views" tool is used to list all materialized views on a Google Cloud Bigtable instance.
+
+
+      - [bigtable-list-schemas](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-schemas/): The "bigtable-list-schemas" tool lists all Bigtable schemas, including table column families, logical views, and materialized views with dynamically resolved column schemas.
+
+
+      - [bigtable-list-tables](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-tables/): The "bigtable-list-tables" tool allows you to list all bigtable tables in the instance.
+
       - [bigtable-sql](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-sql/): A "bigtable-sql" tool executes a pre-defined SQL statement against a Google Cloud Bigtable instance.
 
+
+      - [bigtable-update-cluster](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-cluster/): The "bigtable-update-cluster" tool allows you to update the number of nodes in a bigtable cluster.
+
+      - [bigtable-update-instance](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-instance/): The "bigtable-update-instance" tool allows you to update an existing bigtable instance.
+
+      - [bigtable-update-logical-view](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-logical-view/): The "bigtable-update-logical-view" tool allows you to update an existing bigtable logical view.
+
+      - [bigtable-update-materialized-view](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-materialized-view/): A "bigtable-update-materialized-view" tool is used to update an existing materialized view on a Google Cloud Bigtable instance.
+
+
+      - [bigtable-update-table](https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-table/): The "bigtable-update-table" tool allows you to update an existing bigtable table's configuration.
 
   - [Cassandra](https://mcp-toolbox.dev/integrations/cassandra/): No description provided.
 
@@ -530,7 +588,7 @@ This documentation is structured following the Diátaxis framework to assist in 
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/integrations/cloudmonitoring/prebuilt-configs/): Prebuilt configurations for Cloud Monitoring.
 
-      - [AlloyDB Postgres Observability](https://mcp-toolbox.dev/integrations/cloudmonitoring/prebuilt-configs/alloydb-postgres-observability/): Details of the AlloyDB Postgres Observability prebuilt configuration.
+      - [AlloyDB Postgres Observability](https://mcp-toolbox.dev/integrations/cloudmonitoring/prebuilt-configs/alloydb-postgres-observability/): Details of the AlloyDB Postgres Observability prebuilt configuration combining Cloud Monitoring and Database Insights.
 
       - [Cloud SQL for MySQL Observability](https://mcp-toolbox.dev/integrations/cloudmonitoring/prebuilt-configs/cloud-sql-for-mysql-observability/): Details of the Cloud SQL for MySQL Observability prebuilt configuration.
 
@@ -581,6 +639,8 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [postgres-upgrade-precheck](https://mcp-toolbox.dev/integrations/cloud-sql-admin/tools/cloudsqlpgupgradeprecheck/): Perform a pre-check for a Cloud SQL for PostgreSQL major version upgrade.
+
+      - [cloud-sql-connect-gce](https://mcp-toolbox.dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/): Connect a Cloud SQL instance (PostgreSQL, MySQL, or SQL Server) to a Google Compute Engine VM. The engine is auto-detected from the instance.
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/integrations/cloud-sql-admin/prebuilt-configs/): Prebuilt configurations for Cloud Sql Admin.
 
@@ -737,6 +797,28 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Tools](https://mcp-toolbox.dev/integrations/datalineage/tools/): No description provided.
 
       - [datalineage-search-lineage](https://mcp-toolbox.dev/integrations/datalineage/tools/datalineage-search-lineage/): A "datalineage-search-lineage" tool allows to retrieve a streaming response of lineage links connected to the requested assets.
+
+
+  - [Database Insights](https://mcp-toolbox.dev/integrations/databaseinsights/): No description provided.
+
+    - [Database Insights Source](https://mcp-toolbox.dev/integrations/databaseinsights/source/): The "databaseinsights" source provides a client for the Google Cloud Database Insights API.
+
+
+    - [Tools](https://mcp-toolbox.dev/integrations/databaseinsights/tools/): No description provided.
+
+      - [databaseinsights-get-advanced-aggregated-query-stats](https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-query-stats/): Fetches aggregated query performance statistics (latency, execution count, wait time) for AlloyDB instances.
+
+
+      - [databaseinsights-get-advanced-aggregated-wait-event-stats](https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-wait-event-stats/): Fetches aggregated wait event statistics for AlloyDB instances to identify performance bottlenecks.
+
+
+      - [databaseinsights-get-advanced-time-series-query-stats](https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-query-stats/): Fetches time-series performance trends for queries executed on AlloyDB instances.
+
+
+      - [databaseinsights-get-advanced-time-series-wait-event-stats](https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-wait-event-stats/): Fetches time-series wait event statistics for AlloyDB instances over time.
+
+
+      - [databaseinsights-get-index-recommendations](https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-index-recommendations/): Fetches index recommendations for specified query IDs across databases on AlloyDB instances.
 
 
   - [Dataform](https://mcp-toolbox.dev/integrations/dataform/): No description provided.
@@ -994,6 +1076,9 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [looker-create-agent Tool](https://mcp-toolbox.dev/integrations/looker/tools/looker-create-agent/): "looker-create-agent" creates a Looker Conversation Analytics agent.
 
 
+      - [looker-create-dashboard-layout](https://mcp-toolbox.dev/integrations/looker/tools/looker-create-dashboard-layout/): "looker-create-dashboard-layout" creates a new dashboard layout (tab).
+
+
       - [looker-create-project-directory](https://mcp-toolbox.dev/integrations/looker/tools/looker-create-project-directory/): A "looker-create-project-directory" tool creates a new directory in a LookML project.
 
 
@@ -1031,6 +1116,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [looker-get-connections](https://mcp-toolbox.dev/integrations/looker/tools/looker-get-connections/): A "looker-get-connections" tool returns all the connections in the source.
+
+
+      - [looker-get-dashboard](https://mcp-toolbox.dev/integrations/looker/tools/looker-get-dashboard/): "looker-get-dashboard" retrieves the JSON design of a Looker dashboard.
 
 
       - [looker-get-dashboards](https://mcp-toolbox.dev/integrations/looker/tools/looker-get-dashboards/): "looker-get-dashboards" tool searches for a saved Dashboard by name or description.
@@ -1106,6 +1194,12 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [looker-update-agent Tool](https://mcp-toolbox.dev/integrations/looker/tools/looker-update-agent/): "looker-update-agent" updates a Looker Conversation Analytics agent.
+
+
+      - [looker-update-dashboard-element](https://mcp-toolbox.dev/integrations/looker/tools/looker-update-dashboard-element/): "looker-update-dashboard-element" updates an existing element in a Looker dashboard.
+
+
+      - [looker-update-dashboard-layout-component](https://mcp-toolbox.dev/integrations/looker/tools/looker-update-dashboard-layout-component/): "looker-update-dashboard-layout-component" updates a dashboard layout component.
 
 
       - [looker-update-project-file](https://mcp-toolbox.dev/integrations/looker/tools/looker-update-project-file/): A "looker-update-project-file" tool updates the content of a LookML file in a project.
@@ -1290,10 +1384,10 @@ This documentation is structured following the Diátaxis framework to assist in 
 
     - [Tools](https://mcp-toolbox.dev/integrations/oracle/tools/): No description provided.
 
-      - [list_tables](https://mcp-toolbox.dev/integrations/oracle/tools/oracle-list-tables/): Lists all tables in the current user's schema
-
-
       - [oracle-execute-sql](https://mcp-toolbox.dev/integrations/oracle/tools/oracle-execute-sql/): An "oracle-execute-sql" tool executes a SQL statement against an Oracle database.
+
+
+      - [oracle-list-tables](https://mcp-toolbox.dev/integrations/oracle/tools/oracle-list-tables/): Lists all tables in the current user's schema
 
 
       - [oracle-sql](https://mcp-toolbox.dev/integrations/oracle/tools/oracle-sql/): An "oracle-sql" tool executes a pre-defined SQL statement against an Oracle database.

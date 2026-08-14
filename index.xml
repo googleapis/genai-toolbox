@@ -803,7 +803,1584 @@ within that session.&lt;/li&gt;
 
 
 &lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>bigtable-sql</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-sql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>bigtable-create-cluster</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-cluster/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Create a new Bigtable cluster in an instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-create-cluster&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;cluster_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the cluster&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;zone&lt;/code&gt;&lt;/strong&gt; (string): The zone for the cluster (e.g. us-central1-b)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;num_nodes&lt;/code&gt;&lt;/strong&gt; (integer): The number of nodes to allocate&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_create_cluster&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-create-cluster&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Create a new Bigtable cluster in an instance.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-create-cluster&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-create-instance</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-instance/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Create a new Bigtable instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-create-instance&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance to create&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;display_name&lt;/code&gt;&lt;/strong&gt; (string): Display name for the instance&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;cluster_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the primary cluster&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;zone&lt;/code&gt;&lt;/strong&gt; (string): The zone for the cluster (e.g. us-central1-b)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;num_nodes&lt;/code&gt;&lt;/strong&gt; (integer): The number of nodes for the cluster&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_create_instance&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-create-instance&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Create a new Bigtable instance.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-create-instance&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-create-logical-view</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-logical-view/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-logical-view/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Create a new Bigtable logical view.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-create-logical-view&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;logical_view_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the logical view&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;query&lt;/code&gt;&lt;/strong&gt; (string): The logical view query&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_create_logical_view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-create-logical-view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Create a new Bigtable logical view.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-create-logical-view&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-create-materialized-view</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-materialized-view/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-materialized-view/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;bigtable-create-materialized-view&lt;/code&gt; tool creates a new materialized view on a Google Cloud Bigtable instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The ID of the instance.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;materialized_view_id&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The ID of the materialized view.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;query&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The materialized view query.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;create_materialized_view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-create-materialized-view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Use this tool to create a materialized view.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-create-materialized-view&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-create-table</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-table/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-create-table/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Create a new Bigtable table.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-create-table&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;table_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the table to create&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;column_family&lt;/code&gt;&lt;/strong&gt; (string): Optional column family name to create with the table&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_create_table&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-create-table&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Create a new Bigtable table.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-create-table&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-delete-cluster</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-cluster/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Delete a Bigtable cluster.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-delete-cluster&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;cluster_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the cluster&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_delete_cluster&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-delete-cluster&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Delete a Bigtable cluster.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-delete-cluster&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-delete-instance</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-instance/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Delete a Bigtable instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-delete-instance&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance to delete&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_delete_instance&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-delete-instance&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Delete a Bigtable instance.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-delete-instance&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-delete-logical-view</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-logical-view/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-logical-view/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Delete a Bigtable logical view.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-delete-logical-view&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;logical_view_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the logical view&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_delete_logical_view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-delete-logical-view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Delete a Bigtable logical view.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-delete-logical-view&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-delete-materialized-view</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-materialized-view/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-materialized-view/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;bigtable-delete-materialized-view&lt;/code&gt; tool deletes an existing materialized view from a Google Cloud Bigtable instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The ID of the instance.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;materialized_view_id&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The ID of the materialized view.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;delete_materialized_view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-delete-materialized-view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Use this tool to delete a materialized view.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-delete-materialized-view&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-delete-table</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-table/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-delete-table/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Delete a Bigtable table.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-delete-table&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;table_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the table to delete&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_delete_table&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-delete-table&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Delete a Bigtable table.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-delete-table&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-get-cluster</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-cluster/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Get details of a Bigtable cluster.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-get-cluster&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;cluster_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the cluster&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_get_cluster&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-get-cluster&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Get details of a Bigtable cluster.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-get-cluster&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-get-instance</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-instance/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Get details of a Bigtable instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-get-instance&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance to get&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_get_instance&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-get-instance&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Get details of a Bigtable instance.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-get-instance&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-get-logical-view</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-logical-view/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-logical-view/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Get details of a Bigtable logical view.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-get-logical-view&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;logical_view_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the logical view&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_get_logical_view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-get-logical-view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Get details of a Bigtable logical view.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-get-logical-view&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-get-materialized-view</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-materialized-view/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-materialized-view/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;bigtable-get-materialized-view&lt;/code&gt; tool retrieves metadata and information about a materialized view on a Google Cloud Bigtable instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The ID of the instance.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;materialized_view_id&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The ID of the materialized view.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;get_materialized_view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-get-materialized-view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Use this tool to get materialized view info.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-get-materialized-view&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-get-table</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-table/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-get-table/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Get details of a Bigtable table.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-get-table&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;table_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the table to get&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_get_table&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-get-table&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Get details of a Bigtable table.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-get-table&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-list-clusters</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-clusters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-clusters/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;List all Bigtable clusters in the instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-list-clusters&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_list_clusters&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-list-clusters&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;List all Bigtable clusters in the instance.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-list-clusters&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-list-instances</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-instances/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;List all Bigtable instances in the project.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_list_instances&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-list-instances&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;List all Bigtable instances in the project.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-list-instances&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-list-logical-views</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-logical-views/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-logical-views/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;List all Bigtable logical views in the instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-list-logical-views&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_list_logical_views&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-list-logical-views&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;List all Bigtable logical views in the instance.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-list-logical-views&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-list-materialized-views</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-materialized-views/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-materialized-views/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;bigtable-list-materialized-views&lt;/code&gt; tool lists all materialized views on a Google Cloud Bigtable instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The ID of the instance.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;list_materialized_views&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-list-materialized-views&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Use this tool to list materialized views.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-list-materialized-views&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-list-schemas</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-schemas/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-schemas/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;bigtable-list-schemas&lt;/code&gt; tool retrieves comprehensive schema information for all resources within a Google Cloud Bigtable instance. It provides Large Language Models (LLMs) with full visibility into:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Tables:&lt;/strong&gt; Table names along with their configured column family definitions (&lt;code&gt;FamilyList&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Logical Views &amp;amp; Materialized Views:&lt;/strong&gt; View definitions (&lt;code&gt;LogicalViewID&lt;/code&gt;, &lt;code&gt;MaterializedViewID&lt;/code&gt;, and GoogleSQL &lt;code&gt;Query&lt;/code&gt;) alongside dynamically resolved column schemas (&lt;code&gt;name&lt;/code&gt; and &lt;code&gt;type&lt;/code&gt;) extracted from the view query.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>bigtable-list-tables</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-list-tables/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;List all Bigtable tables in the instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_list_tables&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-list-tables&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;List all Bigtable tables in the instance.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-list-tables&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-sql</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-sql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;bigtable-sql&lt;/code&gt; tool executes a pre-defined SQL statement against a Bigtable
 instance.&lt;/p&gt;
 &lt;h3 id="googlesql"&gt;GoogleSQL&lt;/h3&gt;
@@ -818,7 +2395,409 @@ inserted according to their name: e.g. &lt;code&gt;@name&lt;/code&gt;.&lt;/p&gt;
  &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/&gt;
 &lt;/svg&gt;
 
- &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>cassandra-cql</title><link>https://mcp-toolbox.dev/integrations/cassandra/tools/cassandra-cql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/cassandra/tools/cassandra-cql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>bigtable-update-cluster</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-cluster/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Update the number of nodes in a Bigtable cluster.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-update-cluster&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;cluster_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the cluster&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;serve_nodes&lt;/code&gt;&lt;/strong&gt; (integer): The new number of nodes to allocate&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_update_cluster&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-update-cluster&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Update the number of nodes in a Bigtable cluster.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-update-cluster&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-update-instance</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-instance/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Update an existing Bigtable instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-update-instance&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance to update&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;display_name&lt;/code&gt;&lt;/strong&gt; (string): The new display name&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_update_instance&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-update-instance&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Update an existing Bigtable instance.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-update-instance&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-update-logical-view</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-logical-view/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-logical-view/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Update an existing Bigtable logical view.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-update-logical-view&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the instance&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;logical_view_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the logical view&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;query&lt;/code&gt;&lt;/strong&gt; (string): The new logical view query&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_update_logical_view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-update-logical-view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Update an existing Bigtable logical view.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-update-logical-view&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-update-materialized-view</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-materialized-view/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-materialized-view/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;bigtable-update-materialized-view&lt;/code&gt; tool updates an existing materialized view on a Google Cloud Bigtable instance.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;instance_id&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The ID of the instance.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;materialized_view_id&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The ID of the materialized view.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;code&gt;query&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;The updated materialized view query.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;update_materialized_view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-update-materialized-view&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Use this tool to update a materialized view.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-update-materialized-view&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>bigtable-update-table</title><link>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-table/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigtable/tools/bigtable-update-table/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Update an existing Bigtable table&amp;rsquo;s configuration.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/bigtable/source/"&gt;Bigtable Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;bigtable-update-table&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;table_id&lt;/code&gt;&lt;/strong&gt; (string): The ID of the table to update&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;disable_change_stream&lt;/code&gt;&lt;/strong&gt; (boolean): Disable change stream&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable_update_table&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bigtable-update-table&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-bigtable-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Update an existing Bigtable table&amp;#39;s configuration.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td&gt;type&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &lt;code&gt;bigtable-update-table&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;source&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the source to execute on.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;description&lt;/td&gt;
+					&lt;td&gt;string&lt;/td&gt;
+					&lt;td&gt;false&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>cassandra-cql</title><link>https://mcp-toolbox.dev/integrations/cassandra/tools/cassandra-cql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/cassandra/tools/cassandra-cql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;cassandra-cql&lt;/code&gt; tool executes a pre-defined CQL statement against a Cassandra
 database.&lt;/p&gt;
 &lt;p&gt;The specified CQL statement is executed as a &lt;a href="https://docs.datastax.com/en/datastax-drivers/developing/prepared-statements.html"&gt;prepared
@@ -935,6 +2914,12 @@ names, or other parts of the query.&lt;/p&gt;</description></item><item><title>C
 					&lt;td&gt;&lt;/td&gt;
 					&lt;td&gt;&lt;code&gt;--tls-key&lt;/code&gt;&lt;/td&gt;
 					&lt;td&gt;Path to the PEM-encoded TLS private key file.&lt;/td&gt;
+					&lt;td&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;&lt;/td&gt;
+					&lt;td&gt;&lt;code&gt;--toolbox-url&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;Specifies the absolute Toolbox URL (e.g., &lt;code&gt;https://my-toolbox.example.com&lt;/code&gt;). Used as the resource field in the MCP PRM file when MCP Auth is enabled. Falls back to &lt;code&gt;TOOLBOX_URL&lt;/code&gt; environment variable.&lt;/td&gt;
 					&lt;td&gt;&lt;/td&gt;
 			&lt;/tr&gt;
 			&lt;tr&gt;
@@ -3207,12 +5192,12 @@ details about a specific data agent.&lt;/p&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;data_agent_id&lt;/code&gt;:&lt;/strong&gt; The ID of the data agent to retrieve information for.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id="example"&gt;Example&lt;/h2&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;tools&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;get_agent_info&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;conversational-analytics-get-data-agent-info&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-conversational-analytics-source&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;location&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;global&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;get_agent_info&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;conversational-analytics-get-data-agent-info&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-conversational-analytics-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;location&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;global&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Use this tool to get details about a specific data agent.&lt;/span&gt;&lt;span class="w"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
 &lt;table&gt;
@@ -3226,7 +5211,7 @@ details about a specific data agent.&lt;/p&gt;
 	&lt;/thead&gt;
 	&lt;tbody&gt;
 			&lt;tr&gt;
-					&lt;td&gt;kind&lt;/td&gt;
+					&lt;td&gt;type&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
 					&lt;td&gt;Must be &amp;ldquo;conversational-analytics-get-data-agent-info&amp;rdquo;.&lt;/td&gt;
@@ -3259,12 +5244,12 @@ data agents that are accessible.&lt;/p&gt;
 &lt;/ul&gt;
 &lt;p&gt;&lt;code&gt;conversational-analytics-list-accessible-data-agents&lt;/code&gt; does not accept any parameters.&lt;/p&gt;
 &lt;h2 id="example"&gt;Example&lt;/h2&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;tools&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;list_agents&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;conversational-analytics-list-accessible-data-agents&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-conversational-analytics-source&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;location&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;global&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;list_agents&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;conversational-analytics-list-accessible-data-agents&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-conversational-analytics-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;location&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;global&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Use this tool to list available data agents.&lt;/span&gt;&lt;span class="w"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
 &lt;table&gt;
@@ -3278,7 +5263,7 @@ data agents that are accessible.&lt;/p&gt;
 	&lt;/thead&gt;
 	&lt;tbody&gt;
 			&lt;tr&gt;
-					&lt;td&gt;kind&lt;/td&gt;
+					&lt;td&gt;type&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
 					&lt;td&gt;Must be &amp;ldquo;conversational-analytics-list-accessible-data-agents&amp;rdquo;.&lt;/td&gt;
@@ -3446,7 +5431,52 @@ for a LookML project.&lt;/p&gt;
 					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
 			&lt;/tr&gt;
 	&lt;/tbody&gt;
-&lt;/table&gt;</description></item><item><title>dataform-compile-local</title><link>https://mcp-toolbox.dev/integrations/dataform/tools/dataform-compile-local/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/dataform/tools/dataform-compile-local/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;/table&gt;</description></item><item><title>databaseinsights-get-advanced-aggregated-query-stats</title><link>https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-query-stats/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-query-stats/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;databaseinsights-get-advanced-aggregated-query-stats&lt;/code&gt; tool fetches aggregated performance metrics for queries executed on AlloyDB instances with Advanced Query Insights enabled. It ranks queries by total execution time (&lt;code&gt;sum(execution_time) desc&lt;/code&gt;) to help identify top resource-consuming queries.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/databaseinsights/source/"&gt;Database Insights Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;databaseinsights.queryStats.fetch&lt;/code&gt; on the target location/project, which is granted by:
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Database Insights Viewer&lt;/strong&gt; (&lt;code&gt;roles/databaseinsights.viewer&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Monitoring Viewer&lt;/strong&gt; (&lt;code&gt;roles/monitoring.viewer&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;h3 id="parent-string-required"&gt;&lt;code&gt;parent&lt;/code&gt; (String, Required)&lt;/h3&gt;
+&lt;p&gt;Project and location in the format &lt;code&gt;projects/{project_id}/locations/{location}&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>dataform-compile-local</title><link>https://mcp-toolbox.dev/integrations/dataform/tools/dataform-compile-local/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/dataform/tools/dataform-compile-local/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataform-compile-local&lt;/code&gt; tool runs the &lt;code&gt;dataform compile&lt;/code&gt; command on a local
 Dataform project.&lt;/p&gt;
 &lt;p&gt;It is a standalone tool and &lt;strong&gt;is not&lt;/strong&gt; compatible with any sources.&lt;/p&gt;
@@ -5375,23 +7405,7 @@ of a LookML project.&lt;/p&gt;
 					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
 			&lt;/tr&gt;
 	&lt;/tbody&gt;
-&lt;/table&gt;</description></item><item><title>list_tables</title><link>https://mcp-toolbox.dev/integrations/oracle/tools/oracle-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/oracle/tools/oracle-list-tables/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
-&lt;p&gt;An &lt;code&gt;oracle-sql&lt;/code&gt; tool executes a pre-defined SQL statement against an
-Oracle database.&lt;/p&gt;
-&lt;p&gt;The specified SQL statement is executed using &lt;a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html"&gt;prepared statements&lt;/a&gt;
-for security and performance. It expects parameter placeholders in the SQL query
-to be in the native Oracle format (e.g., &lt;code&gt;:1&lt;/code&gt;, &lt;code&gt;:2&lt;/code&gt;).&lt;/p&gt;
-&lt;p&gt;By default, tools are configured as &lt;strong&gt;read-only&lt;/strong&gt; (SAFE mode). To execute data modification
-statements (INSERT, UPDATE, DELETE), you must explicitly set the &lt;code&gt;readOnly&lt;/code&gt;
-field to &lt;code&gt;false&lt;/code&gt;.&lt;/p&gt;
-&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-
-
-
-
-
-&lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>looker-add-dashboard-element</title><link>https://mcp-toolbox.dev/integrations/looker/tools/looker-add-dashboard-element/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/looker/tools/looker-add-dashboard-element/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;/table&gt;</description></item><item><title>looker-add-dashboard-element</title><link>https://mcp-toolbox.dev/integrations/looker/tools/looker-add-dashboard-element/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/looker/tools/looker-add-dashboard-element/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;code&gt;looker-add-dashboard-element&lt;/code&gt; tool creates a new tile (element) within an existing Looker dashboard.
 Tiles are added in the order this tool is called for a given &lt;code&gt;dashboard_id&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;CRITICAL ORDER OF OPERATIONS:&lt;/p&gt;
@@ -5831,6 +7845,83 @@ answer the question. The form of the entry is &lt;code&gt;[{&amp;quot;model&amp;
 			&lt;/tr&gt;
 			&lt;tr&gt;
 					&lt;td&gt;description&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>looker-create-dashboard-layout</title><link>https://mcp-toolbox.dev/integrations/looker/tools/looker-create-dashboard-layout/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/looker/tools/looker-create-dashboard-layout/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;looker-create-dashboard-layout&lt;/code&gt; tool creates a new dashboard layout, which typically represents a tab in modern Looker dashboards.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/source/"&gt;Looker Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;create_dashboard_layout&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-create-dashboard-layout&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; This tool creates a new dashboard layout, which typically represents a tab
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; in modern Looker dashboards.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Parameters:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_id (required): The ID of the dashboard.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - label (required): The label (title) of the new tab.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - type (optional): The type of layout (defaults to &amp;#39;newspaper&amp;#39;).
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - active (optional): Whether to make this layout active.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;type&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &amp;ldquo;looker-create-dashboard-layout&amp;rdquo;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;source&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the Looker source.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;description&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
 					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
@@ -6805,6 +8896,81 @@ and an optional &lt;code&gt;db&lt;/code&gt; parameter.&lt;/p&gt;
 			&lt;/tr&gt;
 			&lt;tr&gt;
 					&lt;td&gt;description&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>looker-get-dashboard</title><link>https://mcp-toolbox.dev/integrations/looker/tools/looker-get-dashboard/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/looker/tools/looker-get-dashboard/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;looker-get-dashboard&lt;/code&gt; tool retrieves the JSON design of a Looker dashboard by its ID. The output is trimmed to essential fields, excluding alerts and scheduled plans, making it suitable for replicating or analyzing the dashboard structure.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/source/"&gt;Looker Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;get_dashboard&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-get-dashboard&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; This tool retrieves the JSON design of a Looker dashboard by its ID.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; The output is trimmed to essential fields, excluding alerts and scheduled plans,
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; making it suitable for replicating or analyzing the dashboard structure.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Parameters:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_id (required): The unique identifier of the dashboard.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;type&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &amp;ldquo;looker-get-dashboard&amp;rdquo;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;source&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the Looker source.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;description&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
 					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
@@ -8412,6 +10578,168 @@ saved Look.&lt;/p&gt;
 					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
 			&lt;/tr&gt;
 	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>looker-update-dashboard-element</title><link>https://mcp-toolbox.dev/integrations/looker/tools/looker-update-dashboard-element/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/looker/tools/looker-update-dashboard-element/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;looker-update-dashboard-element&lt;/code&gt; tool updates an existing query element (tile) in a Looker dashboard. It reconstructs the query for the element using the provided parameters and updates its title and visualization configuration.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/source/"&gt;Looker Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;update_dashboard_element&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-update-dashboard-element&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; This tool updates an existing query element (tile) in a Looker dashboard.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; It reconstructs the query for the element using the provided parameters
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; and updates its title and visualization configuration.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Required Parameters:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_id: The ID of the dashboard containing the element.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_element_id: The ID of the element to update.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - model, explore, fields: These query parameters define the data for the tile.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Optional Parameters:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - title: The new title for the dashboard tile.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - pivots, filters, sorts, limit, tz: These query parameters customize the tile&amp;#39;s query.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - vis_config: A JSON object defining the visualization settings.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_filters: An array of dashboard filters to connect to this element.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;type&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &amp;ldquo;looker-update-dashboard-element&amp;rdquo;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;source&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the Looker source.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;description&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;</description></item><item><title>looker-update-dashboard-layout-component</title><link>https://mcp-toolbox.dev/integrations/looker/tools/looker-update-dashboard-layout-component/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/looker/tools/looker-update-dashboard-layout-component/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;looker-update-dashboard-layout-component&lt;/code&gt; tool updates a dashboard layout component, allowing you to move a tile to a different tab (layout) and/or change its position and size.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/source/"&gt;Looker Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;update_dashboard_layout_component&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-update-dashboard-layout-component&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;looker-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; This tool updates a dashboard layout component, allowing you to move a tile
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; to a different tab (layout) and/or change its position and size.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Parameters:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_layout_component_id (required): The ID of the component to update.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - dashboard_layout_id (optional): The ID of the target layout (tab) to move to.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - row (optional): The new row position.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - column (optional): The new column position.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - width (optional): The new width.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - height (optional): The new height.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
+					&lt;th style="text-align: center"&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
+					&lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;type&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Must be &amp;ldquo;looker-update-dashboard-layout-component&amp;rdquo;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;source&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Name of the Looker source.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;description&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;string&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;true&lt;/td&gt;
+					&lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
 &lt;/table&gt;</description></item><item><title>looker-update-project-file</title><link>https://mcp-toolbox.dev/integrations/looker/tools/looker-update-project-file/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/looker/tools/looker-update-project-file/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;looker-update-project-file&lt;/code&gt; tool updates the content of a LookML file.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;looker-update-project-file&lt;/code&gt; accepts a project_id parameter and a file_path parameter
@@ -8725,7 +11053,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode486s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode355s0hbhb"&gt;
 
 
 
@@ -9375,7 +11703,23 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p&g
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;oracle-execute-sql&lt;/span&gt;&lt;span class="w"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-oracle-instance&lt;/span&gt;&lt;span class="w"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Use this tool to execute sql statement.&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description></item><item><title>oracle-sql</title><link>https://mcp-toolbox.dev/integrations/oracle/tools/oracle-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/oracle/tools/oracle-sql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description></item><item><title>oracle-list-tables</title><link>https://mcp-toolbox.dev/integrations/oracle/tools/oracle-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/oracle/tools/oracle-list-tables/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;An &lt;code&gt;oracle-sql&lt;/code&gt; tool executes a pre-defined SQL statement against an
+Oracle database.&lt;/p&gt;
+&lt;p&gt;The specified SQL statement is executed using &lt;a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html"&gt;prepared statements&lt;/a&gt;
+for security and performance. It expects parameter placeholders in the SQL query
+to be in the native Oracle format (e.g., &lt;code&gt;:1&lt;/code&gt;, &lt;code&gt;:2&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;By default, tools are configured as &lt;strong&gt;read-only&lt;/strong&gt; (SAFE mode). To execute data modification
+statements (INSERT, UPDATE, DELETE), you must explicitly set the &lt;code&gt;readOnly&lt;/code&gt;
+field to &lt;code&gt;false&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>oracle-sql</title><link>https://mcp-toolbox.dev/integrations/oracle/tools/oracle-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/oracle/tools/oracle-sql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;An &lt;code&gt;oracle-sql&lt;/code&gt; tool executes a pre-defined SQL statement against an
 Oracle database.&lt;/p&gt;
 &lt;p&gt;The specified SQL statement is executed using &lt;a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html"&gt;prepared statements&lt;/a&gt;
@@ -11460,6 +13804,10 @@ browser) for each request.&lt;/li&gt;
  
  
  
+ 
+ 
+ 
+ 
 
 
 
@@ -11558,6 +13906,11 @@ browser) for each request.&lt;/li&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloud-sql-admin/tools/cloudsqlpgupgradeprecheck/"&gt;&lt;strong&gt;postgres-upgrade-precheck&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;Perform a pre-check for a Cloud SQL for PostgreSQL major version upgrade.&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/"&gt;&lt;strong&gt;cloud-sql-connect-gce&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Connect a Cloud SQL instance (PostgreSQL, MySQL, or SQL Server) to a Google Compute Engine VM. The engine is auto-detected from the instance.&lt;/td&gt;
  &lt;/tr&gt;
  
  &lt;/tbody&gt;
@@ -12467,7 +14820,101 @@ allowing tools to execute SQL queries against it.&lt;/p&gt;
  &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/&gt;
 &lt;/svg&gt;
 
- &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>Data Lineage Source</title><link>https://mcp-toolbox.dev/integrations/datalineage/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/datalineage/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>Database Insights Source</title><link>https://mcp-toolbox.dev/integrations/databaseinsights/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/databaseinsights/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;databaseinsights&lt;/code&gt; source provides a client to interact with the Google Cloud Database Insights API (&lt;code&gt;databaseinsights.googleapis.com&lt;/code&gt;). This source supports the Advanced Query Insights tools that are available via the remote &lt;a href="https://docs.cloud.google.com/alloydb/docs/reference/mcp/databaseinsights/mcp"&gt;Database Insights MCP Server&lt;/a&gt;, allowing tools to retrieve query performance statistics, wait event metrics, time-series trends, and index recommendations for Google Cloud databases like AlloyDB.&lt;/p&gt;
+&lt;p&gt;Authentication is handled via Application Default Credentials (ADC) using OAuth 2.0 access tokens.&lt;/p&gt;
+&lt;h2 id="available-tools"&gt;Available Tools&lt;/h2&gt;
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+ &lt;h3&gt;Database Insights Source Tools&lt;/h3&gt;
+ 
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Tool Name&lt;/th&gt;
+ &lt;th&gt;Description&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-query-stats/"&gt;&lt;strong&gt;databaseinsights-get-advanced-aggregated-query-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Fetches aggregated query performance statistics (latency, execution count, wait time) for AlloyDB instances.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-wait-event-stats/"&gt;&lt;strong&gt;databaseinsights-get-advanced-aggregated-wait-event-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Fetches aggregated wait event statistics for AlloyDB instances to identify performance bottlenecks.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-query-stats/"&gt;&lt;strong&gt;databaseinsights-get-advanced-time-series-query-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Fetches time-series performance trends for queries executed on AlloyDB instances.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-wait-event-stats/"&gt;&lt;strong&gt;databaseinsights-get-advanced-time-series-wait-event-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Fetches time-series wait event statistics for AlloyDB instances over time.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-index-recommendations/"&gt;&lt;strong&gt;databaseinsights-get-index-recommendations&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Fetches index recommendations for specified query IDs across databases on AlloyDB instances.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+
+
+
+
+
+
+
+
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="api-enablement"&gt;API Enablement&lt;/h3&gt;
+&lt;p&gt;Enable the required Google Cloud APIs on your target project:&lt;/p&gt;</description></item><item><title>Data Lineage Source</title><link>https://mcp-toolbox.dev/integrations/datalineage/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/datalineage/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The Data Lineage integration allows the MCP Toolbox to connect to the Google Cloud Data Lineage API. It enables large language models to query and analyze data lineage, representing the flow of data between source (upstream) and target (downstream) assets.&lt;/p&gt;
 &lt;p&gt;This integration supports:&lt;/p&gt;
 &lt;ul&gt;
@@ -13196,6 +15643,22 @@ in the cloud, on GCP, or on premises.&lt;/p&gt;
  
  
  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
 
 
@@ -13259,6 +15722,12 @@ in the cloud, on GCP, or on premises.&lt;/p&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/tools/looker-create-agent/"&gt;&lt;strong&gt;looker-create-agent Tool&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;&amp;#34;looker-create-agent&amp;#34; creates a Looker Conversation Analytics agent.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/tools/looker-create-dashboard-layout/"&gt;&lt;strong&gt;looker-create-dashboard-layout&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;&amp;#34;looker-create-dashboard-layout&amp;#34; creates a new dashboard layout (tab).
 &lt;/td&gt;
  &lt;/tr&gt;
  
@@ -13337,6 +15806,12 @@ in the cloud, on GCP, or on premises.&lt;/p&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/tools/looker-get-connections/"&gt;&lt;strong&gt;looker-get-connections&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;looker-get-connections&amp;#34; tool returns all the connections in the source.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/tools/looker-get-dashboard/"&gt;&lt;strong&gt;looker-get-dashboard&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;&amp;#34;looker-get-dashboard&amp;#34; retrieves the JSON design of a Looker dashboard.
 &lt;/td&gt;
  &lt;/tr&gt;
  
@@ -13487,6 +15962,18 @@ in the cloud, on GCP, or on premises.&lt;/p&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/tools/looker-update-agent/"&gt;&lt;strong&gt;looker-update-agent Tool&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;&amp;#34;looker-update-agent&amp;#34; updates a Looker Conversation Analytics agent.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/tools/looker-update-dashboard-element/"&gt;&lt;strong&gt;looker-update-dashboard-element&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;&amp;#34;looker-update-dashboard-element&amp;#34; updates an existing element in a Looker dashboard.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/tools/looker-update-dashboard-layout-component/"&gt;&lt;strong&gt;looker-update-dashboard-layout-component&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;&amp;#34;looker-update-dashboard-layout-component&amp;#34; updates a dashboard layout component.
 &lt;/td&gt;
  &lt;/tr&gt;
  
@@ -14219,14 +16706,14 @@ DW) database workloads.&lt;/p&gt;
  &lt;tbody&gt;
  
  &lt;tr&gt;
- &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/oracle/tools/oracle-list-tables/"&gt;&lt;strong&gt;list_tables&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
- &lt;td&gt;Lists all tables in the current user&amp;#39;s schema
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/oracle/tools/oracle-execute-sql/"&gt;&lt;strong&gt;oracle-execute-sql&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;An &amp;#34;oracle-execute-sql&amp;#34; tool executes a SQL statement against an Oracle database.
 &lt;/td&gt;
  &lt;/tr&gt;
  
  &lt;tr&gt;
- &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/oracle/tools/oracle-execute-sql/"&gt;&lt;strong&gt;oracle-execute-sql&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
- &lt;td&gt;An &amp;#34;oracle-execute-sql&amp;#34; tool executes a SQL statement against an Oracle database.
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/oracle/tools/oracle-list-tables/"&gt;&lt;strong&gt;oracle-list-tables&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Lists all tables in the current user&amp;#39;s schema
 &lt;/td&gt;
  &lt;/tr&gt;
  
@@ -16432,7 +18919,54 @@ returned by the Cloud Storage API — fields such as &lt;code&gt;Name&lt;/code&g
  &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/&gt;
 &lt;/svg&gt;
 
- &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>elasticsearch-esql</title><link>https://mcp-toolbox.dev/integrations/elasticsearch/tools/elasticsearch-esql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/elasticsearch/tools/elasticsearch-esql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>databaseinsights-get-advanced-aggregated-wait-event-stats</title><link>https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-wait-event-stats/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-wait-event-stats/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;databaseinsights-get-advanced-aggregated-wait-event-stats&lt;/code&gt; tool retrieves aggregated wait event metrics (IO, Lock, CPU contention) to help diagnose database performance bottlenecks.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/databaseinsights/source/"&gt;Database Insights Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;databaseinsights.waitEventStats.fetch&lt;/code&gt; on the target location/project, which is granted by:
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Database Insights Viewer&lt;/strong&gt; (&lt;code&gt;roles/databaseinsights.viewer&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Monitoring Viewer&lt;/strong&gt; (&lt;code&gt;roles/monitoring.viewer&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;h3 id="parent-string-required"&gt;&lt;code&gt;parent&lt;/code&gt; (String, Required)&lt;/h3&gt;
+&lt;p&gt;Project and location in the format &lt;code&gt;projects/{project_id}/locations/{location}&lt;/code&gt;.&lt;/p&gt;
+&lt;h3 id="full_resource_name-string-required"&gt;&lt;code&gt;full_resource_name&lt;/code&gt; (String, Required)&lt;/h3&gt;
+&lt;p&gt;The full resource identifier for the database instance (e.g., &lt;code&gt;//alloydb.googleapis.com/projects/{project_id}/locations/{location}/clusters/{cluster_id}/instances/{instance_id}&lt;/code&gt;).&lt;/p&gt;</description></item><item><title>elasticsearch-esql</title><link>https://mcp-toolbox.dev/integrations/elasticsearch/tools/elasticsearch-esql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/elasticsearch/tools/elasticsearch-esql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;Execute ES|QL queries.&lt;/p&gt;
 &lt;p&gt;This tool allows you to execute ES|QL queries against your Elasticsearch
 cluster. You can use this to perform complex searches and aggregations.&lt;/p&gt;
@@ -17164,7 +19698,52 @@ or custom metadata without reading the object&amp;rsquo;s content.&lt;/p&gt;
 &lt;p&gt;The response is the object metadata structure returned by the Cloud Storage API.&lt;/p&gt;
 &lt;p&gt;You can set &lt;code&gt;bucket&lt;/code&gt; in the tool configuration. When set, &lt;code&gt;bucket&lt;/code&gt; is removed
 from the runtime parameter schema and the configured bucket is always used. A
-configured &lt;code&gt;bucket&lt;/code&gt; must be a non-empty string.&lt;/p&gt;</description></item><item><title>elasticsearch-execute-esql</title><link>https://mcp-toolbox.dev/integrations/elasticsearch/tools/elasticsearch-execute-esql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/elasticsearch/tools/elasticsearch-execute-esql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+configured &lt;code&gt;bucket&lt;/code&gt; must be a non-empty string.&lt;/p&gt;</description></item><item><title>databaseinsights-get-advanced-time-series-query-stats</title><link>https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-query-stats/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-query-stats/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;databaseinsights-get-advanced-time-series-query-stats&lt;/code&gt; tool retrieves historical time-series performance metrics for AlloyDB queries to help analyze latency trends over time and identify performance spikes.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/databaseinsights/source/"&gt;Database Insights Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;databaseinsights.queryTimeSeries.fetch&lt;/code&gt; on the target location/project, which is granted by:
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Database Insights Viewer&lt;/strong&gt; (&lt;code&gt;roles/databaseinsights.viewer&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Monitoring Viewer&lt;/strong&gt; (&lt;code&gt;roles/monitoring.viewer&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;h3 id="parent-string-required"&gt;&lt;code&gt;parent&lt;/code&gt; (String, Required)&lt;/h3&gt;
+&lt;p&gt;Project and location in the format &lt;code&gt;projects/{project_id}/locations/{location}&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>elasticsearch-execute-esql</title><link>https://mcp-toolbox.dev/integrations/elasticsearch/tools/elasticsearch-execute-esql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/elasticsearch/tools/elasticsearch-execute-esql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;Execute arbitrary ES|QL statements.&lt;/p&gt;
 &lt;p&gt;This tool allows you to execute arbitrary ES|QL statements against your
 Elasticsearch cluster at runtime. This is useful for ad-hoc queries where the
@@ -17612,7 +20191,52 @@ payloads will be supported once MCP can carry embedded resources.&lt;/p&gt;
 &lt;p&gt;Reads are capped at &lt;strong&gt;8 MiB&lt;/strong&gt; per call to protect the server&amp;rsquo;s memory and keep
 LLM contexts manageable; objects or ranges larger than that are rejected with
 an agent-fixable error. Use the optional &lt;code&gt;range&lt;/code&gt; parameter to read a slice of
-a larger object.&lt;/p&gt;</description></item><item><title>Deploy ADK Agent and MCP Toolbox</title><link>https://mcp-toolbox.dev/samples/deploy_adk_agent/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/samples/deploy_adk_agent/</guid><description>&lt;h2 id="before-you-begin"&gt;Before you begin&lt;/h2&gt;
+a larger object.&lt;/p&gt;</description></item><item><title>databaseinsights-get-advanced-time-series-wait-event-stats</title><link>https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-wait-event-stats/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-wait-event-stats/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;databaseinsights-get-advanced-time-series-wait-event-stats&lt;/code&gt; tool retrieves time-series wait event metrics (IO, Lock, CPU) for an AlloyDB instance over a specified period to visualize how contention evolves.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/databaseinsights/source/"&gt;Database Insights Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;databaseinsights.waitEventTimeSeries.fetch&lt;/code&gt; on the target location/project, which is granted by:
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Database Insights Viewer&lt;/strong&gt; (&lt;code&gt;roles/databaseinsights.viewer&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Monitoring Viewer&lt;/strong&gt; (&lt;code&gt;roles/monitoring.viewer&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;h3 id="parent-string-required"&gt;&lt;code&gt;parent&lt;/code&gt; (String, Required)&lt;/h3&gt;
+&lt;p&gt;Project and location in the format &lt;code&gt;projects/{project_id}/locations/{location}&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>Deploy ADK Agent and MCP Toolbox</title><link>https://mcp-toolbox.dev/samples/deploy_adk_agent/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/samples/deploy_adk_agent/</guid><description>&lt;h2 id="before-you-begin"&gt;Before you begin&lt;/h2&gt;
 &lt;p&gt;This guide assumes you have already done the following:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;Completed the &lt;a href="https://mcp-toolbox.dev/documentation/getting-started/local_quickstart/"&gt;Python Quickstart
@@ -17901,7 +20525,52 @@ can be used for binary objects or large files.&lt;/p&gt;
 By default, &lt;code&gt;destination&lt;/code&gt; must be an absolute path and paths containing &lt;code&gt;..&lt;/code&gt; are
 rejected. When &lt;code&gt;destination_dir&lt;/code&gt; is configured on the tool, &lt;code&gt;destination&lt;/code&gt; remains
 visible to the LLM but must be a relative path under that configured directory.
-Absolute paths and paths that escape &lt;code&gt;destination_dir&lt;/code&gt; are rejected.&lt;/p&gt;</description></item><item><title>Export Telemetry</title><link>https://mcp-toolbox.dev/documentation/monitoring/export_telemetry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/documentation/monitoring/export_telemetry/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+Absolute paths and paths that escape &lt;code&gt;destination_dir&lt;/code&gt; are rejected.&lt;/p&gt;</description></item><item><title>databaseinsights-get-index-recommendations</title><link>https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-index-recommendations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/databaseinsights/tools/databaseinsights-get-index-recommendations/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;databaseinsights-get-index-recommendations&lt;/code&gt; tool retrieves index advisor recommendations for specified query IDs across databases. It identifies missing indexes, provides exact SQL creation commands, and calculates estimated performance gains.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/databaseinsights/source/"&gt;Database Insights Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;databaseinsights.indexRecommendations.batchQuery&lt;/code&gt;, &lt;code&gt;databaseinsights.recommendations.query&lt;/code&gt;, and &lt;code&gt;databaseinsights.resourceRecommendations.query&lt;/code&gt; on the target location/project, which are granted by:
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Database Insights Viewer&lt;/strong&gt; (&lt;code&gt;roles/databaseinsights.viewer&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Monitoring Viewer&lt;/strong&gt; (&lt;code&gt;roles/monitoring.viewer&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;h3 id="parent-string-required"&gt;&lt;code&gt;parent&lt;/code&gt; (String, Required)&lt;/h3&gt;
+&lt;p&gt;Project and location in the format &lt;code&gt;projects/{project_id}/locations/{location}&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>Export Telemetry</title><link>https://mcp-toolbox.dev/documentation/monitoring/export_telemetry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/documentation/monitoring/export_telemetry/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;a href="https://opentelemetry.io/docs/collector/"&gt;OpenTelemetry Collector&lt;/a&gt; offers a vendor-agnostic
 implementation of how to receive, process and export telemetry data. It removes
 the need to run, operate, and maintain multiple agents/collectors.&lt;/p&gt;
@@ -19219,7 +21888,30 @@ It helps identify potential incompatibilities or issues before starting the actu
 					&lt;td&gt;The target PostgreSQL major version for the upgrade (e.g., &lt;code&gt;POSTGRES_18&lt;/code&gt;). If not specified, defaults to the PostgreSQL 18.&lt;/td&gt;
 			&lt;/tr&gt;
 	&lt;/tbody&gt;
-&lt;/table&gt;</description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://mcp-toolbox.dev/integrations/alloydb/samples/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/alloydb/samples/ai-nl/</guid><description>&lt;div class="notebook-markdown"&gt;
+&lt;/table&gt;</description></item><item><title>cloud-sql-connect-gce</title><link>https://mcp-toolbox.dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;cloud-sql-connect-gce&lt;/code&gt; tool helps an agent (or user) wire up any Cloud
+SQL instance to a Google Compute Engine VM. The engine (PostgreSQL, MySQL,
+or SQL Server) is auto-detected from the &lt;code&gt;DatabaseVersion&lt;/code&gt; returned by the
+Cloud SQL Admin API, so the caller does not have to specify it.&lt;/p&gt;
+&lt;p&gt;The tool:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Reads the Cloud SQL instance via the &lt;code&gt;cloud-sql-admin&lt;/code&gt; source and the
+target GCE VM via the Compute Engine API (auto-discovering the zone
+with an &lt;code&gt;AggregatedList&lt;/code&gt; filter when &lt;code&gt;vm_zone&lt;/code&gt; is omitted).&lt;/li&gt;
+&lt;li&gt;Validates network reachability between the instance and the VM
+(same-VPC, private-IP, public-IP posture, SSL requirements).&lt;/li&gt;
+&lt;li&gt;Recommends a primary connection method (Cloud SQL Auth Proxy, Cloud SQL
+Connector library, or Direct Private IP) plus ranked alternatives.&lt;/li&gt;
+&lt;li&gt;Returns ready-to-paste setup steps, environment/DSN/JDBC snippets, and,
+when &lt;code&gt;language&lt;/code&gt; is set, a Python / Node.js / Java / Go code snippet
+with floor-pinned dependency versions.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id="identity-boundary"&gt;Identity boundary&lt;/h3&gt;
+&lt;p&gt;Both the Cloud SQL Admin call and the Compute Engine call honor the
+caller&amp;rsquo;s OAuth access token when the &lt;code&gt;cloud-sql-admin&lt;/code&gt; source is
+configured with &lt;code&gt;useClientOAuth: true&lt;/code&gt;, so IAM decisions on both APIs are
+evaluated as the caller. When no caller token is passed, the Compute
+Engine call falls back to Application Default Credentials.&lt;/p&gt;</description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://mcp-toolbox.dev/integrations/alloydb/samples/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/alloydb/samples/ai-nl/</guid><description>&lt;div class="notebook-markdown"&gt;
  
  
  &lt;p&gt;&lt;a href="https://colab.research.google.com/github/googleapis/mcp-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb"&gt;&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
@@ -19379,20 +22071,31 @@ long-running operations.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;--prebuilt&lt;/code&gt; value: &lt;code&gt;alloydb-postgres-observability&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Monitoring Viewer&lt;/strong&gt; (&lt;code&gt;roles/monitoring.viewer&lt;/code&gt;) is required on the
-project to view monitoring data.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Monitoring Viewer&lt;/strong&gt; (&lt;code&gt;roles/monitoring.viewer&lt;/code&gt;) is required on the project to view system and query time-series metrics.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Database Insights Viewer&lt;/strong&gt; (&lt;code&gt;roles/databaseinsights.viewer&lt;/code&gt;) is required to retrieve aggregated query statistics, wait events, historical trends, and index advisor recommendations.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Tools:&lt;/strong&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;code&gt;get_system_metrics&lt;/code&gt;: Fetches system level cloud monitoring data
-(timeseries metrics) for an AlloyDB instance using a PromQL query.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;get_query_metrics&lt;/code&gt;: Fetches query level cloud monitoring data
-(timeseries metrics) for queries running in an AlloyDB instance using a
-PromQL query.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_system_metrics&lt;/code&gt;: Fetches system level cloud monitoring data (timeseries metrics) for an AlloyDB instance using a PromQL query.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_query_metrics&lt;/code&gt;: Fetches query level cloud monitoring data (timeseries metrics) for queries running in an AlloyDB instance using a PromQL query.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_advanced_aggregated_query_stats&lt;/code&gt;: Fetches aggregated query execution statistics for a requested AlloyDB instance within a specified time period. Supports filtering by database name, database user, and a specific query ID, as well as pagination. Returns statistics including query ID, database name, total execution time (&lt;code&gt;sum(execution_time)&lt;/code&gt;), average execution time (&lt;code&gt;avg(execution_time)&lt;/code&gt;), total execution count (&lt;code&gt;sum(count)&lt;/code&gt;), total wait time (&lt;code&gt;sum(wait_time)&lt;/code&gt;), and normalized query text. Requires Advanced Query Insights to be enabled.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_advanced_aggregated_wait_event_stats&lt;/code&gt;: Fetches aggregated wait event statistics to identify performance bottlenecks for a requested AlloyDB instance within a specified time period. Supports filtering by database name, database user, and a specific query ID, selecting the aggregation level (by wait class or granular wait event), as well as pagination. Returns statistics including wait class or event name, total time spent (&lt;code&gt;sum(time_spent)&lt;/code&gt;), average time spent (&lt;code&gt;avg(time_spent)&lt;/code&gt;), and total wait count (&lt;code&gt;sum(count)&lt;/code&gt;). Requires Advanced Query Insights to be enabled.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_advanced_time_series_query_stats&lt;/code&gt;: Fetches time-series history of query execution statistics to analyze trends and spikes for a requested AlloyDB instance within a specified time period. Supports filtering by database name, database user, and a specific query ID. Returns time-series data including rates of execution time (&lt;code&gt;rate(execution_time)&lt;/code&gt;) and wait time (&lt;code&gt;rate(wait_time)&lt;/code&gt;). Requires Advanced Query Insights to be enabled.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_advanced_time_series_wait_event_stats&lt;/code&gt;: Fetches time-series history of wait event statistics to analyze contention trends for a requested AlloyDB instance within a specified time period. Supports filtering by database name, database user, and a specific query ID, as well as selecting the aggregation level (by wait class or granular wait event). Returns time-series data including rate of time spent (&lt;code&gt;rate(time_spent)&lt;/code&gt;) grouped by wait class or event. Requires Advanced Query Insights to be enabled.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_index_recommendations&lt;/code&gt;: Fetches index advisor suggestions to optimize performance for a requested AlloyDB instance. Supports requesting recommendations for specific databases and a list of query IDs. Returns index recommendations including SQL commands (&lt;code&gt;CREATE INDEX&lt;/code&gt;), target schema, relation, and columns, estimated storage size, and predicted query performance improvements (current vs estimated execution duration).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;/ul&gt;</description></item><item><title>BigQuery</title><link>https://mcp-toolbox.dev/integrations/bigquery/prebuilt-configs/bigquery/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigquery/prebuilt-configs/bigquery/</guid><description>&lt;h2 id="bigquery"&gt;BigQuery&lt;/h2&gt;
+&lt;li&gt;&lt;strong&gt;Available Toolsets (Filtered Groups):&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;alloydb_postgres_cloud_monitoring_tools&lt;/code&gt;: Exposes only the 2 Cloud Monitoring metrics tools (&lt;code&gt;get_system_metrics&lt;/code&gt;, &lt;code&gt;get_query_metrics&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;alloydb_postgres_database_insights_tools&lt;/code&gt;: Exposes only the 5 Database Insights diagnostic tools (&lt;code&gt;get_advanced_...&lt;/code&gt; and &lt;code&gt;get_index_recommendations&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;alloydb_postgres_observability_tools&lt;/code&gt;: Exposes all 7 observability tools.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="additional-resources"&gt;Additional Resources&lt;/h2&gt;
+&lt;p&gt;These tools are also available via the remote Google Cloud OneMCP server for AlloyDB. For detailed reference documentation on remote OneMCP integration and index advisor capabilities, see:&lt;/p&gt;</description></item><item><title>BigQuery</title><link>https://mcp-toolbox.dev/integrations/bigquery/prebuilt-configs/bigquery/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/bigquery/prebuilt-configs/bigquery/</guid><description>&lt;h2 id="bigquery"&gt;BigQuery&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;--prebuilt&lt;/code&gt; value: &lt;code&gt;bigquery&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Environment Variables:&lt;/strong&gt;
@@ -19410,6 +22113,11 @@ on the target service account.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;BIGQUERY_MAXIMUM_BYTES_BILLED&lt;/code&gt;: (Optional) Per-query bytes scanned cap
 (in bytes). Queries that exceed this limit fail before executing and
 cost nothing.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;BIGQUERY_ENDPOINT&lt;/code&gt;: (Optional) Override the BigQuery API endpoint to
+route traffic through a corporate proxy or a local emulator. Both
+&lt;code&gt;http://&lt;/code&gt; and &lt;code&gt;https://&lt;/code&gt; schemes are supported (e.g.,
+&lt;code&gt;http://localhost:9050&lt;/code&gt;). When unset, the default Google API endpoint
+is used.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
@@ -20719,8 +23427,8 @@ execute DML queries.&lt;/li&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Tools:&lt;/strong&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;code&gt;execute_sql&lt;/code&gt;: Executes a DML SQL query.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;execute_sql_dql&lt;/code&gt;: Executes a DQL SQL query.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;execute_sql&lt;/code&gt;: Execute read-write SQL statements that modify the database (DML), such as INSERT, UPDATE, DELETE, or table alterations. Do not use this tool for standard data queries or SELECT statements.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;execute_sql_readonly&lt;/code&gt;: Execute read-only SQL queries (DQL) such as SELECT statements, metadata inspections, or information_schema queries. Use this tool as the default for any data retrieval tasks.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_tables&lt;/code&gt;: Lists tables in the database.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_graphs&lt;/code&gt;: Lists graphs in the database.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;search_catalog&lt;/code&gt;: Searches for data assets in Knowledge Catalog (Dataplex).&lt;/li&gt;
