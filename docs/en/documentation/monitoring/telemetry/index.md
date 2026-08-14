@@ -345,7 +345,7 @@ enabled:
 {{< /notice >}}
 
 Metrics and traces are exported as two independent signals, and they are
-authorized separately. The identity Toolbox runs as — the attached service
+authorized separately. The identity that Toolbox runs as — the attached service
 account on Cloud Run, GCE, or GKE, or your own credentials when running
 locally — needs **both** of these roles on the telemetry project:
 
