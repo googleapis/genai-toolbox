@@ -71,7 +71,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	emptyString := ""
 	collectionParam := parameters.NewStringParameter(collectionKey, "Optional name or path of a specific collection to get schema for. If omitted, schemas for all root collections are returned.", parameters.WithStringDefault(emptyString))
-	sampleSizeParam := parameters.NewIntegerParameter(sampleSizeKey, "Optional number of documents to sample per collection to infer schema. Defaults to 50.", parameters.WithIntegerDefault(50))
+	sampleSizeParam := parameters.NewIntParameter(sampleSizeKey, "Optional number of documents to sample per collection to infer schema. Defaults to 50.", parameters.WithIntDefault(50))
 	params := parameters.Parameters{collectionParam, sampleSizeParam}
 
 	return Tool{
