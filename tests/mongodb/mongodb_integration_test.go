@@ -163,18 +163,16 @@ func runToolRuntimeCollectionInvokeTest(t *testing.T, want string) {
 		name        string
 		requestBody io.Reader
 		want        string
-		isErr       bool
 	}{
 		{
 			name:        "invoke with runtime collection",
 			requestBody: bytes.NewBuffer([]byte(`{ "id": 3, "collection": "test_collection" }`)),
 			want:        want,
-			isErr:       false,
 		},
 		{
-			name:        "invoke without collection fails",
+			name:        "invoke without collection returns an error",
 			requestBody: bytes.NewBuffer([]byte(`{ "id": 3 }`)),
-			isErr:       true,
+			want:        `{"error":"parameter \"collection\" is required"}`,
 		},
 	}
 
@@ -193,14 +191,8 @@ func runToolRuntimeCollectionInvokeTest(t *testing.T, want string) {
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
-				}
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-			if tc.isErr {
-				t.Fatalf("expected an error but request succeeded")
 			}
 
 			var body map[string]interface{}
@@ -633,7 +625,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolType string) map[str
 				"source":        "my-instance",
 				"description":   "Tool to test runtime collection selection.",
 				"authRequired":  []string{},
-				"filterPayload": `{ "id" : {{ .id }} }`,
+				"filterPayload": `{ "_id" : {{ .id }} }`,
 				"filterParams": []map[string]any{
 					{
 						"name":        "id",
