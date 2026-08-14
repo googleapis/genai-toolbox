@@ -143,6 +143,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminquerylogs"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudmonitoring"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlcloneinstance"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlconnectgce"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlcreatebackup"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlcreatedatabase"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlcreateusers"
