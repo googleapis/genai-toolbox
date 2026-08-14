@@ -181,4 +181,3 @@ func TestGetDatabaseId(t *testing.T) {
 		}
 	})
 }
-
