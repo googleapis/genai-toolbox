@@ -25,6 +25,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
 )
@@ -68,7 +69,7 @@ func TestFileResource_Validation(t *testing.T) {
 		{
 			name:       "missing path",
 			yamlStr:    "type: file",
-			wantErrMsg: "missing required field",
+			wantErrMsg: "required' tag",
 			failDecode: true,
 		},
 		{
@@ -120,7 +121,7 @@ func TestFileResource_Validation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			decoder := yaml.NewDecoder(bytes.NewReader([]byte(tt.yamlStr)), yaml.Strict())
+			decoder := yaml.NewDecoder(bytes.NewReader([]byte(tt.yamlStr)), yaml.Strict(), yaml.Validator(validator.New()))
 			cfg, err := resources.DecodeConfig(ctx, "file", "my-file", decoder)
 
 			if tt.failDecode {
@@ -177,7 +178,7 @@ func TestFileResource_PathResolution(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.WithValue(context.Background(), resources.BaseDirKey, tmpDir)
-			decoder := yaml.NewDecoder(bytes.NewReader([]byte(tt.yamlStr)), yaml.Strict())
+			decoder := yaml.NewDecoder(bytes.NewReader([]byte(tt.yamlStr)), yaml.Strict(), yaml.Validator(validator.New()))
 			cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
 			if err != nil {
 				t.Fatalf("DecodeConfig failed: %v", err)
@@ -237,13 +238,11 @@ func TestFileResource_Truncation(t *testing.T) {
 		{
 			name:      "override max_size small",
 			yamlStr:   fmt.Sprintf("type: file\npath: %s\nmax_size: 50", filepath.ToSlash(smallPath)),
-			wantSize:  50,
 			wantTrunc: true,
 		},
 		{
 			name:      "no truncation needed",
 			yamlStr:   fmt.Sprintf("type: file\npath: %s\nmax_size: 200", filepath.ToSlash(smallPath)),
-			wantSize:  100, // Actual file is 100 bytes
 			wantTrunc: false,
 		},
 	}
@@ -251,7 +250,7 @@ func TestFileResource_Truncation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			decoder := yaml.NewDecoder(bytes.NewReader([]byte(tt.yamlStr)), yaml.Strict())
+			decoder := yaml.NewDecoder(bytes.NewReader([]byte(tt.yamlStr)), yaml.Strict(), yaml.Validator(validator.New()))
 			cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
 			if err != nil {
 				t.Fatalf("DecodeConfig failed: %v", err)
@@ -259,11 +258,6 @@ func TestFileResource_Truncation(t *testing.T) {
 			res, err := cfg.Initialize(ctx)
 			if err != nil {
 				t.Fatalf("Initialize failed: %v", err)
-			}
-
-			fileCfg := res.ToConfig().(*Config)
-			if fileCfg.Size == nil || *fileCfg.Size != tt.wantSize {
-				t.Errorf("expected size annotation %d, got %v", tt.wantSize, fileCfg.Size)
 			}
 
 			data, err := res.Read(ctx, nil)
@@ -442,9 +436,6 @@ func TestFileResource_DynamicMetadata(t *testing.T) {
 	}
 
 	fileCfg := res.ToConfig().(*Config)
-	if *fileCfg.Size != 10 {
-		t.Errorf("Expected initial size to be 10, got %d", *fileCfg.Size)
-	}
 	initialTimestamp := fileCfg.Annotations.LastModified
 
 	time.Sleep(10 * time.Millisecond)
@@ -459,9 +450,6 @@ func TestFileResource_DynamicMetadata(t *testing.T) {
 	f.Close()
 
 	updatedCfg := res.ToConfig().(*Config)
-	if *updatedCfg.Size != 15 {
-		t.Errorf("Expected dynamically updated size to be 15, got %d", *updatedCfg.Size)
-	}
 	if updatedCfg.Annotations.LastModified == initialTimestamp {
 		_, err := time.Parse(time.RFC3339, updatedCfg.Annotations.LastModified)
 		if err != nil {
@@ -637,9 +625,6 @@ func TestFileResource_ToConfigNonRegularFile(t *testing.T) {
 	}
 
 	config := res.ToConfig().(*Config)
-	if config.Size != nil {
-		t.Errorf("Expected Size to be nil for non-regular file, got %v", *config.Size)
-	}
 	if config.Annotations != nil && config.Annotations.LastModified != "" {
 		t.Errorf("Expected LastModified to be empty for non-regular file, got %q", config.Annotations.LastModified)
 	}

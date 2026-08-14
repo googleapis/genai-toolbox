@@ -48,6 +48,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
+	_ "github.com/googleapis/mcp-toolbox/internal/resources/file"
 	_ "github.com/googleapis/mcp-toolbox/internal/resources/text"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -2072,6 +2073,16 @@ kind: resource
 name: resource2
 type: mock
 uri: mock://duplicate
+`,
+			wantError: true,
+		},
+		{
+			name: "malformed file type with missing path triggers validation error",
+			yaml: `
+kind: resource
+name: bad-file
+type: file
+uri: file://bad-file
 `,
 			wantError: true,
 		},
