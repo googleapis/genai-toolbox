@@ -68,6 +68,7 @@ type Server struct {
 	mcpPrmFile          string
 	httpMaxRequestBytes int64
 	enableDraftSpecs    bool
+	toolSuggestions     tools.SuggestionMode
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -500,6 +501,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		mcpPrmFile:          cfg.McpPrmFile,
 		httpMaxRequestBytes: limit,
 		enableDraftSpecs:    cfg.EnableDraftSpecs,
+		toolSuggestions:     cfg.ToolSuggestions,
 	}
 
 	if s.enableDraftSpecs {
