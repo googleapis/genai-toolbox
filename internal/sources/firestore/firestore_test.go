@@ -155,3 +155,30 @@ func TestFirestoreValueToJSON_RoundTrip(t *testing.T) {
 		t.Errorf("created should be a string, got %T", metadata["created"])
 	}
 }
+
+func TestGetDatabaseId(t *testing.T) {
+	t.Run("default database id", func(t *testing.T) {
+		s := &firestore.Source{
+			Config: firestore.Config{
+				Project:  "my-project",
+				Database: "",
+			},
+		}
+		if got := s.GetDatabaseId(); got != "(default)" {
+			t.Errorf("GetDatabaseId() = %q, want %q", got, "(default)")
+		}
+	})
+
+	t.Run("custom database id", func(t *testing.T) {
+		s := &firestore.Source{
+			Config: firestore.Config{
+				Project:  "my-project",
+				Database: "custom-db",
+			},
+		}
+		if got := s.GetDatabaseId(); got != "custom-db" {
+			t.Errorf("GetDatabaseId() = %q, want %q", got, "custom-db")
+		}
+	})
+}
+
