@@ -464,10 +464,10 @@ configuration. This protects both the server and the calling LLM's context
 window from unexpectedly large result sets (for example, a query without a
 `LIMIT` clause matching millions of rows).
 
-| **field**        | **type** | **default** | **description**                                                       |
-|------------------|:--------:|:-----------:|-----------------------------------------------------------------------|
-| maxRows          |   int    | 0 (uncapped)| Maximum number of elements returned for list-shaped results.          |
-| maxResponseBytes |   int    | 0 (uncapped)| Maximum serialized size of the returned result, in bytes.             |
+| **field**        | **type** | **default**  | **description**                                                       |
+|------------------|:--------:|:------------:|-----------------------------------------------------------------------|
+| maxRows          |   int    | server default | Maximum number of elements returned for list-shaped results.        |
+| maxResponseBytes |   int    | server default | Maximum serialized size of the returned result, in bytes.           |
 
 ```yaml
 kind: tool
@@ -498,6 +498,37 @@ in HTTP API responses:
 Result caps are a guardrail, not a paging mechanism: agents that need to walk
 a large result set should page explicitly (for example, with `LIMIT` and
 `OFFSET` parameters in the statement).
+
+### Server-wide defaults
+
+Rather than declaring caps on every tool, you can set defaults for the whole
+server with the `--max-rows` and `--max-response-bytes` flags:
+
+```bash
+toolbox --config tools.yaml --max-rows 500 --max-response-bytes 262144
+```
+
+A tool that declares the field overrides the server default; a tool that omits
+it inherits the default. Declaring `0` on a tool is an explicit opt-out, so a
+tool whose results are always small — or one that must return a complete result
+to be useful at all — can stay uncapped under a server-wide default:
+
+```yaml
+kind: tool
+name: get_airport_by_id     # returns exactly one row
+type: postgres-sql
+source: my-pg-instance
+statement: SELECT * FROM airports WHERE id = @id
+maxRows: 0                  # never capped, whatever --max-rows is set to
+```
+
+{{< notice note >}}
+Caps are applied to the result after the tool has produced it, so they bound
+what reaches the model, not what the server does to build the response. They
+are not a defense against expensive or abusive workloads — use source-level
+controls for that, such as BigQuery's `maxQueryResultRows` and
+`maximumBytesBilled`, which are enforced while the query runs.
+{{< /notice >}}
 
 ## Using tools with MCP Toolbox Client SDKs
 

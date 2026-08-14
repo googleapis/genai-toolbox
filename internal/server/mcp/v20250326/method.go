@@ -416,7 +416,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 		}
 	}
-	results, truncation := tools.CapResult(results, tool.GetMaxRows(), tool.GetMaxResponseBytes())
+	results, truncation := tools.CapResultForTool(ctx, tool, results)
 
 	content := make([]TextContent, 0)
 

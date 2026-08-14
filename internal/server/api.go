@@ -357,7 +357,11 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res, truncation := tools.CapResult(res, tool.GetMaxRows(), tool.GetMaxResponseBytes())
+	res, truncation := tools.CapResult(
+		res,
+		tools.ResolveCap(tool.GetMaxRows(), s.maxRows),
+		tools.ResolveCap(tool.GetMaxResponseBytes(), s.maxResponseBytes),
+	)
 
 	resMarshal, err := json.Marshal(res)
 	if err != nil {

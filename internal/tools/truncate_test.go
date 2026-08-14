@@ -15,10 +15,13 @@
 package tools
 
 import (
+	"context"
 	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 func listOf(n int) []any {
@@ -164,3 +167,60 @@ func TestTruncateUTF8Boundary(t *testing.T) {
 		t.Errorf("expected full string, got %q", got)
 	}
 }
+
+func TestResolveCap(t *testing.T) {
+	intPtr := func(i int) *int { return &i }
+
+	tcs := []struct {
+		name          string
+		declared      *int
+		serverDefault int
+		want          int
+	}{
+		{name: "undeclared inherits the server default", declared: nil, serverDefault: 100, want: 100},
+		{name: "undeclared with no default is uncapped", declared: nil, serverDefault: 0, want: 0},
+		{name: "declared overrides the server default", declared: intPtr(10), serverDefault: 100, want: 10},
+		{name: "declared 0 opts out of the server default", declared: intPtr(0), serverDefault: 100, want: 0},
+		{name: "declared applies with no server default", declared: intPtr(10), serverDefault: 0, want: 10},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := ResolveCap(tc.declared, tc.serverDefault); got != tc.want {
+				t.Errorf("ResolveCap(%v, %d) = %d, want %d", tc.declared, tc.serverDefault, got, tc.want)
+			}
+		})
+	}
+}
+
+// TestCapResultForToolUsesContextDefaults checks the context hop the MCP
+// handlers rely on: a tool that declares nothing is capped by the server-wide
+// defaults on ctx, and one that declares its own is not.
+func TestCapResultForToolUsesContextDefaults(t *testing.T) {
+	intPtr := func(i int) *int { return &i }
+	rows := []any{"a", "b", "c"}
+
+	ctx := util.WithResultCaps(context.Background(), 2, 0)
+
+	got, trunc := CapResultForTool(ctx, capStub{}, rows)
+	if trunc == nil || trunc.ReturnedRows != 2 || trunc.TotalRows != 3 {
+		t.Errorf("expected the server default to cap at 2 of 3 rows, got %v (%+v)", got, trunc)
+	}
+
+	got, trunc = CapResultForTool(ctx, capStub{maxRows: intPtr(0)}, rows)
+	if trunc != nil {
+		t.Errorf("expected an explicit 0 to opt out of the server default, got %+v", trunc)
+	}
+	if !reflect.DeepEqual(got, rows) {
+		t.Errorf("expected the full result, got %v", got)
+	}
+}
+
+// capStub stands in for a tool's declared caps.
+type capStub struct {
+	maxRows  *int
+	maxBytes *int
+}
+
+func (c capStub) GetMaxRows() *int          { return c.maxRows }
+func (c capStub) GetMaxResponseBytes() *int { return c.maxBytes }

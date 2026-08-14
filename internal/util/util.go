@@ -357,6 +357,31 @@ func IgnoreUnknownToolsFromContext(ctx context.Context) bool {
 	return false
 }
 
+// resultCapsKey is the key used to store the server-wide result caps within
+// context. Tools that declare their own caps override these; the value is the
+// fallback for tools that do not.
+const resultCapsKey contextKey = "resultCaps"
+
+// resultCaps carries the server-wide defaults for maxRows / maxResponseBytes.
+type resultCaps struct {
+	maxRows          int
+	maxResponseBytes int
+}
+
+// WithResultCaps adds the server-wide result caps to the context
+func WithResultCaps(ctx context.Context, maxRows, maxResponseBytes int) context.Context {
+	return context.WithValue(ctx, resultCapsKey, resultCaps{maxRows: maxRows, maxResponseBytes: maxResponseBytes})
+}
+
+// ResultCapsFromContext retrieves the server-wide result caps from context,
+// returning zeroes (uncapped) when none are set.
+func ResultCapsFromContext(ctx context.Context) (maxRows, maxResponseBytes int) {
+	if caps, ok := ctx.Value(resultCapsKey).(resultCaps); ok {
+		return caps.maxRows, caps.maxResponseBytes
+	}
+	return 0, 0
+}
+
 // urlParamsKey is the key used to store URL parameters within context
 const urlParamsKey contextKey = "urlParams"
 

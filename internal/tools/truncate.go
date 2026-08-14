@@ -15,8 +15,11 @@
 package tools
 
 import (
+	"context"
 	"encoding/json"
 	"unicode/utf8"
+
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 // Truncation describes how a tool result was capped. It is surfaced to the
@@ -35,6 +38,37 @@ type Truncation struct {
 	// ReturnedBytes/LimitBytes are set when the byte cap fired.
 	ReturnedBytes int `json:"returnedBytes,omitempty"`
 	LimitBytes    int `json:"limitBytes,omitempty"`
+}
+
+// CapDeclarer is the view of a tool needed to resolve its effective caps.
+// Tools satisfy it for free by embedding BaseTool.
+type CapDeclarer interface {
+	GetMaxRows() *int
+	GetMaxResponseBytes() *int
+}
+
+// ResolveCap picks the effective cap for one dimension. A tool that declares
+// the field wins outright, including when it declares 0 — that is how a tool
+// whose results are always small opts out of a server-wide default. A tool
+// that omits the field inherits the default.
+func ResolveCap(declared *int, serverDefault int) int {
+	if declared != nil {
+		return *declared
+	}
+	return serverDefault
+}
+
+// CapResultForTool applies the caps in effect for a tool: the tool's own
+// declared caps where it set them, otherwise the server-wide defaults carried
+// on ctx. Invocation sites call this rather than CapResult directly so the
+// precedence rule lives in one place.
+func CapResultForTool(ctx context.Context, t CapDeclarer, result any) (any, *Truncation) {
+	defaultRows, defaultBytes := util.ResultCapsFromContext(ctx)
+	return CapResult(
+		result,
+		ResolveCap(t.GetMaxRows(), defaultRows),
+		ResolveCap(t.GetMaxResponseBytes(), defaultBytes),
+	)
 }
 
 // CapResult applies a tool's declared result caps to an invocation result.
