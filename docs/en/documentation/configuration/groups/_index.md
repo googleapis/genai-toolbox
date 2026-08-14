@@ -20,8 +20,8 @@ Declare a group as a `kind: group` document in your configuration file. A group 
 | `description` | No       | Human-readable description of the group.                                                       |
 | `tools`       | No       | List of tool names to include in the group.                                                    |
 | `prompts`     | No       | List of prompt names to include in the group.                                                  |
-| `ttlMs`       | No       | Time-to-live in milliseconds for cached group list responses. Defaults to `300000` (5 minutes).|
-| `cacheScope`  | No       | Cache visibility for group list responses (either `public` or `private`). Defaults to `public`.|
+| `ttlMs`       | No       | Time-to-live in milliseconds for cached group list responses. ([MCP TTL Spec](https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/caching#time-to-live-ttl-field )). Defaults to `300000` (5 minutes).|
+| `cacheScope`  | No       | Cache visibility for group list responses (either `public` or `private`). ([MCP Cache Scope Spec](https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/caching#cache-scope-field)). Defaults to `public`.|
 
 \* `name` is required for every named group. The single [default group](#the-default-group) omits it.
 
@@ -66,7 +66,7 @@ At startup, Toolbox validates groups:
 - **One default group.** Declaring more than one nameless group is an error.
 - **Default group restrictions.** The default group may set only a `description`; declaring `tools`, `prompts`, or any other primitive list on it is an error.
 - **No duplicate names across toolsets and groups.** A `kind: toolset` is parsed as a group, so defining the same name as both a `kind: toolset` and a `kind: group` is a duplicate-name error.
-- **Valid caching parameters.** If specified, `ttlMs` must be non-negative (>=0), and `cacheScope` must be either `public` or `private`.
+- **Valid parameters.** If specified, `ttlMs` must be non-negative (>=0), and `cacheScope` must be either `public` or `private`.
 
 ## Relationship to toolsets
 
