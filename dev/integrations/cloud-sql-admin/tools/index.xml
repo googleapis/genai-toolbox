@@ -1120,4 +1120,27 @@ It helps identify potential incompatibilities or issues before starting the actu
 					&lt;td&gt;The target PostgreSQL major version for the upgrade (e.g., &lt;code&gt;POSTGRES_18&lt;/code&gt;). If not specified, defaults to the PostgreSQL 18.&lt;/td&gt;
 			&lt;/tr&gt;
 	&lt;/tbody&gt;
-&lt;/table&gt;</description></item></channel></rss>
+&lt;/table&gt;</description></item><item><title>cloud-sql-connect-gce</title><link>https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;cloud-sql-connect-gce&lt;/code&gt; tool helps an agent (or user) wire up any Cloud
+SQL instance to a Google Compute Engine VM. The engine (PostgreSQL, MySQL,
+or SQL Server) is auto-detected from the &lt;code&gt;DatabaseVersion&lt;/code&gt; returned by the
+Cloud SQL Admin API, so the caller does not have to specify it.&lt;/p&gt;
+&lt;p&gt;The tool:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Reads the Cloud SQL instance via the &lt;code&gt;cloud-sql-admin&lt;/code&gt; source and the
+target GCE VM via the Compute Engine API (auto-discovering the zone
+with an &lt;code&gt;AggregatedList&lt;/code&gt; filter when &lt;code&gt;vm_zone&lt;/code&gt; is omitted).&lt;/li&gt;
+&lt;li&gt;Validates network reachability between the instance and the VM
+(same-VPC, private-IP, public-IP posture, SSL requirements).&lt;/li&gt;
+&lt;li&gt;Recommends a primary connection method (Cloud SQL Auth Proxy, Cloud SQL
+Connector library, or Direct Private IP) plus ranked alternatives.&lt;/li&gt;
+&lt;li&gt;Returns ready-to-paste setup steps, environment/DSN/JDBC snippets, and,
+when &lt;code&gt;language&lt;/code&gt; is set, a Python / Node.js / Java / Go code snippet
+with floor-pinned dependency versions.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id="identity-boundary"&gt;Identity boundary&lt;/h3&gt;
+&lt;p&gt;Both the Cloud SQL Admin call and the Compute Engine call honor the
+caller&amp;rsquo;s OAuth access token when the &lt;code&gt;cloud-sql-admin&lt;/code&gt; source is
+configured with &lt;code&gt;useClientOAuth: true&lt;/code&gt;, so IAM decisions on both APIs are
+evaluated as the caller. When no caller token is passed, the Compute
+Engine call falls back to Application Default Credentials.&lt;/p&gt;</description></item></channel></rss>

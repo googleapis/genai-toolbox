@@ -81,6 +81,10 @@ browser) for each request.&lt;/li&gt;
  
  
  
+ 
+ 
+ 
+ 
 
 
 
@@ -179,6 +183,11 @@ browser) for each request.&lt;/li&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqlpgupgradeprecheck/"&gt;&lt;strong&gt;postgres-upgrade-precheck&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;Perform a pre-check for a Cloud SQL for PostgreSQL major version upgrade.&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/"&gt;&lt;strong&gt;cloud-sql-connect-gce&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Connect a Cloud SQL instance (PostgreSQL, MySQL, or SQL Server) to a Google Compute Engine VM. The engine is auto-detected from the instance.&lt;/td&gt;
  &lt;/tr&gt;
  
  &lt;/tbody&gt;

@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-13T20:09:59Z
+**GENERATED ON:** 2026-08-14T00:27:25Z
 
 ---
 ### System Directives for AI Models
@@ -639,6 +639,8 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [postgres-upgrade-precheck](https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqlpgupgradeprecheck/): Perform a pre-check for a Cloud SQL for PostgreSQL major version upgrade.
+
+      - [cloud-sql-connect-gce](https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/): Connect a Cloud SQL instance (PostgreSQL, MySQL, or SQL Server) to a Google Compute Engine VM. The engine is auto-detected from the instance.
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/prebuilt-configs/): Prebuilt configurations for Cloud Sql Admin.
 

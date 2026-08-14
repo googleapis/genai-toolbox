@@ -11053,7 +11053,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode508s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode280s0hbhb"&gt;
 
 
 
@@ -13804,6 +13804,10 @@ browser) for each request.&lt;/li&gt;
  
  
  
+ 
+ 
+ 
+ 
 
 
 
@@ -13902,6 +13906,11 @@ browser) for each request.&lt;/li&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqlpgupgradeprecheck/"&gt;&lt;strong&gt;postgres-upgrade-precheck&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;Perform a pre-check for a Cloud SQL for PostgreSQL major version upgrade.&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/"&gt;&lt;strong&gt;cloud-sql-connect-gce&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;Connect a Cloud SQL instance (PostgreSQL, MySQL, or SQL Server) to a Google Compute Engine VM. The engine is auto-detected from the instance.&lt;/td&gt;
  &lt;/tr&gt;
  
  &lt;/tbody&gt;
@@ -21879,7 +21888,30 @@ It helps identify potential incompatibilities or issues before starting the actu
 					&lt;td&gt;The target PostgreSQL major version for the upgrade (e.g., &lt;code&gt;POSTGRES_18&lt;/code&gt;). If not specified, defaults to the PostgreSQL 18.&lt;/td&gt;
 			&lt;/tr&gt;
 	&lt;/tbody&gt;
-&lt;/table&gt;</description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://mcp-toolbox.dev/dev/integrations/alloydb/samples/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/alloydb/samples/ai-nl/</guid><description>&lt;div class="notebook-markdown"&gt;
+&lt;/table&gt;</description></item><item><title>cloud-sql-connect-gce</title><link>https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/tools/cloudsqlconnectgce/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;cloud-sql-connect-gce&lt;/code&gt; tool helps an agent (or user) wire up any Cloud
+SQL instance to a Google Compute Engine VM. The engine (PostgreSQL, MySQL,
+or SQL Server) is auto-detected from the &lt;code&gt;DatabaseVersion&lt;/code&gt; returned by the
+Cloud SQL Admin API, so the caller does not have to specify it.&lt;/p&gt;
+&lt;p&gt;The tool:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Reads the Cloud SQL instance via the &lt;code&gt;cloud-sql-admin&lt;/code&gt; source and the
+target GCE VM via the Compute Engine API (auto-discovering the zone
+with an &lt;code&gt;AggregatedList&lt;/code&gt; filter when &lt;code&gt;vm_zone&lt;/code&gt; is omitted).&lt;/li&gt;
+&lt;li&gt;Validates network reachability between the instance and the VM
+(same-VPC, private-IP, public-IP posture, SSL requirements).&lt;/li&gt;
+&lt;li&gt;Recommends a primary connection method (Cloud SQL Auth Proxy, Cloud SQL
+Connector library, or Direct Private IP) plus ranked alternatives.&lt;/li&gt;
+&lt;li&gt;Returns ready-to-paste setup steps, environment/DSN/JDBC snippets, and,
+when &lt;code&gt;language&lt;/code&gt; is set, a Python / Node.js / Java / Go code snippet
+with floor-pinned dependency versions.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id="identity-boundary"&gt;Identity boundary&lt;/h3&gt;
+&lt;p&gt;Both the Cloud SQL Admin call and the Compute Engine call honor the
+caller&amp;rsquo;s OAuth access token when the &lt;code&gt;cloud-sql-admin&lt;/code&gt; source is
+configured with &lt;code&gt;useClientOAuth: true&lt;/code&gt;, so IAM decisions on both APIs are
+evaluated as the caller. When no caller token is passed, the Compute
+Engine call falls back to Application Default Credentials.&lt;/p&gt;</description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://mcp-toolbox.dev/dev/integrations/alloydb/samples/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/alloydb/samples/ai-nl/</guid><description>&lt;div class="notebook-markdown"&gt;
  
  
  &lt;p&gt;&lt;a href="https://colab.research.google.com/github/googleapis/mcp-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb"&gt;&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
