@@ -16,7 +16,6 @@ package v20260728
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
@@ -129,8 +128,8 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 			ResultType: resultTypeComplete,
 		},
 		CacheableResult: CacheableResult{
-			TtlMs:      300000, // 5 minutes
-			CacheScope: cacheScopePublic,
+			TtlMs:      g.GetTTLMs(),
+			CacheScope: cacheScope(g.GetCacheScope()),
 		},
 	}
 	return res, nil
@@ -171,31 +170,11 @@ func GenerateListPromptsResult(pMgr *primitives.PrimitiveManager, g group.Group)
 			ResultType: resultTypeComplete,
 		},
 		CacheableResult: CacheableResult{
-			TtlMs:      300000, // 5 minutes
-			CacheScope: cacheScopePublic,
+			TtlMs:      g.GetTTLMs(),
+			CacheScope: cacheScope(g.GetCacheScope()),
 		},
 	}
 	return res, nil
-}
-
-// GenerateListGroupsResult generates the groups/list result. It omits the
-// default nameless group and returns the remaining groups sorted by name.
-func GenerateListGroupsResult(groupsMap map[string]group.Group) ListGroupsResult {
-	names := make([]string, 0, len(groupsMap))
-	for name := range groupsMap {
-		if name == "" {
-			continue
-		}
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
-	groupsList := make([]Group, 0, len(names))
-	for _, name := range names {
-		g := groupsMap[name]
-		groupsList = append(groupsList, Group{Name: g.Name, Description: g.Description})
-	}
-	return ListGroupsResult{Groups: groupsList}
 }
 
 // GenerateGetGroupResult generates the groups/get result for a single group's

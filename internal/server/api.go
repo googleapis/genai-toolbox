@@ -299,7 +299,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	params, err = tool.EmbedParams(ctx, params, s.PrimitiveMgr.GetEmbeddingModelMap())
+	params, err = tool.EmbedParams(ctx, params, s.PrimitiveMgr)
 	if err != nil {
 		err = fmt.Errorf("error embedding parameters: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
