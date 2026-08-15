@@ -968,7 +968,7 @@ func TestIsJWTFormat(t *testing.T) {
 	}
 }
 
-func TestForeceIntrospection(t *testing.T) {
+func TestForceIntrospection(t *testing.T) {
 	const jwtToken = "eyJhbGciOiJSUzI1NiJ9.payload.signature"
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
