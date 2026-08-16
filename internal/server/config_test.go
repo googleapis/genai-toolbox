@@ -36,6 +36,11 @@ func TestResponseEncodingFlag(t *testing.T) {
 	if got := e.String(); got != "gcf" {
 		t.Errorf("after Set(\"GCF\"), String() = %q, want %q", got, "gcf")
 	}
+	// Set normalizes to lowercase, so the stored value matches downstream ("gcf")
+	// comparisons even when the flag was given as "GCF".
+	if got := string(e); got != "gcf" {
+		t.Errorf("Set(\"GCF\") stored %q, want lowercased %q", got, "gcf")
+	}
 
 	// Rejected values leave the previous value intact.
 	for _, v := range []string{"yaml", "toon", ""} {

@@ -86,6 +86,24 @@ func TestEncodeGCFToolResult_PreservesInt64AbovePow53(t *testing.T) {
 	}
 }
 
+func TestScalarEqualNoInt64FloatPrecisionMasking(t *testing.T) {
+	// 2^53 + 1 is not exactly representable as a float64; it must not be reported
+	// equal to the float64 it would round to, or a lossy encoding could pass the
+	// round-trip guard.
+	big := int64(1<<53 + 1)
+	rounded := float64(1 << 53)
+	if scalarEqual(big, rounded) || scalarEqual(rounded, big) {
+		t.Errorf("a large int64 (%d) must not equal a rounded float64 (%v)", big, rounded)
+	}
+	// In-range integers still equal their exact float; non-integer floats don't.
+	if !scalarEqual(int64(5), 5.0) || !scalarEqual(5.0, int64(5)) {
+		t.Error("an in-range integer must equal its exact float")
+	}
+	if scalarEqual(int64(3), 3.5) || scalarEqual(3.5, int64(3)) {
+		t.Error("an integer must not equal a non-integer float")
+	}
+}
+
 func TestEncodeGCFToolResult_ByteColumnIsSafe(t *testing.T) {
 	// A []byte column (bytea/BLOB) is a type gcf-go may not round-trip. Whatever it
 	// does, the outcome must be safe: either declined, or a genuine lossless
