@@ -27,6 +27,8 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/lexer"
+	"github.com/goccy/go-yaml/token"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/server"
@@ -65,6 +67,8 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		p.EnvVars = make(map[string]string)
 	}
 
+	tokens := lexer.Tokenize(input)
+
 	var missing []string
 	seenMissing := make(map[string]bool)
 	matches := re.FindAllStringSubmatchIndex(input, -1)
@@ -72,6 +76,14 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	lastIndex := 0
 	for _, match := range matches {
 		start, end := match[0], match[1]
+
+		// Skip substitution if the variable is inside a comment
+		if isInsideComment(tokens, start) {
+			output.WriteString(input[lastIndex:end])
+			lastIndex = end
+			continue
+		}
+
 		output.WriteString(input[lastIndex:start])
 
 		variableName := input[match[2]:match[3]]
@@ -127,6 +139,18 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	}
 
 	return output.String(), err
+}
+
+// isInsideComment checks if the given byte offset in the YAML input is within a comment token.
+func isInsideComment(tokens token.Tokens, offset int) bool {
+	for _, t := range tokens {
+		if t.Type == token.CommentType && t.Position != nil {
+			if offset >= t.Position.Offset && offset < t.Position.Offset+len(t.Origin) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // ParseConfig parses the provided yaml into appropriate configs.
