@@ -148,9 +148,9 @@ func (e *responseEncoding) String() string {
 
 // Set validates the response-encoding flag
 func (e *responseEncoding) Set(v string) error {
-	switch strings.ToLower(v) {
+	switch lowered := strings.ToLower(v); lowered {
 	case "json", "gcf":
-		*e = responseEncoding(v)
+		*e = responseEncoding(lowered)
 		return nil
 	default:
 		return fmt.Errorf(`response encoding must be one of "json", or "gcf"`)

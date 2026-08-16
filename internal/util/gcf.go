@@ -131,42 +131,61 @@ func gcfValuesEqual(a, b any) bool {
 	}
 }
 
-// scalarEqual compares two leaf values. Same-type integers and floats compare
-// exactly (so a large int64 is not masked through a float); mixed numeric widths
-// compare by value; everything else (strings, bools, nil, and any type GCF could
-// not round-trip) compares with reflect.DeepEqual.
+// scalarEqual compares two leaf values. Integers of any width compare exactly as
+// int64, floats compare exactly, and an integer compares equal to a float only when
+// the float represents it exactly, so a large int64 (beyond the ±2^53 float-exact
+// range) is never masked as equal to a rounded float64, which would let a lossy
+// encoding pass the round-trip guard. Everything else (strings, bools, nil, and any
+// type GCF could not round-trip) compares with reflect.DeepEqual.
 func scalarEqual(a, b any) bool {
-	switch av := a.(type) {
-	case int64:
-		if bv, ok := b.(int64); ok {
-			return av == bv
+	if ai, ok := asInt64(a); ok {
+		if bi, ok := asInt64(b); ok {
+			return ai == bi
 		}
-	case float64:
-		if bv, ok := b.(float64); ok {
-			return av == bv
+		if bf, ok := asFloat64(b); ok {
+			return int64EqualsFloat(ai, bf)
 		}
+		return false
 	}
-	if af, aok := toFloat(a); aok {
-		if bf, bok := toFloat(b); bok {
+	if af, ok := asFloat64(a); ok {
+		if bf, ok := asFloat64(b); ok {
 			return af == bf
 		}
+		if bi, ok := asInt64(b); ok {
+			return int64EqualsFloat(bi, af)
+		}
+		return false
 	}
 	return reflect.DeepEqual(a, b)
 }
 
-func toFloat(v any) (float64, bool) {
+func asInt64(v any) (int64, bool) {
 	switch n := v.(type) {
 	case int:
-		return float64(n), true
+		return int64(n), true
 	case int32:
-		return float64(n), true
+		return int64(n), true
 	case int64:
-		return float64(n), true
+		return n, true
+	default:
+		return 0, false
+	}
+}
+
+func asFloat64(v any) (float64, bool) {
+	switch n := v.(type) {
 	case float32:
-		return float64(n), true
+		return float64(n), true // widening float32 -> float64 is exact
 	case float64:
 		return n, true
 	default:
 		return 0, false
 	}
+}
+
+// int64EqualsFloat reports whether an int64 and a float64 denote the same number.
+// A float64 can hold an int64 exactly only within ±2^53; beyond that the conversion
+// is lossy, so such values are treated as unequal (never falsely matched).
+func int64EqualsFloat(i int64, f float64) bool {
+	return i >= -(1<<53) && i <= (1<<53) && float64(i) == f
 }
