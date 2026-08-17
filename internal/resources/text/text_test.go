@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package text
+package text_test
 
 import (
 	"bytes"
@@ -24,6 +24,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
+	"github.com/googleapis/mcp-toolbox/internal/resources/text"
 )
 
 func floatPtr(f float64) *float64 { return &f }
@@ -33,7 +34,7 @@ func TestTextResourceInitialization(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      Config
+		config      text.Config
 		wantError   bool
 		errContains string
 		wantMime    string
@@ -41,7 +42,7 @@ func TestTextResourceInitialization(t *testing.T) {
 	}{
 		{
 			name: "success with defaults",
-			config: Config{
+			config: text.Config{
 				BaseConfig: resources.BaseConfig{Name: "test1"},
 				Text:       "Hello, world!",
 			},
@@ -51,7 +52,7 @@ func TestTextResourceInitialization(t *testing.T) {
 		},
 		{
 			name: "success with overrides",
-			config: Config{
+			config: text.Config{
 				BaseConfig: resources.BaseConfig{
 					Name:        "test2",
 					MimeType:    "application/json",
@@ -66,7 +67,7 @@ func TestTextResourceInitialization(t *testing.T) {
 
 		{
 			name: "explicit 0.0 priority",
-			config: Config{
+			config: text.Config{
 				BaseConfig: resources.BaseConfig{
 					Name:        "test-priority",
 					Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.0)},
@@ -79,7 +80,7 @@ func TestTextResourceInitialization(t *testing.T) {
 		},
 		{
 			name: "multi-byte unicode size calculation",
-			config: Config{
+			config: text.Config{
 				BaseConfig: resources.BaseConfig{Name: "test-unicode"},
 				Text:       "Hello 🌍",
 			},
@@ -89,7 +90,7 @@ func TestTextResourceInitialization(t *testing.T) {
 		},
 		{
 			name: "pure whitespace payload",
-			config: Config{
+			config: text.Config{
 				BaseConfig: resources.BaseConfig{Name: "test-whitespace"},
 				Text:       "   \n  ",
 			},
@@ -99,7 +100,7 @@ func TestTextResourceInitialization(t *testing.T) {
 		},
 		{
 			name: "explicit empty mimetype defaults to text/plain",
-			config: Config{
+			config: text.Config{
 				BaseConfig: resources.BaseConfig{
 					Name:     "test-empty-mime",
 					MimeType: "",
@@ -139,7 +140,7 @@ func TestTextResourceInitialization(t *testing.T) {
 				t.Errorf("Read() mismatch (-want +got):\n%s", diff)
 			}
 
-			textRes := res.(*Resource)
+			textRes := res.(*text.Resource)
 			expectedSize := int64(len(tc.config.Text))
 			if textRes.Size != expectedSize {
 				t.Errorf("Size = %d, want %d", textRes.Size, expectedSize)
@@ -181,12 +182,12 @@ text: |
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			dec := yaml.NewDecoder(bytes.NewReader([]byte(tc.yamlData)), yaml.Strict(), yaml.Validator(validator.New()))
-			resCfg, err := newConfig(ctx, "test-yaml", dec)
+			resCfg, err := resources.DecodeConfig(ctx, "text", "test-yaml", dec)
 			if err != nil {
 				t.Fatalf("unexpected error decoding text resource: %v", err)
 			}
 
-			cfg := resCfg.(*Config)
+			cfg := resCfg.(*text.Config)
 			if cfg.Text != tc.wantText {
 				t.Errorf("unexpected text payload: %q", cfg.Text)
 			}
@@ -204,8 +205,8 @@ text: |
 			}
 
 			if tc.wantSize != nil {
-				if res.(*Resource).Size != *tc.wantSize {
-					t.Errorf("unexpected size: got %v, want %v", res.(*Resource).Size, tc.wantSize)
+				if res.(*text.Resource).Size != *tc.wantSize {
+					t.Errorf("unexpected size: got %v, want %v", res.(*text.Resource).Size, tc.wantSize)
 				}
 			}
 		})
@@ -251,7 +252,7 @@ text: ""
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			dec := yaml.NewDecoder(bytes.NewReader([]byte(tc.yamlData)), yaml.Strict(), yaml.Validator(validator.New()))
-			resCfg, err := newConfig(ctx, "test-invalid", dec)
+			resCfg, err := resources.DecodeConfig(ctx, "text", "test-invalid", dec)
 			if err == nil {
 				err = resCfg.Validate()
 			}
