@@ -360,6 +360,12 @@ func runAINLMCPToolCallMethod(t *testing.T) {
 					defer resp.Body.Close()
 					got := string(bytes.TrimSpace(respBody))
 
+					if protocolVersion == "2026-07-28" {
+						got = strings.ReplaceAll(got, `"resultType":"complete",`, "")
+						reg := regexp.MustCompile(`"_meta":\{"io.modelcontextprotocol/serverInfo":\{"name":"[^"]+","version":"[^"]+"\}\},`)
+						got = reg.ReplaceAllString(got, "")
+					}
+
 					// Remove `\` and `"` for string comparison
 					got = strings.ReplaceAll(got, "\\", "")
 					want := strings.ReplaceAll(tc.want, "\\", "")

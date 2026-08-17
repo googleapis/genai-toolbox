@@ -23,6 +23,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -1247,6 +1248,16 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 
 					// Check response body
 					got := string(bytes.TrimSpace(respBody))
+					if protocolVersion == "2026-07-28" {
+						// Strip protocol noise to match legacy expectations in wantBody
+						// This is a pragmatic way to support legacy expectations without rewriting them all
+						got = strings.ReplaceAll(got, `"resultType":"complete",`, "")
+						
+						// Regex to match and remove _meta block
+						// "_meta":{"io.modelcontextprotocol/serverInfo":{"name":"Toolbox","version":"..."}},
+						reg := regexp.MustCompile(`"_meta":\{"io.modelcontextprotocol/serverInfo":\{"name":"[^"]+","version":"[^"]+"\}\},`)
+						got = reg.ReplaceAllString(got, "")
+					}
 					if !strings.Contains(got, tc.wantBody) {
 						t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.wantBody)
 					}
