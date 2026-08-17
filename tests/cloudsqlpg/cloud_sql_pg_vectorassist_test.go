@@ -40,7 +40,7 @@ func createPostgresExtension(t *testing.T, ctx context.Context, pool *pgxpool.Po
 	}
 	return func() {
 		dropExtensionCmd := fmt.Sprintf("DROP EXTENSION IF EXISTS %s", extensionName)
-		_, err := pool.Exec(ctx, dropExtensionCmd)
+		_, err := pool.Exec(context.WithoutCancel(ctx), dropExtensionCmd)
 		if err != nil {
 			t.Fatalf("failed to drop extension: %v", err)
 		}

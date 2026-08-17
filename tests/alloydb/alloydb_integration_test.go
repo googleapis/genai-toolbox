@@ -121,123 +121,131 @@ func runAlloyDBToolGetTest(t *testing.T) {
 }
 
 func runAlloyDBMCPToolCallMethod(t *testing.T, vars map[string]string) {
-	sessionId := tests.RunInitialize(t, "2024-11-05")
-	header := map[string]string{}
-	if sessionId != "" {
-		header["Mcp-Session-Id"] = sessionId
-	}
+	versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+	for _, protocolVersion := range versions {
+		t.Run("protocol "+protocolVersion, func(t *testing.T) {
+			sessionId := tests.RunInitialize(t, protocolVersion)
+			header := map[string]string{}
+			if sessionId != "" {
+				header["Mcp-Session-Id"] = sessionId
+			}
 
-	invokeTcs := []struct {
-		name         string
-		requestBody  jsonrpc.JSONRPCRequest
-		wantContains string
-		isErr        bool
-	}{
-		{
-			name: "MCP Invoke my-param-tool",
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "my-param-tool-mcp",
-				Request: jsonrpc.Request{Method: "tools/call"},
-				Params: map[string]any{
-					"name": "my-param-tool",
-					"arguments": map[string]any{
-						"project":  vars["project"],
-						"location": vars["location"],
+			invokeTcs := []struct {
+				name         string
+				requestBody  jsonrpc.JSONRPCRequest
+				wantContains string
+				isErr        bool
+			}{
+				{
+					name: "MCP Invoke my-param-tool",
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "my-param-tool-mcp",
+						Request: jsonrpc.Request{Method: "tools/call"},
+						Params: map[string]any{
+							"name": "my-param-tool",
+							"arguments": map[string]any{
+								"project":  vars["project"],
+								"location": vars["location"],
+							},
+						},
 					},
+					wantContains: fmt.Sprintf(`"name\":\"projects/%s/locations/%s/clusters/%s\"`, vars["project"], vars["location"], vars["cluster"]),
+					isErr:        false,
 				},
-			},
-			wantContains: fmt.Sprintf(`"name\":\"projects/%s/locations/%s/clusters/%s\"`, vars["project"], vars["location"], vars["cluster"]),
-			isErr:        false,
-		},
-		{
-			name: "MCP Invoke my-fail-tool",
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke-fail-tool",
-				Request: jsonrpc.Request{Method: "tools/call"},
-				Params: map[string]any{
-					"name": "my-fail-tool",
-					"arguments": map[string]any{
-						"location": vars["location"],
+				{
+					name: "MCP Invoke my-fail-tool",
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke-fail-tool",
+						Request: jsonrpc.Request{Method: "tools/call"},
+						Params: map[string]any{
+							"name": "my-fail-tool",
+							"arguments": map[string]any{
+								"location": vars["location"],
+							},
+						},
 					},
+					wantContains: `parameter \"project\" is required`,
+					isErr:        true,
 				},
-			},
-			wantContains: `parameter \"project\" is required`,
-			isErr:        true,
-		},
-		{
-			name: "MCP Invoke invalid tool",
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invalid-tool-mcp",
-				Request: jsonrpc.Request{Method: "tools/call"},
-				Params: map[string]any{
-					"name":      "non-existent-tool",
-					"arguments": map[string]any{},
+				{
+					name: "MCP Invoke invalid tool",
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invalid-tool-mcp",
+						Request: jsonrpc.Request{Method: "tools/call"},
+						Params: map[string]any{
+							"name":      "non-existent-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantContains: `tool with name \"non-existent-tool\" does not exist`,
+					isErr:        true,
 				},
-			},
-			wantContains: `tool with name \"non-existent-tool\" does not exist`,
-			isErr:        true,
-		},
-		{
-			name: "MCP Invoke tool without required parameters",
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke-without-params-mcp",
-				Request: jsonrpc.Request{Method: "tools/call"},
-				Params: map[string]any{
-					"name":      "my-param-tool",
-					"arguments": map[string]any{"location": vars["location"]},
+				{
+					name: "MCP Invoke tool without required parameters",
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke-without-params-mcp",
+						Request: jsonrpc.Request{Method: "tools/call"},
+						Params: map[string]any{
+							"name":      "my-param-tool",
+							"arguments": map[string]any{"location": vars["location"]},
+						},
+					},
+					wantContains: `parameter \"project\" is required`,
+					isErr:        true,
 				},
-			},
-			wantContains: `parameter \"project\" is required`,
-			isErr:        true,
-		},
-		{
-			name: "MCP Invoke my-auth-required-tool",
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke my-auth-required-tool",
-				Request: jsonrpc.Request{Method: "tools/call"},
-				Params: map[string]any{
-					"name":      "my-auth-required-tool",
-					"arguments": map[string]any{},
+				{
+					name: "MCP Invoke my-auth-required-tool",
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke my-auth-required-tool",
+						Request: jsonrpc.Request{Method: "tools/call"},
+						Params: map[string]any{
+							"name":      "my-auth-required-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantContains: `tool with name \"my-auth-required-tool\" does not exist`,
+					isErr:        true,
 				},
-			},
-			wantContains: `tool with name \"my-auth-required-tool\" does not exist`,
-			isErr:        true,
-		},
-	}
-
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			api := "http://127.0.0.1:5000/mcp"
-			reqMarshal, err := json.Marshal(tc.requestBody)
-			if err != nil {
-				t.Fatalf("unexpected error during marshaling of request body: %v", err)
 			}
 
-			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBuffer(reqMarshal))
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
+			for _, tc := range invokeTcs {
+				t.Run(tc.name, func(t *testing.T) {
+					api := "http://127.0.0.1:5000/mcp"
+					reqMarshal, err := json.Marshal(tc.requestBody)
+					if err != nil {
+						t.Fatalf("unexpected error during marshaling of request body: %v", err)
+					}
 
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+					req, err := http.NewRequest(http.MethodPost, api, bytes.NewBuffer(reqMarshal))
+					if err != nil {
+						t.Fatalf("unable to create request: %s", err)
+					}
+					req.Header.Add("Content-type", "application/json")
+					for k, v := range header {
+						req.Header.Add(k, v)
+					}
 
-			respBody, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("unable to read request body: %s", err)
-			}
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						t.Fatalf("unable to send request: %s", err)
+					}
+					defer resp.Body.Close()
 
-			got := string(bytes.TrimSpace(respBody))
-			if !strings.Contains(got, tc.wantContains) {
-				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.wantContains)
+					respBody, err := io.ReadAll(resp.Body)
+					if err != nil {
+						t.Fatalf("unable to read request body: %s", err)
+					}
+
+					got := string(bytes.TrimSpace(respBody))
+					if !strings.Contains(got, tc.wantContains) {
+						t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.wantContains)
+					}
+				})
 			}
 		})
 	}

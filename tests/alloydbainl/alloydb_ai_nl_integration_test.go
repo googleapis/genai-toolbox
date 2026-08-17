@@ -236,108 +236,113 @@ func runAINLToolInvokeTest(t *testing.T) {
 }
 
 func runAINLMCPToolCallMethod(t *testing.T) {
-	sessionId := tests.RunInitialize(t, "2024-11-05")
-	header := map[string]string{}
-	if sessionId != "" {
-		header["Mcp-Session-Id"] = sessionId
-	}
+	versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+	for _, protocolVersion := range versions {
+		t.Run("protocol "+protocolVersion, func(t *testing.T) {
+			sessionId := tests.RunInitialize(t, protocolVersion)
+			header := map[string]string{}
+			if sessionId != "" {
+				header["Mcp-Session-Id"] = sessionId
+			}
 
-	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name          string
-		api           string
-		requestBody   jsonrpc.JSONRPCRequest
-		requestHeader map[string]string
-		want          string
-	}{
-		{
-			name:          "MCP Invoke my-simple-tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "my-simple-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name": "my-simple-tool",
-					"arguments": map[string]any{
-						"question": "return the number 1",
+			// Test tool invoke endpoint
+			invokeTcs := []struct {
+				name          string
+				api           string
+				requestBody   jsonrpc.JSONRPCRequest
+				requestHeader map[string]string
+				want          string
+			}{
+				{
+					name:          "MCP Invoke my-simple-tool",
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "my-simple-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "my-simple-tool",
+							"arguments": map[string]any{
+								"question": "return the number 1",
+							},
+						},
 					},
+					want: `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"execute_nl_query\":{\"number_one\":1}}"}]}}`,
 				},
-			},
-			want: `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"execute_nl_query\":{\"number_one\":1}}"}]}}`,
-		},
-		{
-			name:          "MCP Invoke invalid tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invalid-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
+				{
+					name:          "MCP Invoke invalid tool",
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invalid-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "foo",
+							"arguments": map[string]any{},
+						},
+					},
+					want: `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
 				},
-				Params: map[string]any{
-					"name":      "foo",
-					"arguments": map[string]any{},
+				{
+					name:          "MCP Invoke my-auth-tool without parameters",
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke-without-parameter",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-auth-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","result":{"content":[{"type":"text","text":"provided parameters were invalid: parameter question is required"}],"isError":true}}`,
 				},
-			},
-			want: `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
-		},
-		{
-			name:          "MCP Invoke my-auth-tool without parameters",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke-without-parameter",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-auth-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","result":{"content":[{"type":"text","text":"provided parameters were invalid: parameter question is required"}],"isError":true}}`,
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			reqMarshal, err := json.Marshal(tc.requestBody)
-			if err != nil {
-				t.Fatalf("unexpected error during marshaling of request body")
 			}
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal))
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range header {
-				req.Header.Add(k, v)
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			respBody, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("unable to read request body: %s", err)
-			}
-			defer resp.Body.Close()
-			got := string(bytes.TrimSpace(respBody))
+			for _, tc := range invokeTcs {
+				t.Run(tc.name, func(t *testing.T) {
+					reqMarshal, err := json.Marshal(tc.requestBody)
+					if err != nil {
+						t.Fatalf("unexpected error during marshaling of request body")
+					}
+					// Send Tool invocation request
+					req, err := http.NewRequest(http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal))
+					if err != nil {
+						t.Fatalf("unable to create request: %s", err)
+					}
+					req.Header.Add("Content-type", "application/json")
+					for k, v := range header {
+						req.Header.Add(k, v)
+					}
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						t.Fatalf("unable to send request: %s", err)
+					}
+					respBody, err := io.ReadAll(resp.Body)
+					if err != nil {
+						t.Fatalf("unable to read request body: %s", err)
+					}
+					defer resp.Body.Close()
+					got := string(bytes.TrimSpace(respBody))
 
-			// Remove `\` and `"` for string comparison
-			got = strings.ReplaceAll(got, "\\", "")
-			want := strings.ReplaceAll(tc.want, "\\", "")
-			got = strings.ReplaceAll(got, "\"", "")
-			want = strings.ReplaceAll(want, "\"", "")
+					// Remove `\` and `"` for string comparison
+					got = strings.ReplaceAll(got, "\\", "")
+					want := strings.ReplaceAll(tc.want, "\\", "")
+					got = strings.ReplaceAll(got, "\"", "")
+					want = strings.ReplaceAll(want, "\"", "")
 
-			if !strings.Contains(got, want) {
-				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, want)
+					if !strings.Contains(got, want) {
+						t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, want)
+					}
+				})
 			}
 		})
 	}

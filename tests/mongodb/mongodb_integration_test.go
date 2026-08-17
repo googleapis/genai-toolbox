@@ -494,7 +494,7 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 
 	return func(t *testing.T) {
 		// tear down test
-		err := database.Collection(collectionName).Drop(ctx)
+		err := database.Collection(collectionName).Drop(context.WithoutCancel(ctx))
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}

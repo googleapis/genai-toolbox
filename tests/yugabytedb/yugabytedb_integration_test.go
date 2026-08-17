@@ -99,7 +99,7 @@ func SetupYugabyteDBSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Po
 
 	return func(t *testing.T) {
 		// tear down test
-		_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		_, err = pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP TABLE %s;", tableName))
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}

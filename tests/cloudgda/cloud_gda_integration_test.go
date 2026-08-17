@@ -186,41 +186,46 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeParametersTest(t, toolName, params, "\"generated_query\":\"SELECT * FROM table;\"")
 
 	// 3. Manual MCP Tool Call Test
-	// Initialize MCP session
-	sessionId := tests.RunInitialize(t, "2024-11-05")
+	versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+	for _, protocolVersion := range versions {
+		t.Run("protocol "+protocolVersion, func(t *testing.T) {
+			// Initialize MCP session
+			sessionId := tests.RunInitialize(t, protocolVersion)
 
-	// Construct MCP Request
-	mcpReq := jsonrpc.JSONRPCRequest{
-		Jsonrpc: "2.0",
-		Id:      "test-mcp-call",
-		Request: jsonrpc.Request{
-			Method: "tools/call",
-		},
-		Params: map[string]any{
-			"name": toolName,
-			"arguments": map[string]any{
-				"query": "test question",
-			},
-		},
-	}
-	reqBytes, _ := json.Marshal(mcpReq)
+			// Construct MCP Request
+			mcpReq := jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "test-mcp-call",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name": toolName,
+					"arguments": map[string]any{
+						"query": "test question",
+					},
+				},
+			}
+			reqBytes, _ := json.Marshal(mcpReq)
 
-	headers := map[string]string{}
-	if sessionId != "" {
-		headers["Mcp-Session-Id"] = sessionId
-	}
+			headers := map[string]string{}
+			if sessionId != "" {
+				headers["Mcp-Session-Id"] = sessionId
+			}
 
-	// Send Request
-	resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBytes), headers)
+			// Send Request
+			resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBytes), headers)
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("MCP request failed with status %d: %s", resp.StatusCode, string(respBody))
-	}
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("MCP request failed with status %d: %s", resp.StatusCode, string(respBody))
+			}
 
-	// Check Response
-	respStr := string(respBody)
-	if !strings.Contains(respStr, "SELECT * FROM table;") {
-		t.Errorf("MCP response does not contain expected query result: %s", respStr)
+			// Check Response
+			respStr := string(respBody)
+			if !strings.Contains(respStr, "SELECT * FROM table;") {
+				t.Errorf("MCP response does not contain expected query result: %s", respStr)
+			}
+		})
 	}
 }
 
@@ -287,12 +292,12 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 	return func(t *testing.T) {
 		// tear down table
 		dropSQL := fmt.Sprintf("drop table %s", tableName)
-		dropJob, err := client.Query(dropSQL).Run(ctx)
+		dropJob, err := client.Query(dropSQL).Run(context.WithoutCancel(ctx))
 		if err != nil {
 			t.Errorf("Failed to start drop table job for %s: %v", tableName, err)
 			return
 		}
-		dropStatus, err := dropJob.Wait(ctx)
+		dropStatus, err := dropJob.Wait(context.WithoutCancel(ctx))
 		if err != nil {
 			t.Errorf("Failed to wait for drop table job for %s: %v", tableName, err)
 			return
@@ -303,11 +308,11 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 
 		// tear down dataset
 		datasetToTeardown := client.Dataset(datasetName)
-		tablesIterator := datasetToTeardown.Tables(ctx)
+		tablesIterator := datasetToTeardown.Tables(context.WithoutCancel(ctx))
 		_, err = tablesIterator.Next()
 
 		if err == iterator.Done {
-			if err := datasetToTeardown.Delete(ctx); err != nil {
+			if err := datasetToTeardown.Delete(context.WithoutCancel(ctx)); err != nil {
 				t.Errorf("Failed to delete dataset %s: %v", datasetName, err)
 			}
 		} else if err != nil {

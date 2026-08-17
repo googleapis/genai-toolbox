@@ -248,7 +248,7 @@ func setupSnowflakeTable(t *testing.T, ctx context.Context, db *sqlx.DB, createS
 
 	return func(t *testing.T) {
 		// tear down test
-		_, err = db.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		_, err = db.ExecContext(context.WithoutCancel(ctx), fmt.Sprintf("DROP TABLE %s;", tableName))
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}

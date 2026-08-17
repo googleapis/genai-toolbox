@@ -372,148 +372,153 @@ func runFirestoreGetRulesTest(t *testing.T) {
 }
 
 func runFirestoreMCPToolCallMethod(t *testing.T, docPath1, docPath2 string) {
-	sessionId := tests.RunInitialize(t, "2024-11-05")
-	header := map[string]string{}
-	if sessionId != "" {
-		header["Mcp-Session-Id"] = sessionId
-	}
+	versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+	for _, protocolVersion := range versions {
+		t.Run("protocol "+protocolVersion, func(t *testing.T) {
+			sessionId := tests.RunInitialize(t, protocolVersion)
+			header := map[string]string{}
+			if sessionId != "" {
+				header["Mcp-Session-Id"] = sessionId
+			}
 
-	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name          string
-		api           string
-		requestBody   jsonrpc.JSONRPCRequest
-		requestHeader map[string]string
-		wantContains  string
-		wantError     bool
-	}{
-		{
-			name:          "MCP Invoke my-param-tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "my-param-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name": "my-param-tool",
-					"arguments": map[string]any{
-						"documentPaths": []string{docPath1},
+			// Test tool invoke endpoint
+			invokeTcs := []struct {
+				name          string
+				api           string
+				requestBody   jsonrpc.JSONRPCRequest
+				requestHeader map[string]string
+				wantContains  string
+				wantError     bool
+			}{
+				{
+					name:          "MCP Invoke my-param-tool",
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "my-param-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "my-param-tool",
+							"arguments": map[string]any{
+								"documentPaths": []string{docPath1},
+							},
+						},
 					},
+					wantContains: `\"name\":\"Alice\"`,
+					wantError:    false,
 				},
-			},
-			wantContains: `\"name\":\"Alice\"`,
-			wantError:    false,
-		},
-		{
-			name:          "MCP Invoke invalid tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invalid-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "foo",
-					"arguments": map[string]any{},
-				},
-			},
-			wantContains: `tool with name \"foo\" does not exist`,
-			wantError:    true,
-		},
-		{
-			name:          "MCP Invoke my-param-tool without parameters",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke-without-parameter",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-param-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantContains: `parameter \"documentPaths\" is required`,
-			wantError:    true,
-		},
-		{
-			name:          "MCP Invoke my-auth-required-tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke my-auth-required-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-auth-required-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantContains: `tool with name \"my-auth-required-tool\" does not exist`,
-			wantError:    true,
-		},
-		{
-			name:          "MCP Invoke my-fail-tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke-fail-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name": "my-fail-tool",
-					"arguments": map[string]any{
-						"documentPaths": []string{"non-existent/path"},
+				{
+					name:          "MCP Invoke invalid tool",
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invalid-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "foo",
+							"arguments": map[string]any{},
+						},
 					},
+					wantContains: `tool with name \"foo\" does not exist`,
+					wantError:    true,
 				},
-			},
-			wantContains: `\"exists\":false`,
-			wantError:    false,
-		},
-	}
-
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			reqMarshal, err := json.Marshal(tc.requestBody)
-			if err != nil {
-				t.Fatalf("unexpected error during marshaling of request body")
+				{
+					name:          "MCP Invoke my-param-tool without parameters",
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke-without-parameter",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-param-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantContains: `parameter \"documentPaths\" is required`,
+					wantError:    true,
+				},
+				{
+					name:          "MCP Invoke my-auth-required-tool",
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke my-auth-required-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-auth-required-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantContains: `tool with name \"my-auth-required-tool\" does not exist`,
+					wantError:    true,
+				},
+				{
+					name:          "MCP Invoke my-fail-tool",
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke-fail-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "my-fail-tool",
+							"arguments": map[string]any{
+								"documentPaths": []string{"non-existent/path"},
+							},
+						},
+					},
+					wantContains: `\"exists\":false`,
+					wantError:    false,
+				},
 			}
 
-			req, err := http.NewRequest(http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal))
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range header {
-				req.Header.Add(k, v)
-			}
+			for _, tc := range invokeTcs {
+				t.Run(tc.name, func(t *testing.T) {
+					reqMarshal, err := json.Marshal(tc.requestBody)
+					if err != nil {
+						t.Fatalf("unexpected error during marshaling of request body")
+					}
 
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+					req, err := http.NewRequest(http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal))
+					if err != nil {
+						t.Fatalf("unable to create request: %s", err)
+					}
+					req.Header.Add("Content-type", "application/json")
+					for k, v := range header {
+						req.Header.Add(k, v)
+					}
 
-			respBody, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("unable to read request body: %s", err)
-			}
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						t.Fatalf("unable to send request: %s", err)
+					}
+					defer resp.Body.Close()
 
-			got := string(bytes.TrimSpace(respBody))
+					respBody, err := io.ReadAll(resp.Body)
+					if err != nil {
+						t.Fatalf("unable to read request body: %s", err)
+					}
 
-			if !strings.Contains(got, tc.wantContains) {
-				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.wantContains)
+					got := string(bytes.TrimSpace(respBody))
+
+					if !strings.Contains(got, tc.wantContains) {
+						t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.wantContains)
+					}
+				})
 			}
 		})
 	}
@@ -1132,7 +1137,7 @@ func setupFirestoreTestData(t *testing.T, ctx context.Context, client *firestore
 		var deleteCollection func(*firestoreapi.CollectionRef) error
 		deleteCollection = func(collection *firestoreapi.CollectionRef) error {
 			// Get all documents in the collection
-			docs, err := collection.Documents(ctx).GetAll()
+			docs, err := collection.Documents(context.WithoutCancel(ctx)).GetAll()
 			if err != nil {
 				return fmt.Errorf("failed to list documents in collection %s: %w", collection.Path, err)
 			}
@@ -1140,7 +1145,7 @@ func setupFirestoreTestData(t *testing.T, ctx context.Context, client *firestore
 			// Delete each document and its subcollections
 			for _, doc := range docs {
 				// First, get all subcollections of this document
-				subcollections, err := doc.Ref.Collections(ctx).GetAll()
+				subcollections, err := doc.Ref.Collections(context.WithoutCancel(ctx)).GetAll()
 				if err != nil {
 					return fmt.Errorf("failed to list subcollections of document %s: %w", doc.Ref.Path, err)
 				}
@@ -1153,7 +1158,7 @@ func setupFirestoreTestData(t *testing.T, ctx context.Context, client *firestore
 				}
 
 				// Delete the document itself
-				if _, err := doc.Ref.Delete(ctx); err != nil {
+				if _, err := doc.Ref.Delete(context.WithoutCancel(ctx)); err != nil {
 					return fmt.Errorf("failed to delete document %s: %w", doc.Ref.Path, err)
 				}
 			}
@@ -1162,7 +1167,7 @@ func setupFirestoreTestData(t *testing.T, ctx context.Context, client *firestore
 		}
 
 		// Get all root collections in the database
-		rootCollections, err := client.Collections(ctx).GetAll()
+		rootCollections, err := client.Collections(context.WithoutCancel(ctx)).GetAll()
 		if err != nil {
 			t.Errorf("Failed to list root collections: %v", err)
 			return

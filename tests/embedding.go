@@ -100,124 +100,132 @@ func AddSemanticSearchConfig(t *testing.T, config map[string]any, toolKind, inse
 // RunSemanticSearchToolInvokeTest runs the insert_docs and search_docs tools
 // via both HTTP and MCP endpoints and verifies the output.
 func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, mcpInsertWant, searchWant string) {
-	// Initialize MCP session once for the MCP test cases
-	sessionId := RunInitialize(t, "2024-11-05")
+	versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+	for i, protocolVersion := range versions {
+		t.Run("protocol "+protocolVersion, func(t *testing.T) {
+			// Initialize MCP session
+			sessionId := RunInitialize(t, protocolVersion)
 
-	tcs := []struct {
-		name        string
-		api         string
-		isMcp       bool
-		requestBody interface{}
-		want        string
-	}{
-		{
-			name:        "HTTP invoke insert_docs",
-			api:         "http://127.0.0.1:5000/api/tool/insert_docs/invoke",
-			isMcp:       false,
-			requestBody: `{"content": "The quick brown fox jumps over the lazy dog"}`,
-			want:        insertWant,
-		},
-		{
-			name:        "HTTP invoke search_docs",
-			api:         "http://127.0.0.1:5000/api/tool/search_docs/invoke",
-			isMcp:       false,
-			requestBody: `{"query": "fast fox jumping"}`,
-			want:        searchWant,
-		},
-		{
-			name:  "MCP invoke insert_docs",
-			api:   "http://127.0.0.1:5000/mcp",
-			isMcp: true,
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "mcp-insert-docs",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
+			tcs := []struct {
+				name        string
+				api         string
+				isMcp       bool
+				requestBody interface{}
+				want        string
+			}{
+				{
+					name:        "HTTP invoke insert_docs",
+					api:         "http://127.0.0.1:5000/api/tool/insert_docs/invoke",
+					isMcp:       false,
+					requestBody: `{"content": "The quick brown fox jumps over the lazy dog"}`,
+					want:        insertWant,
 				},
-				Params: map[string]any{
-					"name": "insert_docs",
-					"arguments": map[string]any{
-						"content": "The quick brown fox jumps over the lazy dog",
+				{
+					name:        "HTTP invoke search_docs",
+					api:         "http://127.0.0.1:5000/api/tool/search_docs/invoke",
+					isMcp:       false,
+					requestBody: `{"query": "fast fox jumping"}`,
+					want:        searchWant,
+				},
+				{
+					name:  "MCP invoke insert_docs",
+					api:   "http://127.0.0.1:5000/mcp",
+					isMcp: true,
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "mcp-insert-docs",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "insert_docs",
+							"arguments": map[string]any{
+								"content": "The quick brown fox jumps over the lazy dog",
+							},
+						},
 					},
+					want: mcpInsertWant,
 				},
-			},
-			want: mcpInsertWant,
-		},
-		{
-			name:  "MCP invoke search_docs",
-			api:   "http://127.0.0.1:5000/mcp",
-			isMcp: true,
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "mcp-search-docs",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name": "search_docs",
-					"arguments": map[string]any{
-						"query": "fast fox jumping",
+				{
+					name:  "MCP invoke search_docs",
+					api:   "http://127.0.0.1:5000/mcp",
+					isMcp: true,
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "mcp-search-docs",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "search_docs",
+							"arguments": map[string]any{
+								"query": "fast fox jumping",
+							},
+						},
 					},
+					want: searchWant,
 				},
-			},
-			want: searchWant,
-		},
-	}
-
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			var bodyReader io.Reader
-			headers := map[string]string{}
-
-			// Prepare Request Body and Headers
-			if tc.isMcp {
-				reqBytes, err := json.Marshal(tc.requestBody)
-				if err != nil {
-					t.Fatalf("failed to marshal mcp request: %v", err)
-				}
-				bodyReader = bytes.NewBuffer(reqBytes)
-				if sessionId != "" {
-					headers["Mcp-Session-Id"] = sessionId
-				}
-			} else {
-				bodyReader = bytes.NewBufferString(tc.requestBody.(string))
 			}
 
-			// Send Request
-			resp, respBody := RunRequest(t, http.MethodPost, tc.api, bodyReader, headers)
+			for _, tc := range tcs {
+				if !tc.isMcp && i > 0 {
+					continue
+				}
+				t.Run(tc.name, func(t *testing.T) {
+					var bodyReader io.Reader
+					headers := map[string]string{}
 
-			if resp.StatusCode != http.StatusOK {
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
-			}
+					// Prepare Request Body and Headers
+					if tc.isMcp {
+						reqBytes, err := json.Marshal(tc.requestBody)
+						if err != nil {
+							t.Fatalf("failed to marshal mcp request: %v", err)
+						}
+						bodyReader = bytes.NewBuffer(reqBytes)
+						if sessionId != "" {
+							headers["Mcp-Session-Id"] = sessionId
+						}
+					} else {
+						bodyReader = bytes.NewBufferString(tc.requestBody.(string))
+					}
 
-			// Normalize Response to get the actual tool result string
-			var got string
-			if tc.isMcp {
-				var mcpResp struct {
-					Result struct {
-						Content []struct {
-							Text string `json:"text"`
-						} `json:"content"`
-					} `json:"result"`
-				}
-				if err := json.Unmarshal(respBody, &mcpResp); err != nil {
-					t.Fatalf("error parsing mcp response: %s", err)
-				}
-				if len(mcpResp.Result.Content) > 0 {
-					got = mcpResp.Result.Content[0].Text
-				}
-			} else {
-				var httpResp map[string]interface{}
-				if err := json.Unmarshal(respBody, &httpResp); err != nil {
-					t.Fatalf("error parsing http response: %s", err)
-				}
-				if res, ok := httpResp["result"].(string); ok {
-					got = res
-				}
-			}
+					// Send Request
+					resp, respBody := RunRequest(t, http.MethodPost, tc.api, bodyReader, headers)
 
-			if !strings.Contains(got, tc.want) {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+					if resp.StatusCode != http.StatusOK {
+						t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+					}
+
+					// Normalize Response to get the actual tool result string
+					var got string
+					if tc.isMcp {
+						var mcpResp struct {
+							Result struct {
+								Content []struct {
+									Text string `json:"text"`
+								} `json:"content"`
+							} `json:"result"`
+						}
+						if err := json.Unmarshal(respBody, &mcpResp); err != nil {
+							t.Fatalf("error parsing mcp response: %s", err)
+						}
+						if len(mcpResp.Result.Content) > 0 {
+							got = mcpResp.Result.Content[0].Text
+						}
+					} else {
+						var httpResp map[string]interface{}
+						if err := json.Unmarshal(respBody, &httpResp); err != nil {
+							t.Fatalf("error parsing http response: %s", err)
+						}
+						if res, ok := httpResp["result"].(string); ok {
+							got = res
+						}
+					}
+
+					if !strings.Contains(got, tc.want) {
+						t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+					}
+				})
 			}
 		})
 	}

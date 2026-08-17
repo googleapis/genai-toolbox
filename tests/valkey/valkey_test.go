@@ -141,7 +141,7 @@ func setupValkeyDB(t *testing.T, ctx context.Context, client valkey.Client) func
 
 	return func(t *testing.T) {
 		// tear down test
-		_, err := client.Do(ctx, client.B().Del().Key(keys...).Build()).AsInt64()
+		_, err := client.Do(context.WithoutCancel(ctx), client.B().Del().Key(keys...).Build()).AsInt64()
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}

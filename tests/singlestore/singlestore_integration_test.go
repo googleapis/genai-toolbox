@@ -126,7 +126,7 @@ func setupSingleStoreTable(t *testing.T, ctx context.Context, pool *sql.DB, crea
 
 	return func(t *testing.T) {
 		// tear down test
-		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		_, err = pool.ExecContext(context.WithoutCancel(ctx), fmt.Sprintf("DROP TABLE %s;", tableName))
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}
