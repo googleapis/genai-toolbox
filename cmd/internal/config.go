@@ -27,9 +27,12 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/lexer"
+	"github.com/goccy/go-yaml/token"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 type Config struct {
@@ -64,6 +67,8 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		p.EnvVars = make(map[string]string)
 	}
 
+	tokens := lexer.Tokenize(input)
+
 	var missing []string
 	seenMissing := make(map[string]bool)
 	matches := re.FindAllStringSubmatchIndex(input, -1)
@@ -71,6 +76,14 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	lastIndex := 0
 	for _, match := range matches {
 		start, end := match[0], match[1]
+
+		// Skip substitution if the variable is inside a comment
+		if isInsideComment(tokens, start) {
+			output.WriteString(input[lastIndex:end])
+			lastIndex = end
+			continue
+		}
+
 		output.WriteString(input[lastIndex:start])
 
 		variableName := input[match[2]:match[3]]
@@ -128,6 +141,18 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	return output.String(), err
 }
 
+// isInsideComment checks if the given byte offset in the YAML input is within a comment token.
+func isInsideComment(tokens token.Tokens, offset int) bool {
+	for _, t := range tokens {
+		if t.Type == token.CommentType && t.Position != nil {
+			if offset >= t.Position.Offset && offset < t.Position.Offset+len(t.Origin) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // ParseConfig parses the provided yaml into appropriate configs.
 func lineColumnAt(input string, index int) (int, int) {
 	line := 1
@@ -155,7 +180,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 	raw = []byte(output)
 
-	raw, err = ConvertConfig(raw)
+	raw, err = ConvertConfig(ctx, raw)
 	if err != nil {
 		return config, fmt.Errorf("error converting config file: %s", err)
 	}
@@ -168,8 +193,9 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	return config, nil
 }
 
-// ConvertConfig converts configuration file to flat format.
-func ConvertConfig(raw []byte) ([]byte, error) {
+// ConvertConfig converts configuration file to flat format and rewrites toolsets
+// to the group kind.
+func ConvertConfig(ctx context.Context, raw []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	// Manually copy top-level comments and empty lines from the source
 	scanner := bufio.NewScanner(bytes.NewReader(raw))
@@ -208,13 +234,16 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 			}
 			if hasKindField(input) {
 				// this doc is already in flat format, encode to buf
-				if err := encoder.Encode(input); err != nil {
+				if err := encoder.Encode(migrateToolsetKind(ctx, input)); err != nil {
 					return nil, err
 				}
 				break
 			}
 			// check if value conversion to yaml.MapSlice successfully
 			if slice, ok := item.Value.(yaml.MapSlice); slices.Contains(nestedFormatKey, key) && ok {
+				// srcKey is kept for error messages, which should name the key the
+				// user actually wrote rather than the flat kind it maps to.
+				srcKey := key
 				switch key {
 				case "authServices":
 					key = "authService"
@@ -233,11 +262,11 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 				}
 				transformed, err := transformDocs(key, slice)
 				if err != nil {
-					return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, key, err)
+					return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, srcKey, err)
 				}
 				// encode per-doc
 				for _, doc := range transformed {
-					if err := encoder.Encode(doc); err != nil {
+					if err := encoder.Encode(migrateToolsetKind(ctx, doc)); err != nil {
 						return nil, err
 					}
 				}
@@ -257,6 +286,53 @@ func hasKindField(input yaml.MapSlice) bool {
 		}
 	}
 	return false
+}
+
+// migrateToolsetKind rewrites `kind: toolset` to `kind: group`, preserving field
+// order, and returns other kinds unchanged. Every flat doc passes through here,
+// so nested and already-flat toolsets cannot diverge.
+//
+// A description on a toolset is dropped with a warning rather than promoted: a
+// toolset has none of its own, so publishing it would give the collection a
+// description it never declared.
+func migrateToolsetKind(ctx context.Context, input yaml.MapSlice) yaml.MapSlice {
+	kindIndex, descIndex, nameIndex := -1, -1, -1
+	for i, item := range input {
+		switch item.Key {
+		case "kind":
+			kindIndex = i
+		case "description":
+			descIndex = i
+		case "name":
+			nameIndex = i
+		}
+	}
+	if kindIndex < 0 {
+		return input
+	}
+	if val, ok := input[kindIndex].Value.(string); !ok || val != "toolset" {
+		return input
+	}
+
+	// Copy before rewriting: ConvertConfig hands us the slice it is still
+	// ranging over, so editing input in place would shift elements out from
+	// under that loop.
+	migrated := slices.Clone(input)
+	migrated[kindIndex].Value = "group"
+	if descIndex >= 0 {
+		migrated = slices.Delete(migrated, descIndex, descIndex+1)
+
+		var name string
+		if nameIndex >= 0 {
+			name, _ = input[nameIndex].Value.(string)
+		}
+		// Warning is best effort: a caller without a logger in context still
+		// gets the conversion.
+		if logger, err := util.LoggerFromContext(ctx); err == nil {
+			logger.WarnContext(ctx, fmt.Sprintf("toolset %q: dropping description, which a toolset does not support; declare the collection as `kind: group` to keep it", name))
+		}
+	}
+	return migrated
 }
 
 // transformDocs transforms the configuration file from nested to flat format
