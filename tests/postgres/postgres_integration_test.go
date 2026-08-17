@@ -47,6 +47,7 @@ func setupPostgresContainer(t *testing.T, ctx context.Context) (map[string]any, 
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2)),
+		testcontainers.WithCmd("postgres", "-c", "shared_preload_libraries=pg_stat_statements"),
 		tcpostgres.WithDatabase(dbName),
 		tcpostgres.WithUsername(dbUser),
 		tcpostgres.WithPassword(dbPassword),
