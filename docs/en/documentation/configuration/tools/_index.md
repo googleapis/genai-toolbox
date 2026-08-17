@@ -122,7 +122,7 @@ Providing a `default` also makes the parameter optional — it overrides
 | omitted    | omitted               | **Required.** Calls that omit the argument are rejected.         |
 | `true`     | omitted               | **Required.** Same as above.                                     |
 | `false`    | omitted               | Optional; omitted calls pass no value (`NULL` in SQL).           |
-| `true`     | a value               | **Optional** — the `default` wins over `required: true`.         |
+| `true`     | a value               | **Optional**;  the `default` wins over `required: true`.         |
 | omitted    | a value               | Optional; omitted calls use the default.                         |
 | `false`    | a value               | Optional; omitted calls use the default.                         |
 
