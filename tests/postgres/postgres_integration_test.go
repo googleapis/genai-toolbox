@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -28,40 +27,58 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/testcontainers/testcontainers-go"
+	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 var (
 	PostgresSourceType = "postgres"
 	PostgresToolType   = "postgres-sql"
-	PostgresDatabase   = os.Getenv("POSTGRES_DATABASE")
-	PostgresHost       = os.Getenv("POSTGRES_HOST")
-	PostgresPort       = os.Getenv("POSTGRES_PORT")
-	PostgresUser       = os.Getenv("POSTGRES_USER")
-	PostgresPass       = os.Getenv("POSTGRES_PASS")
 )
 
-func getPostgresVars(t *testing.T) map[string]any {
-	switch "" {
-	case PostgresDatabase:
-		t.Fatal("'POSTGRES_DATABASE' not set")
-	case PostgresHost:
-		t.Fatal("'POSTGRES_HOST' not set")
-	case PostgresPort:
-		t.Fatal("'POSTGRES_PORT' not set")
-	case PostgresUser:
-		t.Fatal("'POSTGRES_USER' not set")
-	case PostgresPass:
-		t.Fatal("'POSTGRES_PASS' not set")
+func setupPostgresContainer(t *testing.T, ctx context.Context) (map[string]any, string, string, string, string, string) {
+	dbName := "test_database"
+	dbUser := "postgres"
+	dbPassword := "password"
+
+	postgresContainer, err := tcpostgres.Run(ctx,
+		"postgres:16-alpine",
+		testcontainers.WithWaitStrategy(
+			wait.ForLog("database system is ready to accept connections").
+				WithOccurrence(2)),
+		tcpostgres.WithDatabase(dbName),
+		tcpostgres.WithUsername(dbUser),
+		tcpostgres.WithPassword(dbPassword),
+	)
+	if err != nil {
+		t.Fatalf("failed to start Postgres container: %s", err)
+	}
+
+	t.Cleanup(func() {
+		if err := postgresContainer.Terminate(context.Background()); err != nil {
+			t.Logf("failed to terminate container: %s", err)
+		}
+	})
+
+	host, err := postgresContainer.Host(ctx)
+	if err != nil {
+		t.Fatalf("failed to get Postgres host: %s", err)
+	}
+
+	port, err := postgresContainer.MappedPort(ctx, "5432")
+	if err != nil {
+		t.Fatalf("failed to get Postgres port: %s", err)
 	}
 
 	return map[string]any{
 		"type":     PostgresSourceType,
-		"host":     PostgresHost,
-		"port":     PostgresPort,
-		"database": PostgresDatabase,
-		"user":     PostgresUser,
-		"password": PostgresPass,
-	}
+		"host":     host,
+		"port":     port.Port(),
+		"database": dbName,
+		"user":     dbUser,
+		"password": dbPassword,
+	}, host, port.Port(), dbUser, dbPassword, dbName
 }
 
 // Copied over from postgres.go
@@ -82,9 +99,10 @@ func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool
 }
 
 func TestPostgres(t *testing.T) {
-	sourceConfig := getPostgresVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
+
+	sourceConfig, PostgresHost, PostgresPort, PostgresUser, PostgresPass, PostgresDatabase := setupPostgresContainer(t, ctx)
 
 	args := []string{"--enable-api"}
 
