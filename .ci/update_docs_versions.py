@@ -72,17 +72,18 @@ def update_toml_file(file_path, version, remove_oldest):
 
     if remove_oldest:
         # We need to remove the last [[params.versions]] block.
-        version_block_pattern = r'\[\[params\.versions\]\][\s\S]*?(?=\[\[|$)'
+        version_block_pattern = r'\[\[params\.versions\]\][\s\S]*?(?=\[|$)'
         matches = list(re.finditer(version_block_pattern, updated_content))
         print(f"Found {len(matches)} version blocks in {os.path.basename(file_path)}.")
         
-        # We keep at most 8 version blocks (dev + 7 released versions).
-        if len(matches) > 8:
+        # We keep at most 7 version blocks (dev + 6 released versions).
+        if len(matches) > 7:
             last_match = matches[-1]
             start, end = last_match.span()
             before = updated_content[:start]
             after = updated_content[end:]
             
+            # Keep the spacing clean
             before = before.rstrip() + '\n\n'
             after = after.lstrip()
             
