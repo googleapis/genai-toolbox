@@ -43,7 +43,7 @@ func setupPostgresContainer(t *testing.T, ctx context.Context) (map[string]any, 
 	dbPassword := "password"
 
 	postgresContainer, err := tcpostgres.Run(ctx,
-		"postgres:16-alpine",
+		"pgvector/pgvector:pg16",
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2)),
