@@ -55,9 +55,8 @@ type ToolboxOptions struct {
 // Option defines a function that modifies the ToolboxOptions struct.
 type Option func(*ToolboxOptions)
 
-type githubRelease struct {
-	TagName string `json:"tag_name"`
-}
+// githubReleasesURL is the endpoint used to check for latest Toolbox release on startup.
+var githubReleasesURL = "https://api.github.com/repos/googleapis/mcp-toolbox/releases/latest"
 
 // NewToolboxOptions creates a new instance with defaults, then applies any
 // provided options.
@@ -328,7 +327,7 @@ func (opts *ToolboxOptions) checkVersion(ctx context.Context) {
 	reqCtx, cancel := context.WithTimeout(ctx, time.Second*3)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(reqCtx, "GET", "https://api.github.com/repos/googleapis/mcp-toolbox/releases/latest", nil)
+	req, err := http.NewRequestWithContext(reqCtx, "GET", githubReleasesURL, nil)
 	if err != nil {
 		opts.Logger.DebugContext(ctx, fmt.Sprintf("Unable to query latest Toolbox version: %v (skipping version check)", err))
 		return
@@ -349,7 +348,10 @@ func (opts *ToolboxOptions) checkVersion(ctx context.Context) {
 		return
 	}
 	
-	var rel githubRelease
+	var rel struct {
+		TagName string `json:"tag_name"`
+	}
+
 	if err := json.NewDecoder(resp.Body).Decode(&rel); err != nil {
 		opts.Logger.DebugContext(ctx, fmt.Sprintf("Unable to query latest Toolbox version: %v (skipping version check)", err))
 		return
