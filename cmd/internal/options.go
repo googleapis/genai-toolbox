@@ -19,11 +19,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"slices"
 	"strings"
 	"time"
-	"net/http"
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prebuiltconfigs"
@@ -315,11 +315,16 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 	return isCustomConfigured, nil
 }
 
-// checkVersion checks the current version of the Toolbox against the latest release on GitHub 
+// checkVersion checks the current version of the Toolbox against the latest release on GitHub
 // and logs a warning if a newer version is available.
 func (opts *ToolboxOptions) checkVersion(ctx context.Context) {
 
-	if opts.VersionNum == "" || opts.Cfg.DisableVersionCheck {
+	if opts.Cfg.DisableVersionCheck {
+		opts.Logger.DebugContext(ctx, "Skipping version check (disabled)")
+		return
+	}
+
+	if opts.VersionNum == "" {
 		opts.Logger.DebugContext(ctx, "Unable to determine current Toolbox version (skipping version check)")
 		return
 	}
@@ -347,7 +352,7 @@ func (opts *ToolboxOptions) checkVersion(ctx context.Context) {
 		opts.Logger.DebugContext(ctx, fmt.Sprintf("Unable to query latest Toolbox version: received status code %d (skipping version check)", resp.StatusCode))
 		return
 	}
-	
+
 	var rel struct {
 		TagName string `json:"tag_name"`
 	}

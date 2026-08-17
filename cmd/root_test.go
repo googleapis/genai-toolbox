@@ -271,7 +271,7 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--disable-version-check"},
 			want: withDefaults(server.ServerConfig{
 				DisableVersionCheck: true,
-			})
+			}),
 		},
 	}
 	for _, tc := range tcs {

@@ -162,14 +162,14 @@ func TestCheckVersion(t *testing.T) {
 		remoteVersion       string
 		httpStatus          int
 		disableVersionCheck bool
-		wantWarnLog		   	string
+		wantWarnLog         string
 	}{
 		{
-			desc:            "outdated version logs warning",
-			currentVersion:  "1.7.0",
-			remoteVersion:   "v1.8.0",
-			httpStatus:      http.StatusOK,
-			wantWarnLog:     "A newer version of MCP Toolbox is available: (v1.7.0 -> v1.8.0)",
+			desc:           "outdated version logs warning",
+			currentVersion: "1.7.0",
+			remoteVersion:  "v1.8.0",
+			httpStatus:     http.StatusOK,
+			wantWarnLog:    "A newer version of MCP Toolbox is available: (v1.7.0 -> v1.8.0)",
 		},
 		{
 			desc:           "up to date version logs nothing",
@@ -204,7 +204,7 @@ func TestCheckVersion(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			
+
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tc.httpStatus)
 				if tc.httpStatus == http.StatusOK {
@@ -216,7 +216,7 @@ func TestCheckVersion(t *testing.T) {
 			origURL := githubReleasesURL
 			githubReleasesURL = ts.URL
 			defer func() { githubReleasesURL = origURL }()
-			
+
 			buf := new(bytes.Buffer)
 			logger, err := log.NewLogger("standard", "DEBUG", buf, buf)
 			if err != nil {
