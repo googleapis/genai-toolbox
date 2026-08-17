@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package file
+package file_test
+
 
 import (
 	"bytes"
@@ -28,7 +29,11 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
+	"github.com/googleapis/mcp-toolbox/internal/resources/file"
 )
+
+const defaultMaxFileSize = 5 * 1024 * 1024
+
 
 // TestFileResource_Validation verifies that the file resource correctly validates
 // configurations at boot and runtime, blocking invalid paths, missing fields,
@@ -232,7 +237,7 @@ func TestFileResource_Truncation(t *testing.T) {
 		{
 			name:      "default truncation 5MB",
 			yamlStr:   fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(largePath)),
-			wantSize:  defaultMaxFileSize,
+			wantSize:  int64(defaultMaxFileSize),
 			wantTrunc: true,
 		},
 		{
@@ -361,7 +366,7 @@ func TestFileResource_Metadata(t *testing.T) {
 		t.Fatalf("Initialize failed: %v", err)
 	}
 
-	fileCfg := res.ToConfig().(*Config)
+	fileCfg := res.ToConfig().(*file.Config)
 
 	if !strings.HasPrefix(fileCfg.MimeType, "text/markdown") && !strings.HasPrefix(fileCfg.MimeType, "text/plain") && fileCfg.MimeType != "" {
 		t.Errorf("expected reasonable MimeType, got: %v", fileCfg.MimeType)
@@ -435,7 +440,7 @@ func TestFileResource_DynamicMetadata(t *testing.T) {
 		t.Fatalf("Initialize failed: %v", err)
 	}
 
-	fileCfg := res.ToConfig().(*Config)
+	fileCfg := res.ToConfig().(*file.Config)
 	initialTimestamp := fileCfg.Annotations.LastModified
 
 	time.Sleep(10 * time.Millisecond)
@@ -449,7 +454,7 @@ func TestFileResource_DynamicMetadata(t *testing.T) {
 	}
 	f.Close()
 
-	updatedCfg := res.ToConfig().(*Config)
+	updatedCfg := res.ToConfig().(*file.Config)
 	if updatedCfg.Annotations.LastModified == initialTimestamp {
 		_, err := time.Parse(time.RFC3339, updatedCfg.Annotations.LastModified)
 		if err != nil {
@@ -624,7 +629,7 @@ func TestFileResource_ToConfigNonRegularFile(t *testing.T) {
 		t.Fatalf("failed to create directory in place of file: %v", err)
 	}
 
-	config := res.ToConfig().(*Config)
+	config := res.ToConfig().(*file.Config)
 	if config.Annotations != nil && config.Annotations.LastModified != "" {
 		t.Errorf("Expected LastModified to be empty for non-regular file, got %q", config.Annotations.LastModified)
 	}
