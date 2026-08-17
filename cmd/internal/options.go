@@ -320,7 +320,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 // and logs a warning if a newer version is available.
 func (opts *ToolboxOptions) checkVersion(ctx context.Context) {
 
-	if opts.VersionNum == "" {
+	if opts.VersionNum == "" || opts.Cfg.DisableVersionCheck {
 		opts.Logger.DebugContext(ctx, "Unable to determine current Toolbox version (skipping version check)")
 		return
 	}
