@@ -83,7 +83,6 @@ def update_toml_file(file_path, version, remove_oldest):
             before = updated_content[:start]
             after = updated_content[end:]
             
-            # Keep the spacing clean
             before = before.rstrip() + '\n\n'
             after = after.lstrip()
             
