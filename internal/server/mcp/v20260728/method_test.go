@@ -940,8 +940,8 @@ func TestGroupsListHandler(t *testing.T) {
 	}
 	ctx = util.WithLogger(ctx, testLogger)
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
-	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, mockTools, nil, nil)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, nil, groups)
+	toolsMap, promptsMap, _, _, groups := testutils.SetUpPrimitives(t, mockTools, nil, nil, nil)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, nil, nil, groups)
 
 	validMeta := &RequestMetaObject{
 		ProtocolVersion: PROTOCOL_VERSION,
@@ -1040,8 +1040,8 @@ func TestGroupsGetHandler(t *testing.T) {
 	}
 	ctx = util.WithLogger(ctx, testLogger)
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
-	toolsMap, promptsMap, _, groups := testutils.SetUpPrimitives(t, mockTools, nil, nil)
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, nil, groups)
+	toolsMap, promptsMap, _, _, groups := testutils.SetUpPrimitives(t, mockTools, nil, nil, nil)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, nil, nil, groups)
 
 	validMeta := &RequestMetaObject{
 		ProtocolVersion: PROTOCOL_VERSION,

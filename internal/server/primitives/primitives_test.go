@@ -109,8 +109,8 @@ func TestUpdateServer(t *testing.T) {
 // manager can correctly resolve exact URI matches for static resources, or
 // fallback to matching and extracting parameters for URI templates.
 func TestPrimitiveManager_GetResourceOrTemplateByURI(t *testing.T) {
-	primMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil, nil, nil, nil)
-
+	primMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil, nil, nil)
+	
 	resourcesMap := map[string]resources.Resource{
 		"static-res": testutils.NewMockResource("static-res", "file:///mock/resource/1"),
 	}
@@ -118,7 +118,7 @@ func TestPrimitiveManager_GetResourceOrTemplateByURI(t *testing.T) {
 		"test-tmpl": testutils.NewMockResourceTemplate("test-tmpl", "file:///logs/{path}"),
 	}
 
-	primMgr.SetPrimitives(nil, nil, nil, nil, nil, nil, nil, resourcesMap, templatesMap)
+	primMgr.SetPrimitives(nil, nil, nil, nil, nil, resourcesMap, templatesMap, nil)
 
 	// Test matching static resource
 	res, tmpl, params, err := primMgr.GetResourceOrTemplateByURI("file:///mock/resource/1")

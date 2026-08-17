@@ -33,100 +33,132 @@ func TestTextResourceInitialization(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		config      Config
+		yamlStr     string
 		wantError   bool
 		errContains string
 		wantMime    string
 		wantPrior   *float64
+		wantText    string
 	}{
 		{
-			name: "success with defaults",
-			config: Config{
-				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test1"}},
-				Text:               "Hello, world!",
-			},
+			name: "success with defaults (no URI specified)",
+			yamlStr: `
+name: test1
+type: text
+text: "Hello, world!"
+`,
 			wantError: false,
 			wantMime:  "text/plain",
 			wantPrior: nil,
+			wantText:  "Hello, world!",
 		},
 		{
 			name: "success with overrides",
-			config: Config{
-				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{
-					Name:        "test2",
-					MimeType:    "application/json",
-					Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.5)},
-				}},
-				Text: `{"hello":"world"}`,
-			},
+			yamlStr: `
+name: test2
+type: text
+mimeType: application/json
+annotations:
+  priority: 0.5
+text: '{"hello":"world"}'
+`,
 			wantError: false,
 			wantMime:  "application/json",
 			wantPrior: floatPtr(0.5),
+			wantText:  `{"hello":"world"}`,
+		},
+		{
+			name: "error empty text payload explicitly defined",
+			yamlStr: `
+name: test4
+type: text
+text: ""
+`,
+			wantError:   true,
+			errContains: "Field validation for 'Text' failed",
 		},
 		{
 			name: "error missing text payload",
-			config: Config{
-				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test3"}},
-				Text:               "",
-			},
+			yamlStr: `
+name: test3
+type: text
+`,
 			wantError:   true,
-			errContains: "missing required field",
+			errContains: "Field validation for 'Text' failed",
 		},
 		{
 			name: "explicit 0.0 priority",
-			config: Config{
-				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{
-					Name:        "test-priority",
-					Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.0)},
-				}},
-				Text: "priority test",
-			},
+			yamlStr: `
+name: test-priority
+type: text
+annotations:
+  priority: 0.0
+text: "priority test"
+`,
 			wantError: false,
 			wantMime:  "text/plain",
 			wantPrior: floatPtr(0.0),
+			wantText:  "priority test",
 		},
 		{
 			name: "multi-byte unicode size calculation",
-			config: Config{
-				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test-unicode"}},
-				Text:               "Hello 🌍",
-			},
+			yamlStr: `
+name: test-unicode
+type: text
+text: "Hello 🌍"
+`,
 			wantError: false,
 			wantMime:  "text/plain",
 			wantPrior: nil,
+			wantText:  "Hello 🌍",
 		},
 		{
 			name: "pure whitespace payload",
-			config: Config{
-				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test-whitespace"}},
-				Text:               "   \n  ",
-			},
+			yamlStr: `
+name: test-whitespace
+type: text
+text: "   \n  "
+`,
 			wantError: false,
 			wantMime:  "text/plain",
 			wantPrior: nil,
+			wantText:  "   \n  ",
 		},
 		{
 			name: "explicit empty mimetype defaults to text/plain",
-			config: Config{
-				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{
-					Name:     "test-empty-mime",
-					MimeType: "",
-				}},
-				Text: "hello",
-			},
+			yamlStr: `
+name: test-empty-mime
+type: text
+mimeType: ""
+text: "hello"
+`,
 			wantError: false,
 			wantMime:  "text/plain",
 			wantPrior: nil,
+			wantText:  "hello",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.config.Validate()
+			dec := yaml.NewDecoder(bytes.NewReader([]byte(tc.yamlStr)), yaml.Strict(), yaml.Validator(validator.New()))
+			
+			// parse resourceName
+			var pre map[string]any
+			if err := yaml.Unmarshal([]byte(tc.yamlStr), &pre); err != nil {
+			    t.Fatalf("failed to pre-parse yaml: %v", err)
+			}
+			resName := pre["name"].(string)
+			
+			config, err := newConfig(ctx, resName, dec)
 			var res resources.Resource
 			if err == nil {
-				res, err = tc.config.Initialize(ctx)
+			    err = config.Validate()
 			}
+			if err == nil {
+				res, err = config.Initialize(ctx)
+			}
+			
 			if tc.wantError {
 				if err == nil {
 					t.Fatalf("Expected error, got nil")
@@ -142,24 +174,28 @@ func TestTextResourceInitialization(t *testing.T) {
 				t.Fatalf("Initialize() unexpected error: %v", err)
 			}
 
+			// Verify URI default
+			if config.GetURI() != "text://"+resName {
+			    t.Errorf("expected URI to default to %q, got %q", "text://"+resName, config.GetURI())
+			}
+
 			// Verify execution (Read)
 			data, err := res.Read(ctx, nil)
 			if err != nil {
 				t.Fatalf("Read() unexpected error: %v", err)
 			}
-			if diff := cmp.Diff(tc.config.Text, data); diff != "" {
+			if diff := cmp.Diff(tc.wantText, data); diff != "" {
 				t.Errorf("Read() mismatch (-want +got):\n%s", diff)
 			}
 
 			textRes := res.(*Resource)
-			expectedSize := int64(len(tc.config.Text))
+			expectedSize := int64(len(tc.wantText))
 			if textRes.Size != expectedSize {
 				t.Errorf("Size = %d, want %d", textRes.Size, expectedSize)
 			}
 		})
 	}
 }
-
 func TestTextResourceYAMLUnmarshaling(t *testing.T) {
 	ctx := context.Background()
 

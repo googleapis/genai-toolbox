@@ -14,11 +14,11 @@
 package server
 
 import (
-	"net/url"
 	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -736,18 +736,15 @@ func keyToken(body ast.Node, key string) *token.Token {
 }
 
 func UnmarshalYAMLResourceTemplateConfig(ctx context.Context, name string, r map[string]any) (resources.ResourceTemplateConfig, error) {
-	resourceType := "file"
+	var resourceType string
 	if typeVal, ok := r["type"]; ok {
 		var isString bool
 		resourceType, isString = typeVal.(string)
 		if !isString {
 			return nil, fmt.Errorf("invalid 'type' field for resourceTemplate %q (must be a string)", name)
 		}
-		resourceType = strings.ToLower(resourceType)
-	}
-
-	if resourceType != "file" {
-		return nil, fmt.Errorf("invalid 'type' field for resourceTemplate %q: only 'file' is supported", name)
+	} else {
+		return nil, fmt.Errorf("missing required 'type' field for resourceTemplate %q", name)
 	}
 
 	if uriVal, ok := r["uriTemplate"]; ok {
@@ -773,11 +770,6 @@ func UnmarshalYAMLResourceTemplateConfig(ctx context.Context, name string, r map
 			parsed, err := url.Parse(parseableURI)
 			if err != nil || parsed.Scheme == "" {
 				return nil, fmt.Errorf("invalid 'uriTemplate' field for resourceTemplate %q: must be a valid RFC-compliant absolute URI with a scheme", name)
-			}
-
-			// Must be a URI starting with file:// per user requirements
-			if resourceType == "file" && parsed.Scheme != "file" {
-				return nil, fmt.Errorf("invalid scheme for file resource template %q: must be 'file'", name)
 			}
 
 			// Update the map with the normalized URI

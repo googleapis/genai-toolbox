@@ -223,6 +223,8 @@ type ResourceTemplateConfig interface {
 	GetTitle() string
 	GetDescription() string
 	GetMimeType() string
+	SetDefaults()
+	Validate() error
 	Initialize(ctx context.Context) (ResourceTemplate, error)
 }
 
@@ -289,14 +291,10 @@ func DecodeTemplateConfig(ctx context.Context, resourceType, name string, decode
 		return nil, fmt.Errorf("factory returned nil config for resource template %q as type %q", name, resourceType)
 	}
 
-	if defaulter, ok := config.(interface{ SetDefaults() }); ok {
-		defaulter.SetDefaults()
-	}
+	config.SetDefaults()
 
-	if validatable, ok := config.(interface{ Validate() error }); ok {
-		if err := validatable.Validate(); err != nil {
-			return nil, fmt.Errorf("validation failed for resource template %q: %w", name, err)
-		}
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("validation failed for resource template %q: %w", name, err)
 	}
 
 	return config, nil

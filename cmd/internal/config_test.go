@@ -38,6 +38,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools/http"
 	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgressql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"github.com/goccy/go-yaml"
 )
 
 func TestParseEnv(t *testing.T) {
@@ -635,7 +636,7 @@ func TestParseConfig(t *testing.T) {
 		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
 			return nil, err
 		}
-		return cfg, nil
+		return &cfg, nil
 	})
 
 	ctx, err := testutils.ContextWithNewLogger()
@@ -857,7 +858,8 @@ func TestParseConfig(t *testing.T) {
 						ResourceConfigBase: resources.ResourceConfigBase{
 							ConfigBase: resources.ConfigBase{
 								Name: "my-resource",
-								Type: "mock",							},
+								Type: "mock",
+								Annotations: &resources.ResourceAnnotations{Priority: float64Ptr(1.0)},},
 							URI: "mock://test",
 						},
 					},
@@ -908,14 +910,14 @@ func TestParseConfig(t *testing.T) {
 				Sources:      nil,
 				AuthServices: nil,
 				Tools:        nil,
-				Groups:     nil,
+				Groups:       nil,
 				Prompts:      nil,
 				Resources: server.ResourceConfigs{
 					"my-resource": &file.Config{
 						ResourceConfigBase: resources.ResourceConfigBase{
 							ConfigBase: resources.ConfigBase{
-								Name:        "my-resource",
-								Type:        "file",								Annotations: &resources.ResourceAnnotations{Priority: float64Ptr(1.0)},
+								Name: "my-resource",
+								Type: "file", Annotations: &resources.ResourceAnnotations{Priority: float64Ptr(1.0)},
 							},
 							URI: "file:///my/test/path",
 						},
@@ -963,7 +965,7 @@ func TestParseConfig(t *testing.T) {
             uriTemplate: file:///{path}
 `,
 			wantErr:   true,
-			errString: "only 'file' is supported",
+			errString: "unknown resource template type",
 		},
 	}
 	for _, tc := range tcs {
@@ -2468,18 +2470,18 @@ func TestPrebuiltTools(t *testing.T) {
 
 func TestMergeConfigs(t *testing.T) {
 	file1 := Config{
-		Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-		Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}},
-		Groups:          server.GroupConfigs{"set1": group.GroupConfig{Name: "set1"}},
-		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
-		Resources:       server.ResourceConfigs{"res1": &testutils.MockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res1"}, URI: "mock://res1"}}},
+		Sources:           server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+		Tools:             server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}},
+		Groups:            server.GroupConfigs{"set1": group.GroupConfig{Name: "set1"}},
+		EmbeddingModels:   server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
+		Resources:         server.ResourceConfigs{"res1": &testutils.MockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res1"}, URI: "mock://res1"}}},
 		ResourceTemplates: server.ResourceTemplateConfigs{"tmpl1": &testutils.MockResourceTemplateConfig{ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{ConfigBase: resources.ConfigBase{Name: "tmpl1"}, URITemplate: "file:///{path}"}}},
 	}
 	file2 := Config{
-		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-		Tools:        server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
-		Groups:       server.GroupConfigs{"set2": group.GroupConfig{Name: "set2"}},
-		Resources:    server.ResourceConfigs{"res2": &testutils.MockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res2"}, URI: "mock://res2"}}},
+		AuthServices:      server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
+		Tools:             server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
+		Groups:            server.GroupConfigs{"set2": group.GroupConfig{Name: "set2"}},
+		Resources:         server.ResourceConfigs{"res2": &testutils.MockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res2"}, URI: "mock://res2"}}},
 		ResourceTemplates: server.ResourceTemplateConfigs{"tmpl2": &testutils.MockResourceTemplateConfig{ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{ConfigBase: resources.ConfigBase{Name: "tmpl2"}, URITemplate: "mock://logs/{path}"}}},
 	}
 	fileWithConflicts := Config{
@@ -2516,13 +2518,13 @@ func TestMergeConfigs(t *testing.T) {
 			name:  "merge two distinct files",
 			files: []Config{file1, file2},
 			want: Config{
-				Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-				AuthServices:    server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-				Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}, "tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
-				Prompts:         server.PromptConfigs{},
-				Groups:          server.GroupConfigs{"set1": group.GroupConfig{Name: "set1"}, "set2": group.GroupConfig{Name: "set2"}},
-				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
-				Resources:       server.ResourceConfigs{"res1": &testutils.MockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res1"}, URI: "mock://res1"}}, "res2": &testutils.MockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res2"}, URI: "mock://res2"}}},
+				Sources:           server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+				AuthServices:      server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
+				Tools:             server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}, "tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
+				Prompts:           server.PromptConfigs{},
+				Groups:            server.GroupConfigs{"set1": group.GroupConfig{Name: "set1"}, "set2": group.GroupConfig{Name: "set2"}},
+				EmbeddingModels:   server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
+				Resources:         server.ResourceConfigs{"res1": &testutils.MockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res1"}, URI: "mock://res1"}}, "res2": &testutils.MockResourceConfig{ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "res2"}, URI: "mock://res2"}}},
 				ResourceTemplates: server.ResourceTemplateConfigs{"tmpl1": &testutils.MockResourceTemplateConfig{ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{ConfigBase: resources.ConfigBase{Name: "tmpl1"}, URITemplate: "file:///{path}"}}, "tmpl2": &testutils.MockResourceTemplateConfig{ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{ConfigBase: resources.ConfigBase{Name: "tmpl2"}, URITemplate: "mock://logs/{path}"}}},
 			},
 			wantErr: false,
@@ -2566,13 +2568,13 @@ func TestMergeConfigs(t *testing.T) {
 			name:  "merge single file",
 			files: []Config{file1},
 			want: Config{
-				Sources:         file1.Sources,
-				AuthServices:    make(server.AuthServiceConfigs),
-				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
-				Tools:           file1.Tools,
-				Prompts:         server.PromptConfigs{},
-				Resources:       file1.Resources,
-				Groups:          file1.Groups,
+				Sources:           file1.Sources,
+				AuthServices:      make(server.AuthServiceConfigs),
+				EmbeddingModels:   server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
+				Tools:             file1.Tools,
+				Prompts:           server.PromptConfigs{},
+				Resources:         file1.Resources,
+				Groups:            file1.Groups,
 				ResourceTemplates: file1.ResourceTemplates,
 			},
 		},
@@ -2580,13 +2582,13 @@ func TestMergeConfigs(t *testing.T) {
 			name:  "merge empty list",
 			files: []Config{},
 			want: Config{
-				Sources:         make(server.SourceConfigs),
-				AuthServices:    make(server.AuthServiceConfigs),
-				EmbeddingModels: make(server.EmbeddingModelConfigs),
-				Tools:           make(server.ToolConfigs),
-				Prompts:         server.PromptConfigs{},
-				Resources:       make(server.ResourceConfigs),
-				Groups:          make(server.GroupConfigs),
+				Sources:           make(server.SourceConfigs),
+				AuthServices:      make(server.AuthServiceConfigs),
+				EmbeddingModels:   make(server.EmbeddingModelConfigs),
+				Tools:             make(server.ToolConfigs),
+				Prompts:           server.PromptConfigs{},
+				Resources:         make(server.ResourceConfigs),
+				Groups:            make(server.GroupConfigs),
 				ResourceTemplates: make(server.ResourceTemplateConfigs),
 			},
 		},

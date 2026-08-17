@@ -1566,7 +1566,7 @@ func TestGetEndpoint(t *testing.T) {
 }
 
 func TestMcpRequestBodyLimit(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1598,7 +1598,7 @@ func TestMcpRequestBodyLimit(t *testing.T) {
 
 func TestMcpRequestBodyLimitOverride(t *testing.T) {
 	customLimit := int64(1 << 20)
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()

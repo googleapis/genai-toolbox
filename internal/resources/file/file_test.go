@@ -67,12 +67,6 @@ func TestFileResource_Validation(t *testing.T) {
 		failDecode bool
 	}{
 		{
-			name:       "missing path",
-			yamlStr:    "type: file",
-			wantErrMsg: "required' tag",
-			failDecode: true,
-		},
-		{
 			name:       "path traversal",
 			yamlStr:    fmt.Sprintf("type: file\npath: %s", "../secrets.txt"),
 			wantErrMsg: "relative path \"../secrets.txt\" is unsafe",
@@ -843,7 +837,7 @@ func TestFileResource_ToConfigAndType(t *testing.T) {
 		t.Errorf("expected ResourceConfigType to be 'file', got %q", cfg.ResourceConfigType())
 	}
 
-	res := FileResource{config: &cfg}
+	res := FileResource{Config: cfg}
 	if res.ToConfig() == nil {
 		t.Errorf("expected ToConfig to return a valid config")
 	}

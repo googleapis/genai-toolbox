@@ -30,9 +30,9 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/resources"
 )
 
-const(
+const (
 	defaultMaxFileSize = 5 * 1024 * 1024 // 5MB
-	resourceType = "file"
+	resourceType       = "file"
 )
 
 func init() {
@@ -51,7 +51,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 				Name: name,
 				Type: resourceType,
 			},
-			URI:  fmt.Sprintf("file://%s", name),
+			URI: fmt.Sprintf("file://%s", name),
 		},
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
@@ -75,11 +75,10 @@ func newTemplateConfig(ctx context.Context, name string, decoder *yaml.Decoder) 
 	return cfg, nil
 }
 
-
 // Config represents the configuration for a file resource.
 type Config struct {
 	resources.ResourceConfigBase `yaml:",inline"`
-	Path                         string `yaml:"path"`
+	Path                         string `yaml:"path" validate:"required"`
 	MaxSize                      *int64 `yaml:"max_size,omitempty"`
 
 	absPath         string
@@ -380,6 +379,14 @@ type TemplateConfig struct {
 // ResourceTemplateConfigType returns the resource template type identifier.
 func (c *TemplateConfig) ResourceTemplateConfigType() string {
 	return "file"
+}
+
+// Validate performs template-specific validation including URI scheme checks.
+func (c *TemplateConfig) Validate() error {
+	if !strings.HasPrefix(c.URITemplate, "file://") {
+		return fmt.Errorf("invalid scheme for file resource template %q: must be 'file'", c.Name)
+	}
+	return nil
 }
 
 // Initialize validates the configuration and initializes the file resource template.

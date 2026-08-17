@@ -30,7 +30,7 @@ import (
 func TestToolsetEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, _, _, _, groups := testutils.SetUpPrimitives(t, mockTools, nil, nil, nil)
-	r, shutdown := setUpServer(t, "api", toolsMap, nil, groups)
+	r, shutdown := setUpServer(t, "api", toolsMap, nil, nil, nil, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()

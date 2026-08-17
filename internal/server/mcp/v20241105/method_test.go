@@ -463,7 +463,7 @@ func TestPromptsGetHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	// Initialize primitives
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups := testutils.SetUpPrimitives(t, nil, mockPrompts, nil)
+	toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups := testutils.SetUpPrimitives(t, nil, mockPrompts, nil, nil)
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups)
 	tests := []struct {
 		name        string

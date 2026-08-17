@@ -1616,7 +1616,7 @@ messages:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if err == nil {
 				t.Fatalf("UnmarshalPrimitiveConfig() expected a duplicate error, got nil")
 			}
@@ -1764,7 +1764,7 @@ tools:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
@@ -1794,7 +1794,7 @@ tools:
 prompts:
   - prompt_a
 `
-	_, _, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(yaml))
+	_, _, _, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(yaml))
 	if err != nil {
 		t.Fatalf("UnmarshalPrimitiveConfig() returned unexpected error: %v", err)
 	}
@@ -1839,7 +1839,7 @@ func TestInitializeConfigs(t *testing.T) {
 				"my-tool": tools1.ToConfig(),
 			},
 		}
-		sourcesMap, _, _, toolsMap, _, _, _, err := server.InitializeConfigs(ctx, validCfg)
+		sourcesMap, _, _, toolsMap, _, _, _, _, err := server.InitializeConfigs(ctx, validCfg)
 		if err != nil {
 			t.Fatalf("unexpected error during config initialization: %s", err)
 		}
@@ -1862,7 +1862,7 @@ func TestInitializeConfigs(t *testing.T) {
 				"my-invalid-tool": testutils.NewMockTool("my-tool", "mock tool for offline config", "my-source", nil, false, false).ToConfig(),
 			},
 		}
-		_, _, _, _, _, _, _, err := server.InitializeConfigs(ctx, invalidCfg)
+		_, _, _, _, _, _, _, _, err := server.InitializeConfigs(ctx, invalidCfg)
 		if err == nil {
 			t.Fatalf("expected error but got nil")
 		}
@@ -2296,7 +2296,7 @@ func TestResourceTemplateConfigValidation(t *testing.T) {
 		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
 			return nil, err
 		}
-		return cfg, nil
+		return &cfg, nil
 	}
 	resources.RegisterTemplate("file", mockTemplateFactory)
 
@@ -2310,6 +2310,7 @@ func TestResourceTemplateConfigValidation(t *testing.T) {
 			name: "valid resource template",
 			yaml: `
 kind: resourceTemplate
+type: file
 name: project_files
 uriTemplate: file://{path}
 description: Access files in the project directory.
@@ -2320,24 +2321,27 @@ description: Access files in the project directory.
 			name: "missing name",
 			yaml: `
 kind: resourceTemplate
+type: file
 uriTemplate: file://{path}
 `,
 			wantError:   true,
 			errContains: "missing 'name' field",
 		},
 		{
-			name: "missing type defaults to file",
+			name: "missing type throws error",
 			yaml: `
 kind: resourceTemplate
 name: test
 uriTemplate: file://{path}
 `,
-			wantError: false,
+			wantError: true,
+			errContains: "missing required 'type' field",
 		},
 		{
 			name: "invalid scheme for file template",
 			yaml: `
 kind: resourceTemplate
+type: file
 name: test
 uriTemplate: http://example.com/{path}
 `,
@@ -2348,10 +2352,12 @@ uriTemplate: http://example.com/{path}
 			name: "duplicate uri template",
 			yaml: `
 kind: resourceTemplate
+type: file
 name: t1
 uriTemplate: file://{path}
 ---
 kind: resourceTemplate
+type: file
 name: t2
 uriTemplate: file://{path}
 `,
@@ -2366,16 +2372,18 @@ name: test
 type: file
 `,
 			wantError:   true,
-			errContains: "Field validation for 'URITemplate' failed on the 'required' tag",
+			errContains: "missing required 'uriTemplate' field",
 		},
 		{
 			name: "duplicate name",
 			yaml: `
 kind: resourceTemplate
+type: file
 name: t1
 uriTemplate: file://{path}
 ---
 kind: resourceTemplate
+type: file
 name: t1
 uriTemplate: file:///{path}
 `,

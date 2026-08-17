@@ -267,20 +267,20 @@ type MockResourceTemplateConfig struct {
 	resources.ResourceTemplateConfigBase `yaml:",inline"`
 }
 
-func (m MockResourceTemplateConfig) ResourceTemplateConfigType() string {
+func (m *MockResourceTemplateConfig) ResourceTemplateConfigType() string {
 	if m.Type != "" {
 		return m.Type
 	}
 	return "mock"
 }
 
-func (m MockResourceTemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemplate, error) {
+func (m *MockResourceTemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemplate, error) {
 	return MockResourceTemplate{config: m}, nil
 }
 
 // MockResourceTemplate is a mock implementation of resources.ResourceTemplate
 type MockResourceTemplate struct {
-	config MockResourceTemplateConfig
+	config *MockResourceTemplateConfig
 }
 
 func (m MockResourceTemplate) Read(ctx context.Context, params map[string]any) (any, error) {
@@ -310,7 +310,7 @@ func NewMockResource(name, uri string) MockResource {
 // NewMockResourceTemplate creates a new mock resource template for testing
 func NewMockResourceTemplate(name, uriTemplate string) MockResourceTemplate {
 	return MockResourceTemplate{
-		config: MockResourceTemplateConfig{
+		config: &MockResourceTemplateConfig{
 			ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{
 				ConfigBase:  resources.ConfigBase{Name: name},
 				URITemplate: uriTemplate,

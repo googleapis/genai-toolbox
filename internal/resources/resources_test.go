@@ -170,7 +170,7 @@ mimeType: text/plain
 annotations:
   priority: 0.5
 `
-	var cfg ResourceConfigBase
+	var cfg resources.ResourceConfigBase
 	if err := yaml.Unmarshal([]byte(yamlStr), &cfg); err != nil {
 		t.Fatalf("Failed to unmarshal ResourceConfigBase: %v", err)
 	}
