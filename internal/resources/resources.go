@@ -43,6 +43,10 @@ func GetBaseDirFromContext(ctx context.Context) string {
 // ResourceConfig represents the uninitialized configuration for a resource.
 type ResourceConfig interface {
 	ResourceConfigType() string
+	GetName() string
+	GetTitle() string
+	GetDescription() string
+	GetMimeType() string
 	GetURI() string
 	SetDefaults()
 	Validate() error
@@ -51,6 +55,11 @@ type ResourceConfig interface {
 
 // Resource is the initialized object that handles data execution.
 type Resource interface {
+	GetName() string
+	GetTitle() string
+	GetDescription() string
+	GetMimeType() string
+	GetURI() string
 	Read(ctx context.Context, params map[string]any) (any, error)
 	ToConfig() ResourceConfig
 }
@@ -72,6 +81,11 @@ type BaseConfig struct {
 	Annotations *ResourceAnnotations `yaml:"annotations,omitempty"`
 	Size        *int64               `yaml:"-"`
 }
+
+func (c BaseConfig) GetName() string        { return c.Name }
+func (c BaseConfig) GetTitle() string       { return c.Title }
+func (c BaseConfig) GetDescription() string { return c.Description }
+func (c BaseConfig) GetMimeType() string    { return c.MimeType }
 
 // GetURI returns the URI of the resource configuration.
 func (c BaseConfig) GetURI() string {

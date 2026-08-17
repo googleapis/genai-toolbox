@@ -250,6 +250,12 @@ type MockResource struct {
 	config *MockResourceConfig
 }
 
+func (m MockResource) GetName() string        { return m.config.GetName() }
+func (m MockResource) GetTitle() string       { return m.config.GetTitle() }
+func (m MockResource) GetDescription() string { return m.config.GetDescription() }
+func (m MockResource) GetMimeType() string    { return m.config.GetMimeType() }
+func (m MockResource) GetURI() string         { return m.config.GetURI() }
+
 func (m MockResource) Read(ctx context.Context, params map[string]any) (any, error) {
 	return "mock resource data", nil
 }
@@ -258,6 +264,3 @@ func (m MockResource) ToConfig() resources.ResourceConfig {
 	return m.config
 }
 
-func (m MockResource) GetName() string {
-	return m.config.Name
-}
