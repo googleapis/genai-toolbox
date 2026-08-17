@@ -131,100 +131,32 @@ func RunToolGetTestByName(t *testing.T, name string, want map[string]any) {
 // RunToolInvokeSimpleTest runs the tool invoke endpoint with no parameters
 func RunToolInvokeSimpleTest(t *testing.T, name string, simpleWant string) {
 	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name          string
-		api           string
-		requestHeader map[string]string
-		requestBody   io.Reader
-		want          string
-		isErr         bool
-	}{
+	invokeTcs := []InvokeTestCase{
 		{
-			name:          fmt.Sprintf("invoke %s", name),
-			api:           fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", name),
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			want:          simpleWant,
-			isErr:         false,
+			Name:          fmt.Sprintf("invoke %s", name),
+			Api:           fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", name),
+			RequestHeader: map[string]string{},
+			RequestBody:   bytes.NewBuffer([]byte(`{}`)),
+			Want:          simpleWant,
+			IsErr:         false,
 		},
 	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
-				}
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
-			}
-
-			// Check response body
-			var body map[string]interface{}
-			err := json.Unmarshal(respBody, &body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if !strings.Contains(got, tc.want) {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
+	RunRequests(t, invokeTcs)
 }
 
 func RunToolInvokeParametersTest(t *testing.T, name string, params []byte, simpleWant string) {
 	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name          string
-		api           string
-		requestHeader map[string]string
-		requestBody   io.Reader
-		want          string
-		isErr         bool
-	}{
+	invokeTcs := []InvokeTestCase{
 		{
-			name:          fmt.Sprintf("invoke %s", name),
-			api:           fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", name),
-			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer(params),
-			want:          simpleWant,
-			isErr:         false,
+			Name:          fmt.Sprintf("invoke %s", name),
+			Api:           fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", name),
+			RequestHeader: map[string]string{},
+			RequestBody:   bytes.NewBuffer(params),
+			Want:          simpleWant,
+			IsErr:         false,
 		},
 	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr {
-					return
-				}
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
-			}
-
-			// Check response body
-			var body map[string]interface{}
-			err := json.Unmarshal(respBody, &body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
-			}
-
-			if !strings.Contains(got, tc.want) {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
+	RunRequests(t, invokeTcs)
 }
 
 // RunToolInvoke runs the tool invoke endpoint
@@ -977,309 +909,314 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 		option(configs)
 	}
 
-	sessionId := RunInitialize(t, "2024-11-05")
+	versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+	for _, protocolVersion := range versions {
+		t.Run("protocol "+protocolVersion, func(t *testing.T) {
+			sessionId := RunInitialize(t, protocolVersion)
 
-	// Get access token
-	accessToken, err := sources.GetIAMAccessToken(t.Context())
-	if err != nil {
-		t.Fatalf("error getting access token from ADC: %s", err)
-	}
-	accessToken = "Bearer " + accessToken
-
-	idToken, err := GetGoogleIdToken(t)
-	if err != nil {
-		t.Fatalf("error getting Google ID token: %s", err)
-	}
-
-	// Test tool invoke endpoint
-	invokeTcs := []struct {
-		name           string
-		api            string
-		enabled        bool // switch to turn on/off the test case
-		requestBody    jsonrpc.JSONRPCRequest
-		requestHeader  map[string]string
-		wantStatusCode int
-		wantBody       string
-	}{
-		{
-			name:          "MCP Invoke my-tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			enabled:       true,
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "my-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name": "my-tool",
-					"arguments": map[string]any{
-						"id":   int(3),
-						"name": "Alice",
-					},
-				},
-			},
-			wantStatusCode: http.StatusOK,
-			wantBody:       configs.myToolId3NameAliceWant,
-		},
-		{
-			name:          "MCP Invoke invalid tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			enabled:       true,
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invalid-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "foo",
-					"arguments": map[string]any{},
-				},
-			},
-			wantStatusCode: http.StatusOK,
-			wantBody:       `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
-		},
-		{
-			name:          "MCP Invoke my-tool without parameters",
-			api:           "http://127.0.0.1:5000/mcp",
-			enabled:       true,
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke-without-parameter",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantStatusCode: http.StatusOK,
-			wantBody:       `{"jsonrpc":"2.0","id":"invoke-without-parameter","result":{"content":[{"type":"text","text":"provided parameters were invalid: parameter \"id\" is required"}],"isError":true}}`,
-		},
-		{
-			name:          "MCP Invoke my-tool with insufficient parameters",
-			api:           "http://127.0.0.1:5000/mcp",
-			enabled:       true,
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke-insufficient-parameter",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-tool",
-					"arguments": map[string]any{"id": 1},
-				},
-			},
-			wantStatusCode: http.StatusOK,
-			wantBody:       `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","result":{"content":[{"type":"text","text":"provided parameters were invalid: parameter \"name\" is required"}],"isError":true}}`,
-		},
-		{
-			name:          "MCP Invoke my-auth-required-tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			enabled:       configs.supportSelect1Auth,
-			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke my-auth-required-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-auth-required-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantStatusCode: http.StatusOK,
-			wantBody:       configs.mcpSelect1Want,
-		},
-		{
-			name:          "MCP Invoke my-auth-required-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke my-auth-required-tool with invalid token",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-auth-required-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantStatusCode: http.StatusUnauthorized,
-			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool with invalid token\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: Please make sure you specify correct auth headers: unauthorized\"}}",
-		},
-		{
-			name:          "MCP Invoke my-auth-required-tool without auth token",
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke my-auth-required-tool without token",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-auth-required-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantStatusCode: http.StatusUnauthorized,
-			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool without token\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: Please make sure you specify correct auth headers: unauthorized\"}}",
-		},
-
-		{
-			name:          "MCP Invoke my-client-auth-tool",
-			enabled:       configs.supportClientAuth,
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{"Authorization": accessToken},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke my-client-auth-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-client-auth-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantStatusCode: http.StatusOK,
-			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"f0_\\\":1}\"}]}}",
-		},
-		{
-			name:          "MCP Invoke my-client-auth-tool without access token",
-			enabled:       configs.supportClientAuth,
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke my-client-auth-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-client-auth-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantStatusCode: http.StatusUnauthorized,
-			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
-		},
-		{
-			name:          "MCP Invoke my-client-auth-tool with invalid access token",
-			enabled:       configs.supportClientAuth,
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke my-client-auth-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-client-auth-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantStatusCode: http.StatusUnauthorized,
-		},
-		{
-			name:    "MCP Invoke my-custom-client-auth-tool with custom access token",
-			enabled: configs.supportClientAuth,
-			api:     "http://127.0.0.1:5000/mcp",
-			// Note: This assumes my-custom-client-auth-tool is configured to use X-Custom-Auth
-			requestHeader: map[string]string{"X-Custom-Auth": accessToken},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke my-custom-client-auth-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-custom-client-auth-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantStatusCode: http.StatusOK,
-			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-custom-client-auth-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"f0_\\\":1}\"}]}}",
-		},
-		{
-			name:          "MCP Invoke my-custom-client-auth-tool without access token",
-			enabled:       configs.supportClientAuth,
-			api:           "http://127.0.0.1:5000/mcp",
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke my-custom-client-auth-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-custom-client-auth-tool",
-					"arguments": map[string]any{},
-				},
-			},
-			wantStatusCode: http.StatusUnauthorized,
-		},
-		{
-			name:          "MCP Invoke my-fail-tool",
-			api:           "http://127.0.0.1:5000/mcp",
-			enabled:       true,
-			requestHeader: map[string]string{},
-			requestBody: jsonrpc.JSONRPCRequest{
-				Jsonrpc: "2.0",
-				Id:      "invoke-fail-tool",
-				Request: jsonrpc.Request{
-					Method: "tools/call",
-				},
-				Params: map[string]any{
-					"name":      "my-fail-tool",
-					"arguments": map[string]any{"id": 1},
-				},
-			},
-			wantStatusCode: http.StatusOK,
-			wantBody:       myFailToolWant,
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			if !tc.enabled {
-				return
-			}
-			reqMarshal, err := json.Marshal(tc.requestBody)
+			// Get access token
+			accessToken, err := sources.GetIAMAccessToken(t.Context())
 			if err != nil {
-				t.Fatalf("unexpected error during marshaling of request body")
+				t.Fatalf("error getting access token from ADC: %s", err)
+			}
+			accessToken = "Bearer " + accessToken
+
+			idToken, err := GetGoogleIdToken(t)
+			if err != nil {
+				t.Fatalf("error getting Google ID token: %s", err)
 			}
 
-			// add headers
-			headers := map[string]string{}
-			if sessionId != "" {
-				headers["Mcp-Session-Id"] = sessionId
-			}
-			for key, value := range tc.requestHeader {
-				headers[key] = value
-			}
+			// Test tool invoke endpoint
+			invokeTcs := []struct {
+				name           string
+				api            string
+				enabled        bool // switch to turn on/off the test case
+				requestBody    jsonrpc.JSONRPCRequest
+				requestHeader  map[string]string
+				wantStatusCode int
+				wantBody       string
+			}{
+				{
+					name:          "MCP Invoke my-tool",
+					api:           "http://127.0.0.1:5000/mcp",
+					enabled:       true,
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "my-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "my-tool",
+							"arguments": map[string]any{
+								"id":   int(3),
+								"name": "Alice",
+							},
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					wantBody:       configs.myToolId3NameAliceWant,
+				},
+				{
+					name:          "MCP Invoke invalid tool",
+					api:           "http://127.0.0.1:5000/mcp",
+					enabled:       true,
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invalid-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "foo",
+							"arguments": map[string]any{},
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					wantBody:       `{"jsonrpc":"2.0","id":"invalid-tool","error":{"code":-32602,"message":"invalid tool name: tool with name \"foo\" does not exist"}}`,
+				},
+				{
+					name:          "MCP Invoke my-tool without parameters",
+					api:           "http://127.0.0.1:5000/mcp",
+					enabled:       true,
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke-without-parameter",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					wantBody:       `{"jsonrpc":"2.0","id":"invoke-without-parameter","result":{"content":[{"type":"text","text":"provided parameters were invalid: parameter \"id\" is required"}],"isError":true}}`,
+				},
+				{
+					name:          "MCP Invoke my-tool with insufficient parameters",
+					api:           "http://127.0.0.1:5000/mcp",
+					enabled:       true,
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke-insufficient-parameter",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-tool",
+							"arguments": map[string]any{"id": 1},
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					wantBody:       `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","result":{"content":[{"type":"text","text":"provided parameters were invalid: parameter \"name\" is required"}],"isError":true}}`,
+				},
+				{
+					name:          "MCP Invoke my-auth-required-tool",
+					api:           "http://127.0.0.1:5000/mcp",
+					enabled:       configs.supportSelect1Auth,
+					requestHeader: map[string]string{"my-google-auth_token": idToken},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke my-auth-required-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-auth-required-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					wantBody:       configs.mcpSelect1Want,
+				},
+				{
+					name:          "MCP Invoke my-auth-required-tool with invalid auth token",
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke my-auth-required-tool with invalid token",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-auth-required-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantStatusCode: http.StatusUnauthorized,
+					wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool with invalid token\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: Please make sure you specify correct auth headers: unauthorized\"}}",
+				},
+				{
+					name:          "MCP Invoke my-auth-required-tool without auth token",
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke my-auth-required-tool without token",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-auth-required-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantStatusCode: http.StatusUnauthorized,
+					wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-auth-required-tool without token\",\"error\":{\"code\":-32600,\"message\":\"unauthorized Tool call: Please make sure you specify correct auth headers: unauthorized\"}}",
+				},
 
-			httpResponse, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), headers)
-
-			// Check status code
-			if httpResponse.StatusCode != tc.wantStatusCode {
-				t.Errorf("StatusCode mismatch: got %d, want %d", httpResponse.StatusCode, tc.wantStatusCode)
+				{
+					name:          "MCP Invoke my-client-auth-tool",
+					enabled:       configs.supportClientAuth,
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{"Authorization": accessToken},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke my-client-auth-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-client-auth-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"f0_\\\":1}\"}]}}",
+				},
+				{
+					name:          "MCP Invoke my-client-auth-tool without access token",
+					enabled:       configs.supportClientAuth,
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke my-client-auth-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-client-auth-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantStatusCode: http.StatusUnauthorized,
+					wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-client-auth-tool\",\"error\":{\"code\":-32600,\"message\":\"missing access token in the 'Authorization' header\"}",
+				},
+				{
+					name:          "MCP Invoke my-client-auth-tool with invalid access token",
+					enabled:       configs.supportClientAuth,
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke my-client-auth-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-client-auth-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantStatusCode: http.StatusUnauthorized,
+				},
+				{
+					name:    "MCP Invoke my-custom-client-auth-tool with custom access token",
+					enabled: configs.supportClientAuth,
+					api:     "http://127.0.0.1:5000/mcp",
+					// Note: This assumes my-custom-client-auth-tool is configured to use X-Custom-Auth
+					requestHeader: map[string]string{"X-Custom-Auth": accessToken},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke my-custom-client-auth-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-custom-client-auth-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-custom-client-auth-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"f0_\\\":1}\"}]}}",
+				},
+				{
+					name:          "MCP Invoke my-custom-client-auth-tool without access token",
+					enabled:       configs.supportClientAuth,
+					api:           "http://127.0.0.1:5000/mcp",
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke my-custom-client-auth-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-custom-client-auth-tool",
+							"arguments": map[string]any{},
+						},
+					},
+					wantStatusCode: http.StatusUnauthorized,
+				},
+				{
+					name:          "MCP Invoke my-fail-tool",
+					api:           "http://127.0.0.1:5000/mcp",
+					enabled:       true,
+					requestHeader: map[string]string{},
+					requestBody: jsonrpc.JSONRPCRequest{
+						Jsonrpc: "2.0",
+						Id:      "invoke-fail-tool",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "my-fail-tool",
+							"arguments": map[string]any{"id": 1},
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					wantBody:       myFailToolWant,
+				},
 			}
+			for _, tc := range invokeTcs {
+				t.Run(tc.name, func(t *testing.T) {
+					if !tc.enabled {
+						return
+					}
+					reqMarshal, err := json.Marshal(tc.requestBody)
+					if err != nil {
+						t.Fatalf("unexpected error during marshaling of request body")
+					}
 
-			// Check response body
-			got := string(bytes.TrimSpace(respBody))
-			if !strings.Contains(got, tc.wantBody) {
-				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.wantBody)
+					// add headers
+					headers := map[string]string{}
+					if sessionId != "" {
+						headers["Mcp-Session-Id"] = sessionId
+					}
+					for key, value := range tc.requestHeader {
+						headers[key] = value
+					}
+
+					httpResponse, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), headers)
+
+					// Check status code
+					if httpResponse.StatusCode != tc.wantStatusCode {
+						t.Errorf("StatusCode mismatch: got %d, want %d", httpResponse.StatusCode, tc.wantStatusCode)
+					}
+
+					// Check response body
+					got := string(bytes.TrimSpace(respBody))
+					if !strings.Contains(got, tc.wantBody) {
+						t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.wantBody)
+					}
+				})
 			}
 		})
 	}
@@ -1294,7 +1231,7 @@ func setupPostgresSchemas(t *testing.T, ctx context.Context, pool *pgxpool.Pool,
 
 	return func() {
 		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA %s CASCADE", schemaName)
-		_, err := pool.Exec(ctx, dropSchemaStmt)
+		_, err := pool.Exec(context.WithoutCancel(ctx), dropSchemaStmt)
 		if err != nil {
 			t.Fatalf("failed to drop schema: %v", err)
 		}
@@ -1496,7 +1433,7 @@ func setUpPostgresViews(t *testing.T, ctx context.Context, pool *pgxpool.Pool, v
 	}
 	return func() {
 		dropView := fmt.Sprintf("DROP VIEW %s", viewName)
-		_, err := pool.Exec(ctx, dropView)
+		_, err := pool.Exec(context.WithoutCancel(ctx), dropView)
 		if err != nil {
 			t.Fatalf("failed to drop view: %v", err)
 		}
@@ -1783,7 +1720,7 @@ func setupPostgresTrigger(t *testing.T, ctx context.Context, pool *pgxpool.Pool,
 
 	return func() {
 		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA %s CASCADE", schemaName)
-		if _, err := pool.Exec(ctx, dropSchemaStmt); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), dropSchemaStmt); err != nil {
 			t.Fatalf("failed to drop schema %s: %v", schemaName, err)
 		}
 	}
@@ -1945,10 +1882,10 @@ func setupPostgresPublicationTable(t *testing.T, ctx context.Context, pool *pgxp
 
 	return func(t *testing.T) {
 		t.Helper()
-		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP PUBLICATION IF EXISTS %s;", pubName)); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP PUBLICATION IF EXISTS %s;", pubName)); err != nil {
 			t.Errorf("unable to drop publication %s: %v", pubName, err)
 		}
-		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)); err != nil {
 			t.Errorf("unable to drop table %s: %v", tableName, err)
 		}
 	}
@@ -2293,7 +2230,7 @@ func setupPostgresIndex(t *testing.T, ctx context.Context, pool *pgxpool.Pool, s
 
 	return func(t *testing.T) {
 		t.Helper()
-		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE;", schemaName)); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE;", schemaName)); err != nil {
 			t.Errorf("unable to drop schema: %v", err)
 		}
 	}
@@ -2773,8 +2710,8 @@ func setUpDatabase(t *testing.T, ctx context.Context, pool *pgxpool.Pool, dbName
 		t.Fatalf("failed to create %s: %v", dbName, err)
 	}
 	return func() {
-		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP DATABASE IF EXISTS %s;", dbName))
-		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", dbOwner))
+		_, _ = pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP DATABASE IF EXISTS %s;", dbName))
+		_, _ = pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP ROLE IF EXISTS %s;", dbOwner))
 	}
 }
 
@@ -2811,9 +2748,10 @@ func setupPostgresRoles(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (
 
 	return adminUser, superUser, normalUser, func(t *testing.T) {
 		t.Helper()
-		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", normalUser))
-		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", superUser))
-		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", adminUser))
+		cleanupCtx := context.WithoutCancel(ctx)
+		_, _ = pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", normalUser))
+		_, _ = pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", superUser))
+		_, _ = pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", adminUser))
 	}
 }
 
@@ -3513,7 +3451,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 		}
 
 		return func() {
-			if _, err := pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s", tableName)); err != nil {
+			if _, err := pool.ExecContext(context.WithoutCancel(ctx), fmt.Sprintf("DROP TABLE %s", tableName)); err != nil {
 				t.Errorf("failed to drop table %s: %v", tableName, err)
 			}
 		}
@@ -4518,10 +4456,10 @@ func CreateAndLockPostgresTable(t *testing.T, ctx context.Context, pool *pgxpool
 	}
 
 	return func() {
-		if err := tx.Rollback(ctx); err != nil {
+		if err := tx.Rollback(context.WithoutCancel(ctx)); err != nil {
 			t.Fatalf("unable to rollback transaction: %s", err)
 		}
-		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", pgx.Identifier{tableName}.Sanitize())); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP TABLE IF EXISTS %s", pgx.Identifier{tableName}.Sanitize())); err != nil {
 			t.Fatalf("unable to drop table: %s", err)
 		}
 	}
@@ -4887,7 +4825,7 @@ func createPostgresExtension(t *testing.T, ctx context.Context, pool *pgxpool.Po
 	}
 	return func() {
 		dropExtensionCmd := fmt.Sprintf("DROP EXTENSION IF EXISTS %s", extensionName)
-		_, err := pool.Exec(ctx, dropExtensionCmd)
+		_, err := pool.Exec(context.WithoutCancel(ctx), dropExtensionCmd)
 		if err != nil {
 			t.Fatalf("failed to drop extension: %v", err)
 		}

@@ -106,15 +106,15 @@ func TestBigtableToolEndpoints(t *testing.T) {
 		"SELECT TO_INT64(cf['id']) AS id, CAST(cf['name'] AS string) AS name FROM %s WHERE TO_INT64(cf['id']) IN UNNEST(@idArray) AND CAST(cf['name'] AS string) IN UNNEST(@nameArray);",
 		tableName,
 	)
-	setupBtTable(t, adminClient, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableName, columnFamilyName, muts, rowKeys)
+	defer setupBtTable(t, adminClient, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableName, columnFamilyName, muts, rowKeys)()
 
 	// Do not change the shape of statement without checking tests/common_test.go.
 	// The structure and value of seed data has to match https://github.com/googleapis/mcp-toolbox/blob/4dba0df12dc438eca3cb476ef52aa17cdf232c12/tests/common_test.go#L200-L251
 	authToolStatement := fmt.Sprintf("SELECT CAST(cf['name'] AS string) as name FROM %s WHERE CAST(cf['email'] AS string) = @email;", tableNameAuth)
-	setupBtTable(t, adminClient, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameAuth, columnFamilyName, muts, rowKeys)
+	defer setupBtTable(t, adminClient, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameAuth, columnFamilyName, muts, rowKeys)()
 
 	mutsTmpl, rowKeysTmpl := getTestDataTemplateParam(columnFamilyName)
-	setupBtTable(t, adminClient, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameTemplateParam, columnFamilyName, mutsTmpl, rowKeysTmpl)
+	defer setupBtTable(t, adminClient, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameTemplateParam, columnFamilyName, mutsTmpl, rowKeysTmpl)()
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigtableToolType, paramTestStatement, idParamTestStatement, nameParamTestStatement, arrayTestStatement, authToolStatement)
@@ -246,7 +246,7 @@ func getTestDataTemplateParam(columnFamilyName string) ([]*bigtable.Mutation, []
 	return muts, rowKeys
 }
 
-func setupBtTable(t *testing.T, adminClient *bigtable.AdminClient, ctx context.Context, projectId string, instance string, tableName string, columnFamilyName string, muts []*bigtable.Mutation, rowKeys []string) {
+func setupBtTable(t *testing.T, adminClient *bigtable.AdminClient, ctx context.Context, projectId string, instance string, tableName string, columnFamilyName string, muts []*bigtable.Mutation, rowKeys []string) func() {
 
 	client, err := bigtable.NewClient(ctx, projectId, instance)
 	if err != nil {
@@ -289,6 +289,11 @@ func setupBtTable(t *testing.T, adminClient *bigtable.AdminClient, ctx context.C
 			t.Logf("Error writing row: %v", rowErr)
 		}
 		t.Fatalf("Could not write some rows")
+	}
+	return func() {
+		if err := adminClient.DeleteTable(context.WithoutCancel(ctx), tableName); err != nil {
+			t.Logf("Failed to delete table %s: %v", tableName, err)
+		}
 	}
 }
 
