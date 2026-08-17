@@ -38,7 +38,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 				Type:     resourceType,
 				MimeType: "text/plain",
 			},
-			URI: fmt.Sprintf("text://%s", name),
+			URI:      fmt.Sprintf("text://%s", name),
 		},
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {

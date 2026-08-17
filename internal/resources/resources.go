@@ -55,6 +55,11 @@ type ResourceConfig interface {
 
 // Resource is the initialized object that handles data execution.
 type Resource interface {
+	GetName() string
+	GetTitle() string
+	GetDescription() string
+	GetMimeType() string
+	GetURI() string
 	Read(ctx context.Context, params map[string]any) (any, error)
 	ToConfig() ResourceConfig
 }
@@ -218,11 +223,11 @@ func DecodeConfig(ctx context.Context, resourceType, name string, decoder *yaml.
 // ResourceTemplateConfig represents the uninitialized configuration for a resource template.
 type ResourceTemplateConfig interface {
 	ResourceTemplateConfigType() string
-	GetURITemplate() string
 	GetName() string
 	GetTitle() string
 	GetDescription() string
 	GetMimeType() string
+	GetURITemplate() string
 	SetDefaults()
 	Validate() error
 	Initialize(ctx context.Context) (ResourceTemplate, error)
@@ -230,6 +235,11 @@ type ResourceTemplateConfig interface {
 
 // ResourceTemplate is the initialized object that handles data execution.
 type ResourceTemplate interface {
+	GetName() string
+	GetTitle() string
+	GetDescription() string
+	GetMimeType() string
+	GetURITemplate() string
 	Read(ctx context.Context, params map[string]any) (any, error)
 	ToConfig() ResourceTemplateConfig
 }
@@ -244,6 +254,22 @@ type ResourceTemplateConfigBase struct {
 func (c ResourceTemplateConfigBase) GetURITemplate() string {
 	return c.URITemplate
 }
+
+// Validate performs base configuration validation for resource templates.
+func (c *ResourceTemplateConfigBase) Validate() error {
+	if err := c.ConfigBase.Validate(); err != nil {
+		return err
+	}
+	if c.URITemplate == "" {
+		return fmt.Errorf("missing required 'uriTemplate' field for resource template %q", c.Name)
+	}
+	parsed, err := url.Parse(strings.ReplaceAll(c.URITemplate, "{path}", "path"))
+	if err != nil || parsed.Scheme == "" {
+		return fmt.Errorf("invalid 'uriTemplate' field for resource template %q: must be a valid RFC-compliant absolute URI with a scheme", c.Name)
+	}
+	return nil
+}
+
 
 // ResourceTemplateConfigFactory defines the signature for a function that creates and
 // decodes a specific resource template's configuration.

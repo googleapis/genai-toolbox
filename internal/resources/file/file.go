@@ -111,7 +111,8 @@ func (c *Config) Validate() error {
 	if err := c.ResourceConfigBase.Validate(); err != nil {
 		return err
 	}
-	if !strings.HasPrefix(c.URI, "file://") {
+	parsed, _ := url.Parse(c.URI)
+	if parsed.Scheme != "file" {
 		return fmt.Errorf("invalid scheme for file resource %q: must be 'file'", c.Name)
 	}
 
@@ -383,7 +384,11 @@ func (c *TemplateConfig) ResourceTemplateConfigType() string {
 
 // Validate performs template-specific validation including URI scheme checks.
 func (c *TemplateConfig) Validate() error {
-	if !strings.HasPrefix(c.URITemplate, "file://") {
+	if err := c.ResourceTemplateConfigBase.Validate(); err != nil {
+		return err
+	}
+	parsed, _ := url.Parse(strings.ReplaceAll(c.URITemplate, "{path}", "path"))
+	if parsed.Scheme != "file" {
 		return fmt.Errorf("invalid scheme for file resource template %q: must be 'file'", c.Name)
 	}
 	return nil
@@ -425,10 +430,6 @@ func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemp
 		}
 	}
 
-	if c.Annotations == nil {
-		c.Annotations = &resources.ResourceAnnotations{}
-	}
-
 	return &FileTemplate{
 		config:                 c,
 		unresolvedAllowedPaths: unresolvedAllowedPaths,
@@ -442,6 +443,12 @@ type FileTemplate struct {
 	unresolvedAllowedPaths []string
 	resolvedAllowedPaths   []string
 }
+
+func (r *FileTemplate) GetName() string        { return r.config.GetName() }
+func (r *FileTemplate) GetTitle() string       { return r.config.GetTitle() }
+func (r *FileTemplate) GetDescription() string { return r.config.GetDescription() }
+func (r *FileTemplate) GetMimeType() string    { return r.config.GetMimeType() }
+func (r *FileTemplate) GetURITemplate() string { return r.config.GetURITemplate() }
 
 // Read retrieves the file content using template parameters.
 func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, error) {
