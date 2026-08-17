@@ -88,6 +88,8 @@ jobs:
           path: cf-pages-temp
 
       - name: Push to Cloudflare Branch
+        env:
+            COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           cd $GITHUB_WORKSPACE/cf-pages-temp
           rm -rf dev
@@ -101,4 +103,4 @@ jobs:
           git config user.email "55107282+release-please[bot]@users.noreply.github.com"
           git add .
           
-          git diff-index --quiet HEAD || git commit -m "deploy dev docs: ${{ github.event.head_commit.message }}" && git push origin cloudflare-pages
+          git diff-index --quiet HEAD || git commit -m "deploy dev docs: $COMMIT_MESSAGE" && git push origin cloudflare-pages
