@@ -30,6 +30,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryforecast"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/option"
 )
 
@@ -292,9 +293,15 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 		t.Fatalf("failed to create mocked BigQuery client: %v", err)
 	}
 
+	restService, err := bigqueryrestapi.NewService(ctx, option.WithEndpoint(mockServer.URL), option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("failed to create mocked BigQuery REST service: %v", err)
+	}
+
 	// 3. Define mock source that returns this client and allowed datasets configuration
 	testSrc := &bigquerycommon.MockSource{
 		Client:          bqClient,
+		Service:         restService,
 		AllowedDatasets: []string{"allowed_dataset"}, // only "allowed_dataset" is allowed!
 	}
 
@@ -319,7 +326,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	// 4. Set up parameters mimicking the bypass/injection attempt
 	// We try to run the tool, but the dry-run of the final query will detect the reference to "unauthorized_dataset"
 	data := map[string]any{
-		"history_data":  "allowed_dataset.my_table",
+		"history_data":  "SELECT * FROM unauthorized_dataset.some_table",
 		"timestamp_col": "ts",
 		"data_col":      "val",
 		"horizon":       5,
@@ -340,7 +347,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 		t.Fatal("expected Invoke to return an error due to out-of-allowlist dataset reference, but got nil")
 	}
 
-	expectedErr := "query accesses dataset 'test-project.unauthorized_dataset', which is not in the allowed list"
+	expectedErr := "access to dataset 'test-project.unauthorized_dataset' is not allowed"
 	if !strings.Contains(err.Error(), expectedErr) {
 		t.Errorf("expected error to contain %q, got: %v", expectedErr, err)
 	}

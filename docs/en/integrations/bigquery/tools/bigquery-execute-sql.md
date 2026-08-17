@@ -39,6 +39,7 @@ layer of security by controlling which datasets can be accessed:
   It will reject the query if it attempts to access any table outside the
   allowed `datasets` list. To enforce this restriction, the following operations
   are also disallowed:
+
   - **Dataset-level operations** (e.g., `CREATE SCHEMA`, `ALTER SCHEMA`).
   - **Unanalyzable operations** where the accessed tables cannot be determined
     statically (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`, `CALL`).

@@ -127,7 +127,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		return nil, util.NewAgentError(fmt.Sprintf("unable to cast input_data parameter %s", paramsMap["input_data"]), nil)
 	}
 
-	bqClient, _, err := source.RetrieveClientAndService(accessToken)
+	bqClient, restService, err := source.RetrieveClientAndService(accessToken)
 	if err != nil {
 		return nil, util.NewClientServerError("failed to retrieve BigQuery client", http.StatusInternalServerError, err)
 	}
@@ -187,6 +187,26 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	var inputDataSource string
 	trimmedUpperInputData := strings.TrimSpace(strings.ToUpper(inputData))
 	if strings.HasPrefix(trimmedUpperInputData, "SELECT") || strings.HasPrefix(trimmedUpperInputData, "WITH") {
+		if len(source.BigQueryAllowedDatasets()) > 0 {
+			var connProps []*bigqueryapi.ConnectionProperty
+			session, err := source.BigQuerySession()(ctx)
+			if err != nil {
+				return nil, util.NewClientServerError("failed to get BigQuery session", http.StatusInternalServerError, err)
+			}
+			if session != nil {
+				connProps = []*bigqueryapi.ConnectionProperty{
+					{Key: "session_id", Value: session.ID},
+				}
+			}
+
+			dryRunJob, validationErr := bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, inputData, nil, connProps, source, source.GetMaximumBytesBilled(), false)
+			if validationErr != nil {
+				return nil, validationErr
+			}
+			if dryRunJob.Statistics.Query.StatementType != "SELECT" {
+				return nil, util.NewAgentError(fmt.Sprintf("the 'input_data' parameter only supports a table ID or a SELECT query. The provided query has statement type '%s'", dryRunJob.Statistics.Query.StatementType), nil)
+			}
+		}
 		inputDataSource = fmt.Sprintf("(%s)", inputData)
 	} else {
 		if !bqutil.ValidTableID(inputData) {
@@ -236,27 +256,12 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		// If not in protected mode, create a session for this invocation.
 		createModelQuery.CreateSession = true
 	}
+
 	if len(source.BigQueryAllowedDatasets()) > 0 {
-		createModelQuery.DryRun = true
-		dryRunJob, err := createModelQuery.Run(ctx)
-		if err != nil {
-			return nil, util.ProcessGcpError(err)
+		_, validationErr := bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, createModelSQL, nil, createModelQuery.ConnectionProperties, source, source.GetMaximumBytesBilled(), true)
+		if validationErr != nil {
+			return nil, validationErr
 		}
-		status := dryRunJob.LastStatus()
-		if status.Statistics != nil {
-			if qStats, ok := status.Statistics.Details.(*bigqueryapi.QueryStatistics); ok {
-				for _, tableRef := range qStats.ReferencedTables {
-					if !source.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
-						return nil, util.NewAgentError(fmt.Sprintf("query accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectID, tableRef.DatasetID), nil)
-					}
-				}
-			} else {
-				return nil, util.NewAgentError("could not get query statistics details during dry run validation", nil)
-			}
-		} else {
-			return nil, util.NewAgentError("could not dry run model creation query to validate allowed datasets", nil)
-		}
-		createModelQuery.DryRun = false
 	}
 
 	createModelJob, err := createModelQuery.Run(ctx)

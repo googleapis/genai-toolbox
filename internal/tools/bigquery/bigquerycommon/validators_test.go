@@ -139,3 +139,99 @@ func TestStripSingleQuotes(t *testing.T) {
 		}
 	}
 }
+
+func TestValidColumnParam(t *testing.T) {
+	tcs := []struct {
+		in    string
+		valid bool
+	}{
+		{"'sales'", true},
+		{"sales", true},
+		{"'sales_col'", true},
+		{"_internal", true},
+		{"'1col'", false},
+		{"col'", false},
+		{"'col", false},
+		{"'col; DROP TABLE x'", false},
+		{"", false},
+	}
+	for _, tc := range tcs {
+		if got := bigquerycommon.ValidColumnParam(tc.in); got != tc.valid {
+			t.Errorf("ValidColumnParam(%q) = %v, want %v", tc.in, got, tc.valid)
+		}
+	}
+}
+
+func TestValidContributionMetricParam(t *testing.T) {
+	tcs := []struct {
+		in    string
+		valid bool
+	}{
+		{"'metric'", true},
+		{"metric", true},
+		{"'metric's'", false},
+		{"metric's", false},
+		{"'metric", false},
+		{"''metric''", false},
+	}
+	for _, tc := range tcs {
+		if got := bigquerycommon.ValidContributionMetricParam(tc.in); got != tc.valid {
+			t.Errorf("ValidContributionMetricParam(%q) = %v, want %v", tc.in, got, tc.valid)
+		}
+	}
+}
+
+func TestIsSystemResource(t *testing.T) {
+	tcs := []struct {
+		datasetID  string
+		resourceID string
+		want       bool
+	}{
+		{"AI", "FORECAST", true},
+		{"ai", "forecast", true},
+		{"AI", "GENERATE_TEXT", true},
+		{"AI", "SUMMARIZE", true},
+		{"ML", "PREDICT", true},
+		{"ml", "predict", true},
+		{"ML", "DISTANCE", true},
+		{"ML", "GET_INSIGHTS", true},
+		{"AI", "INVALID", false},
+		{"ML", "INVALID", false},
+		{"OTHER", "FORECAST", false},
+	}
+	for _, tc := range tcs {
+		if got := bigquerycommon.IsSystemResource(tc.datasetID, tc.resourceID); got != tc.want {
+			t.Errorf("IsSystemResource(%q, %q) = %v, want %v", tc.datasetID, tc.resourceID, got, tc.want)
+		}
+	}
+}
+
+func TestBQTypeStringFromToolType(t *testing.T) {
+	tcs := []struct {
+		in      string
+		want    string
+		wantErr bool
+	}{
+		{"string", "STRING", false},
+		{"integer", "INT64", false},
+		{"float", "FLOAT64", false},
+		{"boolean", "BOOL", false},
+		{"map", "STRUCT", false},
+		{"invalid", "", true},
+	}
+	for _, tc := range tcs {
+		got, err := bigquerycommon.BQTypeStringFromToolType(tc.in)
+		if tc.wantErr {
+			if err == nil {
+				t.Errorf("BQTypeStringFromToolType(%q) expected error, got nil", tc.in)
+			}
+		} else {
+			if err != nil {
+				t.Errorf("BQTypeStringFromToolType(%q) unexpected error: %v", tc.in, err)
+			}
+			if got != tc.want {
+				t.Errorf("BQTypeStringFromToolType(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		}
+	}
+}
