@@ -27,6 +27,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	v20251125 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20251125"
 )
 
@@ -60,20 +61,46 @@ func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[st
 func RunInitialize(t *testing.T, protocolVersion string) string {
 	url := "http://127.0.0.1:5000/mcp"
 
-	initializeRequestBody := map[string]any{
-		"jsonrpc": "2.0",
-		"id":      "mcp-initialize",
-		"method":  "initialize",
-		"params": map[string]any{
-			"protocolVersion": protocolVersion,
-		},
+	var initializeRequestBody map[string]any
+	var headers map[string]string
+
+	if protocolVersion == "2026-07-28" {
+		initializeRequestBody = map[string]any{
+			"jsonrpc": "2.0",
+			"id":      "mcp-initialize",
+			"method":  "server/discover",
+			"params": map[string]any{
+				"_meta": map[string]any{
+					"io.modelcontextprotocol/protocolVersion": protocolVersion,
+					"io.modelcontextprotocol/clientInfo": map[string]any{
+						"name":    "testClient",
+						"version": "0.0.0",
+					},
+					"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+				},
+			},
+		}
+		headers = map[string]string{
+			"Mcp-Method":           "server/discover",
+			"MCP-Protocol-Version": "2026-07-28",
+		}
+	} else {
+		initializeRequestBody = map[string]any{
+			"jsonrpc": "2.0",
+			"id":      "mcp-initialize",
+			"method":  "initialize",
+			"params": map[string]any{
+				"protocolVersion": protocolVersion,
+			},
+		}
 	}
+
 	reqMarshal, err := json.Marshal(initializeRequestBody)
 	if err != nil {
 		t.Fatalf("unexpected error during marshaling of body")
 	}
 
-	resp, _ := RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqMarshal), nil)
+	resp, _ := RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqMarshal), headers)
 	if resp.StatusCode != 200 {
 		t.Fatalf("response status code is not 200")
 	}
@@ -109,7 +136,7 @@ func NewMCPRequestHeader(t *testing.T, customHeaders map[string]string) map[stri
 		headers[k] = v
 	}
 	headers["Content-Type"] = "application/json"
-	headers["MCP-Protocol-Version"] = v20251125.PROTOCOL_VERSION
+	headers["MCP-Protocol-Version"] = mcputil.LATEST_PROTOCOL_VERSION
 	return headers
 }
 

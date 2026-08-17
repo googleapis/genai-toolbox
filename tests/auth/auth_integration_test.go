@@ -30,6 +30,7 @@ import (
 
 	"github.com/MicahParks/jwkset"
 	"github.com/golang-jwt/jwt/v5"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
@@ -321,7 +322,7 @@ func TestMcpAuth(t *testing.T) {
 			}
 
 			if method == http.MethodPost {
-				versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+				versions := mcputil.GetSupportedVersions(true)
 				for _, v := range versions {
 					t.Run("version_"+v, func(t *testing.T) {
 						runTest(t, v)

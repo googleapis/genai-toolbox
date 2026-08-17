@@ -34,6 +34,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -909,7 +910,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 		option(configs)
 	}
 
-	versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+	versions := mcputil.GetSupportedVersions(true)
 	for _, protocolVersion := range versions {
 		t.Run("protocol "+protocolVersion, func(t *testing.T) {
 			sessionId := RunInitialize(t, protocolVersion)
@@ -1190,6 +1191,29 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 					if !tc.enabled {
 						return
 					}
+					if protocolVersion == "2026-07-28" {
+						params, ok := tc.requestBody.Params.(map[string]any)
+						if !ok {
+							params = make(map[string]any)
+						} else {
+							// Shallow copy to avoid modifying the original tc in invokeTcs
+							newParams := make(map[string]any)
+							for k, v := range params {
+								newParams[k] = v
+							}
+							params = newParams
+						}
+						params["_meta"] = map[string]any{
+							"io.modelcontextprotocol/protocolVersion": protocolVersion,
+							"io.modelcontextprotocol/clientInfo": map[string]any{
+								"name":    "testClient",
+								"version": "0.0.0",
+							},
+							"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+						}
+						tc.requestBody.Params = params
+					}
+
 					reqMarshal, err := json.Marshal(tc.requestBody)
 					if err != nil {
 						t.Fatalf("unexpected error during marshaling of request body")
@@ -1202,6 +1226,16 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 					}
 					for key, value := range tc.requestHeader {
 						headers[key] = value
+					}
+
+					if protocolVersion == "2026-07-28" {
+						headers["Mcp-Method"] = "tools/call"
+						if params, ok := tc.requestBody.Params.(map[string]any); ok {
+							if name, ok := params["name"].(string); ok {
+								headers["Mcp-Name"] = name
+							}
+						}
+						headers["MCP-Protocol-Version"] = "2026-07-28"
 					}
 
 					httpResponse, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), headers)

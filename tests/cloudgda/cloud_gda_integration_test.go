@@ -33,6 +33,7 @@ import (
 	"cloud.google.com/go/geminidataanalytics/apiv1beta/geminidataanalyticspb"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	source "github.com/googleapis/mcp-toolbox/internal/sources/cloudgda"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
@@ -186,7 +187,7 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeParametersTest(t, toolName, params, "\"generated_query\":\"SELECT * FROM table;\"")
 
 	// 3. Manual MCP Tool Call Test
-	versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+	versions := mcputil.GetSupportedVersions(true)
 	for _, protocolVersion := range versions {
 		t.Run("protocol "+protocolVersion, func(t *testing.T) {
 			// Initialize MCP session
@@ -206,11 +207,34 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 					},
 				},
 			}
+
+			if protocolVersion == "2026-07-28" {
+				params, ok := mcpReq.Params.(map[string]any)
+				if !ok {
+					params = make(map[string]any)
+				}
+				params["_meta"] = map[string]any{
+					"io.modelcontextprotocol/protocolVersion": protocolVersion,
+					"io.modelcontextprotocol/clientInfo": map[string]any{
+						"name":    "testClient",
+						"version": "0.0.0",
+					},
+					"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+				}
+				mcpReq.Params = params
+			}
+
 			reqBytes, _ := json.Marshal(mcpReq)
 
 			headers := map[string]string{}
 			if sessionId != "" {
 				headers["Mcp-Session-Id"] = sessionId
+			}
+
+			if protocolVersion == "2026-07-28" {
+				headers["Mcp-Method"] = "tools/call"
+				headers["Mcp-Name"] = toolName
+				headers["MCP-Protocol-Version"] = "2026-07-28"
 			}
 
 			// Send Request

@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 )
@@ -236,7 +237,7 @@ func runAINLToolInvokeTest(t *testing.T) {
 }
 
 func runAINLMCPToolCallMethod(t *testing.T) {
-	versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+	versions := mcputil.GetSupportedVersions(true)
 	for _, protocolVersion := range versions {
 		t.Run("protocol "+protocolVersion, func(t *testing.T) {
 			sessionId := tests.RunInitialize(t, protocolVersion)
@@ -309,6 +310,22 @@ func runAINLMCPToolCallMethod(t *testing.T) {
 			}
 			for _, tc := range invokeTcs {
 				t.Run(tc.name, func(t *testing.T) {
+					if protocolVersion == "2026-07-28" {
+						params, ok := tc.requestBody.Params.(map[string]any)
+						if !ok {
+							params = make(map[string]any)
+						}
+						params["_meta"] = map[string]any{
+							"io.modelcontextprotocol/protocolVersion": protocolVersion,
+							"io.modelcontextprotocol/clientInfo": map[string]any{
+								"name":    "testClient",
+								"version": "0.0.0",
+							},
+							"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+						}
+						tc.requestBody.Params = params
+					}
+
 					reqMarshal, err := json.Marshal(tc.requestBody)
 					if err != nil {
 						t.Fatalf("unexpected error during marshaling of request body")
@@ -319,6 +336,16 @@ func runAINLMCPToolCallMethod(t *testing.T) {
 						t.Fatalf("unable to create request: %s", err)
 					}
 					req.Header.Add("Content-type", "application/json")
+
+					if protocolVersion == "2026-07-28" {
+						req.Header.Add("Mcp-Method", "tools/call")
+						if params, ok := tc.requestBody.Params.(map[string]any); ok {
+							if name, ok := params["name"].(string); ok {
+								req.Header.Add("Mcp-Name", name)
+							}
+						}
+						req.Header.Add("MCP-Protocol-Version", "2026-07-28")
+					}
 					for k, v := range header {
 						req.Header.Add(k, v)
 					}

@@ -30,6 +30,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -100,7 +101,7 @@ func AddSemanticSearchConfig(t *testing.T, config map[string]any, toolKind, inse
 // RunSemanticSearchToolInvokeTest runs the insert_docs and search_docs tools
 // via both HTTP and MCP endpoints and verifies the output.
 func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, mcpInsertWant, searchWant string) {
-	versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"}
+	versions := mcputil.GetSupportedVersions(true)
 	for i, protocolVersion := range versions {
 		t.Run("protocol "+protocolVersion, func(t *testing.T) {
 			// Initialize MCP session
@@ -177,6 +178,26 @@ func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, mcpInsertWant, se
 
 					// Prepare Request Body and Headers
 					if tc.isMcp {
+						if protocolVersion == "2026-07-28" {
+							mcpReq, ok := tc.requestBody.(jsonrpc.JSONRPCRequest)
+							if ok {
+								params, ok := mcpReq.Params.(map[string]any)
+								if !ok {
+									params = make(map[string]any)
+								}
+								params["_meta"] = map[string]any{
+									"io.modelcontextprotocol/protocolVersion": protocolVersion,
+									"io.modelcontextprotocol/clientInfo": map[string]any{
+										"name":    "testClient",
+										"version": "0.0.0",
+									},
+									"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+								}
+								mcpReq.Params = params
+								tc.requestBody = mcpReq
+							}
+						}
+
 						reqBytes, err := json.Marshal(tc.requestBody)
 						if err != nil {
 							t.Fatalf("failed to marshal mcp request: %v", err)
@@ -184,6 +205,18 @@ func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, mcpInsertWant, se
 						bodyReader = bytes.NewBuffer(reqBytes)
 						if sessionId != "" {
 							headers["Mcp-Session-Id"] = sessionId
+						}
+
+						if protocolVersion == "2026-07-28" {
+							headers["Mcp-Method"] = "tools/call"
+							if mcpReq, ok := tc.requestBody.(jsonrpc.JSONRPCRequest); ok {
+								if params, ok := mcpReq.Params.(map[string]any); ok {
+									if name, ok := params["name"].(string); ok {
+										headers["Mcp-Name"] = name
+									}
+								}
+							}
+							headers["MCP-Protocol-Version"] = "2026-07-28"
 						}
 					} else {
 						bodyReader = bytes.NewBufferString(tc.requestBody.(string))
