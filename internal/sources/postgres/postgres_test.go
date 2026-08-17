@@ -113,6 +113,32 @@ func TestParseFromYamlPostgres(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "example with connect timeout",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: postgres
+			host: my-host
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			connectTimeout: 5
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-pg-instance": postgres.Config{
+					Name:           "my-pg-instance",
+					Type:           postgres.SourceType,
+					Host:           "my-host",
+					Port:           "my-port",
+					Database:       "my_db",
+					User:           "my_user",
+					Password:       "my_pass",
+					ConnectTimeout: intPtr(5),
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -177,6 +203,21 @@ func TestFailParseFromYaml(t *testing.T) {
 			`,
 			err: "error unmarshaling source: unable to parse source \"my-pg-instance\" as \"postgres\": [6:16] Key: 'Config.QueryExecMode' Error:Field validation for 'QueryExecMode' failed on the 'oneof' tag\n   3 | name: my-pg-instance\n   4 | password: my_pass\n   5 | port: my-port\n>  6 | queryExecMode: invalid_mode\n                      ^\n   7 | type: postgres\n   8 | user: my_user",
 		},
+		{
+			desc: "connect timeout below minimum",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: postgres
+			host: my-host
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			connectTimeout: 0
+			`,
+			err: "error unmarshaling source: unable to parse source \"my-pg-instance\" as \"postgres\": [1:17] Key: 'Config.ConnectTimeout' Error:Field validation for 'ConnectTimeout' failed on the 'gte' tag\n>  1 | connectTimeout: 0\n                       ^\n   2 | database: my_db\n   3 | host: my-host\n   4 | name: my-pg-instance\n   5 | ",
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -190,6 +231,10 @@ func TestFailParseFromYaml(t *testing.T) {
 			}
 		})
 	}
+}
+
+func intPtr(v int) *int {
+	return &v
 }
 
 func TestBuildPostgresURL(t *testing.T) {

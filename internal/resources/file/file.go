@@ -46,11 +46,12 @@ func init() {
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
 	cfg := &Config{
-		BaseResourceConfig: resources.BaseResourceConfig{
-			BaseConfig: resources.BaseConfig{
+		ResourceConfigBase: resources.ResourceConfigBase{
+			ConfigBase: resources.ConfigBase{
 				Name: name,
 				Type: resourceType,
 			},
+			URI:  fmt.Sprintf("file://%s", name),
 		},
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
@@ -61,8 +62,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 
 func newTemplateConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceTemplateConfig, error) {
 	cfg := &TemplateConfig{
-		BaseResourceTemplateConfig: resources.BaseResourceTemplateConfig{
-			BaseConfig: resources.BaseConfig{
+		ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{
+			ConfigBase: resources.ConfigBase{
 				Name: name,
 				Type: resourceType,
 			},
@@ -74,9 +75,10 @@ func newTemplateConfig(ctx context.Context, name string, decoder *yaml.Decoder) 
 	return cfg, nil
 }
 
+
 // Config represents the configuration for a file resource.
 type Config struct {
-	resources.BaseResourceConfig `yaml:",inline"`
+	resources.ResourceConfigBase `yaml:",inline"`
 	Path                         string `yaml:"path"`
 	MaxSize                      *int64 `yaml:"max_size,omitempty"`
 
@@ -107,9 +109,13 @@ func validateExtension(path string) error {
 }
 
 func (c *Config) Validate() error {
-	if c.Path == "" {
-		return fmt.Errorf("Field validation for 'Path' failed: missing required field")
+	if err := c.ResourceConfigBase.Validate(); err != nil {
+		return err
 	}
+	if !strings.HasPrefix(c.URI, "file://") {
+		return fmt.Errorf("invalid scheme for file resource %q: must be 'file'", c.Name)
+	}
+
 	if c.MaxSize != nil {
 		if *c.MaxSize <= 0 {
 			return fmt.Errorf("file resource %q max_size must be greater than 0", c.Name)
@@ -117,7 +123,7 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("file resource %q max_size cannot exceed 1GB", c.Name)
 		}
 	}
-	return c.BaseConfig.Validate()
+	return nil
 }
 
 // containsTraversal checks if any component of the path is a backward traversal
@@ -194,7 +200,7 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 			if err := validateExtension(c.absPath); err != nil {
 				return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
 			}
-			return &FileResource{config: c}, nil
+			return &FileResource{Config: *c}, nil
 		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q: %w", c.Name, err)
 	}
@@ -219,25 +225,31 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		return nil, fmt.Errorf("path %q for resource %q is not a regular file (devices, pipes, sockets are blocked)", c.absPath, c.Name)
 	}
 
+	size := info.Size()
+	if size > *c.MaxSize {
+		size = *c.MaxSize
+	}
 	return &FileResource{
-		config: c,
+		Config: *c,
+		Size:   size,
 	}, nil
 }
 
 // FileResource handles reading content from a local file.
 type FileResource struct {
-	config *Config
+	Config
+	Size int64
 }
 
 // Read retrieves the file content.
 func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, error) {
-	resolvedPath, err := filepath.EvalSymlinks(r.config.absPath)
+	resolvedPath, err := filepath.EvalSymlinks(r.Config.absPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.config.Name, err)
+		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Config.Name, err)
 	}
 
-	if r.config.isRelative && r.config.resolvedBaseDir != "" {
-		resolvedBaseDir := r.config.resolvedBaseDir
+	if r.Config.isRelative && r.Config.resolvedBaseDir != "" {
+		resolvedBaseDir := r.Config.resolvedBaseDir
 		if resolved, err := filepath.EvalSymlinks(resolvedBaseDir); err == nil {
 			resolvedBaseDir = resolved
 		}
@@ -248,7 +260,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	}
 
 	if err := validateExtension(resolvedPath); err != nil {
-		return nil, fmt.Errorf("security violation: file extension changed post-boot for resource %q: %w", r.config.Name, err)
+		return nil, fmt.Errorf("security violation: file extension changed post-boot for resource %q: %w", r.Config.Name, err)
 	}
 
 	statInfo, err := os.Lstat(resolvedPath)
@@ -279,7 +291,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("security violation: file %q was swapped with a non-regular file during read", resolvedPath)
 	}
 
-	limit := *r.config.MaxSize
+	limit := *r.Config.MaxSize
 	limitedReader := io.LimitReader(f, limit+1)
 	content, err := io.ReadAll(limitedReader)
 	if err != nil {
@@ -305,22 +317,22 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 
 // ToConfig returns the runtime config struct back to the caller.
 func (r *FileResource) ToConfig() resources.ResourceConfig {
-	cfgCopy := *r.config
+	cfgCopy := r.Config
 
-	if r.config.Annotations != nil {
-		ann := *r.config.Annotations
+	if r.Config.Annotations != nil {
+		ann := *r.Config.Annotations
 		cfgCopy.Annotations = &ann
 	} else {
 		cfgCopy.Annotations = &resources.ResourceAnnotations{}
 	}
 
-	resolvedPath := r.config.absPath
-	if resolved, err := filepath.EvalSymlinks(r.config.absPath); err == nil {
+	resolvedPath := r.Config.absPath
+	if resolved, err := filepath.EvalSymlinks(r.Config.absPath); err == nil {
 		resolvedPath = resolved
 	}
 
-	if r.config.isRelative && r.config.resolvedBaseDir != "" {
-		resolvedBaseDir := r.config.resolvedBaseDir
+	if r.Config.isRelative && r.Config.resolvedBaseDir != "" {
+		resolvedBaseDir := r.Config.resolvedBaseDir
 		if resolved, err := filepath.EvalSymlinks(resolvedBaseDir); err == nil {
 			resolvedBaseDir = resolved
 		}
@@ -331,20 +343,37 @@ func (r *FileResource) ToConfig() resources.ResourceConfig {
 	}
 
 	if info, err := os.Stat(resolvedPath); err == nil && info.Mode().IsRegular() {
-		size := info.Size()
-		if size > *cfgCopy.MaxSize {
-			size = *cfgCopy.MaxSize
-		}
-		cfgCopy.Size = &size
 		cfgCopy.Annotations.LastModified = info.ModTime().Format(time.RFC3339)
 	}
 
 	return &cfgCopy
 }
 
+// Size dynamically retrieves the current size of the file on disk.
+func (r *FileResource) GetCurrentSize() (int64, error) {
+	resolvedPath := r.Config.absPath
+	if resolved, err := filepath.EvalSymlinks(r.Config.absPath); err == nil {
+		resolvedPath = resolved
+	}
+
+	info, err := os.Stat(resolvedPath)
+	if err != nil {
+		return 0, fmt.Errorf("failed to stat file for size: %w", err)
+	}
+	if !info.Mode().IsRegular() {
+		return 0, fmt.Errorf("not a regular file")
+	}
+
+	size := info.Size()
+	if size > *r.Config.MaxSize {
+		size = *r.Config.MaxSize
+	}
+	return size, nil
+}
+
 // TemplateConfig represents the configuration for a file resource template.
 type TemplateConfig struct {
-	resources.BaseResourceTemplateConfig `yaml:",inline"`
+	resources.ResourceTemplateConfigBase `yaml:",inline"`
 	AllowedPaths                         []string `yaml:"allowedPaths,omitempty"`
 }
 

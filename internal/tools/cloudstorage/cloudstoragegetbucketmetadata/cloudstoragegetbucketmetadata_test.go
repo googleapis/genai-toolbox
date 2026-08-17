@@ -137,15 +137,6 @@ func (m *mockSource) GetBucketMetadata(ctx context.Context, bucket string) (*sto
 	return &storage.BucketAttrs{Name: bucket, Location: "US"}, nil
 }
 
-type mockSourceProvider struct {
-	tools.SourceProvider
-	source *mockSource
-}
-
-func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.source, true
-}
-
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragegetbucketmetadata.Config{
 		ConfigBase: tools.ConfigBase{
@@ -173,9 +164,8 @@ func TestInvokeValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			primitiveMgr := &mockSourceProvider{source: src}
 			params := parameters.ParamValues{{Name: "bucket", Value: tc.bucket}}
-			_, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), src, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")
@@ -221,7 +211,7 @@ func TestConfiguredBucketHiddenAndForwarded(t *testing.T) {
 	}
 
 	src := &mockSource{}
-	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, nil, ""); err != nil {
+	if _, err := tool.Invoke(context.Background(), src, nil, ""); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if src.gotBucket != "baked-bucket" {

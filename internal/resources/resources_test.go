@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resources
+package resources_test
 
 import (
 	"bytes"
@@ -21,96 +21,78 @@ import (
 	"testing"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
-type mockResourceConfig struct {
-	ResourceConfigBase `yaml:",inline"`
-	CustomProp         string `yaml:"customProp"`
+func mockFailingFactory(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
+	return nil, errors.New("factory error")
 }
 
-func (m mockResourceConfig) ResourceConfigType() string {
-	return "mock"
-}
-
-func (m mockResourceConfig) Initialize(ctx context.Context) (Resource, error) {
+func mockNilReturningFactory(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
 	return nil, nil
 }
 
-func mockFactory(ctx context.Context, name string, decoder *yaml.Decoder) (ResourceConfig, error) {
-	cfg := mockResourceConfig{}
+func TestRegister(t *testing.T) {
+	if resources.Register("nilFactory", nil) {
+		t.Errorf("Expected Register to return false for nil factory")
+	}
+
+	if !resources.Register("mockNew", mockFactory) {
+		t.Errorf("Expected Register to return true for new type")
+	}
+
+	if resources.Register("mockNew", mockFactory) {
+		t.Errorf("Expected Register to return false for duplicate type")
+	}
+}
+
+func mockFactory(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
+	var cfg testutils.MockResourceConfig
 	cfg.Name = name
 	cfg.Type = "mock"
 	if err := decoder.DecodeContext(ctx, &cfg); err != nil {
 		return nil, err
 	}
-	return cfg, nil
-}
-
-func mockFailingFactory(ctx context.Context, name string, decoder *yaml.Decoder) (ResourceConfig, error) {
-	return nil, errors.New("factory error")
-}
-
-func mockNilReturningFactory(ctx context.Context, name string, decoder *yaml.Decoder) (ResourceConfig, error) {
-	return nil, nil
-}
-
-func TestRegister(t *testing.T) {
-	registryMu.Lock()
-	registry = make(map[string]ResourceConfigFactory) // reset registry
-	registryMu.Unlock()
-
-	if Register("nilFactory", nil) {
-		t.Errorf("Expected Register to return false for nil factory")
-	}
-
-	if !Register("mock", mockFactory) {
-		t.Errorf("Expected Register to return true for new type")
-	}
-
-	if Register("mock", mockFactory) {
-		t.Errorf("Expected Register to return false for duplicate type")
-	}
+	return &cfg, nil
 }
 
 func TestDecodeConfig(t *testing.T) {
-	registryMu.Lock()
-	registry = make(map[string]ResourceConfigFactory) // reset registry
-	registryMu.Unlock()
-	Register("mock", mockFactory)
-	Register("failing", mockFailingFactory)
-	Register("nilReturn", mockNilReturningFactory)
+	resources.Register("mock_success", mockFactory)
+	resources.Register("failing", mockFailingFactory)
+	resources.Register("nilReturn", mockNilReturningFactory)
 
 	t.Run("NilDecoder", func(t *testing.T) {
 		ctx := context.Background()
-		_, err := DecodeConfig(ctx, "mock", "testMock", nil)
+		_, err := resources.DecodeConfig(ctx, "mock_success", "testMock", nil)
 		if err == nil {
 			t.Fatalf("Expected error when decoder is nil, got nil")
 		}
 	})
 
 	t.Run("NilReturningFactory", func(t *testing.T) {
-		yamlBytes := []byte("customProp: value\nuri: mock://test")
+		yamlBytes := []byte("uri: mock://test")
 		decoder := yaml.NewDecoder(bytes.NewReader(yamlBytes))
 		ctx := context.Background()
-		_, err := DecodeConfig(ctx, "nilReturn", "testMock", decoder)
+		_, err := resources.DecodeConfig(ctx, "nilReturn", "testMock", decoder)
 		if err == nil {
 			t.Fatalf("Expected error when factory returns nil config, got nil")
 		}
 	})
 
 	t.Run("Success", func(t *testing.T) {
-		yamlBytes := []byte("customProp: value\nuri: mock://test")
+		yamlBytes := []byte("uri: mock://test")
 		decoder := yaml.NewDecoder(bytes.NewReader(yamlBytes))
 		ctx := context.Background()
-		cfg, err := DecodeConfig(ctx, "mock", "testMock", decoder)
+		cfg, err := resources.DecodeConfig(ctx, "mock_success", "testMock", decoder)
 		if err != nil {
 			t.Fatalf("Expected no error, got %v", err)
 		}
 
-		mockCfg, ok := cfg.(mockResourceConfig)
+		mockCfg, ok := cfg.(*testutils.MockResourceConfig)
 		if !ok {
-			t.Fatalf("Expected mockResourceConfig, got %T", cfg)
+			t.Fatalf("Expected *testutils.MockResourceConfig, got %T", cfg)
 		}
 
 		if mockCfg.Name != "testMock" {
@@ -122,26 +104,24 @@ func TestDecodeConfig(t *testing.T) {
 		if mockCfg.URI != "mock://test" {
 			t.Errorf("Expected URI 'mock://test', got %q", mockCfg.URI)
 		}
-		if mockCfg.CustomProp != "value" {
-			t.Errorf("Expected CustomProp 'value', got %q", mockCfg.CustomProp)
-		}
+
 	})
 
 	t.Run("UnknownType", func(t *testing.T) {
-		yamlBytes := []byte("customProp: value\nuri: mock://test")
+		yamlBytes := []byte("uri: mock://test")
 		decoder := yaml.NewDecoder(bytes.NewReader(yamlBytes))
 		ctx := context.Background()
-		_, err := DecodeConfig(ctx, "unknown", "test", decoder)
+		_, err := resources.DecodeConfig(ctx, "unknown", "test", decoder)
 		if err == nil {
 			t.Fatalf("Expected error for unknown type, got nil")
 		}
 	})
 
 	t.Run("FactoryError", func(t *testing.T) {
-		yamlBytes := []byte("customProp: value\nuri: mock://test")
+		yamlBytes := []byte("uri: mock://test")
 		decoder := yaml.NewDecoder(bytes.NewReader(yamlBytes))
 		ctx := context.Background()
-		_, err := DecodeConfig(ctx, "failing", "test", decoder)
+		_, err := resources.DecodeConfig(ctx, "failing", "test", decoder)
 		if err == nil {
 			t.Fatalf("Expected error from failing factory, got nil")
 		}
@@ -152,28 +132,28 @@ func TestGetBaseDirFromContext(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("EmptyContext", func(t *testing.T) {
-		if GetBaseDirFromContext(ctx) != "" {
+		if resources.GetBaseDirFromContext(ctx) != "" {
 			t.Errorf("Expected empty string for empty context")
 		}
 	})
 
 	t.Run("NilContext", func(t *testing.T) {
 		var nilCtx context.Context
-		if GetBaseDirFromContext(nilCtx) != "" {
+		if resources.GetBaseDirFromContext(nilCtx) != "" {
 			t.Errorf("Expected empty string for nil context")
 		}
 	})
 
 	t.Run("ValidString", func(t *testing.T) {
-		ctxWithDir := context.WithValue(ctx, BaseDirKey, "/test/dir")
-		if GetBaseDirFromContext(ctxWithDir) != "/test/dir" {
-			t.Errorf("Expected '/test/dir', got %q", GetBaseDirFromContext(ctxWithDir))
+		ctxWithDir := context.WithValue(ctx, resources.BaseDirKey, "/test/dir")
+		if resources.GetBaseDirFromContext(ctxWithDir) != "/test/dir" {
+			t.Errorf("Expected '/test/dir', got %q", resources.GetBaseDirFromContext(ctxWithDir))
 		}
 	})
 
 	t.Run("InvalidType", func(t *testing.T) {
-		ctxWithInt := context.WithValue(ctx, BaseDirKey, 12345)
-		if GetBaseDirFromContext(ctxWithInt) != "" {
+		ctxWithInt := context.WithValue(ctx, resources.BaseDirKey, 12345)
+		if resources.GetBaseDirFromContext(ctxWithInt) != "" {
 			t.Errorf("Expected empty string when base dir is not a string type")
 		}
 	})
@@ -221,7 +201,7 @@ annotations:
 func TestStrictDecoding_Error(t *testing.T) {
 	raw := map[string]any{
 		"name":               "testResource",
-		"type":               "mock",
+		"type":               "mock_strict",
 		"invalidRandomField": true, // This should trigger the strict decoding error
 	}
 
@@ -231,10 +211,9 @@ func TestStrictDecoding_Error(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	registry = make(map[string]ResourceConfigFactory)
-	Register("mock", mockFactory)
+	resources.Register("mock_strict", mockFactory)
 
-	_, err = DecodeConfig(ctx, "mock", "testResource", decoder)
+	_, err = resources.DecodeConfig(ctx, "mock_strict", "testResource", decoder)
 	if err == nil {
 		t.Fatalf("Expected DecodeConfig to return an error for an unknown field 'invalidRandomField', but got nil")
 	}

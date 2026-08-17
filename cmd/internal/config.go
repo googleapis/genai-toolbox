@@ -33,14 +33,14 @@ import (
 )
 
 type Config struct {
-	Sources           server.SourceConfigs           `yaml:"sources"`
-	AuthServices      server.AuthServiceConfigs      `yaml:"authServices"`
-	EmbeddingModels   server.EmbeddingModelConfigs   `yaml:"embeddingModels"`
-	Tools             server.ToolConfigs             `yaml:"tools"`
-	Toolsets          server.ToolsetConfigs          `yaml:"toolsets"`
-	Prompts           server.PromptConfigs           `yaml:"prompts"`
-	Resources         server.ResourceConfigs         `yaml:"resources"`
+	Sources         server.SourceConfigs         `yaml:"sources"`
+	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
+	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
+	Tools           server.ToolConfigs           `yaml:"tools"`
+	Prompts         server.PromptConfigs         `yaml:"prompts"`
+	Resources       server.ResourceConfigs       `yaml:"resources"`
 	ResourceTemplates server.ResourceTemplateConfigs `yaml:"resourceTemplates"`
+	Groups          server.GroupConfigs          `yaml:"groups"`
 }
 
 type ConfigParser struct {
@@ -66,7 +66,8 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		p.EnvVars = make(map[string]string)
 	}
 
-	var err error
+	var missing []string
+	seenMissing := make(map[string]bool)
 	matches := re.FindAllStringSubmatchIndex(input, -1)
 	var output strings.Builder
 	lastIndex := 0
@@ -97,9 +98,10 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 			if p.AllowMissingEnvVars {
 				p.EnvVars[variableName] = variableName
 				output.WriteString(variableName)
-			} else if err == nil {
+			} else if !seenMissing[variableName] {
+				seenMissing[variableName] = true
 				line, column := lineColumnAt(input, start)
-				err = fmt.Errorf("environment variable not found: %q (line %d, column %d)", variableName, line, column)
+				missing = append(missing, fmt.Sprintf("%q (line %d, column %d)", variableName, line, column))
 			}
 		}
 
@@ -115,6 +117,15 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		}
 	}
 	p.OptionalEnvVars = finalOptional
+
+	var err error
+	if len(missing) > 0 {
+		if len(missing) == 1 {
+			err = fmt.Errorf("environment variable not found: %s", missing[0])
+		} else {
+			err = fmt.Errorf("environment variables not found:\n  - %s", strings.Join(missing, "\n  - "))
+		}
+	}
 
 	return output.String(), err
 }
@@ -152,7 +163,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 
 	// Parse contents
-	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, config.Resources, config.ResourceTemplates, err = server.UnmarshalPrimitiveConfig(ctx, raw)
+	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Prompts, config.Resources, config.ResourceTemplates, config.Groups, err = server.UnmarshalPrimitiveConfig(ctx, raw)
 	if err != nil {
 		return config, err
 	}
@@ -182,7 +193,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 	encoder := yaml.NewEncoder(&buf, yaml.UseLiteralStyleIfMultiline(true))
 
-	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts", "resources", "resourceTemplates"}
+	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts", "resources", "resourceTemplates", "groups"}
 	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
@@ -223,6 +234,8 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					key = "resource"
 				case "resourceTemplates":
 					key = "resourceTemplate"
+				case "groups":
+					key = "group"
 				}
 				transformed, err := transformDocs(key, slice)
 				if err != nil {
@@ -312,18 +325,18 @@ func processValue(v any, isToolset bool) any {
 }
 
 // mergeConfigs merges multiple Config structs into one.
-// Detects and raises errors for resource conflicts in sources, authServices, tools, and toolsets.
-// All resource names (sources, authServices, tools, toolsets) must be unique across all files.
+// Detects and raises errors for resource conflicts in sources, authServices, tools, and groups.
+// All resource names (sources, authServices, tools, groups) must be unique across all files.
 func mergeConfigs(files ...Config) (Config, error) {
 	merged := Config{
-		Sources:           make(server.SourceConfigs),
-		AuthServices:      make(server.AuthServiceConfigs),
-		EmbeddingModels:   make(server.EmbeddingModelConfigs),
-		Tools:             make(server.ToolConfigs),
-		Toolsets:          make(server.ToolsetConfigs),
-		Prompts:           make(server.PromptConfigs),
-		Resources:         make(server.ResourceConfigs),
+		Sources:         make(server.SourceConfigs),
+		AuthServices:    make(server.AuthServiceConfigs),
+		EmbeddingModels: make(server.EmbeddingModelConfigs),
+		Tools:           make(server.ToolConfigs),
+		Prompts:         make(server.PromptConfigs),
+		Resources:       make(server.ResourceConfigs),
 		ResourceTemplates: make(server.ResourceTemplateConfigs),
+		Groups:          make(server.GroupConfigs),
 	}
 
 	var conflicts []string
@@ -365,15 +378,6 @@ func mergeConfigs(files ...Config) (Config, error) {
 				conflicts = append(conflicts, fmt.Sprintf("tool '%s' (file #%d)", name, fileIndex+1))
 			} else {
 				merged.Tools[name] = tool
-			}
-		}
-
-		// Check for conflicts and merge toolsets
-		for name, toolset := range file.Toolsets {
-			if _, exists := merged.Toolsets[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("toolset '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				merged.Toolsets[name] = toolset
 			}
 		}
 
@@ -421,11 +425,20 @@ func mergeConfigs(files ...Config) (Config, error) {
 				}
 			}
 		}
+
+		// Check for conflicts and merge groups
+		for name, grp := range file.Groups {
+			if _, exists := merged.Groups[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("group '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.Groups[name] = grp
+			}
+		}
 	}
 
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
-		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset and prompt has a unique name across all files", strings.Join(conflicts, "\n  - "))
+		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, prompt and group has a unique name across all files", strings.Join(conflicts, "\n  - "))
 	}
 
 	// Ensure only one authService has mcpEnabled = true

@@ -51,8 +51,9 @@ type: spanner-search-catalog
 source: spanner-source
 description: Searches for data assets (eg. Spanner instances, tables, views, or databases) in catalog based on the provided search query
 ---
-kind: toolset
+kind: group
 name: data
+description: Use these skills when you need to explore the database structure, discover schema objects like tables and graphs, and execute custom SQL queries to interact with your data.
 tools:
 - execute_sql
 - execute_sql_dql

@@ -131,23 +131,6 @@ func (m MockSource) GetLookerSDK(ctx context.Context, s string) (*v4.LookerSDK, 
 	return &v4.LookerSDK{}, nil
 }
 
-type MockSourceProvider struct {
-	tools.SourceProvider
-	source MockSource
-}
-
-func (m MockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.source, true
-}
-
-func TestInvokeValidation(t *testing.T) {
-	primitiveMgr := MockSourceProvider{source: MockSource{}}
-
-	// No validation errors to mock for this simple tool that throws errors from Invoke directly
-	_ = primitiveMgr
-
-}
-
 func TestManifest(t *testing.T) {
 	cfg := lkr.Config{
 		ConfigBase: tools.ConfigBase{
