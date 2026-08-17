@@ -301,7 +301,7 @@ func runAINLMCPToolCallMethod(t *testing.T) {
 					"arguments": map[string]any{},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter question is required"}}`,
+			want: `{"jsonrpc":"2.0","id":"invoke-without-parameter","result":{"content":[{"type":"text","text":"provided parameters were invalid: parameter question is required"}],"isError":true}}`,
 		},
 	}
 	for _, tc := range invokeTcs {
