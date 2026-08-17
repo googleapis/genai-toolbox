@@ -17,6 +17,7 @@ package sqlcommenter
 import (
 	"context"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -241,5 +242,143 @@ func TestPrependComment_EmptyTelemetryAttributes(t *testing.T) {
 	// Should only have db.system.name since all telemetry attrs are empty
 	if !strings.Contains(result, "db.system.name='postgresql'") {
 		t.Errorf("expected db.system.name, got: %s", result)
+	}
+}
+
+func TestLabels_Disabled(t *testing.T) {
+	// SQL commenter not enabled in context — no labels should be produced
+	ctx := context.Background()
+	ctx = util.WithUserAgent(ctx, "1.1.0")
+	ctx = util.WithGenAIMetricAttrs(ctx, &util.GenAIMetricAttrs{
+		ToolName: "search_hotels",
+	})
+
+	if labels := Labels(ctx, "bigquery", nil); labels != nil {
+		t.Errorf("expected nil labels when sql-commenter disabled, got: %v", labels)
+	}
+}
+
+// TestLabels_SourceOverride verifies the priority between the global
+// sql-commenter flag (from context) and the per-source `sqlCommenter`
+// setting, mirroring the PrependComment behavior.
+func TestLabels_SourceOverride(t *testing.T) {
+	boolPtr := func(b bool) *bool { return &b }
+
+	cases := []struct {
+		name           string
+		global         bool
+		sourceOverride *bool
+		wantLabels     bool
+	}{
+		{"global on, source on", true, boolPtr(true), true},
+		{"global on, source unset", true, nil, true},
+		{"global on, source off", true, boolPtr(false), false},
+		{"global off, source on", false, boolPtr(true), true},
+		{"global off, source unset", false, nil, false},
+		{"global off, source off", false, boolPtr(false), false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := util.WithSQLCommenterEnabled(context.Background(), tc.global)
+			labels := Labels(ctx, "bigquery", tc.sourceOverride)
+
+			gotLabels := len(labels) > 0
+			if gotLabels != tc.wantLabels {
+				t.Errorf("wantLabels=%v, got: %v", tc.wantLabels, labels)
+			}
+		})
+	}
+}
+
+func TestLabels_EmptyContext(t *testing.T) {
+	ctx := sqlCommenterCtx()
+
+	// No attributes available at all — nil map, not an empty one
+	if labels := Labels(ctx, "", nil); labels != nil {
+		t.Errorf("expected nil labels for empty context, got: %v", labels)
+	}
+}
+
+func TestLabels_FullAttributes(t *testing.T) {
+	ctx := sqlCommenterCtx()
+	ctx = util.WithUserAgent(ctx, "1.1.0")
+	ctx = util.WithGenAIMetricAttrs(ctx, &util.GenAIMetricAttrs{
+		ToolName: "search_user",
+	})
+	ctx = util.WithTelemetryAttributes(ctx, &util.TelemetryAttributes{
+		ClientName:    "toolbox-langchain-python",
+		ClientVersion: "v0.1.0",
+		ClientModel:   "gemini-2.5-flash",
+		ClientUserID:  "user-123",
+		ClientAgentID: "agent-456",
+	})
+
+	labels := Labels(ctx, "bigquery", nil)
+
+	// Attribute names map dots to underscores; values have characters
+	// outside [a-z0-9_-] replaced with underscores.
+	expected := map[string]string{
+		"client":          "toolbox-langchain-python_v0_1_0",
+		"client_agent_id": "agent-456",
+		"client_model":    "gemini-2_5-flash",
+		"client_user_id":  "user-123",
+		"db_system_name":  "bigquery",
+		"server":          "genai-toolbox_1_1_0",
+		"tool_name":       "search_user",
+	}
+	if !reflect.DeepEqual(labels, expected) {
+		t.Errorf("expected %v, got: %v", expected, labels)
+	}
+}
+
+func TestSanitizeLabelKey(t *testing.T) {
+	cases := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"plain", "traceparent", "traceparent"},
+		{"dots to underscores", "tool.name", "tool_name"},
+		{"uppercase lowered", "Tool.Name", "tool_name"},
+		{"dash kept", "client-id", "client-id"},
+		{"leading digit prefixed", "0key", "x0key"},
+		{"leading underscore prefixed", "_key", "x_key"},
+		{"unicode replaced", "kéy", "k_y"},
+		{"empty stays empty", "", ""},
+		{"truncated to 63", strings.Repeat("a", 100), strings.Repeat("a", 63)},
+		{"prefix respects max length", "0" + strings.Repeat("a", 63), "x0" + strings.Repeat("a", 61)},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := sanitizeLabelKey(tc.in); got != tc.want {
+				t.Errorf("sanitizeLabelKey(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSanitizeLabelValue(t *testing.T) {
+	cases := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"plain", "search_user", "search_user"},
+		{"slash and dots replaced", "genai-toolbox/1.1.0", "genai-toolbox_1_1_0"},
+		{"uppercase lowered", "Test-Client", "test-client"},
+		{"spaces replaced", "a b c", "a_b_c"},
+		{"empty allowed", "", ""},
+		{"leading digit kept", "00-abc", "00-abc"},
+		{"truncated to 63", strings.Repeat("v", 100), strings.Repeat("v", 63)},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := sanitizeLabelValue(tc.in); got != tc.want {
+				t.Errorf("sanitizeLabelValue(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
 	}
 }

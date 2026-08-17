@@ -154,3 +154,4 @@ useClientOAuth: true
 | maxQueryResultRows             |   int    |    false     | The maximum number of rows to return from a query. Defaults to 50. |
 | maximumBytesBilled             |  int64   |    false     | The maximum bytes billed per query. When set, queries that exceed this limit fail before executing. |
 | apiEndpoint                    |  string  |    false     | Override the BigQuery API endpoint. |
+| sqlCommenter                   | boolean  |    false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. For BigQuery, [SQL Commenter](../../documentation/monitoring/sql_commenter.md) attributes are attached as [job labels](https://cloud.google.com/bigquery/docs/adding-labels#job-label) rather than SQL-text comments, so they appear in `INFORMATION_SCHEMA.JOBS` and billing exports. |
