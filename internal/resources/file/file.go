@@ -17,6 +17,7 @@ package file
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"io"
 	"mime"
 	"os"
@@ -90,7 +91,8 @@ func (c *Config) Validate() error {
 	if err := c.BaseConfig.Validate(); err != nil {
 		return err
 	}
-	if !strings.HasPrefix(c.URI, "file://") {
+	parsed, _ := url.Parse(c.URI)
+	if parsed.Scheme != "file" {
 		return fmt.Errorf("invalid scheme for file resource %q: must be 'file'", c.Name)
 	}
 
