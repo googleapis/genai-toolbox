@@ -112,7 +112,7 @@ func main() {
 
 		if len(parts) > 0 {
 			resp, err := genkit.Generate(ctx, g,
-				ai.WithMessages(append(response.History(), ai.NewMessage(ai.RoleTool, nil, parts...))...),
+				ai.WithMessages(append(response.History(), ai.NewMessage(ai.RoleUser, nil, parts...))...),
 				ai.WithTools(toolRefs...),
 			)
 			if err != nil {
