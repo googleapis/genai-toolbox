@@ -112,12 +112,26 @@ jobs:
               --body "Automated update to \`hugo.cloudflare.toml\` for upcoming release **${TARGET_VERSION}**.
               
               Merge this into \`main\` just before merging Release PR #${PR_NUMBER}. Release Please will automatically sync this into the release PR.")
-
-            gh pr comment "$PR_NUMBER" --body "Hugo config update PR is ready: **[Review and merge PR]($PR_URL)**.
             
-            Merge that PR into \`main\` just before merging Release PR."
-
             echo "Created PR for main: $PR_URL" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "PR for main already exists: $EXISTING_PR" >> "$GITHUB_STEP_SUMMARY"
+            PR_URL="$EXISTING_PR"
+            echo "PR for main already exists: $PR_URL" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          
+          COMMENT_BODY="Hugo config update PR is ready: **[Review and merge PR]($PR_URL)**.
+          
+          Merge that PR into \`main\` just before merging Release PR."
+
+          # Search for an existing comment starting with our specific string
+          COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+            -q '.[] | select(.body | startswith("Hugo config update PR is ready:")) | .id' | head -n 1)
+
+          if [ -n "$COMMENT_ID" ]; then
+            # Update existing comment
+            gh api --method PATCH "repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" \
+              -f body="$COMMENT_BODY" > /dev/null
+          else
+            # Create new comment
+            gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY"
           fi
