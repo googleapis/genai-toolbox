@@ -57,10 +57,13 @@ jobs:
           
           # Loop through all folders starting with 'v'
           for dir in v[0-9]*/; do
-            # Safely skip if no matching directories exist
             [ -d "$dir" ] || continue 
             
             VERSION_DIR="${dir%/}"
+
+            if [[ ! "$VERSION_DIR" =~ ^v[0-9]+(\.[0-9]+)+(-[a-zA-Z0-9.-]+)?$ ]]; then
+              continue
+            fi
             
             # Check if the folder exists in our Hugo config's versions list
             if echo "$ACTIVE_VERSIONS" | grep -qx "$VERSION_DIR"; then
