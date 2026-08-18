@@ -2194,3 +2194,125 @@ func TestMcpPromptScopingByGroup(t *testing.T) {
 		})
 	}
 }
+
+func TestInitializeProtocolVersionNegotiation(t *testing.T) {
+	testCases := []struct {
+		name             string
+		enableDraftSpecs bool
+		reqVersion       string
+		wantVersion      string
+	}{
+		{
+			name:             "2026-07-28 downgrades to 2025-11-25 (default)",
+			enableDraftSpecs: false,
+			reqVersion:       "2026-07-28",
+			wantVersion:      "2025-11-25",
+		},
+		{
+			name:             "2026-07-28 downgrades to 2025-11-25 (draft specs enabled)",
+			enableDraftSpecs: true,
+			reqVersion:       "2026-07-28",
+			wantVersion:      "2025-11-25",
+		},
+		{
+			name:             "2025-11-25 returns 2025-11-25",
+			enableDraftSpecs: false,
+			reqVersion:       "2025-11-25",
+			wantVersion:      "2025-11-25",
+		},
+		{
+			name:             "2025-06-18 returns 2025-06-18",
+			enableDraftSpecs: false,
+			reqVersion:       "2025-06-18",
+			wantVersion:      "2025-06-18",
+		},
+		{
+			name:             "2025-03-26 returns 2025-03-26",
+			enableDraftSpecs: false,
+			reqVersion:       "2025-03-26",
+			wantVersion:      "2025-03-26",
+		},
+		{
+			name:             "2024-11-05 returns 2024-11-05",
+			enableDraftSpecs: false,
+			reqVersion:       "2024-11-05",
+			wantVersion:      "2024-11-05",
+		},
+		{
+			name:             "unknown future version 2999-01-01 downgrades to 2025-11-25",
+			enableDraftSpecs: false,
+			reqVersion:       "2999-01-01",
+			wantVersion:      "2025-11-25",
+		},
+		{
+			name:             "arbitrary string banana downgrades to 2025-11-25",
+			enableDraftSpecs: false,
+			reqVersion:       "banana",
+			wantVersion:      "2025-11-25",
+		},
+		{
+			name:             "empty string downgrades to 2025-11-25",
+			enableDraftSpecs: false,
+			reqVersion:       "",
+			wantVersion:      "2025-11-25",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var opts []func(*Server)
+			if tc.enableDraftSpecs {
+				opts = append(opts, withEnableDraftSpecs())
+			}
+			toolsMap, promptsMap, groups := testutils.SetUpResources(t, []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}, nil)
+			r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups, opts...)
+			defer shutdown()
+			ts := runServer(r, false)
+			defer ts.Close()
+
+			initReq := map[string]any{
+				"jsonrpc": jsonrpcVersion,
+				"id":      1,
+				"method":  "initialize",
+				"params": map[string]any{
+					"protocolVersion": tc.reqVersion,
+					"capabilities":    map[string]any{},
+					"clientInfo": map[string]any{
+						"name":    "probe",
+						"version": "0",
+					},
+				},
+			}
+			reqBytes, err := json.Marshal(initReq)
+			if err != nil {
+				t.Fatalf("unexpected marshal error: %v", err)
+			}
+
+			resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewBuffer(reqBytes), nil)
+			if err != nil {
+				t.Fatalf("unexpected request error: %v", err)
+			}
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("unexpected status code: got %d, want %d, body: %s", resp.StatusCode, http.StatusOK, string(body))
+			}
+
+			var got map[string]any
+			if err := json.Unmarshal(body, &got); err != nil {
+				t.Fatalf("unexpected unmarshal error: %v, body: %s", err, string(body))
+			}
+
+			if got["error"] != nil {
+				t.Fatalf("expected error to be nil, got error: %+v", got["error"])
+			}
+
+			result, ok := got["result"].(map[string]any)
+			if !ok {
+				t.Fatalf("expected result object in response, got: %+v", got)
+			}
+
+			if result["protocolVersion"] != tc.wantVersion {
+				t.Errorf("negotiated protocolVersion mismatch: got %v, want %v", result["protocolVersion"], tc.wantVersion)
+			}
+		})
+	}
+}

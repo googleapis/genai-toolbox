@@ -14,6 +14,8 @@
 
 package util
 
+import "slices"
+
 const (
 	VERSION_20241105 = "2024-11-05"
 	VERSION_20250326 = "2025-03-26"
@@ -22,22 +24,28 @@ const (
 	VERSION_20260728 = "2026-07-28"
 )
 
-// LATEST_PROTOCOL_VERSION is the latest version of the MCP protocol supported.
-// Update the version used in InitializeResponse when this value is updated.
-const LATEST_PROTOCOL_VERSION = VERSION_20251125
+// LATEST_STATEFUL_PROTOCOL_VERSION is the latest version of the MCP protocol
+// supported that uses the stateful initialize handshake (< 2026).
+// Update this value and InitializeResponse when a new stateful version is added.
+const LATEST_STATEFUL_PROTOCOL_VERSION = VERSION_20251125
 
-// LATEST_PROTOCOL_VERSION_NONSTABLE is the latest version of the MCP protocol
-// supported that includes non-stable version
-const LATEST_PROTOCOL_VERSION_NONSTABLE = VERSION_20260728
-
-// SUPPORTED_PROTOCOL_VERSIONS is the MCP protocol versions that are supported.
-var SUPPORTED_PROTOCOL_VERSIONS = []string{
+// STATEFUL_ERA_VERSIONS are the legacy MCP protocol versions
+// that support the stateful initialize handshake (< 2026).
+var STATEFUL_ERA_VERSIONS = []string{
 	VERSION_20241105,
 	VERSION_20250326,
 	VERSION_20250618,
 	VERSION_20251125,
+}
+
+// STATELESS_ERA_VERSIONS are the modern MCP protocol versions
+// that operate statelessly without an initialize handshake (>= 2026).
+var STATELESS_ERA_VERSIONS = []string{
 	VERSION_20260728,
 }
+
+// SUPPORTED_PROTOCOL_VERSIONS is the composite list of all supported MCP protocol versions across both eras.
+var SUPPORTED_PROTOCOL_VERSIONS = slices.Concat(STATEFUL_ERA_VERSIONS, STATELESS_ERA_VERSIONS)
 
 var SUPPORTED_PROTOCOL_VERSIONS_NONSTABLE = []string{}
 
@@ -48,9 +56,10 @@ func GetSupportedVersions(enableDraft bool) []string {
 	return SUPPORTED_PROTOCOL_VERSIONS
 }
 
-func GetLatestSupportedVersion(enableDraft bool) string {
-	if enableDraft {
-		return LATEST_PROTOCOL_VERSION_NONSTABLE
-	}
-	return LATEST_PROTOCOL_VERSION
+func GetStatefulEraVersions() []string {
+	return STATEFUL_ERA_VERSIONS
+}
+
+func GetLatestStatefulVersion() string {
+	return LATEST_STATEFUL_PROTOCOL_VERSION
 }

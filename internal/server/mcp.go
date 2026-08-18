@@ -838,10 +838,10 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 
 		var version string
 		v := initReq.Params.ProtocolVersion
-		if slices.Contains(mcputil.GetSupportedVersions(s.enableDraftSpecs), v) {
+		if slices.Contains(mcputil.GetStatefulEraVersions(), v) {
 			version = v
 		} else {
-			version = mcputil.GetLatestSupportedVersion(s.enableDraftSpecs)
+			version = mcputil.GetLatestStatefulVersion()
 		}
 
 		result, err := mcp.ProcessMethod(ctx, version, baseMessage.Id, baseMessage.Method, group.Group{}, nil, body, nil)
