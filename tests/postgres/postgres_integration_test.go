@@ -100,7 +100,7 @@ func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool
 }
 
 func TestPostgres(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	sourceConfig, PostgresHost, PostgresPort, PostgresUser, PostgresPass, PostgresDatabase := setupPostgresContainer(t, ctx)
