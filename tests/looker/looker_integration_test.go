@@ -348,6 +348,26 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"get_dashboard": map[string]any{
+				"type":        "looker-get-dashboard",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"update_dashboard_element": map[string]any{
+				"type":        "looker-update-dashboard-element",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"create_dashboard_layout": map[string]any{
+				"type":        "looker-create-dashboard-layout",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"update_dashboard_layout_component": map[string]any{
+				"type":        "looker-update-dashboard-layout-component",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -2074,6 +2094,277 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "get_dashboard",
+		map[string]any{
+			"get_dashboard": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The id of the dashboard to retrieve.",
+						"name":         "dashboard_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "update_dashboard_element",
+		map[string]any{
+			"update_dashboard_element": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The explore to be queried.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The fields to be retrieved.",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be returned in the query",
+							"name":         "field",
+							"required":     true,
+							"type":         "string",
+						},
+						"name":     "fields",
+						"required": true,
+						"type":     "array",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authServices":         []any{},
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`. To retrieve valid filter values for a suggestible field, use the 'get_field_value_suggestions' tool.",
+						"name":                 "filters",
+						"required":             false,
+						"default":              map[string]any{},
+						"type":                 "object",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The query pivots (must be included in fields as well).",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be used as a pivot in the query",
+							"name":         "pivot_field",
+							"required":     false,
+							"type":         "string",
+						},
+						"name":     "pivots",
+						"required": false,
+						"type":     "array",
+						"default":  []any{},
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The sorts like \"field.id desc 0\".",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be used as a sort in the query",
+							"name":         "sort_field",
+							"required":     false,
+							"type":         "string",
+						},
+						"name":     "sorts",
+						"required": false,
+						"type":     "array",
+						"default":  []any{},
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The row limit.",
+						"name":         "limit",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(500),
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The query timezone.",
+						"name":         "tz",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "An optional filter expression string.",
+						"name":         "filter_expression",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      []any{},
+						"description":  "An optional array of dynamic fields (table calculations, custom measures, custom dimensions).",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          "A dynamic field definition",
+							"name":                 "dynamic_field",
+							"required":             false,
+							"type":                 "object",
+						},
+						"name":     "dynamic_fields",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the dashboard containing the element.",
+						"name":         "dashboard_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the dashboard element to update.",
+						"name":         "dashboard_element_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The new title of the element.",
+						"name":         "title",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authServices":         []any{},
+						"description":          "The new visualization configuration.",
+						"name":                 "vis_config",
+						"required":             false,
+						"type":                 "object",
+						"default":              map[string]any{},
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  `An array of dashboard filters like [{"dashboard_filter_name": "name", "field": "view_name.field_name"}, ...]`,
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          `A dashboard filter like {"dashboard_filter_name": "name", "field": "view_name.field_name"}`,
+							"name":                 "dashboard_filter",
+							"required":             false,
+							"type":                 "object",
+							"default":              map[string]any{},
+						},
+						"name":     "dashboard_filters",
+						"required": false,
+						"type":     "array",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "create_dashboard_layout",
+		map[string]any{
+			"create_dashboard_layout": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the dashboard to create the layout for.",
+						"name":         "dashboard_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The label (title) of the layout/tab.",
+						"name":         "label",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The type of layout (e.g. 'newspaper', 'grid'). Defaults to 'newspaper'.",
+						"name":         "type",
+						"required":     false,
+						"type":         "string",
+						"default":      "newspaper",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Whether this layout should be active.",
+						"name":         "active",
+						"required":     false,
+						"type":         "boolean",
+						"default":      false,
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "update_dashboard_layout_component",
+		map[string]any{
+			"update_dashboard_layout_component": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the dashboard layout component to update.",
+						"name":         "dashboard_layout_component_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the target dashboard layout (tab) to move the component to.",
+						"name":         "dashboard_layout_id",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The new row position.",
+						"name":         "row",
+						"required":     false,
+						"type":         "integer",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The new column position.",
+						"name":         "column",
+						"required":     false,
+						"type":         "integer",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The new width.",
+						"name":         "width",
+						"required":     false,
+						"type":         "integer",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The new height.",
+						"name":         "height",
+						"required":     false,
+						"type":         "integer",
+					},
+				},
+			},
+		},
+	)
 
 	randstr := rand.Text()[0:8]
 
@@ -2090,17 +2381,16 @@ func TestLooker(t *testing.T) {
 	wantResult = `{"suggestions":`
 	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source"}`), wantResult)
 
-	// Verify that the suggestions list contains the expected value
-	wantResult = "{\"suggestions\":[\"api4\",\"dashboard\",\"explore\",\"merge_query\",\"regenerator\",\"sqlrunner\",\"suggest\"]}"
-	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source"}`), wantResult)
+	// Verify that the suggestions list contains the expected values
+	wantSuggestions := []string{"api4", "dashboard", "explore", "merge_query", "regenerator", "sqlrunner", "suggest"}
+	testFieldValueSuggestions(t, "basic", []byte("{\"model\": \"system__activity\", \"explore\": \"history\", \"field\": \"history.source\"}"), wantSuggestions)
 
 	// Verify that search term filtering works
 	wantResult = "{\"suggestions\":[\"api4\"]}"
 	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "term": "ap"}`), wantResult)
 
 	// Verify that conditional filtering based on other fields works
-	wantResult = "{\"suggestions\":[\"api4\",\"dashboard\",\"explore\",\"merge_query\",\"regenerator\",\"sqlrunner\",\"suggest\"]}"
-	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "filters": {"history.status": "complete"}}`), wantResult)
+	testFieldValueSuggestions(t, "with_filtering", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "filters": {"history.status": "complete"}}`), wantSuggestions)
 
 	wantResult = "{\"description\":\"\",\"label\":\"API Usage\",\"label_short\":\"API Usage\",\"name\":\"turtle::api_usage\",\"suggestable\":false,\"type\":\"turtle_look\"}"
 	tests.RunToolInvokeParametersTest(t, "get_measures", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
@@ -2238,6 +2528,7 @@ func TestLooker(t *testing.T) {
 	testAddDashboardElement(t, dashboardId)
 	testAddDashboardSqlElement(t, dashboardId)
 	testRunDashboard(t, dashboardId)
+	testDashboardLifecycle(t, dashboardId)
 
 	wantResult = "\"Connection\":\"thelook\""
 	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
@@ -2256,6 +2547,50 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "\"Model\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
+}
+
+// testFieldValueSuggestions asserts that get_field_value_suggestions returns at
+// least the wanted values. Suggestions are drawn from live System Activity data,
+// which only accumulates — running the LookML tests in this suite, for instance,
+// adds "__lookml_test__" as a history source — so the exact list cannot be pinned.
+func testFieldValueSuggestions(t *testing.T, name string, params []byte, want []string) {
+	t.Helper()
+	t.Run("invoke get_field_value_suggestions/"+name, func(t *testing.T) {
+		t.Helper()
+		url := "http://127.0.0.1:5000/api/tool/get_field_value_suggestions/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(params), nil)
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, http.StatusOK, string(bodyBytes))
+		}
+
+		var respBody map[string]any
+		if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
+			t.Fatalf("error parsing response body: %v", err)
+		}
+
+		result, ok := respBody["result"].(string)
+		if !ok {
+			t.Fatalf("unable to find result in response body: %s", string(bodyBytes))
+		}
+
+		var got struct {
+			Suggestions []string `json:"suggestions"`
+		}
+		if err := json.Unmarshal([]byte(result), &got); err != nil {
+			t.Fatalf("error parsing result body: %v", err)
+		}
+
+		gotSuggestions := make(map[string]bool, len(got.Suggestions))
+		for _, s := range got.Suggestions {
+			gotSuggestions[s] = true
+		}
+		for _, w := range want {
+			if !gotSuggestions[w] {
+				t.Errorf("missing suggestion %q: got %v", w, got.Suggestions)
+			}
+		}
+	})
 }
 
 func findTestAgentId(t *testing.T, name string) (string, error) {
@@ -2523,10 +2858,177 @@ func testMakeDashboard(t *testing.T, randstr string) (string, func()) {
 		if _, err := sdk.DeleteDashboard(id, nil); err != nil {
 			t.Fatalf("error deleting dashboard: %v", err)
 		}
-		t.Logf("deleted Dashboard %s", id)
 	}
 }
 
 func stringPtr(s string) *string {
 	return &s
+}
+
+func testDashboardLifecycle(t *testing.T, dashboardId string) {
+	t.Run("TestDashboardLifecycle", func(t *testing.T) {
+		// 1. Get Dashboard
+		getDashboardUrl := "http://127.0.0.1:5000/api/tool/get_dashboard/invoke"
+		reqBody := []byte(fmt.Sprintf(`{"dashboard_id": "%s"}`, dashboardId))
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, getDashboardUrl, bytes.NewBuffer(reqBody), nil)
+		if resp.StatusCode != 200 {
+			t.Fatalf("get_dashboard failed: %d, body: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		var respMap map[string]any
+		if err := json.Unmarshal(bodyBytes, &respMap); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+		resultStr, ok := respMap["result"].(string)
+		if !ok {
+			t.Fatalf("result field missing or not string")
+		}
+
+		var dashboard v4.Dashboard
+		if err := json.Unmarshal([]byte(resultStr), &dashboard); err != nil {
+			t.Fatalf("failed to unmarshal dashboard: %v. Result string: %s", err, resultStr)
+		}
+
+		if dashboard.Id == nil || *dashboard.Id != dashboardId {
+			t.Fatalf("expected dashboard ID %s, got %v", dashboardId, dashboard.Id)
+		}
+
+		if dashboard.DashboardElements == nil || len(*dashboard.DashboardElements) == 0 {
+			t.Fatalf("expected at least one dashboard element")
+		}
+
+		elements := *dashboard.DashboardElements
+		elementId := *elements[0].Id
+		t.Logf("Found dashboard element ID: %s", elementId)
+
+		// 2. Update Dashboard Element
+		updateElementUrl := "http://127.0.0.1:5000/api/tool/update_dashboard_element/invoke"
+		newTitle := "Updated Title By Integration Test"
+		updateBody := []byte(fmt.Sprintf(`{"dashboard_id": "%s", "dashboard_element_id": "%s", "title": "%s", "model": "system__activity", "explore": "look", "fields": ["look.count"]}`, dashboardId, elementId, newTitle))
+		resp, bodyBytes = tests.RunRequest(t, http.MethodPost, updateElementUrl, bytes.NewBuffer(updateBody), nil)
+		if resp.StatusCode != 200 {
+			t.Fatalf("update_dashboard_element failed: %d, body: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		// Verify update via get_dashboard
+		resp, bodyBytes = tests.RunRequest(t, http.MethodPost, getDashboardUrl, bytes.NewBuffer(reqBody), nil)
+		if resp.StatusCode != 200 {
+			t.Fatalf("get_dashboard failed: %d, body: %s", resp.StatusCode, string(bodyBytes))
+		}
+		if err := json.Unmarshal(bodyBytes, &respMap); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+		resultStr = respMap["result"].(string)
+		if err := json.Unmarshal([]byte(resultStr), &dashboard); err != nil {
+			t.Fatalf("failed to unmarshal dashboard: %v", err)
+		}
+		elements = *dashboard.DashboardElements
+		if elements[0].Title == nil || *elements[0].Title != newTitle {
+			t.Fatalf("expected element title %q, got %q", newTitle, *elements[0].Title)
+		}
+
+		// 3. Create Dashboard Layout (Tab)
+		createLayoutUrl := "http://127.0.0.1:5000/api/tool/create_dashboard_layout/invoke"
+		layoutLabel := "Tab 2"
+		createLayoutBody := []byte(fmt.Sprintf(`{"dashboard_id": "%s", "label": "%s"}`, dashboardId, layoutLabel))
+		resp, bodyBytes = tests.RunRequest(t, http.MethodPost, createLayoutUrl, bytes.NewBuffer(createLayoutBody), nil)
+		if resp.StatusCode != 200 {
+			t.Fatalf("create_dashboard_layout failed: %d, body: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		if err := json.Unmarshal(bodyBytes, &respMap); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+		resultStr = respMap["result"].(string)
+		var createLayoutResult map[string]any
+		if err := json.Unmarshal([]byte(resultStr), &createLayoutResult); err != nil {
+			t.Fatalf("failed to unmarshal layout result: %v", err)
+		}
+		newLayoutId, ok := createLayoutResult["id"].(string)
+		if !ok || newLayoutId == "" {
+			t.Fatalf("failed to get new layout ID from result: %v", createLayoutResult)
+		}
+		t.Logf("Created new layout ID: %s", newLayoutId)
+
+		// 4. Move Element to new layout
+		resp, bodyBytes = tests.RunRequest(t, http.MethodPost, getDashboardUrl, bytes.NewBuffer(reqBody), nil)
+		if resp.StatusCode != 200 {
+			t.Fatalf("get_dashboard failed: %d, body: %s", resp.StatusCode, string(bodyBytes))
+		}
+		if err := json.Unmarshal(bodyBytes, &respMap); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+		resultStr = respMap["result"].(string)
+		if err := json.Unmarshal([]byte(resultStr), &dashboard); err != nil {
+			t.Fatalf("failed to unmarshal dashboard: %v", err)
+		}
+
+		if dashboard.DashboardLayouts == nil || len(*dashboard.DashboardLayouts) == 0 {
+			t.Fatalf("expected dashboard layouts")
+		}
+
+		var componentId string
+		for _, layout := range *dashboard.DashboardLayouts {
+			if layout.DashboardLayoutComponents != nil {
+				for _, comp := range *layout.DashboardLayoutComponents {
+					if comp.DashboardElementId != nil && *comp.DashboardElementId == elementId {
+						componentId = *comp.Id
+						break
+					}
+				}
+			}
+			if componentId != "" {
+				break
+			}
+		}
+
+		if componentId == "" {
+			t.Fatalf("failed to find layout component for element %s", elementId)
+		}
+		t.Logf("Found layout component ID: %s", componentId)
+
+		// Move it
+		updateComponentUrl := "http://127.0.0.1:5000/api/tool/update_dashboard_layout_component/invoke"
+		updateComponentBody := []byte(fmt.Sprintf(`{"dashboard_layout_component_id": "%s", "dashboard_layout_id": "%s", "row": 0, "column": 0}`, componentId, newLayoutId))
+		resp, bodyBytes = tests.RunRequest(t, http.MethodPost, updateComponentUrl, bytes.NewBuffer(updateComponentBody), nil)
+		if resp.StatusCode != 200 {
+			t.Fatalf("update_dashboard_layout_component failed: %d, body: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		// Verify move
+		resp, bodyBytes = tests.RunRequest(t, http.MethodPost, getDashboardUrl, bytes.NewBuffer(reqBody), nil)
+		if resp.StatusCode != 200 {
+			t.Fatalf("get_dashboard failed: %d, body: %s", resp.StatusCode, string(bodyBytes))
+		}
+		if err := json.Unmarshal(bodyBytes, &respMap); err != nil {
+			t.Fatalf("failed to unmarshal response: %v", err)
+		}
+		resultStr = respMap["result"].(string)
+		if err := json.Unmarshal([]byte(resultStr), &dashboard); err != nil {
+			t.Fatalf("failed to unmarshal dashboard: %v", err)
+		}
+
+		foundMoved := false
+		for _, layout := range *dashboard.DashboardLayouts {
+			if layout.Id != nil && *layout.Id == newLayoutId {
+				if layout.DashboardLayoutComponents != nil {
+					for _, comp := range *layout.DashboardLayoutComponents {
+						if comp.DashboardElementId != nil && *comp.DashboardElementId == elementId {
+							foundMoved = true
+							if comp.Row == nil || *comp.Row != 0 {
+								t.Errorf("expected row 0, got %v", comp.Row)
+							}
+							if comp.Column == nil || *comp.Column != 0 {
+								t.Errorf("expected column 0, got %v", comp.Column)
+							}
+							break
+						}
+					}
+				}
+			}
+		}
+		if !foundMoved {
+			t.Fatalf("failed to find element %s in target layout %s", elementId, newLayoutId)
+		}
+	})
 }
