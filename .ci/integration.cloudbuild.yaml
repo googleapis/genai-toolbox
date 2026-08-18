@@ -968,9 +968,8 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "MONGODB_DATABASE=$_DATABASE_NAME"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["MONGODB_URI", "CLIENT_ID"]
+    secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -1152,7 +1151,7 @@ steps:
       - "CLICKHOUSE_PORT=$_CLICKHOUSE_PORT"
       - "CLICKHOUSE_PROTOCOL=$_CLICKHOUSE_PROTOCOL"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLICKHOUSE_HOST", "CLICKHOUSE_USER", "CLIENT_ID"]
+    secretEnv: ["CLICKHOUSE_HOST", "CLICKHOUSE_USER", "CLIENT_ID", "API_KEY"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -1425,7 +1424,7 @@ steps:
       - "GOPATH=/gopath"
       - "DATAPROC_PROJECT=$PROJECT_ID"
       - "DATAPROC_REGION=$_REGION"
-      - "DATAPROC_LIST_JOBS_CLUSTER=cluster-36"
+      - "DATAPROC_LIST_JOBS_CLUSTER=$_DATAPROC_CLUSTER"
     secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
@@ -1477,6 +1476,33 @@ steps:
           exit 0
         fi
 
+  - id: "arcadedb"
+    name: golang:1
+    waitFor: ["compile-test-binary", "detect-changes"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        PATTERN="(^|/)arcadedb/|$$(cat .ci/core_pattern.txt)"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running ArcadeDB tests..."
+          .ci/test_with_coverage.sh \
+            "ArcadeDB" \
+            arcadedb \
+            arcadedb
+        else
+          echo "No relevant changes for ArcadeDB. Skipping shard."
+          exit 0
+        fi
+
   - id: "mariadb"
     name: golang:1
     waitFor: ["compile-test-binary", "detect-changes"]
@@ -1525,6 +1551,40 @@ steps:
           ./auth.test -test.v
         else
           echo "No relevant changes for Auth. Skipping shard."
+          exit 0
+        fi
+
+  - id: "databaseinsights"
+    name: golang:1
+    waitFor: ["compile-test-binary", "detect-changes"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "DATABASE_INSIGHTS_PROJECT=$PROJECT_ID"
+      - "DATABASE_INSIGHTS_REGION=$_REGION"
+      - "DATABASE_INSIGHTS_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
+      - "DATABASE_INSIGHTS_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        PATTERN="(^|/)databaseinsights/|$$(cat .ci/core_pattern.txt)"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Database Insights tests..."
+          .ci/test_with_coverage.sh \
+            "Database Insights" \
+            databaseinsights \
+            databaseinsights/getadvancedaggregatedquerystats \
+            databaseinsights/getadvancedaggregatedwaiteventstats \
+            databaseinsights/getadvancedtimeseriesquerystats \
+            databaseinsights/getadvancedtimeserieswaiteventstats \
+            databaseinsights/getindexrecommendations
+        else
+          echo "No relevant changes for Database Insights. Skipping shard."
           exit 0
         fi
 
@@ -1645,8 +1705,6 @@ availableSecrets:
       env: MARIADB_PASS
     - versionName: projects/$PROJECT_ID/secrets/mariadb_host/versions/latest
       env: MARIADB_HOST
-    - versionName: projects/$PROJECT_ID/secrets/mongodb_uri/versions/latest
-      env: MONGODB_URI
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -1711,3 +1769,4 @@ substitutions:
   _MARIADB_DATABASE: test_database
   _SNOWFLAKE_DATABASE: "test"
   _SNOWFLAKE_SCHEMA: "PUBLIC"
+  _DATAPROC_CLUSTER: "dataproc-testing-cluster"

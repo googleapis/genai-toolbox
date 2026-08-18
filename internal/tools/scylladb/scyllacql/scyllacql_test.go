@@ -69,9 +69,9 @@ func TestParseFromYamlScyllaDBCQL(t *testing.T) {
 					Source:    "my-scylladb-instance",
 					Statement: "SELECT * FROM CQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
-							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+						parameters.NewStringParameter("country", "some description",
+							parameters.WithStringAuth([]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 				},
 			},
@@ -121,9 +121,9 @@ func TestParseFromYamlScyllaDBCQL(t *testing.T) {
 					Source:    "my-scylladb-instance",
 					Statement: "SELECT * FROM CQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
-							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+						parameters.NewStringParameter("country", "some description",
+							parameters.WithStringAuth([]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 					TemplateParameters: []parameters.Parameter{
 						parameters.NewStringParameter("tableName", "some description."),
@@ -162,7 +162,7 @@ func TestParseFromYamlScyllaDBCQL(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

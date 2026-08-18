@@ -85,9 +85,13 @@ during initialization (e.g., `tbadk.NewToolboxClient(URL, core.WithHTTPClient(my
 `ToolboxClient` *will not* close it.
 {{< /notice >}}
 
+{{< notice note >}}
+If your connection URL contains query parameters (e.g., `http://localhost:5000?foo=bar`), the client automatically preserves them across API requests for parameter binding.
+{{< /notice >}}
+
 ## Transport Protocols
 
-The SDK supports multiple transport protocols for communicating with the Toolbox server. By default, the client uses the `v2025-06-18` version of the **Model Context Protocol (MCP)**.
+The SDK supports multiple transport protocols for communicating with the Toolbox server. By default, the client uses the `2026-07-28` version of the **Model Context Protocol (MCP)**.
 
 You can explicitly select a protocol using the `core.WithProtocol` option during client initialization. This is useful if you need to pin the client to a specific legacy version of MCP.
 
@@ -101,7 +105,10 @@ We currently support different versions of the MCP protocol.
 
 | Constant | Description |
 | :--- | :--- |
-| `core.MCP` | **(Default)** Alias for the latest supported MCP version (currently `v2025-06-18`). |
+| `core.MCP` | **(Default)** Alias for the default MCP version (currently `2026-07-28`). |
+| `core.MCPLatest` | Alias for the latest stable MCP version (currently `2026-07-28`). |
+| `core.MCPDraft` | Alias for the upcoming draft MCP version (currently `2026-07-28`). |
+| `core.MCPv20260728` | MCP Protocol version 2026-07-28. |
 | `core.MCPv20251125` | MCP Protocol version 2025-11-25. |
 | `core.MCPv20250618` | MCP Protocol version 2025-06-18. |
 | `core.MCPv20250326` | MCP Protocol version 2025-03-26. |
@@ -115,7 +122,7 @@ import (
     "github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
 )
 
-// Initialize with the default MCP protocol (2025-06-18)
+// Initialize with the default MCP protocol (2026-07-28)
 client, err := tbadk.NewToolboxClient(
     "http://localhost:5000",
 )
