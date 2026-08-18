@@ -371,6 +371,11 @@ func TestSanitizeLabelValue(t *testing.T) {
 		{"spaces replaced", "a b c", "a_b_c"},
 		{"empty allowed", "", ""},
 		{"leading digit kept", "00-abc", "00-abc"},
+		// Unlike keys, values have no leading-character requirement:
+		// BigQuery accepts values starting with an underscore or dash.
+		{"leading underscore kept", "_internal", "_internal"},
+		{"leading dash kept", "-flag", "-flag"},
+		{"leading dot becomes underscore", ".hidden", "_hidden"},
 		{"truncated to 63", strings.Repeat("v", 100), strings.Repeat("v", 63)},
 	}
 

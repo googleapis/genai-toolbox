@@ -211,7 +211,9 @@ func sanitizeLabelKey(s string) string {
 }
 
 // sanitizeLabelValue sanitizes s for use as a BigQuery label value. Values
-// share the key character set but may be empty.
+// share the key character set but may be empty, and unlike keys they have no
+// leading-character requirement: BigQuery accepts values beginning with an
+// underscore, dash, or digit.
 func sanitizeLabelValue(s string) string {
 	return sanitizeLabelPart(s)
 }
