@@ -12,6 +12,7 @@ import (
 )
 
 // ConvertToGenaiTool translates a ToolboxTool into the genai.FunctionDeclaration format.
+// Test trigger for Go quickstart CI on main
 func ConvertToGenaiTool(toolboxTool *core.ToolboxTool) *genai.Tool {
 
 	inputschema, err := toolboxTool.InputSchema()
