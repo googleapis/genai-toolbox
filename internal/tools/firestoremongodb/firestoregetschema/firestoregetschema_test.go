@@ -81,7 +81,7 @@ func TestParseFromYamlFirestoreGetSchema(t *testing.T) {
 			in: `
 			kind: tool
 			name: get_schema_tool
-			type: firestore-get-schema
+			type: firestoremongodb-get-schema
 			source: my-firestore-database
 			description: Get schema from Firestore collections
 			`,
@@ -92,7 +92,7 @@ func TestParseFromYamlFirestoreGetSchema(t *testing.T) {
 						Description:  "Get schema from Firestore collections",
 						AuthRequired: []string{},
 					},
-					Type:   "firestore-get-schema",
+					Type:   "firestoremongodb-get-schema",
 					Source: "my-firestore-database",
 				},
 			},
@@ -102,7 +102,7 @@ func TestParseFromYamlFirestoreGetSchema(t *testing.T) {
 			in: `
 			kind: tool
 			name: secure_get_schema
-			type: firestore-get-schema
+			type: firestoremongodb-get-schema
 			source: prod-firestore
 			description: Get schema with authentication
 			authRequired:
@@ -115,7 +115,7 @@ func TestParseFromYamlFirestoreGetSchema(t *testing.T) {
 						Description:  "Get schema with authentication",
 						AuthRequired: []string{"google-auth-service"},
 					},
-					Type:   "firestore-get-schema",
+					Type:   "firestoremongodb-get-schema",
 					Source: "prod-firestore",
 				},
 			},
@@ -170,7 +170,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			kind: tool
 			name: get_schema_tool
-			type: firestore-get-schema
+			type: firestoremongodb-get-schema
 			description: Get schema
 			`,
 			err: "Field validation for 'Source' failed on the 'required' tag",
@@ -200,7 +200,7 @@ func TestInvoke(t *testing.T) {
 			Name:        "get_schema",
 			Description: "Get schema",
 		},
-		Type:   "firestore-get-schema",
+		Type:   "firestoremongodb-get-schema",
 		Source: "my-firestore",
 	}
 
@@ -274,7 +274,7 @@ func TestValidateSource(t *testing.T) {
 			Name:        "get_schema",
 			Description: "Get schema",
 		},
-		Type:   "firestore-get-schema",
+		Type:   "firestoremongodb-get-schema",
 		Source: "my-firestore",
 	}
 	tool, err := cfg.Initialize(ctx)

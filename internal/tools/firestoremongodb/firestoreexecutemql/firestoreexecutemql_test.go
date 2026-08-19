@@ -81,7 +81,7 @@ func TestParseFromYamlFirestoreExecuteMQL(t *testing.T) {
 			in: `
 			kind: tool
 			name: execute_mql_tool
-			type: firestore-execute-mql
+			type: firestoremongodb-execute-mql
 			source: my-firestore-database
 			description: Execute MQL query in Firestore
 			`,
@@ -92,7 +92,7 @@ func TestParseFromYamlFirestoreExecuteMQL(t *testing.T) {
 						Description:  "Execute MQL query in Firestore",
 						AuthRequired: []string{},
 					},
-					Type:   "firestore-execute-mql",
+					Type:   "firestoremongodb-execute-mql",
 					Source: "my-firestore-database",
 				},
 			},
@@ -102,7 +102,7 @@ func TestParseFromYamlFirestoreExecuteMQL(t *testing.T) {
 			in: `
 			kind: tool
 			name: secure_execute_mql
-			type: firestore-execute-mql
+			type: firestoremongodb-execute-mql
 			source: prod-firestore
 			description: Execute MQL with authentication
 			authRequired:
@@ -115,7 +115,7 @@ func TestParseFromYamlFirestoreExecuteMQL(t *testing.T) {
 						Description:  "Execute MQL with authentication",
 						AuthRequired: []string{"google-auth-service"},
 					},
-					Type:   "firestore-execute-mql",
+					Type:   "firestoremongodb-execute-mql",
 					Source: "prod-firestore",
 				},
 			},
@@ -170,7 +170,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			in: `
 			kind: tool
 			name: execute_mql_tool
-			type: firestore-execute-mql
+			type: firestoremongodb-execute-mql
 			description: Execute MQL query
 			`,
 			err: "Field validation for 'Source' failed on the 'required' tag",
@@ -200,7 +200,7 @@ func TestInvoke(t *testing.T) {
 			Name:        "execute_mql",
 			Description: "Executes MQL query",
 		},
-		Type:   "firestore-execute-mql",
+		Type:   "firestoremongodb-execute-mql",
 		Source: "my-firestore",
 	}
 
@@ -300,7 +300,7 @@ func TestValidateSource(t *testing.T) {
 			Name:        "execute_mql",
 			Description: "Executes MQL query",
 		},
-		Type:   "firestore-execute-mql",
+		Type:   "firestoremongodb-execute-mql",
 		Source: "my-firestore",
 	}
 	tool, err := cfg.Initialize(ctx)

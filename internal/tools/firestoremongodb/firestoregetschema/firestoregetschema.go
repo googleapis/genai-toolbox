@@ -27,7 +27,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "firestore-get-schema"
+const resourceType string = "firestoremongodb-get-schema"
 const collectionKey string = "collection"
 
 func init() {

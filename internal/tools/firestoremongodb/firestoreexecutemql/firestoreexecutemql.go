@@ -27,7 +27,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "firestore-execute-mql"
+const resourceType string = "firestoremongodb-execute-mql"
 const queryKey string = "query"
 
 func init() {
