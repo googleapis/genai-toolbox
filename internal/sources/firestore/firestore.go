@@ -879,7 +879,12 @@ func (s *Source) ExecutePipeline(ctx context.Context, query string) (any, error)
 	if strings.HasPrefix(trimmed, "{") && (strings.Contains(trimmed, "structuredPipeline") || strings.Contains(trimmed, "pipeline")) {
 		bodyBytes = []byte(trimmed)
 	} else {
-		// Construct the structuredPipeline payload with "iql" stage and read_only: true option
+		mqlQuery := trimmed
+		if !strings.HasPrefix(mqlQuery, "db.") && !strings.HasPrefix(mqlQuery, "db[") {
+			mqlQuery = "db." + mqlQuery
+		}
+
+		// Construct the structuredPipeline payload with "iql" stage
 		payload := map[string]any{
 			"structuredPipeline": map[string]any{
 				"pipeline": map[string]any{
@@ -888,14 +893,9 @@ func (s *Source) ExecutePipeline(ctx context.Context, query string) (any, error)
 							"name": "iql",
 							"args": []map[string]any{
 								{
-									"stringValue": trimmed,
+									"stringValue": mqlQuery,
 								},
 							},
-						},
-					},
-					"options": map[string]any{
-						"read_only": map[string]any{
-							"booleanValue": true,
 						},
 					},
 				},

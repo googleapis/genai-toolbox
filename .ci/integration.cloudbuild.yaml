@@ -940,7 +940,8 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "FIRESTORE_PROJECT=$PROJECT_ID"
+      - "FIRESTORE_PROJECT=$_FIRESTORE_PROJECT"
+      - "FIRESTORE_DATABASE=$_FIRESTORE_DATABASE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
     secretEnv: ["CLIENT_ID"]
     volumes:
@@ -949,14 +950,24 @@ steps:
     args:
       - -c
       - |
-        PATTERN="(^|/)firestore/|$$(cat .ci/core_pattern.txt)"
+        PATTERN="(^|/)firestore/|(^|/)firestoremongodb/|$$(cat .ci/core_pattern.txt)"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running Firestore tests..."
           .ci/test_with_coverage.sh \
             "Firestore" \
             firestore \
-            firestore
+            firestore \
+            firestoregetdocuments \
+            firestorelistcollections \
+            firestoredeletedocuments \
+            firestorequery \
+            firestorequerycollection \
+            firestoreupdatedocument \
+            firestoregetrules \
+            firestorevalidaterules \
+            firestoremongodb/firestoregetschema \
+            firestoremongodb/firestoreexecutemql
         else
           echo "No relevant changes for Firestore. Skipping shard."
           exit 0
@@ -1770,3 +1781,5 @@ substitutions:
   _SNOWFLAKE_DATABASE: "test"
   _SNOWFLAKE_SCHEMA: "PUBLIC"
   _DATAPROC_CLUSTER: "dataproc-testing-cluster"
+  _FIRESTORE_PROJECT: "fs-onemcp-e2e-prod"
+  _FIRESTORE_DATABASE: "mcp-toolbox-db-native-schema"
