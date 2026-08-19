@@ -858,8 +858,8 @@ func getTypeName(v any) string {
 	}
 }
 
-// ExecutePipeline sends an MQL query or aggregation pipeline to the Firestore executePipeline API.
-func (s *Source) ExecutePipeline(ctx context.Context, query string) (any, error) {
+// ExecuteMQL sends an MQL query to the Firestore executePipeline API via the iql stage or as a raw structured pipeline.
+func (s *Source) ExecuteMQL(ctx context.Context, query string) (any, error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		userAgent = "mcp-toolbox"

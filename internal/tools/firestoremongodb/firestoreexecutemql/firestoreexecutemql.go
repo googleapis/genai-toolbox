@@ -46,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
-	ExecutePipeline(context.Context, string) (any, error)
+	ExecuteMQL(context.Context, string) (any, error)
 }
 
 type Config struct {
@@ -122,7 +122,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, query))
 
-	resp, err := source.ExecutePipeline(ctx, query)
+	resp, err := source.ExecuteMQL(ctx, query)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

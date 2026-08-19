@@ -32,7 +32,7 @@ import (
 
 type mockSource struct {
 	sources.SourceConfig
-	executePipelineFunc func(ctx context.Context, query string) (any, error)
+	executeMQLFunc func(ctx context.Context, query string) (any, error)
 }
 
 func (m *mockSource) SourceType() string {
@@ -47,9 +47,9 @@ func (m *mockSource) FirestoreClient() *firestoreapi.Client {
 	return nil
 }
 
-func (m *mockSource) ExecutePipeline(ctx context.Context, query string) (any, error) {
-	if m.executePipelineFunc != nil {
-		return m.executePipelineFunc(ctx, query)
+func (m *mockSource) ExecuteMQL(ctx context.Context, query string) (any, error) {
+	if m.executeMQLFunc != nil {
+		return m.executeMQLFunc(ctx, query)
 	}
 	return nil, nil
 }
@@ -212,7 +212,7 @@ func TestInvoke(t *testing.T) {
 	t.Run("successful invocation find query", func(t *testing.T) {
 		wantResult := []map[string]any{{"_id": "doc1", "value": 100}}
 		mock := &mockSource{
-			executePipelineFunc: func(ctx context.Context, query string) (any, error) {
+			executeMQLFunc: func(ctx context.Context, query string) (any, error) {
 				if query != "db.orders.find({})" {
 					return nil, errors.New("unexpected query")
 				}
@@ -234,7 +234,7 @@ func TestInvoke(t *testing.T) {
 		wantResult := []map[string]any{{"_id": "item1", "total": 250}}
 		pipelineQuery := `[{"$match": {"status": "completed"}}, {"$group": {"_id": "$item", "total": {"$sum": "$amount"}}}]`
 		mock := &mockSource{
-			executePipelineFunc: func(ctx context.Context, query string) (any, error) {
+			executeMQLFunc: func(ctx context.Context, query string) (any, error) {
 				if query != pipelineQuery {
 					return nil, errors.New("unexpected query")
 				}
@@ -256,7 +256,7 @@ func TestInvoke(t *testing.T) {
 		wantResult := []map[string]any{{"_id": "item1", "total": 250}}
 		pipelineObj := `{"pipeline": [{"$match": {"status": "completed"}}], "explain": false}`
 		mock := &mockSource{
-			executePipelineFunc: func(ctx context.Context, query string) (any, error) {
+			executeMQLFunc: func(ctx context.Context, query string) (any, error) {
 				if query != pipelineObj {
 					return nil, errors.New("unexpected query")
 				}
