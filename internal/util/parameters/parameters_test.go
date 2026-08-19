@@ -1995,6 +1995,21 @@ func TestFailParametersUnmarshal(t *testing.T) {
 			},
 			err: "unsupported valueType \"not-a-real-type\" for map parameter",
 		},
+		{
+			name: "both secure and authServices",
+			in: []map[string]any{
+				{
+					"name":        "my_string",
+					"type":        "string",
+					"description": "this param",
+					"secure":      true,
+					"authServices": []map[string]any{
+						{"name": "service_one"},
+					},
+				},
+			},
+			err: "parameter \"my_string\" cannot have both 'secure' set to true and 'authServices' specified",
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -2366,6 +2381,99 @@ func TestCheckParamRequired(t *testing.T) {
 			got := parameters.CheckParamRequired(tc.required, tc.defaultV)
 			if got != tc.want {
 				t.Fatalf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestProcessParametersValidation(t *testing.T) {
+	tcs := []struct {
+		name           string
+		templateParams parameters.Parameters
+		params         parameters.Parameters
+		wantErr        bool
+		errStr         string
+	}{
+		{
+			name:           "valid - only secure",
+			templateParams: nil,
+			params: parameters.Parameters{
+				&parameters.StringParameter{
+					CommonParameter: parameters.CommonParameter{
+						Name:   "p1",
+						Type:   parameters.TypeString,
+						Desc:   "desc",
+						Secure: true,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:           "valid - only authServices",
+			templateParams: nil,
+			params: parameters.Parameters{
+				&parameters.StringParameter{
+					CommonParameter: parameters.CommonParameter{
+						Name: "p1",
+						Type: parameters.TypeString,
+						Desc: "desc",
+						AuthServices: []parameters.ParamAuthService{
+							{Name: "auth1"},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:           "invalid - both secure and authServices",
+			templateParams: nil,
+			params: parameters.Parameters{
+				&parameters.StringParameter{
+					CommonParameter: parameters.CommonParameter{
+						Name:   "p1",
+						Type:   parameters.TypeString,
+						Desc:   "desc",
+						Secure: true,
+						AuthServices: []parameters.ParamAuthService{
+							{Name: "auth1"},
+						},
+					},
+				},
+			},
+			wantErr: true,
+			errStr:  `parameter "p1" cannot have both 'secure' set to true and 'authServices' specified`,
+		},
+		{
+			name: "invalid - both secure and authServices in templateParams",
+			templateParams: parameters.Parameters{
+				&parameters.StringParameter{
+					CommonParameter: parameters.CommonParameter{
+						Name:   "p1",
+						Type:   parameters.TypeString,
+						Desc:   "desc",
+						Secure: true,
+						AuthServices: []parameters.ParamAuthService{
+							{Name: "auth1"},
+						},
+					},
+				},
+			},
+			params:  nil,
+			wantErr: true,
+			errStr:  `parameter "p1" cannot have both 'secure' set to true and 'authServices' specified`,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, err := parameters.ProcessParameters(tc.templateParams, tc.params)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("ProcessParameters() error = %v, wantErr %v", err, tc.wantErr)
+			}
+			if tc.wantErr && err != nil && !strings.Contains(err.Error(), tc.errStr) {
+				t.Fatalf("ProcessParameters() error = %v, want error containing %q", err, tc.errStr)
 			}
 		})
 	}

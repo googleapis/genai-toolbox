@@ -78,7 +78,7 @@ parameters:
 ```
 
 | **field**      |    **type**    | **required** | **description**                                                                                                                                                                                                                        |
-|----------------|:--------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | :------------: | :----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | name           |     string     |     true     | Name of the parameter.                                                                                                                                                                                                                 |
 | type           |     string     |     true     | Must be one of "string", "integer", "float", "boolean" "array"                                                                                                                                                                         |
 | description    |     string     |     true     | Natural language description of the parameter to describe it to the agent.                                                                                                                                                             |
@@ -180,7 +180,7 @@ statement: |
 ```
 
 | **field**      |     **type**     | **required** | **description**                                                            |
-|----------------|:----------------:|:------------:|----------------------------------------------------------------------------|
+| -------------- | :--------------: | :----------: | -------------------------------------------------------------------------- |
 | name           |      string      |     true     | Name of the parameter.                                                     |
 | type           |      string      |     true     | Must be "array"                                                            |
 | description    |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
@@ -230,6 +230,53 @@ parameters:
     valueType: integer # This enforces the value type for all entries.
 ```
 
+### Secure Parameters
+
+Secure parameters are designed for sensitive runtime context (such as an end-user `customer_id`, tenant identifier, or session token) that **AI agents (LLMs) should not control or see** and that should not be transmitted in plain text through prompt completion requests, model context windows, or standard server logs.
+
+> **Note:** Secure parameters should be used for client-supplied runtime values (such as `customer_id` or end-user context). Database credentials (such as service account passwords or API keys) should be configured directly in the Data Source configuration rather than passed as per-request tool parameters.
+
+To configure a parameter as secure, set the `secure` field to `true` in your tool's parameter definition:
+
+```yaml
+kind: tool
+name: search_secure_data
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM sessions WHERE customer_id = $1
+parameters:
+  - name: customer_id
+    type: string
+    description: Sensitive customer identifier supplied out-of-band by the calling application
+    secure: true
+```
+
+When a parameter is marked as `secure: true`, it will not be presented to the agent as a configurable parameter. Instead, it relies on the application to set the parameter. If an application fails to set the parameter before the tool is called, execution is blocked and returns an `invalid_params` error.
+
+> **Note:** A parameter cannot have both `secure: true` and `authServices` specified.
+
+Here is how you set a secure parameter with the Toolbox Python SDK:
+
+```python
+# Pass secure_args when loading or calling a tool via the Python SDK
+auth_tool = await toolbox.load_tool(
+    "search_secure_data",
+    secure_args={"customer_id": "cust_12345"}
+)
+result = await auth_tool()
+```
+
+#### Unsupported Extension Behavior
+
+- **Protocol Version Support**: The secure parameter feature is strictly tied to the latest `v20260728` MCP protocol and the Toolbox experimental extension (`com.google.cloud/toolbox.v1`). For earlier protocol versions, tools with secure parameters will not be listed and will return a "tool not found" error if invoked.
+- **Automatic Tool Filtering (`tools/list`)**: If a client does not declare support for the `com.google.cloud/toolbox.v1` extension, any tool configured with secure parameters is automatically filtered out from `tools/list` responses so AI agents cannot discover or attempt to call tools they cannot invoke securely.
+- **Invocation Rejection (`tools/call`)**: If a client attempts to call a tool requiring secure parameters without supporting the extension, the server blocks execution and returns a `400 Bad Request` (`MISSING_REQUIRED_CLIENT_CAPABILITY`) error:
+  ```
+  missing required client capability: tool "<name>" requires com.google.cloud/toolbox.v1 extension which is not supported by the client
+  ```
+- **Actionable Guidance**: If callers encounter missing tools or extension errors, ensure that the calling client/SDK is upgraded to a version supporting `com.google.cloud/toolbox.v1`. If a parameter does not require transport-level hiding from the LLM agent, omit `secure: true` so standard clients can access the tool.
+
 ### Authenticated Parameters
 
 Authenticated parameters are automatically populated with user
@@ -258,10 +305,10 @@ parameters:
         field: sub
 ```
 
-| **field** | **type** | **required** | **description**                                                                  |
-|-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
+| **field** | **type** | **required** | **description**                                                                             |
+| --------- | :------: | :----------: | ------------------------------------------------------------------------------------------- |
 | name      |  string  |     true     | Name of the [authServices](../authentication/_index.md) used to verify the OIDC auth token. |
-| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.    |
+| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.               |
 
 ### Template Parameters
 
@@ -324,7 +371,7 @@ templateParameters:
 ```
 
 | **field**      |     **type**     |  **required**   | **description**                                                                     |
-|----------------|:----------------:|:---------------:|-------------------------------------------------------------------------------------|
+| -------------- | :--------------: | :-------------: | ----------------------------------------------------------------------------------- |
 | name           |      string      |      true       | Name of the template parameter.                                                     |
 | type           |      string      |      true       | Must be one of "string", "integer", "float", "boolean", "array"                     |
 | description    |      string      |      true       | Natural language description of the template parameter to describe it to the agent. |
@@ -367,12 +414,12 @@ and provide appropriate user experiences.
 
 ### Available Annotations
 
-| **annotation**     |  **type**   | **default** | **description**                                                        |
-|--------------------|:-----------:|:-----------:|------------------------------------------------------------------------|
-| readOnlyHint       |    bool     |    false    | Tool only reads data, no modifications to the environment.             |
-| destructiveHint    |    bool     |    true     | Tool may create, update, or delete data.                               |
-| idempotentHint     |    bool     |    false    | Repeated calls with same arguments have no additional effect.          |
-| openWorldHint      |    bool     |    true     | Tool interacts with external entities beyond its local environment.    |
+| **annotation**  | **type** | **default** | **description**                                                     |
+| --------------- | :------: | :---------: | ------------------------------------------------------------------- |
+| readOnlyHint    |   bool   |    false    | Tool only reads data, no modifications to the environment.          |
+| destructiveHint |   bool   |    true     | Tool may create, update, or delete data.                            |
+| idempotentHint  |   bool   |    false    | Repeated calls with same arguments have no additional effect.       |
+| openWorldHint   |   bool   |    true     | Tool interacts with external entities beyond its local environment. |
 
 ### Specifying Annotations
 
@@ -439,10 +486,10 @@ result = await tool("foo", bar="baz")
 
 ```javascript
 // Loading a single tool
-const tool = await client.loadTool("my-tool")
+const tool = await client.loadTool("my-tool");
 
 // Invoke the tool
-const result = await tool({a: 5, b: 2})
+const result = await tool({ a: 5, b: 2 });
 ```
 
 ### Go
@@ -455,6 +502,5 @@ tool, err = client.LoadTool("my-tool", ctx)
 inputs := map[string]any{"location": "London"}
 result, err := tool.Invoke(ctx, inputs)
 ```
-
 
 To see all supported sources and the specific tools they unlock, explore the full list of our [Integrations](../../../integrations/_index.md).

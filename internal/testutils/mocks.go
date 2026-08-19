@@ -151,6 +151,23 @@ func (t MockTool) GetAnnotations() *tools.ToolAnnotations {
 	return nil
 }
 
+func (t MockTool) GetAuthTokenHeaderName(sources.Source) (string, error) {
+	return "Authorization", nil
+}
+
+func (t MockTool) GetScopesRequired() []string {
+	return nil
+}
+
+func (t MockTool) HasSecureParams() bool {
+	for _, p := range t.StaticParameters {
+		if p != nil && p.GetSecure() {
+			return true
+		}
+	}
+	return false
+}
+
 // MockPrompt is used to mock prompts in tests
 type MockPrompt struct {
 	Name        string
