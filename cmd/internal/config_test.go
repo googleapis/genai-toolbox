@@ -92,7 +92,72 @@ func TestParseEnv(t *testing.T) {
 			want: "bar",
 		},
 		{
-			desc:         "with empty default",
+			desc: "skip commented out env var",
+			in:   "# ${FOO}",
+			want: "# ${FOO}",
+		},
+		{
+			desc: "skip commented out env var with preceding whitespace",
+			in:   "  # ${FOO}",
+			want: "  # ${FOO}",
+		},
+		{
+			desc: "skip commented out env var in inline comment",
+			in:   "port: 8080 # default is ${DEFAULT_PORT}",
+			want: "port: 8080 # default is ${DEFAULT_PORT}",
+		},
+		{
+			desc: "skip commented out env var in inline comment but parse active env var",
+			in:   "port: ${PORT} # default is ${DEFAULT_PORT}",
+			env: map[string]string{
+				"PORT": "9090",
+			},
+			want: "port: 9090 # default is ${DEFAULT_PORT}",
+		},
+		{
+			desc: "do not skip env var with hash inside double quotes",
+			in:   `url: "http://example.com/#${ANCHOR}"`,
+			env: map[string]string{
+				"ANCHOR": "section1",
+			},
+			want: `url: "http://example.com/#section1"`,
+		},
+		{
+			desc: "do not skip env var with hash inside single quotes",
+			in:   `url: 'http://example.com/#${ANCHOR}'`,
+			env: map[string]string{
+				"ANCHOR": "section1",
+			},
+			want: `url: 'http://example.com/#section1'`,
+		},
+		{
+			desc: "skip commented out env var but parse non-commented ones",
+			in:   "foo: ${BAR}\n# ${FOO}\nbaz: ${QUX}",
+			env: map[string]string{
+				"BAR": "bar_val",
+				"QUX": "qux_val",
+			},
+			want: "foo: bar_val\n# ${FOO}\nbaz: qux_val",
+		},
+		{
+			desc: "multiline yaml with mixed comments and env vars",
+			in: "database: my-db # Another comment in line ${SHOULD_BE_IGNORED}\n" +
+				"host: \"localhost\"\n" +
+				"# This is a comment, ${SHOULD_BE_IGNORED} won't be replaced!\n" +
+				"port: ${DB_PORT:5432}\n" +
+				"user: ${DB_USER}\n",
+			env: map[string]string{
+				"DB_USER": "my_user",
+			},
+			want: "database: my-db # Another comment in line ${SHOULD_BE_IGNORED}\n" +
+				"host: \"localhost\"\n" +
+				"# This is a comment, ${SHOULD_BE_IGNORED} won't be replaced!\n" +
+				"port: 5432\n" +
+				"user: my_user\n",
+			wantOptional: []string{"DB_PORT"},
+		},
+		{
+			desc:         "with default without env",
 			in:           "${FOO:}",
 			want:         "",
 			wantOptional: []string{"FOO"},
