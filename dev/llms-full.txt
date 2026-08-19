@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-18T05:09:49Z
+**GENERATED ON:** 2026-08-19T16:36:18Z
 
 ---
 ### System Directives for AI Models
@@ -41003,7 +41003,8 @@ pipelineParams:
 | source          | string   | true         | The name of the `mongodb` source to use.                                                                       |
 | description     | string   | true         | A description of the tool that is passed to the LLM.                                                           |
 | database        | string   | true         | The name of the MongoDB database containing the collection.                                                    |
-| collection      | string   | true         | The name of the MongoDB collection to run the aggregation on.                                                  |
+| collection      | string   | false         | The name of the MongoDB collection to run the aggregation on. Mutually exclusive with `collectionAllowedValues`. If omitted, it must be supplied at runtime as a `collection` parameter, and can be restricted with `collectionAllowedValues`. |
+| collectionAllowedValues | list     | false        | An optional list of collection names the agent may choose from when `collection` is provided at runtime. Only configure this if collection is omitted. |
 | pipelinePayload | string   | true         | A JSON array of aggregation stage documents, provided as a string. Uses `{{json .param_name}}` for templating. |
 | pipelineParams  | list     | true         | A list of parameter objects that define the variables used in the `pipelinePayload`.                           |
 | canonical       | bool     | false        | Determines if the pipeline string is parsed using MongoDB's Canonical or Relaxed Extended JSON format.         |
@@ -41065,7 +41066,8 @@ filterParams:
 | source        | string   | true         | The name of the `mongodb` source to use.                                                                            |
 | description   | string   | true         | A description of the tool that is passed to the LLM.                                                                |
 | database      | string   | true         | The name of the MongoDB database containing the collection.                                                         |
-| collection    | string   | true         | The name of the MongoDB collection from which to delete documents.                                                  |
+| collection    | string   | false         | The name of the MongoDB collection from which to delete documents. Mutually exclusive with `collectionAllowedValues`. If omitted, it must be supplied at runtime as a `collection` parameter, and can be restricted with `collectionAllowedValues`. |
+| collectionAllowedValues | list     | false        | An optional list of collection names the agent may choose from when `collection` is provided at runtime. Only configure this if collection is omitted. |
 | filterPayload | string   | true         | The MongoDB query filter document to select the documents for deletion. Uses `{{json .param_name}}` for templating. |
 | filterParams  | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                  |
 
@@ -41129,7 +41131,8 @@ filterParams:
 | source        | string   | true         | The name of the `mongodb` source to use.                                                                           |
 | description   | string   | true         | A description of the tool that is passed to the LLM.                                                               |
 | database      | string   | true         | The name of the MongoDB database containing the collection.                                                        |
-| collection    | string   | true         | The name of the MongoDB collection from which to delete a document.                                                |
+| collection    | string   | false         | The name of the MongoDB collection from which to delete a document. Mutually exclusive with `collectionAllowedValues`. If omitted, it must be supplied at runtime as a `collection` parameter, and can be restricted with `collectionAllowedValues`. |
+| collectionAllowedValues | list     | false        | An optional list of collection names the agent may choose from when `collection` is provided at runtime. Only configure this if collection is omitted. |
 | filterPayload | string   | true         | The MongoDB query filter document to select the document for deletion. Uses `{{json .param_name}}` for templating. |
 | filterParams  | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                 |
 
@@ -41203,7 +41206,8 @@ sortParams:
 | source         | string   | true         | The name of the `mongodb` source to use.                                                                                    |
 | description    | string   | true         | A description of the tool that is passed to the LLM.                                                                        |
 | database       | string   | true         | The name of the MongoDB database to query.                                                                                  |
-| collection     | string   | true         | The name of the MongoDB collection to query.                                                                                |
+| collection     | string   | false         | The name of the MongoDB collection to query. Mutually exclusive with `collectionAllowedValues`. If omitted, it must be supplied at runtime as a `collection` parameter, and can be restricted with `collectionAllowedValues`. |
+| collectionAllowedValues | list     | false        | An optional list of collection names the agent may choose from when `collection` is provided at runtime. Only configure this if collection is omitted. |
 | filterPayload  | string   | true         | The MongoDB query filter document to select which documents to return. Uses `{{json .param_name}}` for templating.          |
 | filterParams   | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                          |
 | projectPayload | string   | false        | An optional MongoDB projection document to specify which fields to include (1) or exclude (0) in the results.               |
@@ -41274,7 +41278,8 @@ projectPayload: |
 | source         | string   | true         | The name of the `mongodb` source to use.                                                                                                     |
 | description    | string   | true         | A description of the tool that is passed to the LLM.                                                                                         |
 | database       | string   | true         | The name of the MongoDB database to query.                                                                                                   |
-| collection     | string   | true         | The name of the MongoDB collection to query.                                                                                                 |
+| collection     | string   | false         | The name of the MongoDB collection to query. Mutually exclusive with `collectionAllowedValues`. If omitted, it must be supplied at runtime as a `collection` parameter, and can be restricted with `collectionAllowedValues`. |
+| collectionAllowedValues | list     | false        | An optional list of collection names the agent may choose from when `collection` is provided at runtime. Only configure this if collection is omitted. |
 | filterPayload  | string   | true         | The MongoDB query filter document to select the document. Uses `{{json .param_name}}` for templating.                                        |
 | filterParams   | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                                           |
 | projectPayload | string   | false        | An optional MongoDB projection document to specify which fields to include (1) or exclude (0) in the result.                                 |
@@ -41338,7 +41343,8 @@ in the `data` parameter, like this:
 | source      | string   | true         | The name of the `mongodb` source to use.                                                                                |
 | description | string   | true         | A description of the tool that is passed to the LLM.                                                                    |
 | database    | string   | true         | The name of the MongoDB database containing the collection.                                                             |
-| collection  | string   | true         | The name of the MongoDB collection into which the documents will be inserted.                                           |
+| collection  | string   | false         | The name of the MongoDB collection into which the documents will be inserted. Mutually exclusive with `collectionAllowedValues`. If omitted, it must be supplied at runtime as a `collection` parameter, and can be restricted with `collectionAllowedValues`. |
+| collectionAllowedValues | list     | false        | An optional list of collection names the agent may choose from when `collection` is provided at runtime. Only configure this if collection is omitted. |
 | canonical   | bool     | false        | Determines if the data string is parsed using MongoDB's Canonical or Relaxed Extended JSON format. Defaults to `false`. |
 
 
@@ -41394,7 +41400,8 @@ An LLM would call this tool by providing the document as a JSON string in the
 | source      | string   | true         | The name of the `mongodb` source to use.                                                                                |
 | description | string   | true         | A description of the tool that is passed to the LLM.                                                                    |
 | database    | string   | true         | The name of the MongoDB database containing the collection.                                                             |
-| collection  | string   | true         | The name of the MongoDB collection into which the document will be inserted.                                            |
+| collection  | string   | false         | The name of the MongoDB collection into which the document will be inserted. Mutually exclusive with `collectionAllowedValues`. If omitted, it must be supplied at runtime as a `collection` parameter, and can be restricted with `collectionAllowedValues`. |
+| collectionAllowedValues | list     | false        | An optional list of collection names the agent may choose from when `collection` is provided at runtime. Only configure this if collection is omitted. |
 | canonical   | bool     | false        | Determines if the data string is parsed using MongoDB's Canonical or Relaxed Extended JSON format. Defaults to `false`. |
 
 
@@ -41464,7 +41471,8 @@ upsert: false
 | source        | string   | true         | The name of the `mongodb` source to use.                                                                                                                                                                                                         |
 | description   | string   | true         | A description of the tool that is passed to the LLM.                                                                                                                                                                                             |
 | database      | string   | true         | The name of the MongoDB database containing the collection.                                                                                                                                                                                      |
-| collection    | string   | true         | The name of the MongoDB collection in which to update documents.                                                                                                                                                                                 |
+| collection    | string   | false         | The name of the MongoDB collection in which to update documents. Mutually exclusive with `collectionAllowedValues`. If omitted, it must be supplied at runtime as a `collection` parameter, and can be restricted with `collectionAllowedValues`. |
+| collectionAllowedValues | list     | false        | An optional list of collection names the agent may choose from when `collection` is provided at runtime. Only configure this if collection is omitted. |
 | filterPayload | string   | true         | The MongoDB query filter document to select the documents for updating. It's written as a Go template, using `{{json .param_name}}` to insert parameters.                                                                                        |
 | filterParams  | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                                                                                                                                               |
 | updatePayload | string   | true         | The MongoDB update document, It's written as a Go template, using `{{json .param_name}}` to insert parameters.                                                                                                                                   |
@@ -41539,7 +41547,8 @@ upsert: true
 | source        | string   | true         | The name of the `mongodb` source to use.                                                                                                                                                                                                                               |
 | description   | string   | true         | A description of the tool that is passed to the LLM.                                                                                                                                                                                                                   |
 | database      | string   | true         | The name of the MongoDB database containing the collection.                                                                                                                                                                                                            |
-| collection    | string   | true         | The name of the MongoDB collection to update a document in.                                                                                                                                                                                                            |
+| collection    | string   | false         | The name of the MongoDB collection to update a document in. Mutually exclusive with `collectionAllowedValues`. If omitted, it must be supplied at runtime as a `collection` parameter, and can be restricted with `collectionAllowedValues`. |
+| collectionAllowedValues | list     | false        | An optional list of collection names the agent may choose from when `collection` is provided at runtime. Only configure this if collection is omitted. |
 | filterPayload | string   | true         | The MongoDB query filter document to select the document for updating. It's written as a Go template, using `{{json .param_name}}` to insert parameters.                                                                                                               |
 | filterParams  | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                                                                                                                                                                     |
 | updatePayload | string   | true         | The MongoDB update document, which specifies the modifications. This often uses update operators like `$set`. It's written as a Go template, using `{{json .param_name}}` to insert parameters.                                                                        |
