@@ -883,6 +883,9 @@ func TestMcpEndpoint(t *testing.T) {
 							"resultType":        "complete",
 							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 							"capabilities": map[string]any{
+								"extensions": map[string]any{
+									"com.google.cloud/toolbox.v1": map[string]any{},
+								},
 								"tools":   map[string]any{"listChanged": false},
 								"prompts": map[string]any{"listChanged": false},
 							},
