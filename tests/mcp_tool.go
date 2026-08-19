@@ -455,18 +455,6 @@ func GetBaseMCPExpectedTools() []MCPToolManifest {
 			InputSchema: map[string]any{"type": "object", "properties": map[string]any{}, "required": []any{}},
 		},
 		{
-			Name:        "my-secure-tool",
-			Description: "Tool to test secure parameters.",
-			InputSchema: map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"id":   map[string]any{"type": "integer", "description": "user ID"},
-					"name": map[string]any{"type": "string", "description": "user name"},
-				},
-				"required": []any{"id", "name"},
-			},
-		},
-		{
 			Name:        "my-fail-tool",
 			Description: "Tool to test statement with incorrect syntax.",
 			InputSchema: map[string]any{"type": "object", "properties": map[string]any{}, "required": []any{}},
@@ -593,12 +581,12 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 		o(configs)
 	}
 
-	mcpVersion := "DRAFT-2026-v1"
+	mcpVersion := "2026-07-28"
 
-	// In DRAFT-2026-v1 (vdraft), the initialize method is removed in favor of optional server/discover.
+	// In 2026-07-28 (v20260728), the initialize method is removed in favor of optional server/discover.
 	// Therefore, we only run RunInitialize for older protocol versions.
 	header := map[string]string{}
-	if mcpVersion != "DRAFT-2026-v1" {
+	if mcpVersion != "2026-07-28" {
 		sessionId := RunInitialize(t, mcpVersion)
 		if sessionId != "" {
 			header["Mcp-Session-Id"] = sessionId
@@ -636,8 +624,8 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 		}
 		if supportsSecure {
 			meta["io.modelcontextprotocol/clientCapabilities"] = map[string]any{
-				"experimental": map[string]any{
-					"com.google.cloud/toolbox.v1": true,
+				"extensions": map[string]any{
+					"com.google.cloud/toolbox.v1": map[string]any{},
 				},
 			}
 		}

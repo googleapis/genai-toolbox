@@ -365,6 +365,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		}
 	}
 
+	// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
 	var data map[string]any
 	if toolArguments != nil {
 		aMarshal, err := json.Marshal(toolArguments)
