@@ -86,7 +86,8 @@ type Config struct {
 	Type                      string              `yaml:"type" validate:"required"`
 	Project                   string              `yaml:"project" validate:"required"`
 	Location                  string              `yaml:"location"`
-	WriteMode                 string              `yaml:"writeMode" validate:"required,oneof=blocked protected allowed"`
+	ReadOnly                  *bool               `yaml:"readOnly,omitempty"`
+	WriteMode                 string              `yaml:"writeMode" validate:"omitempty,oneof=blocked protected allowed"`
 	AllowedDatasets           StringOrStringSlice `yaml:"allowedDatasets"`
 	UseClientOAuth            string              `yaml:"useClientOAuth"`
 	QuotaProject              string              `yaml:"quotaProject"`
@@ -132,6 +133,23 @@ func (r Config) SourceConfigType() string {
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	if r.WriteMode == "" {
 		r.WriteMode = WriteModeAllowed
+		if r.ReadOnly != nil && *r.ReadOnly {
+			r.WriteMode = WriteModeBlocked
+		}
+	}
+
+	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
+		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
+	}
+
+	if r.ReadOnly != nil {
+		// A writeMode is considered a read-only mode if it is Blocked or Protected.
+		isReadOnlyMode := (r.WriteMode == WriteModeBlocked || r.WriteMode == WriteModeProtected)
+
+		// The declared readOnly boolean must match the writeMode's behavior.
+		if *r.ReadOnly != isReadOnlyMode {
+			return nil, fmt.Errorf("conflicting source configuration: readOnly is %v, but writeMode is %q", *r.ReadOnly, r.WriteMode)
+		}
 	}
 
 	if r.MaxQueryResultRows == 0 {
@@ -314,7 +332,7 @@ type Session struct {
 }
 
 func (s *Source) IsReadOnly() bool {
-	return false
+	return s.WriteMode == WriteModeBlocked || s.WriteMode == WriteModeProtected
 }
 
 func (s *Source) SourceType() string {
@@ -323,7 +341,10 @@ func (s *Source) SourceType() string {
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
-	return s.Config
+	cfg := s.Config
+	readOnly := s.IsReadOnly()
+	cfg.ReadOnly = &readOnly
+	return cfg
 }
 
 func (s *Source) BigQueryClient() *bigqueryapi.Client {

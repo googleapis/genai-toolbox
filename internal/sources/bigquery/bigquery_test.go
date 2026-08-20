@@ -25,6 +25,8 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestParseFromYamlBigQuery(t *testing.T) {
@@ -70,6 +72,46 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Location:           "asia",
 					WriteMode:          "blocked",
 					UseClientOAuth:     "",
+					MaxQueryResultRows: 50,
+				},
+			},
+		},
+		{
+			desc: "with readOnly true",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			readOnly: true
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					ReadOnly:           func() *bool { b := true; return &b }(),
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
+				},
+			},
+		},
+		{
+			desc: "with readOnly false",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			readOnly: false
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					ReadOnly:           func() *bool { b := false; return &b }(),
+					WriteMode:          "allowed",
 					MaxQueryResultRows: 50,
 				},
 			},
@@ -522,4 +564,155 @@ func TestNormalizeValue(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBigQuerySource_IsReadOnly(t *testing.T) {
+	tests := []struct {
+		name          string
+		source        *bigquery.Source
+		wantReadOnly  bool
+		wantWriteMode string
+	}{
+		{
+			name: "writeMode: blocked is read-only",
+			source: &bigquery.Source{
+				Config: bigquery.Config{
+					Name:      "test-source",
+					Type:      bigquery.SourceType,
+					WriteMode: bigquery.WriteModeBlocked,
+				},
+			},
+			wantReadOnly:  true,
+			wantWriteMode: bigquery.WriteModeBlocked,
+		},
+		{
+			name: "writeMode: protected is read-only",
+			source: &bigquery.Source{
+				Config: bigquery.Config{
+					Name:      "test-source",
+					Type:      bigquery.SourceType,
+					WriteMode: bigquery.WriteModeProtected,
+				},
+			},
+			wantReadOnly:  true,
+			wantWriteMode: bigquery.WriteModeProtected,
+		},
+		{
+			name: "writeMode: allowed is not read-only",
+			source: &bigquery.Source{
+				Config: bigquery.Config{
+					Name:      "test-source",
+					Type:      bigquery.SourceType,
+					WriteMode: bigquery.WriteModeAllowed,
+				},
+			},
+			wantReadOnly:  false,
+			wantWriteMode: bigquery.WriteModeAllowed,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.source.IsReadOnly(); got != tt.wantReadOnly {
+				t.Errorf("IsReadOnly() = %v, want %v", got, tt.wantReadOnly)
+			}
+			toCfg, ok := tt.source.ToConfig().(bigquery.Config)
+			if !ok {
+				t.Fatalf("ToConfig() did not return bigquery.Config, got %T", tt.source.ToConfig())
+			}
+			if toCfg.ReadOnly == nil {
+				t.Errorf("ToConfig().ReadOnly is nil, want %v", tt.wantReadOnly)
+			} else if *toCfg.ReadOnly != tt.wantReadOnly {
+				t.Errorf("ToConfig().ReadOnly = %v, want %v", *toCfg.ReadOnly, tt.wantReadOnly)
+			}
+			if toCfg.WriteMode != tt.wantWriteMode {
+				t.Errorf("ToConfig().WriteMode = %q, want %q", toCfg.WriteMode, tt.wantWriteMode)
+			}
+		})
+	}
+}
+
+func TestInitialize_ReadOnlyAndWriteModeValidation(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithUserAgent(ctx, "test-agent")
+	tracer := noop.NewTracerProvider().Tracer("")
+	boolPtr := func(b bool) *bool { return &b }
+
+	t.Run("conflict error cases", func(t *testing.T) {
+		tests := []struct {
+			name        string
+			cfg         bigquery.Config
+			wantErrText string
+		}{
+			{
+				name: "readOnly: true + writeMode: allowed",
+				cfg: bigquery.Config{
+					Name:      "test-source",
+					Type:      bigquery.SourceType,
+					Project:   "test-project",
+					ReadOnly:  boolPtr(true),
+					WriteMode: bigquery.WriteModeAllowed,
+				},
+				wantErrText: `conflicting source configuration: readOnly is true, but writeMode is "allowed"`,
+			},
+			{
+				name: "readOnly: false + writeMode: blocked",
+				cfg: bigquery.Config{
+					Name:      "test-source",
+					Type:      bigquery.SourceType,
+					Project:   "test-project",
+					ReadOnly:  boolPtr(false),
+					WriteMode: bigquery.WriteModeBlocked,
+				},
+				wantErrText: `conflicting source configuration: readOnly is false, but writeMode is "blocked"`,
+			},
+			{
+				name: "readOnly: false + writeMode: protected",
+				cfg: bigquery.Config{
+					Name:      "test-source",
+					Type:      bigquery.SourceType,
+					Project:   "test-project",
+					ReadOnly:  boolPtr(false),
+					WriteMode: bigquery.WriteModeProtected,
+				},
+				wantErrText: `conflicting source configuration: readOnly is false, but writeMode is "protected"`,
+			},
+			{
+				name: "writeMode: protected + useClientOAuth: true",
+				cfg: bigquery.Config{
+					Name:           "test-source",
+					Type:           bigquery.SourceType,
+					Project:        "test-project",
+					WriteMode:      bigquery.WriteModeProtected,
+					UseClientOAuth: "true",
+				},
+				wantErrText: `writeMode 'protected' cannot be used with useClientOAuth enabled`,
+			},
+			{
+				name: "invalid writeMode",
+				cfg: bigquery.Config{
+					Name:      "test-source",
+					Type:      bigquery.SourceType,
+					Project:   "test-project",
+					WriteMode: "invalid-mode",
+				},
+				wantErrText: `invalid writeMode "invalid-mode": must be one of "allowed", "protected", or "blocked"`,
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				_, err := tt.cfg.Initialize(ctx, tracer)
+				if err == nil {
+					t.Fatalf("expected error containing %q, got nil", tt.wantErrText)
+				}
+				if err.Error() != tt.wantErrText {
+					t.Errorf("Initialize() error = %q, want %q", err.Error(), tt.wantErrText)
+				}
+			})
+		}
+	})
 }
