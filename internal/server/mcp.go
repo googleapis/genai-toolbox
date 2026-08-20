@@ -821,7 +821,6 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	// Add instrumentation and toolbox version to context for use in method handlers
 	ctx = util.WithInstrumentation(ctx, s.instrumentation)
 	ctx = util.WithToolboxVersionKey(ctx, s.version)
-	ctx = util.WithResultCaps(ctx, s.maxRows, s.maxResponseBytes)
 	ctx = util.WithEnableDraftSpecs(ctx, s.enableDraftSpecs)
 	// Process the method
 	switch baseMessage.Method {

@@ -31,13 +31,15 @@ import (
 // groups is the source of truth for named collections; toolset views (manifests)
 // are derived from the group on demand by the callers that render them.
 type PrimitiveManager struct {
-	mu              sync.RWMutex
-	sources         map[string]sources.Source
-	authServices    map[string]auth.AuthService
-	embeddingModels map[string]embeddingmodels.EmbeddingModel
-	tools           map[string]tools.Tool
-	prompts         map[string]prompts.Prompt
-	groups          map[string]group.Group
+	mu               sync.RWMutex
+	sources          map[string]sources.Source
+	authServices     map[string]auth.AuthService
+	embeddingModels  map[string]embeddingmodels.EmbeddingModel
+	tools            map[string]tools.Tool
+	prompts          map[string]prompts.Prompt
+	groups           map[string]group.Group
+	maxRows          int
+	maxResponseBytes int
 }
 
 func NewPrimitiveManager(
@@ -125,6 +127,24 @@ func (r *PrimitiveManager) AuthServices() map[string]auth.AuthService {
 		copiedMap[k] = v
 	}
 	return copiedMap
+}
+
+// ResultCaps returns the server-wide result caps applied to tools that do not
+// declare their own. They are server configuration rather than per-request
+// state, so they live here alongside the primitives handlers already resolve
+// through.
+func (r *PrimitiveManager) ResultCaps() (maxRows, maxResponseBytes int) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.maxRows, r.maxResponseBytes
+}
+
+// SetResultCaps records the caps. Called once during server construction,
+// before any request is served.
+func (r *PrimitiveManager) SetResultCaps(maxRows, maxResponseBytes int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.maxRows, r.maxResponseBytes = maxRows, maxResponseBytes
 }
 
 // GroupsList returns a copy of the groups list sorted alphabetically by name

@@ -600,7 +600,8 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		}
 	}
 
-	results, truncation := tools.CapResultForTool(ctx, tool, results)
+	defaultRows, defaultBytes := primitiveMgr.ResultCaps()
+	results, truncation := tools.CapResultForTool(tool, results, defaultRows, defaultBytes)
 
 	content := make([]TextContent, 0)
 

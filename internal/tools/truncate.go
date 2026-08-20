@@ -15,11 +15,8 @@
 package tools
 
 import (
-	"context"
 	"encoding/json"
 	"unicode/utf8"
-
-	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 // Truncation describes how a tool result was capped. It is surfaced to the
@@ -59,11 +56,10 @@ func ResolveCap(declared *int, serverDefault int) int {
 }
 
 // CapResultForTool applies the caps in effect for a tool: the tool's own
-// declared caps where it set them, otherwise the server-wide defaults carried
-// on ctx. Invocation sites call this rather than CapResult directly so the
-// precedence rule lives in one place.
-func CapResultForTool(ctx context.Context, t CapDeclarer, result any) (any, *Truncation) {
-	defaultRows, defaultBytes := util.ResultCapsFromContext(ctx)
+// declared caps where it set them, otherwise the server-wide defaults the
+// caller passes in. Invocation sites call this rather than CapResult directly
+// so the precedence rule lives in one place.
+func CapResultForTool(t CapDeclarer, result any, defaultRows, defaultBytes int) (any, *Truncation) {
 	return CapResult(
 		result,
 		ResolveCap(t.GetMaxRows(), defaultRows),

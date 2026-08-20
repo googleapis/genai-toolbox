@@ -15,13 +15,10 @@
 package tools
 
 import (
-	"context"
 	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 func listOf(n int) []any {
@@ -193,21 +190,19 @@ func TestResolveCap(t *testing.T) {
 	}
 }
 
-// TestCapResultForToolUsesContextDefaults checks the context hop the MCP
+// TestCapResultForToolAppliesServerDefaults checks the precedence the MCP
 // handlers rely on: a tool that declares nothing is capped by the server-wide
-// defaults on ctx, and one that declares its own is not.
-func TestCapResultForToolUsesContextDefaults(t *testing.T) {
+// defaults it is handed, and one that declares its own is not.
+func TestCapResultForToolAppliesServerDefaults(t *testing.T) {
 	intPtr := func(i int) *int { return &i }
 	rows := []any{"a", "b", "c"}
 
-	ctx := util.WithResultCaps(context.Background(), 2, 0)
-
-	got, trunc := CapResultForTool(ctx, capStub{}, rows)
+	got, trunc := CapResultForTool(capStub{}, rows, 2, 0)
 	if trunc == nil || trunc.ReturnedRows != 2 || trunc.TotalRows != 3 {
 		t.Errorf("expected the server default to cap at 2 of 3 rows, got %v (%+v)", got, trunc)
 	}
 
-	got, trunc = CapResultForTool(ctx, capStub{maxRows: intPtr(0)}, rows)
+	got, trunc = CapResultForTool(capStub{maxRows: intPtr(0)}, rows, 2, 0)
 	if trunc != nil {
 		t.Errorf("expected an explicit 0 to opt out of the server default, got %+v", trunc)
 	}

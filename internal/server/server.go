@@ -478,6 +478,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	sseManager := newSseManager(ctx)
 
 	primitiveManager := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap)
+	primitiveManager.SetResultCaps(cfg.MaxRows, cfg.MaxResponseBytes)
 
 	limit := cfg.HttpMaxRequestBytes
 	if limit <= 0 {

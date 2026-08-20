@@ -691,7 +691,6 @@ func TestToolsCallHandlerResultCaps(t *testing.T) {
 				t.Fatalf("unable to initialize logger: %s", err)
 			}
 			ctxLogger := util.WithLogger(ctx, testLogger)
-			ctxLogger = util.WithResultCaps(ctxLogger, tc.serverMaxRows, tc.serverBytes)
 
 			cappedCfg := testutils.MockToolConfig{
 				ConfigBase: tools.ConfigBase{Name: "capped_tool", MaxResponseBytes: tc.toolMaxResponseBytes},
@@ -704,6 +703,7 @@ func TestToolsCallHandlerResultCaps(t *testing.T) {
 			}
 			toolsMap, promptsMap, groups := testutils.SetUpResources(t, []testutils.MockTool{capped.(testutils.MockTool), testutils.MockTool1}, nil)
 			primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
+			primitiveMgr.SetResultCaps(tc.serverMaxRows, tc.serverBytes)
 
 			body, err := json.Marshal(CallToolRequest{
 				Request: jsonrpc.Request{Method: TOOLS_CALL},
