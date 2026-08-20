@@ -1,14 +1,14 @@
 ---
-title: "firestoremongodb-get-schema"
+title: "firestore-mongodb-get-schema"
 type: docs
 weight: 1
 description: >
-  A "firestoremongodb-get-schema" tool introspects Firestore collections to infer field types and schema definitions.
+  A "firestore-mongodb-get-schema" tool introspects Firestore collections to infer field types and schema definitions.
 ---
 
 ## About
 
-A `firestoremongodb-get-schema` tool retrieves schema information and inferred document structures for Firestore collections.
+A `firestore-mongodb-get-schema` tool retrieves schema information and inferred document structures for Firestore collections.
 
 This tool introspects collections to detect field names, nested maps, and data types (such as string, integer, double, boolean, timestamp, geopoint, and reference), returning structured schema definitions.
 
@@ -27,7 +27,7 @@ This tool introspects collections to detect field names, nested maps, and data t
 ```yaml
 kind: tool
 name: get_schema
-type: firestoremongodb-get-schema
+type: firestore-mongodb-get-schema
 source: my-firestore-source
 description: Use this tool to retrieve schemas for Firestore collections.
 ```
@@ -36,6 +36,6 @@ description: Use this tool to retrieve schemas for Firestore collections.
 
 | **field**   | **type** | **required** | **description** |
 |-------------|:--------:|:------------:|-----------------|
-| type | string | true | Must be "firestoremongodb-get-schema". |
+| type | string | true | Must be "firestore-mongodb-get-schema". |
 | source | string | true | Name of the Firestore source to introspect. |
 | description | string | true | Description of the tool that is passed to the LLM. |

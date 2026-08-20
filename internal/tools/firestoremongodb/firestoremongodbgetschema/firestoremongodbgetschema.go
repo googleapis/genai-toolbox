@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package firestoreexecutemql
+package firestoremongodbgetschema
 
 import (
 	"context"
@@ -27,8 +27,8 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "firestoremongodb-execute-mql"
-const queryKey string = "query"
+const resourceType string = "firestore-mongodb-get-schema"
+const collectionKey string = "collection"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -46,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
-	ExecuteMQL(context.Context, string) (any, error)
+	GetSchema(context.Context, string) (any, error)
 }
 
 type Config struct {
@@ -68,8 +68,9 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	queryParameter := parameters.NewStringParameter(queryKey, "The MQL query or aggregation pipeline to execute against Firestore.")
-	params := parameters.Parameters{queryParameter}
+	emptyString := ""
+	collectionParam := parameters.NewStringParameter(collectionKey, "Optional name or path of a specific collection to get schema for. If omitted, schemas for all root collections are returned.", parameters.WithStringDefault(emptyString))
+	params := parameters.Parameters{collectionParam}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -111,18 +112,15 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	}
 	mapParams := params.AsMap()
 
-	query, ok := mapParams[queryKey].(string)
-	if !ok || query == "" {
-		return nil, util.NewAgentError(fmt.Sprintf("parameter %q is required and must be a non-empty string", queryKey), nil)
-	}
+	collection, _ := mapParams[collectionKey].(string)
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, query))
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool for collection: %q", resourceType, collection))
 
-	resp, err := source.ExecuteMQL(ctx, query)
+	resp, err := source.GetSchema(ctx, collection)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

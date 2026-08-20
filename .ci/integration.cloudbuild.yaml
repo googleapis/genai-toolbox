@@ -966,8 +966,8 @@ steps:
             firestoreupdatedocument \
             firestoregetrules \
             firestorevalidaterules \
-            firestoremongodb/firestoregetschema \
-            firestoremongodb/firestoreexecutemql
+            firestoremongodb/firestoremongodbgetschema \
+            firestoremongodb/firestoremongodbexecutemql
         else
           echo "No relevant changes for Firestore. Skipping shard."
           exit 0

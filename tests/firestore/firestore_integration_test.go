@@ -44,10 +44,10 @@ var (
 
 func getFirestoreVars(t *testing.T) map[string]any {
 	if FirestoreProject == "" {
-		FirestoreProject = "fs-onemcp-e2e-prod"
+		t.Fatal("'FIRESTORE_PROJECT' not set")
 	}
 	if FirestoreDatabase == "" {
-		FirestoreDatabase = "mcp-toolbox-db-native-schema"
+		t.Fatal("'FIRESTORE_DATABASE' not set")
 	}
 
 	vars := map[string]any{
@@ -64,7 +64,7 @@ func initFirestoreConnection(project, database string) (*firestoreapi.Client, er
 	ctx := context.Background()
 
 	if database == "" {
-		database = "mcp-toolbox-db-native-schema"
+		database = "(default)"
 	}
 
 	client, err := firestoreapi.NewClientWithDatabase(ctx, project, database, option.WithUserAgent("genai-toolbox-integration-test"))
@@ -138,8 +138,8 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 	runFirestoreDeleteDocumentsTest(t, docPath3)
 	runFirestoreGetRulesTest(t)
 	runFirestoreValidateRulesTest(t)
-	runFirestoreGetSchemaTest(t, testCollectionName)
-	runFirestoreExecuteMQLTest(t, testCollectionName)
+	runFirestoreMongodbGetSchemaTest(t, testCollectionName)
+	runFirestoreMongodbExecuteMQLTest(t, testCollectionName)
 }
 
 func runFirestoreToolGetTest(t *testing.T) {
@@ -176,10 +176,10 @@ func runFirestoreToolGetTest(t *testing.T) {
 			},
 		},
 		{
-			name: "get firestoremongodb-get-schema",
-			api:  "http://127.0.0.1:5000/api/tool/firestoremongodb-get-schema/",
+			name: "get firestore-mongodb-get-schema",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-mongodb-get-schema/",
 			want: map[string]any{
-				"firestoremongodb-get-schema": map[string]any{
+				"firestore-mongodb-get-schema": map[string]any{
 					"description": "Get schema for Firestore collections",
 					"parameters": []any{
 						map[string]any{
@@ -196,10 +196,10 @@ func runFirestoreToolGetTest(t *testing.T) {
 			},
 		},
 		{
-			name: "get firestoremongodb-execute-mql",
-			api:  "http://127.0.0.1:5000/api/tool/firestoremongodb-execute-mql/",
+			name: "get firestore-mongodb-execute-mql",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-mongodb-execute-mql/",
 			want: map[string]any{
-				"firestoremongodb-execute-mql": map[string]any{
+				"firestore-mongodb-execute-mql": map[string]any{
 					"description": "Execute MQL query or aggregation pipeline against Firestore",
 					"parameters": []any{
 						map[string]any{
@@ -681,13 +681,13 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			"source":      "my-instance",
 			"description": "Update a document in Firestore",
 		},
-		"firestoremongodb-get-schema": map[string]any{
-			"type":        "firestoremongodb-get-schema",
+		"firestore-mongodb-get-schema": map[string]any{
+			"type":        "firestore-mongodb-get-schema",
 			"source":      "my-instance",
 			"description": "Get schema for Firestore collections",
 		},
-		"firestoremongodb-execute-mql": map[string]any{
-			"type":        "firestoremongodb-execute-mql",
+		"firestore-mongodb-execute-mql": map[string]any{
+			"type":        "firestore-mongodb-execute-mql",
 			"source":      "my-instance",
 			"description": "Execute MQL query or aggregation pipeline against Firestore",
 		},
@@ -1853,7 +1853,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 	}
 }
 
-func runFirestoreGetSchemaTest(t *testing.T, collectionName string) {
+func runFirestoreMongodbGetSchemaTest(t *testing.T, collectionName string) {
 	invokeTcs := []struct {
 		name        string
 		api         string
@@ -1863,7 +1863,7 @@ func runFirestoreGetSchemaTest(t *testing.T, collectionName string) {
 	}{
 		{
 			name: "get schema for specific collection",
-			api:  "http://127.0.0.1:5000/api/tool/firestoremongodb-get-schema/invoke",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-mongodb-get-schema/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s"
 			}`, collectionName))),
@@ -1872,14 +1872,14 @@ func runFirestoreGetSchemaTest(t *testing.T, collectionName string) {
 		},
 		{
 			name:        "get schema for all root collections",
-			api:         "http://127.0.0.1:5000/api/tool/firestoremongodb-get-schema/invoke",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-mongodb-get-schema/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			wantRegex:   fmt.Sprintf(`"collection":"%s"`, collectionName),
 			isErr:       false,
 		},
 		{
 			name: "get schema for non-existent collection",
-			api:  "http://127.0.0.1:5000/api/tool/firestoremongodb-get-schema/invoke",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-mongodb-get-schema/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"collection": "non_existent_collection_xyz"
 			}`)),
@@ -1939,7 +1939,7 @@ func runFirestoreGetSchemaTest(t *testing.T, collectionName string) {
 	}
 }
 
-func runFirestoreExecuteMQLTest(t *testing.T, collectionName string) {
+func runFirestoreMongodbExecuteMQLTest(t *testing.T, collectionName string) {
 	invokeTcs := []struct {
 		name        string
 		api         string
@@ -1949,7 +1949,7 @@ func runFirestoreExecuteMQLTest(t *testing.T, collectionName string) {
 	}{
 		{
 			name: "execute MQL structured pipeline get_schema stage",
-			api:  "http://127.0.0.1:5000/api/tool/firestoremongodb-execute-mql/invoke",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-mongodb-execute-mql/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"query": "{\"structuredPipeline\": {\"pipeline\": {\"stages\": [{\"name\": \"get_schema\", \"args\": [{\"stringValue\": \"{\\\"collection\\\": \\\"%s\\\", \\\"semantics\\\": \\\"mongodb\\\"}\"}]}]}}}"
 			}`, collectionName))),
@@ -1958,7 +1958,7 @@ func runFirestoreExecuteMQLTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "execute MQL find query",
-			api:  "http://127.0.0.1:5000/api/tool/firestoremongodb-execute-mql/invoke",
+			api:  "http://127.0.0.1:5000/api/tool/firestore-mongodb-execute-mql/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"query": "%s.find({\"name\": \"Alice\"})"
 			}`, collectionName))),
@@ -1967,13 +1967,13 @@ func runFirestoreExecuteMQLTest(t *testing.T, collectionName string) {
 		},
 		{
 			name:        "execute MQL with empty query",
-			api:         "http://127.0.0.1:5000/api/tool/firestoremongodb-execute-mql/invoke",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-mongodb-execute-mql/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"query": ""}`)),
 			isErr:       true,
 		},
 		{
 			name:        "missing query parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestoremongodb-execute-mql/invoke",
+			api:         "http://127.0.0.1:5000/api/tool/firestore-mongodb-execute-mql/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			isErr:       true,
 		},
