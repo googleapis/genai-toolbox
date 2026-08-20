@@ -108,17 +108,58 @@ func TestParseSupportedExtensions(t *testing.T) {
 }
 
 func TestServerExtensions(t *testing.T) {
-	orig := ServerExtensions
+	origServer := ServerExtensions
 	t.Cleanup(func() {
-		ServerExtensions = orig
+		ServerExtensions = origServer
 	})
-	ServerExtensions = nil
-	if ServerExtensions != nil {
-		t.Errorf("expected nil when no server extensions registered")
+
+	tests := []struct {
+		name        string
+		setup       func()
+		expectedUri string
+		expectedVal bool
+	}{
+		{
+			name: "unregistered / nil server extensions",
+			setup: func() {
+				ServerExtensions = nil
+			},
+			expectedUri: testExtURI,
+			expectedVal: false,
+		},
+		{
+			name: "manually registered server extension",
+			setup: func() {
+				ServerExtensions = map[string]any{testExtURI: map[string]any{}}
+			},
+			expectedUri: testExtURI,
+			expectedVal: true,
+		},
+		{
+			name: "default supported extension registered after Initialize",
+			setup: func() {
+				Initialize(nil)
+			},
+			expectedUri: "com.google.cloud/toolbox.v1",
+			expectedVal: true,
+		},
+		{
+			name: "extension disabled after Initialize",
+			setup: func() {
+				Initialize([]string{"com.google.cloud/toolbox.v1"})
+			},
+			expectedUri: "com.google.cloud/toolbox.v1",
+			expectedVal: false,
+		},
 	}
 
-	ServerExtensions = map[string]any{testExtURI: map[string]any{}}
-	if ServerExtensions == nil || ServerExtensions[testExtURI] == nil {
-		t.Errorf("expected testExtURI to be registered in server extensions")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup()
+			_, ok := ServerExtensions[tc.expectedUri]
+			if ok != tc.expectedVal {
+				t.Errorf("ServerExtensions[%q] presence = %v, want %v", tc.expectedUri, ok, tc.expectedVal)
+			}
+		})
 	}
 }

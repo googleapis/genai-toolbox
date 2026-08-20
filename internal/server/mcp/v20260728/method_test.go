@@ -291,6 +291,7 @@ func TestValidateHeader(t *testing.T) {
 }
 
 func TestServerDiscoverHandler(t *testing.T) {
+	Initialize(nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	ctx = util.WithEnableDraftSpecs(ctx, true)
 	defer cancel()
@@ -404,6 +405,12 @@ func TestServerDiscoverHandler(t *testing.T) {
 				}
 				if got == nil {
 					t.Errorf("expected valid response, got nil")
+				} else if res, ok := got.(jsonrpc.JSONRPCResponse); ok {
+					if discoverRes, ok := res.Result.(DiscoverResult); ok {
+						if _, ok := discoverRes.Capabilities.Extensions["com.google.cloud/toolbox.v1"]; !ok {
+							t.Errorf("expected com.google.cloud/toolbox.v1 in discover capabilities extensions, got %v", discoverRes.Capabilities.Extensions)
+						}
+					}
 				}
 			}
 		})
