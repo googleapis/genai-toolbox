@@ -16,6 +16,7 @@ package mongodblistcollections_test
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -42,6 +43,20 @@ func (s *fakeSource) ToConfig() sources.SourceConfig {
 func (s *fakeSource) ListCollections(_ context.Context, database string) ([]string, error) {
 	s.database = database
 	return []string{"customers", "orders"}, nil
+}
+
+type nilCollectionsSource struct{}
+
+func (s *nilCollectionsSource) SourceType() string {
+	return "mongodb"
+}
+
+func (s *nilCollectionsSource) ToConfig() sources.SourceConfig {
+	return nil
+}
+
+func (s *nilCollectionsSource) ListCollections(context.Context, string) ([]string, error) {
+	return nil, nil
 }
 
 func TestParseFromYamlMongoDBListCollections(t *testing.T) {
@@ -111,5 +126,36 @@ func TestInvokeListsConfiguredDatabaseCollections(t *testing.T) {
 	}
 	if source.database != "app" {
 		t.Fatalf("expected database %q, got %q", "app", source.database)
+	}
+}
+
+func TestInvokeNormalizesNilCollectionList(t *testing.T) {
+	ctx := context.Background()
+	cfg := mongodblistcollections.Config{
+		ConfigBase: tools.ConfigBase{Name: "list_collections", Description: "List collections"},
+		Type:       "mongodb-list-collections",
+		Source:     "mongo",
+		Database:   "app",
+	}
+
+	tool, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("unable to initialize tool: %s", err)
+	}
+
+	got, tbErr := tool.Invoke(ctx, &nilCollectionsSource{}, parameters.ParamValues{}, "")
+	if tbErr != nil {
+		t.Fatalf("unexpected invocation error: %s", tbErr)
+	}
+	collections, ok := got.([]string)
+	if !ok {
+		t.Fatalf("expected []string result, got %T", got)
+	}
+	encoded, err := json.Marshal(collections)
+	if err != nil {
+		t.Fatalf("unable to marshal collections: %s", err)
+	}
+	if string(encoded) != `[]` {
+		t.Fatalf("expected empty collection list to marshal as [], got %s", encoded)
 	}
 }

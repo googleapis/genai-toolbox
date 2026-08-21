@@ -107,5 +107,8 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, _ parameters.ParamVa
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
+	if resp == nil {
+		resp = []string{}
+	}
 	return resp, nil
 }

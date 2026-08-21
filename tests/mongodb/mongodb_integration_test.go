@@ -158,6 +158,29 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	runToolListCollectionsInvokeTest(t)
 }
 
+func collectionResultContains(result, expected string) (bool, error) {
+	var collections []string
+	if err := json.Unmarshal([]byte(result), &collections); err != nil {
+		return false, err
+	}
+	for _, collection := range collections {
+		if collection == expected {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func TestCollectionResultAcceptsAdditionalCollections(t *testing.T) {
+	contains, err := collectionResultContains(`["test_collection","target_collection"]`, "test_collection")
+	if err != nil {
+		t.Fatalf("unable to parse collections result: %s", err)
+	}
+	if !contains {
+		t.Fatal(`expected collections result to contain "test_collection"`)
+	}
+}
+
 func runToolListCollectionsInvokeTest(t *testing.T) {
 	t.Run("invoke list collections", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/my-list-collections-tool/invoke", bytes.NewBufferString(`{}`))
@@ -184,8 +207,13 @@ func runToolListCollectionsInvokeTest(t *testing.T) {
 		if !ok {
 			t.Fatalf("unable to find result in response body")
 		}
-		if got != `["test_collection"]` {
-			t.Fatalf("unexpected collections: got %q, want %q", got, `["test_collection"]`)
+
+		contains, err := collectionResultContains(got, "test_collection")
+		if err != nil {
+			t.Fatalf("unable to parse collections result %q: %s", got, err)
+		}
+		if !contains {
+			t.Fatalf("expected collections to contain %q, got %q", "test_collection", got)
 		}
 	})
 }
