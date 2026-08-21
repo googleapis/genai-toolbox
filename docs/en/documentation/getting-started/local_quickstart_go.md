@@ -78,6 +78,9 @@ Breaking Change Notice: As of version `0.6.0`, this SDK has transitioned to a mu
 
     {{< tabpane persist=header >}}
 {{< tab header="LangChain Go" lang="go" >}}
+{{< notice warning >}}
+The `langchaingo` library is currently not compatible with modern Google AI models (such as Gemini 2.5+ and 3.0+) because it lacks support for `thought_signature` on multi-turn function calling. This sample code is currently untested with active Google AI models.
+{{< /notice >}}
 
 {{< include "quickstart/go/langchain/quickstart.go" >}}
 
