@@ -140,6 +140,29 @@ func TestParseEnv(t *testing.T) {
 			want: "foo: bar_val\n# ${FOO}\nbaz: qux_val",
 		},
 		{
+			desc: "parse env vars after a comment containing multi-byte characters",
+			in: "# " + strings.Repeat("é", 30) + "\n" +
+				"foo: ${BAR}\n" +
+				"# " + strings.Repeat("é", 30) + "\n" +
+				"baz: ${QUX}\n",
+			env: map[string]string{
+				"BAR": "bar_val",
+				"QUX": "qux_val",
+			},
+			want: "# " + strings.Repeat("é", 30) + "\n" +
+				"foo: bar_val\n" +
+				"# " + strings.Repeat("é", 30) + "\n" +
+				"baz: qux_val\n",
+		},
+		{
+			desc: "skip commented out env var when comment contains multi-byte characters",
+			in:   "# " + strings.Repeat("é", 30) + " ${FOO}\nbar: ${BAR}\n",
+			env: map[string]string{
+				"BAR": "bar_val",
+			},
+			want: "# " + strings.Repeat("é", 30) + " ${FOO}\nbar: bar_val\n",
+		},
+		{
 			desc: "multiline yaml with mixed comments and env vars",
 			in: "database: my-db # Another comment in line ${SHOULD_BE_IGNORED}\n" +
 				"host: \"localhost\"\n" +

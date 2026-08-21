@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/lexer"
@@ -74,11 +75,19 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	matches := re.FindAllStringSubmatchIndex(input, -1)
 	var output strings.Builder
 	lastIndex := 0
+	// The lexer reports token positions as 1-based rune offsets, while the regexp
+	// reports byte offsets. Track the rune offset alongside so both use the same
+	// coordinate space; matches are ordered, so this only walks the input once.
+	runeOffset := 1
+	scannedBytes := 0
 	for _, match := range matches {
 		start, end := match[0], match[1]
 
+		runeOffset += utf8.RuneCountInString(input[scannedBytes:start])
+		scannedBytes = start
+
 		// Skip substitution if the variable is inside a comment
-		if isInsideComment(tokens, start) {
+		if isInsideComment(tokens, runeOffset) {
 			output.WriteString(input[lastIndex:end])
 			lastIndex = end
 			continue
@@ -141,11 +150,16 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	return output.String(), err
 }
 
-// isInsideComment checks if the given byte offset in the YAML input is within a comment token.
-func isInsideComment(tokens token.Tokens, offset int) bool {
+// isInsideComment checks if the given 1-based rune offset in the YAML input is
+// within a comment token. Token positions from the lexer are 1-based rune
+// offsets, so callers must convert byte offsets before calling this.
+func isInsideComment(tokens token.Tokens, runeOffset int) bool {
 	for _, t := range tokens {
 		if t.Type == token.CommentType && t.Position != nil {
-			if offset >= t.Position.Offset && offset < t.Position.Offset+len(t.Origin) {
+			// Position.Offset points at the "#", but Origin also carries any
+			// indentation that precedes it, so measure the length from the "#".
+			length := utf8.RuneCountInString(strings.TrimLeft(t.Origin, " \t"))
+			if runeOffset >= t.Position.Offset && runeOffset < t.Position.Offset+length {
 				return true
 			}
 		}
