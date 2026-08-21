@@ -411,7 +411,7 @@ func TestBigQueryWriteModeAllowed(t *testing.T) {
 		t.Fatalf("Failed to create dataset %q: %v", datasetName, err)
 	}
 	defer func() {
-		if err := dataset.DeleteWithContents(ctx); err != nil {
+		if err := dataset.DeleteWithContents(context.WithoutCancel(ctx)); err != nil {
 			t.Logf("failed to cleanup dataset %s: %v", datasetName, err)
 		}
 	}()
@@ -510,7 +510,7 @@ func TestBigQueryWriteModeProtected(t *testing.T) {
 		t.Fatalf("Failed to create dataset %q: %v", permanentDatasetName, err)
 	}
 	defer func() {
-		if err := dataset.DeleteWithContents(ctx); err != nil {
+		if err := dataset.DeleteWithContents(context.WithoutCancel(ctx)); err != nil {
 			t.Logf("failed to cleanup dataset %s: %v", permanentDatasetName, err)
 		}
 	}()
@@ -703,12 +703,12 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 	return func(t *testing.T) {
 		// tear down table
 		dropSQL := fmt.Sprintf("drop table %s", tableName)
-		dropJob, err := client.Query(dropSQL).Run(ctx)
+		dropJob, err := client.Query(dropSQL).Run(context.WithoutCancel(ctx))
 		if err != nil {
 			t.Errorf("Failed to start drop table job for %s: %v", tableName, err)
 			return
 		}
-		dropStatus, err := dropJob.Wait(ctx)
+		dropStatus, err := dropJob.Wait(context.WithoutCancel(ctx))
 		if err != nil {
 			t.Errorf("Failed to wait for drop table job for %s: %v", tableName, err)
 			return
@@ -719,11 +719,11 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 
 		// tear down dataset
 		datasetToTeardown := client.Dataset(datasetName)
-		tablesIterator := datasetToTeardown.Tables(ctx)
+		tablesIterator := datasetToTeardown.Tables(context.WithoutCancel(ctx))
 		_, err = tablesIterator.Next()
 
 		if err == iterator.Done {
-			if err := datasetToTeardown.Delete(ctx); err != nil {
+			if err := datasetToTeardown.Delete(context.WithoutCancel(ctx)); err != nil {
 				t.Errorf("Failed to delete dataset %s: %v", datasetName, err)
 			}
 		} else if err != nil {
