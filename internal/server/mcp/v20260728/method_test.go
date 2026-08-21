@@ -291,6 +291,7 @@ func TestValidateHeader(t *testing.T) {
 }
 
 func TestServerDiscoverHandler(t *testing.T) {
+	Initialize(nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	ctx = util.WithEnableDraftSpecs(ctx, true)
 	defer cancel()
@@ -404,6 +405,12 @@ func TestServerDiscoverHandler(t *testing.T) {
 				}
 				if got == nil {
 					t.Errorf("expected valid response, got nil")
+				} else if res, ok := got.(jsonrpc.JSONRPCResponse); ok {
+					if discoverRes, ok := res.Result.(DiscoverResult); ok {
+						if _, ok := discoverRes.Capabilities.Extensions["com.google.cloud/toolbox.v1"]; !ok {
+							t.Errorf("expected com.google.cloud/toolbox.v1 in discover capabilities extensions, got %v", discoverRes.Capabilities.Extensions)
+						}
+					}
 				}
 			}
 		})
@@ -557,6 +564,7 @@ func TestToolsCallHandler(t *testing.T) {
 	// Setup tools including the auth/unauth ones
 	mockTools := []testutils.MockTool{
 		testutils.MockTool1,
+		testutils.MockTool2,
 		testutils.MockTool4,
 		testutils.MockTool5,
 	}
@@ -564,13 +572,15 @@ func TestToolsCallHandler(t *testing.T) {
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	tests := []struct {
-		name        string
-		body        CallToolRequest
-		rawBody     []byte
-		header      http.Header
-		context     context.Context
-		wantErr     bool
-		errContains string
+		name            string
+		body            CallToolRequest
+		rawBody         []byte
+		header          http.Header
+		context         context.Context
+		wantErr         bool
+		errContains     string
+		wantIsError     bool
+		wantContentText string
 	}{
 		{
 			name:        "invalid json body",
@@ -679,6 +689,91 @@ func TestToolsCallHandler(t *testing.T) {
 			context: ctxLogger,
 			wantErr: false,
 		},
+		{
+			name: "successful invocation - URL bound parameters auto-populated",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "some_params",
+					Arguments: map[string]any{
+						"param2": 20,
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"some_params"}},
+			context:     util.WithUrlParams(ctxLogger, map[string]string{"param1": "10"}),
+			wantErr:     false,
+			wantIsError: false,
+		},
+		{
+			name: "parameter validation error - missing required param",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name:      "some_params",
+					Arguments: map[string]any{},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:          http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"some_params"}},
+			context:         ctxLogger,
+			wantErr:         false,
+			wantIsError:     true,
+			wantContentText: `provided parameters were invalid: parameter "param1" is required`,
+		},
+		{
+			name: "URL bound parameter override by client returns error",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "some_params",
+					Arguments: map[string]any{
+						"param1": 10,
+						"param2": 20,
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:          http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"some_params"}},
+			context:         util.WithUrlParams(ctxLogger, map[string]string{"param1": "10"}),
+			wantErr:         false,
+			wantIsError:     true,
+			wantContentText: `parameter "param1" is bound by URL and cannot be provided in client arguments`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -706,6 +801,33 @@ func TestToolsCallHandler(t *testing.T) {
 				}
 				if got == nil {
 					t.Errorf("expected valid response, got nil")
+				}
+				res, ok := got.(jsonrpc.JSONRPCResponse)
+				if !ok {
+					t.Fatalf("expected jsonrpc.JSONRPCResponse, got %T", got)
+				}
+				callResult, ok := res.Result.(CallToolResult)
+				if !ok {
+					t.Fatalf("expected CallToolResult, got %T", res.Result)
+				}
+				if callResult.IsError != tt.wantIsError {
+					t.Errorf("callResult.IsError = %v, want %v", callResult.IsError, tt.wantIsError)
+				}
+				if tt.wantIsError {
+					if callResult.ResultType != resultTypeComplete {
+						t.Errorf("callResult.ResultType = %v, want %v", callResult.ResultType, resultTypeComplete)
+					}
+					if callResult.Meta == nil {
+						t.Errorf("callResult.Meta is nil, expected populated meta")
+					}
+				}
+				if tt.wantContentText != "" {
+					if len(callResult.Content) == 0 {
+						t.Fatalf("expected content in result, got empty")
+					}
+					if !strings.Contains(callResult.Content[0].Text, tt.wantContentText) {
+						t.Errorf("callResult.Content[0].Text = %q, want string containing %q", callResult.Content[0].Text, tt.wantContentText)
+					}
 				}
 			}
 		})

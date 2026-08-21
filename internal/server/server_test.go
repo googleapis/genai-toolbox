@@ -47,6 +47,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	v20260728 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20260728"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
@@ -859,79 +860,126 @@ func TestPRMEndpoint(t *testing.T) {
 	}))
 	defer mockOIDC.Close()
 
-	// Configure the server
-	addr, port := "127.0.0.1", 5003
-	cfg := server.ServerConfig{
-		Version:      "0.0.0",
-		Address:      addr,
-		Port:         port,
-		ToolboxUrl:   "https://my-toolbox.example.com",
-		AllowedHosts: []string{"*"},
-		AuthServiceConfigs: map[string]auth.AuthServiceConfig{
-			"generic1": generic.Config{
-				Name:                "generic1",
-				Type:                generic.AuthServiceType,
-				McpEnabled:          true,
-				AuthorizationServer: mockOIDC.URL, // Injecting the mock server URL here
-				ScopesRequired:      []string{"read", "write"},
-			},
+	tests := []struct {
+		name         string
+		toolboxURL   string
+		wantEndpoint string
+		wantResource string
+		wantErr      string
+	}{
+		{
+			name:         "valid absolute url without path",
+			toolboxURL:   "https://my-toolbox.example.com",
+			wantEndpoint: "/.well-known/oauth-protected-resource",
+			wantResource: "https://my-toolbox.example.com",
+		},
+		{
+			name:         "valid absolute url with path",
+			toolboxURL:   "https://my-toolbox.example.com/mcp",
+			wantEndpoint: "/.well-known/oauth-protected-resource/mcp",
+			wantResource: "https://my-toolbox.example.com/mcp",
+		},
+		{
+			name:         "valid relative path without leading slash",
+			toolboxURL:   "mcp",
+			wantEndpoint: "/.well-known/oauth-protected-resource/mcp",
+			wantResource: "mcp",
+		},
+		{
+			name:         "valid relative path with leading slash",
+			toolboxURL:   "/mcp",
+			wantEndpoint: "/.well-known/oauth-protected-resource/mcp",
+			wantResource: "/mcp",
+		},
+		{
+			name:       "invalid absolute url missing host",
+			toolboxURL: "http://",
+			wantErr:    "must be a valid absolute URL with scheme and host",
 		},
 	}
 
-	// Initialize and start the server
-	s, err := server.NewServer(ctx, cfg)
-	if err != nil {
-		t.Fatalf("unable to initialize server: %v", err)
-	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := server.ServerConfig{
+				Version:      "0.0.0",
+				Address:      "127.0.0.1",
+				Port:         0,
+				ToolboxUrl:   tc.toolboxURL,
+				AllowedHosts: []string{"*"},
+				AuthServiceConfigs: map[string]auth.AuthServiceConfig{
+					"generic1": generic.Config{
+						Name:                "generic1",
+						Type:                generic.AuthServiceType,
+						McpEnabled:          true,
+						AuthorizationServer: mockOIDC.URL,
+						ScopesRequired:      []string{"read", "write"},
+					},
+				},
+			}
 
-	if err := s.Listen(ctx, "", ""); err != nil {
-		t.Fatalf("unable to start server: %v", err)
-	}
+			s, err := server.NewServer(ctx, cfg)
+			if tc.wantErr != "" {
+				if err == nil {
+					t.Fatalf("expected error containing %q, got nil", tc.wantErr)
+				}
+				if !strings.Contains(err.Error(), tc.wantErr) {
+					t.Fatalf("expected error containing %q, got: %v", tc.wantErr, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unable to initialize server: %v", err)
+			}
 
-	go func() {
-		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
-			t.Errorf("server serve error: %v", err)
-		}
-	}()
-	defer func() {
-		if err := s.Shutdown(ctx); err != nil {
-			t.Errorf("failed to cleanly shutdown server: %v", err)
-		}
-	}()
+			if err := s.Listen(ctx, "", ""); err != nil {
+				t.Fatalf("unable to start server: %v", err)
+			}
 
-	// Test the PRM endpoint
-	url := fmt.Sprintf("http://%s:%d/.well-known/oauth-protected-resource", addr, port)
-	resp, err := http.Get(url)
-	if err != nil {
-		t.Fatalf("error when sending a request: %s", err)
-	}
-	defer resp.Body.Close()
+			go func() {
+				if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+					t.Errorf("server serve error: %v", err)
+				}
+			}()
+			defer func() {
+				if err := s.Shutdown(ctx); err != nil {
+					t.Errorf("failed to cleanly shutdown server: %v", err)
+				}
+			}()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected status %d, got %d", http.StatusOK, resp.StatusCode)
-	}
+			reqURL := fmt.Sprintf("http://%s%s", s.Addr(), tc.wantEndpoint)
+			resp, err := http.Get(reqURL)
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
+			}
+			defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("unexpected error reading body: %s", err)
-	}
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("expected status %d, got %d", http.StatusOK, resp.StatusCode)
+			}
 
-	var got map[string]any
-	if err := json.Unmarshal(body, &got); err != nil {
-		t.Fatalf("unexpected error unmarshalling body: %s", err)
-	}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unexpected error reading body: %s", err)
+			}
 
-	want := map[string]any{
-		"resource": "https://my-toolbox.example.com",
-		"authorization_servers": []any{
-			mockOIDC.URL,
-		},
-		"scopes_supported":         []any{"read", "write"},
-		"bearer_methods_supported": []any{"header"},
-	}
+			var got map[string]any
+			if err := json.Unmarshal(body, &got); err != nil {
+				t.Fatalf("unexpected error unmarshalling body: %s", err)
+			}
 
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("unexpected PRM response:\ngot  %+v\nwant %+v", got, want)
+			want := map[string]any{
+				"resource": tc.wantResource,
+				"authorization_servers": []any{
+					mockOIDC.URL,
+				},
+				"scopes_supported":         []any{"read", "write"},
+				"bearer_methods_supported": []any{"header"},
+			}
+
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("unexpected PRM response:\ngot  %+v\nwant %+v", got, want)
+			}
+		})
 	}
 }
 
@@ -1978,5 +2026,74 @@ func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
 	expectedOrder := []string{"apple", "banana", "zoo"}
 	if diff := cmp.Diff(expectedOrder, defaultToolset.ToolNames); diff != "" {
 		t.Errorf("default toolset ToolNames mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestNewServer_Extensions(t *testing.T) {
+	orig := v20260728.SupportedExtensions
+	t.Cleanup(func() {
+		v20260728.SupportedExtensions = orig
+	})
+	v20260728.SupportedExtensions = map[string]any{"com.google.cloud/toolbox.v1": map[string]any{}, "io.modelcontextprotocol/tasks": map[string]any{}}
+
+	ctx := context.Background()
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	tests := []struct {
+		name       string
+		disableExt []string
+		want       []string
+	}{
+		{
+			name:       "default enables all supported extensions",
+			disableExt: nil,
+			want:       []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"},
+		},
+		{
+			name:       "disable one extension",
+			disableExt: []string{"io.modelcontextprotocol/tasks"},
+			want:       []string{"com.google.cloud/toolbox.v1"},
+		},
+		{
+			name:       "disable all supported extensions",
+			disableExt: []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"},
+			want:       nil,
+		},
+		{
+			name:       "empty strings or unknown extensions in disableExt ignored",
+			disableExt: []string{"", "com.example/unknown"},
+			want:       []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := server.ServerConfig{
+				DisableExt: tt.disableExt,
+			}
+			_, err := server.NewServer(ctx, cfg)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			var got []string
+			for k := range v20260728.ServerExtensions {
+				got = append(got, k)
+			}
+			slices.Sort(got)
+			slices.Sort(tt.want)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("v20260728.ServerExtensions keys = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
