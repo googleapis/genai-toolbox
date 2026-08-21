@@ -116,7 +116,8 @@ func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, a
 	r.groups = groupsMap
 }
 
-func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
+// AuthServices returns a copy of the auth services map
+func (r *PrimitiveManager) AuthServices() map[string]auth.AuthService {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]auth.AuthService, len(r.authServices))
