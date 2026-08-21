@@ -49,7 +49,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Type:      bigquery.SourceType,
 					Project:   "my-project",
 					Location:  "",
-					WriteMode: "",
+					WriteMode: "allowed",
 				},
 			},
 		},
@@ -91,6 +91,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:        "my-project",
 					Location:       "us",
 					UseClientOAuth: "true",
+					WriteMode:      "allowed",
 				},
 			},
 		},
@@ -111,6 +112,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:        "my-project",
 					Location:       "us",
 					UseClientOAuth: "X-Custom-Auth",
+					WriteMode:      "allowed",
 				},
 			},
 		},
@@ -131,6 +133,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:        "my-project",
 					Location:       "us",
 					UseClientOAuth: "true",
+					WriteMode:      "allowed",
 				},
 			},
 		},
@@ -151,6 +154,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:        "my-project",
 					Location:       "us",
 					UseClientOAuth: "false",
+					WriteMode:      "allowed",
 				},
 			},
 		},
@@ -173,6 +177,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Location:       "us",
 					UseClientOAuth: "true",
 					QuotaProject:   "billing-project",
+					WriteMode:      "allowed",
 				},
 			},
 		},
@@ -194,6 +199,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:         "my-project",
 					Location:        "us",
 					AllowedDatasets: []string{"my_dataset"},
+					WriteMode:       "allowed",
 				},
 			},
 		},
@@ -214,6 +220,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:                   "my-project",
 					Location:                  "us",
 					ImpersonateServiceAccount: "service-account@my-project.iam.gserviceaccount.com",
+					WriteMode:                 "allowed",
 				},
 			},
 		},
@@ -231,11 +238,12 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
-					Name:     "my-instance",
-					Type:     bigquery.SourceType,
-					Project:  "my-project",
-					Location: "us",
-					Scopes:   []string{"https://www.googleapis.com/auth/bigquery", "https://www.googleapis.com/auth/cloud-platform"},
+					Name:      "my-instance",
+					Type:      bigquery.SourceType,
+					Project:   "my-project",
+					Location:  "us",
+					Scopes:    []string{"https://www.googleapis.com/auth/bigquery", "https://www.googleapis.com/auth/cloud-platform"},
+					WriteMode: "allowed",
 				},
 			},
 		},
@@ -256,6 +264,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:            "my-project",
 					Location:           "us",
 					MaxQueryResultRows: 10,
+					WriteMode:          "allowed",
 				},
 			},
 		},
@@ -276,6 +285,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:            "my-project",
 					Location:           "us",
 					MaximumBytesBilled: 10737418240,
+					WriteMode:          "allowed",
 				},
 			},
 		},
@@ -294,6 +304,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Type:        bigquery.SourceType,
 					Project:     "my-project",
 					APIEndpoint: "http://localhost:9050",
+					WriteMode:   "allowed",
 				},
 			},
 		},
@@ -349,6 +360,17 @@ func TestFailParseFromYaml(t *testing.T) {
 			maximumBytesBilled: -1
 			`,
 			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": [1:21] Key: 'Config.MaximumBytesBilled' Error:Field validation for 'MaximumBytesBilled' failed on the 'gte' tag\n>  1 | maximumBytesBilled: -1\n                           ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | type: bigquery",
+		},
+		{
+			desc: "invalid value for write mode",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			writeMode: foo
+			`,
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": [4:12] Key: 'Config.WriteMode' Error:Field validation for 'WriteMode' failed on the 'oneof' tag\n   1 | name: my-instance\n   2 | project: my-project\n   3 | type: bigquery\n>  4 | writeMode: foo\n                  ^\n",
 		},
 	}
 	for _, tc := range tcs {

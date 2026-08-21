@@ -73,7 +73,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{Name: name, WriteMode: WriteModeAllowed} // set WriteMode default value to allowed
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ type Config struct {
 	Type                      string              `yaml:"type" validate:"required"`
 	Project                   string              `yaml:"project" validate:"required"`
 	Location                  string              `yaml:"location"`
-	WriteMode                 string              `yaml:"writeMode"`
+	WriteMode                 string              `yaml:"writeMode" validate:"required,oneof=blocked protected allowed"`
 	AllowedDatasets           StringOrStringSlice `yaml:"allowedDatasets"`
 	UseClientOAuth            string              `yaml:"useClientOAuth"`
 	QuotaProject              string              `yaml:"quotaProject"`
@@ -130,10 +130,6 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	if r.WriteMode == "" {
-		r.WriteMode = WriteModeAllowed
-	}
-
 	if r.MaxQueryResultRows == 0 {
 		r.MaxQueryResultRows = 50
 	}
@@ -230,10 +226,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s.AllowedDatasets = allowedDatasets
 	s.SessionProvider = s.newBigQuerySessionProvider()
-
-	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
-		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
-	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
 }
