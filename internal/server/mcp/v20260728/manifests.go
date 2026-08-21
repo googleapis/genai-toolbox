@@ -128,8 +128,8 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 			ResultType: resultTypeComplete,
 		},
 		CacheableResult: CacheableResult{
-			TtlMs:      300000, // 5 minutes
-			CacheScope: cacheScopePublic,
+			TtlMs:      g.GetTTLMs(),
+			CacheScope: cacheScope(g.GetCacheScope()),
 		},
 	}
 	return res, nil
@@ -170,8 +170,8 @@ func GenerateListPromptsResult(pMgr *primitives.PrimitiveManager, g group.Group)
 			ResultType: resultTypeComplete,
 		},
 		CacheableResult: CacheableResult{
-			TtlMs:      300000, // 5 minutes
-			CacheScope: cacheScopePublic,
+			TtlMs:      g.GetTTLMs(),
+			CacheScope: cacheScope(g.GetCacheScope()),
 		},
 	}
 	return res, nil
