@@ -744,7 +744,7 @@ func setupGcsBucket(t *testing.T, ctx context.Context, project string, bucketNam
 	}
 
 	return func(t *testing.T) {
-		if err := bucket.Delete(ctx); err != nil {
+		if err := bucket.Delete(context.WithoutCancel(ctx)); err != nil {
 			t.Logf("cleanup: failed to delete bucket %s: %v", bucketName, err)
 		}
 	}

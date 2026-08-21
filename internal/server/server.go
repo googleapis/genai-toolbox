@@ -535,7 +535,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// Host OAuth Protected Resource Metadata endpoint
 	mcpAuthEnabled := false
-	for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
+	for _, authSvc := range s.PrimitiveMgr.AuthServices() {
 		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 			mcpAuthEnabled = true
 			break
@@ -621,7 +621,7 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Find McpEnabled auth service
 			var mcpSvc auth.MCPAuthService
-			for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
+			for _, authSvc := range s.PrimitiveMgr.AuthServices() {
 				if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 					mcpSvc = mSvc
 					break
