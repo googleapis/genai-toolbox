@@ -26,7 +26,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -157,7 +156,7 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
 
-	execMode, err := ParseQueryExecMode(queryExecMode)
+	execMode, err := sources.ParsePGXQueryExecMode(queryExecMode)
 	if err != nil {
 		return nil, err
 	}
@@ -195,21 +194,4 @@ func BuildPostgresURL(host, port, user, pass, dbname string, queryParams map[str
 		u.RawQuery = q.Encode()
 	}
 	return u.String()
-}
-
-func ParseQueryExecMode(queryExecMode string) (pgx.QueryExecMode, error) {
-	switch queryExecMode {
-	case "", "cache_statement":
-		return pgx.QueryExecModeCacheStatement, nil
-	case "cache_describe":
-		return pgx.QueryExecModeCacheDescribe, nil
-	case "describe_exec":
-		return pgx.QueryExecModeDescribeExec, nil
-	case "exec":
-		return pgx.QueryExecModeExec, nil
-	case "simple_protocol":
-		return pgx.QueryExecModeSimpleProtocol, nil
-	default:
-		return 0, fmt.Errorf("invalid queryExecMode %q: must be one of %q, %q, %q, %q, or %q", queryExecMode, "cache_statement", "cache_describe", "describe_exec", "exec", "simple_protocol")
-	}
 }

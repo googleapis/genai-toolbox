@@ -321,7 +321,7 @@ func TestParseQueryExecMode(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, err := postgres.ParseQueryExecMode(tc.in)
+			got, err := sources.ParsePGXQueryExecMode(tc.in)
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("parseQueryExecMode() error = %v, wantErr %v", err, tc.wantErr)
 			}

@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"cloud.google.com/go/cloudsqlconn"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/oauth2/google"
 )
 
@@ -125,4 +126,21 @@ func GetIAMAccessToken(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("retrieved token is invalid or expired")
 	}
 	return token.AccessToken, nil
+}
+
+func ParsePGXQueryExecMode(queryExecMode string) (pgx.QueryExecMode, error) {
+	switch queryExecMode {
+	case "", "cache_statement":
+		return pgx.QueryExecModeCacheStatement, nil
+	case "cache_describe":
+		return pgx.QueryExecModeCacheDescribe, nil
+	case "describe_exec":
+		return pgx.QueryExecModeDescribeExec, nil
+	case "exec":
+		return pgx.QueryExecModeExec, nil
+	case "simple_protocol":
+		return pgx.QueryExecModeSimpleProtocol, nil
+	default:
+		return 0, fmt.Errorf("invalid queryExecMode %q: must be one of %q, %q, %q, %q, or %q", queryExecMode, "cache_statement", "cache_describe", "describe_exec", "exec", "simple_protocol")
+	}
 }

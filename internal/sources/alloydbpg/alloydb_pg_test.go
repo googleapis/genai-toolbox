@@ -120,6 +120,37 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "example with query exec mode",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: alloydb-postgres
+			project: my-project
+			region: my-region
+			cluster: my-cluster
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryExecMode: simple_protocol
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-pg-instance": alloydbpg.Config{
+					Name:          "my-pg-instance",
+					Type:          alloydbpg.SourceType,
+					Project:       "my-project",
+					Region:        "my-region",
+					Cluster:       "my-cluster",
+					Instance:      "my-instance",
+					IPType:        "public",
+					Database:      "my_db",
+					User:          "my_user",
+					Password:      "my_pass",
+					QueryExecMode: "simple_protocol",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -189,6 +220,23 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			`,
 			err: "error unmarshaling source: unable to parse source \"my-pg-instance\" as \"alloydb-postgres\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+		},
+		{
+			desc: "invalid query exec mode",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: alloydb-postgres
+			project: my-project
+			region: my-region
+			cluster: my-cluster
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryExecMode: invalid_mode
+			`,
+			err: "error unmarshaling source: unable to parse source \"my-pg-instance\" as \"alloydb-postgres\": [7:16] Key: 'Config.QueryExecMode' Error:Field validation for 'QueryExecMode' failed on the 'oneof' tag\n   4 | name: my-pg-instance\n   5 | password: my_pass\n   6 | project: my-project\n>  7 | queryExecMode: invalid_mode\n                      ^\n   8 | region: my-region\n   9 | type: alloydb-postgres\n  10 | user: my_user",
 		},
 	}
 	for _, tc := range tcs {

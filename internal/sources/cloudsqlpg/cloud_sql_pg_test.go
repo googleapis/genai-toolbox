@@ -142,6 +142,35 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "example with query exec mode",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryExecMode: simple_protocol
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-pg-instance": cloudsqlpg.Config{
+					Name:          "my-pg-instance",
+					Type:          cloudsqlpg.SourceType,
+					Project:       "my-project",
+					Region:        "my-region",
+					Instance:      "my-instance",
+					IPType:        "public",
+					Database:      "my_db",
+					User:          "my_user",
+					Password:      "my_pass",
+					QueryExecMode: "simple_protocol",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -208,6 +237,22 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			`,
 			err: "error unmarshaling source: unable to parse source \"my-pg-instance\" as \"cloud-sql-postgres\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+		},
+		{
+			desc: "invalid query exec mode",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryExecMode: invalid_mode
+			`,
+			err: "error unmarshaling source: unable to parse source \"my-pg-instance\" as \"cloud-sql-postgres\": [6:16] Key: 'Config.QueryExecMode' Error:Field validation for 'QueryExecMode' failed on the 'oneof' tag\n   3 | name: my-pg-instance\n   4 | password: my_pass\n   5 | project: my-project\n>  6 | queryExecMode: invalid_mode\n                      ^\n   7 | region: my-region\n   8 | type: cloud-sql-postgres\n   9 | user: my_user",
 		},
 	}
 	for _, tc := range tcs {

@@ -49,16 +49,17 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name         string         `yaml:"name" validate:"required"`
-	Type         string         `yaml:"type" validate:"required"`
-	Project      string         `yaml:"project" validate:"required"`
-	Region       string         `yaml:"region" validate:"required"`
-	Instance     string         `yaml:"instance" validate:"required"`
-	IPType       sources.IPType `yaml:"ipType" validate:"required"`
-	Database     string         `yaml:"database" validate:"required"`
-	User         string         `yaml:"user"`
-	Password     string         `yaml:"password"`
-	SQLCommenter *bool          `yaml:"sqlCommenter"`
+	Name          string         `yaml:"name" validate:"required"`
+	Type          string         `yaml:"type" validate:"required"`
+	Project       string         `yaml:"project" validate:"required"`
+	Region        string         `yaml:"region" validate:"required"`
+	Instance      string         `yaml:"instance" validate:"required"`
+	IPType        sources.IPType `yaml:"ipType" validate:"required"`
+	Database      string         `yaml:"database" validate:"required"`
+	User          string         `yaml:"user"`
+	Password      string         `yaml:"password"`
+	SQLCommenter  *bool          `yaml:"sqlCommenter"`
+	QueryExecMode string         `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -66,7 +67,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initCloudSQLPgConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
+	pool, err := initCloudSQLPgConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database, r.QueryExecMode)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -171,7 +172,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 	return dsn, useIAM, nil
 }
 
-func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname, queryExecMode string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -186,6 +187,11 @@ func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
+	execMode, err := sources.ParsePGXQueryExecMode(queryExecMode)
+	if err != nil {
+		return nil, err
+	}
+	config.ConnConfig.DefaultQueryExecMode = execMode
 
 	// Create a new dialer with options
 	userAgent, err := util.UserAgentFromContext(ctx)
