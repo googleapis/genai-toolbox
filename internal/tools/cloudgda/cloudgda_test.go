@@ -23,7 +23,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -108,7 +107,7 @@ func TestParseFromYaml(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -187,7 +186,7 @@ func TestInitialize(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			tool, err := tc.cfg.Initialize()
+			tool, err := tc.cfg.Initialize(context.Background())
 			if err != nil {
 				t.Fatalf("did not expect an error but got: %v", err)
 			}
@@ -216,10 +215,6 @@ func TestInvoke(t *testing.T) {
 		expectedQuery:  query,
 		expectedParent: expectedParent,
 		response:       expectedResp,
-	}
-
-	srcs := map[string]sources.Source{
-		"mock-gda-source": fake,
 	}
 
 	// Initialize the tool config with context
@@ -258,7 +253,7 @@ func TestInvoke(t *testing.T) {
 		},
 	}
 
-	tool, err := toolCfg.Initialize()
+	tool, err := toolCfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -268,12 +263,10 @@ func TestInvoke(t *testing.T) {
 		{Name: "query", Value: query},
 	}
 
-	resourceMgr := resources.NewResourceManager(srcs, nil, nil, nil, nil, nil, nil)
-
 	ctx := testutils.ContextWithUserAgent(context.Background(), "test-user-agent")
 
 	// Invoke the tool
-	result, err := tool.Invoke(ctx, resourceMgr, params, "")
+	result, err := tool.Invoke(ctx, fake, params, "")
 	if err != nil {
 		t.Fatalf("tool invocation failed: %v", err)
 	}

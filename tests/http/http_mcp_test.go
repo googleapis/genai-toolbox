@@ -341,7 +341,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string, jwksURL st
 				"path":        "/tool1name",
 				"description": "some description",
 				"queryParams": []parameters.Parameter{
-					parameters.NewStringParameterWithRequired("name", "user name", false)},
+					parameters.NewStringParameter("name", "user name", parameters.WithStringRequired(false))},
 				"headers": map[string]string{"Content-Type": "application/json"},
 			},
 			"my-query-param-tool": map[string]any{
@@ -351,9 +351,9 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string, jwksURL st
 				"path":        "/toolQueryTest",
 				"description": "Tool to test optional query parameters.",
 				"queryParams": []parameters.Parameter{
-					parameters.NewStringParameterWithRequired("reqId", "required ID", true),
-					parameters.NewStringParameterWithRequired("page", "optional page number", false),
-					parameters.NewStringParameterWithRequired("filter", "optional filter string", false),
+					parameters.NewStringParameter("reqId", "required ID", parameters.WithStringRequired(true)),
+					parameters.NewStringParameter("page", "optional page number", parameters.WithStringRequired(false)),
+					parameters.NewStringParameter("filter", "optional filter string", parameters.WithStringRequired(false)),
 				},
 			},
 			"my-auth-tool": map[string]any{
@@ -364,8 +364,8 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string, jwksURL st
 				"description": "some description",
 				"requestBody": "{}",
 				"queryParams": []parameters.Parameter{
-					parameters.NewStringParameterWithAuth("email", "some description",
-						[]parameters.ParamAuthService{{Name: "my-google-auth", Field: "email"}}),
+					parameters.NewStringParameter("email", "some description", parameters.WithStringAuth(
+						[]parameters.ParamAuthService{{Name: "my-google-auth", Field: "email"}})),
 				},
 			},
 			"my-auth-required-tool": map[string]any{

@@ -36,10 +36,10 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	cmd.Command = &cobra.Command{
 		Use:   "migrate",
 		Short: "Migrate all configuration files to flat format",
-		Long:  "Migrate all configuration files provided to the flat format, updating deprecated fields and ensuring compatibility.",
+		Long:  "Migrate all configuration files provided to the flat format, updating deprecated fields (including converting toolsets to groups) and ensuring compatibility.",
 	}
 	flags := cmd.Flags()
-	internal.ConfigFileFlags(flags, opts)
+	internal.ConfigFileFlags(cmd.Command, flags, opts)
 	flags.BoolVar(&cmd.dryRun, "dry-run", false, "Preview the converted format without applying actual changes.")
 	cmd.RunE = func(*cobra.Command, []string) error { return runMigrate(cmd, opts) }
 	return cmd.Command
@@ -76,7 +76,7 @@ func runMigrate(cmd *migrateCmd, opts *internal.ToolboxOptions) error {
 			errs = append(errs, errMsg)
 			continue
 		}
-		newBuf, err := internal.ConvertConfig(buf)
+		newBuf, err := internal.ConvertConfig(ctx, buf)
 		if err != nil {
 			logger.ErrorContext(ctx, err.Error())
 			errs = append(errs, err)

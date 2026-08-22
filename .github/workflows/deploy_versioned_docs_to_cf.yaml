@@ -30,9 +30,10 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Checkout Code at Tag
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.event.release.tag_name }}
+          persist-credentials: false
 
       - name: Get Version from Release Tag
         id: get_version
@@ -43,11 +44,13 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3
         with:
-          hugo-version: "0.161.1"
+          hugo-version: "0.163.3"
           extended: true
 
       - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        # zizmor flags setup-node for cache-poisoning on releases, but since we don't pass `cache: npm`, no caching occurs. Safe to ignore.
+        # zizmor: ignore[cache-poisoning]
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: "22"
 
@@ -70,7 +73,7 @@ jobs:
         working-directory: .hugo
 
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .hugo/public
@@ -94,12 +97,27 @@ jobs:
         run: npx pagefind --site public
         working-directory: .hugo
 
-      - name: Deploy to root
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+      - name: Checkout Cloudflare Branch for Root
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .hugo/public
-          publish_branch: cloudflare-pages
-          keep_files: true
-          allow_empty_commit: true
-          commit_message: "deploy: docs to root for ${{ steps.get_version.outputs.VERSION }}"
+          ref: cloudflare-pages
+          path: cf-pages-root-temp
+          persist-credentials: false
+
+      - name: Deploy to root
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
+        run: |
+          cd $GITHUB_WORKSPACE/cf-pages-root-temp
+          # Delete older pagefind search indexes
+          rm -rf pagefind
+          
+          # Copy over the fresh root build
+          cp -r ../.hugo/public/* .
+          
+          # Commit and push the clean build
+          git config user.name "release-please[bot]"
+          git config user.email "55107282+release-please[bot]@users.noreply.github.com"
+          git add .
+          
+          git diff-index --quiet HEAD || git commit -m "deploy: docs to root for $VERSION" && git push origin cloudflare-pages

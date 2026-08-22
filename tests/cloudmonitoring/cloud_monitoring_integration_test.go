@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -27,7 +28,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-func newTestTool(t *testing.T, toolType string) cloudmonitoring.Tool {
+func newTestTool(t *testing.T, ctx context.Context, toolType string) cloudmonitoring.Tool {
 	t.Helper()
 	cfg := cloudmonitoring.Config{
 		ConfigBase: tools.ConfigBase{
@@ -37,7 +38,7 @@ func newTestTool(t *testing.T, toolType string) cloudmonitoring.Tool {
 		Type:   toolType,
 		Source: "test-source",
 	}
-	toolIface, err := cfg.Initialize()
+	toolIface, err := cfg.Initialize(ctx)
 	if err != nil {
 		t.Fatalf("Initialize() error = %v", err)
 	}
@@ -46,6 +47,9 @@ func newTestTool(t *testing.T, toolType string) cloudmonitoring.Tool {
 
 func TestTool_Invoke(t *testing.T) {
 	t.Parallel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
 
 	// Mock the monitoring server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +68,7 @@ func TestTool_Invoke(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := newTestTool(t, "cloud-monitoring-query-prometheus")
+	tool := newTestTool(t, ctx, "cloud-monitoring-query-prometheus")
 
 	// Define the test parameters
 	params := parameters.ParamValues{
@@ -73,7 +77,7 @@ func TestTool_Invoke(t *testing.T) {
 	}
 
 	// Invoke the tool
-	result, err := tool.Invoke(context.Background(), nil, params, "")
+	result, err := tool.Invoke(ctx, nil, params, "")
 	if err != nil {
 		t.Fatalf("Invoke() error = %v", err)
 	}
@@ -94,6 +98,9 @@ func TestTool_Invoke(t *testing.T) {
 func TestTool_Invoke_Error(t *testing.T) {
 	t.Parallel()
 
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
 	// Mock the monitoring server to return an error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -101,7 +108,7 @@ func TestTool_Invoke_Error(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := newTestTool(t, "clou-monitoring-query-prometheus")
+	tool := newTestTool(t, ctx, "clou-monitoring-query-prometheus")
 
 	// Define the test parameters
 	params := parameters.ParamValues{
@@ -110,7 +117,7 @@ func TestTool_Invoke_Error(t *testing.T) {
 	}
 
 	// Invoke the tool
-	_, err := tool.Invoke(context.Background(), nil, params, "")
+	_, err := tool.Invoke(ctx, nil, params, "")
 	if err == nil {
 		t.Fatal("Invoke() error = nil, want error")
 	}

@@ -104,6 +104,15 @@ func (s *Source) validateBucket(bucket string) error {
 	return fmt.Errorf("bucket %q is not allowed by source %q configuration", bucket, s.Name)
 }
 
+// validateLocalPath enforces allowedLocalRoots. The path must sit under an
+// allowed root both as written and after symlinks are resolved: the first check
+// keeps the rejection message tied to what the caller actually asked for, and
+// the second is what makes the root a real boundary, since a symlink planted
+// under a root can otherwise point anywhere on the filesystem.
+//
+// The resolved comparison uses resolved roots as well, so an allowed root that
+// is itself reached through a symlink (/tmp on macOS, a symlinked workspace)
+// still matches.
 func (s *Source) validateLocalPath(p string) error {
 	clean, err := cloudstoragecommon.ValidateLocalPath(p)
 	if err != nil {
@@ -112,12 +121,34 @@ func (s *Source) validateLocalPath(p string) error {
 	if len(s.AllowedLocalRoots) == 0 {
 		return nil
 	}
+
+	nameMatched := false
 	for _, root := range s.AllowedLocalRoots {
 		if isUnderRoot(clean, root) {
+			nameMatched = true
+			break
+		}
+	}
+	if !nameMatched {
+		return fmt.Errorf("local path %q is not under any allowed local roots for source %q", p, s.Name)
+	}
+
+	resolved, err := cloudstoragecommon.ResolveSymlinks(clean)
+	if err != nil {
+		return fmt.Errorf("local path %q cannot be resolved for source %q: %w", p, s.Name, err)
+	}
+	for _, root := range s.AllowedLocalRoots {
+		// A root we cannot resolve authorizes nothing; skip it rather than
+		// falling back to the name-level match we already passed.
+		resolvedRoot, err := cloudstoragecommon.ResolveSymlinks(root)
+		if err != nil {
+			continue
+		}
+		if isUnderRoot(resolved, resolvedRoot) {
 			return nil
 		}
 	}
-	return fmt.Errorf("local path %q is not under any allowed local roots for source %q", p, s.Name)
+	return fmt.Errorf("local path %q resolves through a symbolic link to a target outside the allowed local roots for source %q", p, s.Name)
 }
 
 func isUnderRoot(target, root string) bool {
@@ -273,12 +304,15 @@ func (s *Source) ListBuckets(ctx context.Context, project, prefix string, maxRes
 	}, nil
 }
 
-// CreateBucket creates a Cloud Storage bucket in the source project and returns
-// its freshly-read metadata. When location is empty, Cloud Storage applies its
-// service default.
-func (s *Source) CreateBucket(ctx context.Context, bucket, location string, uniformBucketLevelAccess bool) (map[string]any, error) {
+// CreateBucket creates a Cloud Storage bucket and returns its freshly-read
+// metadata. When project is empty, the source's configured project is used.
+// When location is empty, Cloud Storage applies its service default.
+func (s *Source) CreateBucket(ctx context.Context, bucket, project, location string, uniformBucketLevelAccess bool) (map[string]any, error) {
 	if err := s.validateBucket(bucket); err != nil {
 		return nil, err
+	}
+	if project == "" {
+		project = s.Project
 	}
 	attrs := &storage.BucketAttrs{Location: location}
 	if uniformBucketLevelAccess {
@@ -286,8 +320,8 @@ func (s *Source) CreateBucket(ctx context.Context, bucket, location string, unif
 	}
 
 	bkt := s.client.Bucket(bucket)
-	if err := bkt.Create(ctx, s.Project, attrs); err != nil {
-		return nil, fmt.Errorf("failed to create bucket %q in project %q: %w", bucket, s.Project, err)
+	if err := bkt.Create(ctx, project, attrs); err != nil {
+		return nil, fmt.Errorf("failed to create bucket %q in project %q: %w", bucket, project, err)
 	}
 
 	createdAttrs, err := bkt.Attrs(ctx)

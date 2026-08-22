@@ -59,4 +59,3 @@ instead of hardcoding your secrets into the configuration file.
 | schema    |  string  |     true     | Name of the schema to use (e.g. "my_schema").                          |
 | warehouse |  string  |     false    | The virtual warehouse to use. Defaults to "COMPUTE_WH".                |
 | role      |  string  |     false    | The security role to use. Defaults to "ACCOUNTADMIN".                  |
-| timeout   |  integer |     false    | The connection timeout in seconds. Defaults to 60.                     |

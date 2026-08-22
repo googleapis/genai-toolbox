@@ -67,3 +67,4 @@ instead of hardcoding your secrets into the configuration file.
 | queryParams |  map[string]string |     false    | Raw query to be added to the db connection string.                     |
 | queryExecMode | string | false | pgx query execution mode. Valid values: `cache_statement` (default), `cache_describe`, `describe_exec`, `exec`, `simple_protocol`. Useful with connection poolers that don't support prepared statement caching. |
 | sqlCommenter | boolean | false | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
+| connectTimeout | integer | false | Maximum time in seconds to wait for a single connection attempt (minimum 1, e.g. 5). When omitted, no timeout is applied and connection behavior is unchanged. |

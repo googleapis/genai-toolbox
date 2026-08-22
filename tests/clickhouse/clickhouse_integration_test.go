@@ -910,11 +910,6 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Test listing databases",
 			},
-			"test-invalid-source": map[string]any{
-				"type":        "clickhouse-list-databases",
-				"source":      "non-existent-source",
-				"description": "Test with invalid source",
-			},
 		},
 	}
 
@@ -984,15 +979,6 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 		t.Logf("Successfully listed %d databases", len(databases))
 	})
 
-	t.Run("ListDatabasesWithInvalidSource", func(t *testing.T) {
-		api := "http://127.0.0.1:5000/api/tool/test-invalid-source/invoke"
-		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
-		if resp.StatusCode == http.StatusOK {
-			t.Fatalf("expected error for non-existent source, but got 200 OK")
-		}
-
-	})
-
 	t.Logf("✅ clickhouse-list-databases tool tests completed successfully")
 }
 
@@ -1038,11 +1024,6 @@ func TestClickHouseListTablesTool(t *testing.T) {
 				"type":        "clickhouse-list-tables",
 				"source":      "my-instance",
 				"description": "Test listing tables",
-			},
-			"test-invalid-source": map[string]any{
-				"type":        "clickhouse-list-tables",
-				"source":      "non-existent-source",
-				"description": "Test with invalid source",
 			},
 		},
 	}
@@ -1128,13 +1109,90 @@ func TestClickHouseListTablesTool(t *testing.T) {
 		}
 	})
 
-	t.Run("ListTablesWithInvalidSource", func(t *testing.T) {
-		api := "http://127.0.0.1:5000/api/tool/test-invalid-source/invoke"
-		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected 200 OK for non-existent source, but got %d", resp.StatusCode)
-		}
-	})
-
 	t.Logf("✅ clickhouse-list-tables tool tests completed successfully")
+}
+
+// TestClickHouseSQLToolWithEmbedding verifies that the clickhouse-sql tool can
+// embed a string parameter via an embedding model and store/query an
+// Array(Float32) column. Skips when ClickHouse infra is not configured;
+// requires API_KEY (gemini) when it is.
+func TestClickHouseSQLToolWithEmbedding(t *testing.T) {
+	// Skip if ClickHouse infra isn't configured (matches the rest of this
+	// suite). If it is, a missing API_KEY is a real misconfiguration (e.g. the
+	// CI secret was dropped) — fail loudly rather than skip silently.
+	sourceConfig := getClickHouseVars(t)
+	if os.Getenv("API_KEY") == "" {
+		t.Fatal("'API_KEY' not set; required for the embedding integration test")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	args := []string{"--enable-api"}
+
+	pool, err := initClickHouseConnectionPool(ClickHouseHost, ClickHousePort, ClickHouseUser, ClickHousePass, ClickHouseDatabase, ClickHouseProtocol)
+	if err != nil {
+		t.Fatalf("unable to create ClickHouse connection pool: %s", err)
+	}
+	defer pool.Close()
+
+	vectorTableName, tearDownVectorTable := setupClickHouseVectorTable(t, ctx, pool)
+	defer tearDownVectorTable(t)
+
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"tools": map[string]any{},
+	}
+
+	insertStmt, searchStmt := getClickHouseVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, ClickHouseToolType, insertStmt, searchStmt)
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
+}
+
+// setupClickHouseVectorTable creates a ClickHouse table with an Array(Float32)
+// embedding column for the semantic search test, and returns its name plus a
+// teardown helper.
+func setupClickHouseVectorTable(t *testing.T, ctx context.Context, pool *sql.DB) (string, func(*testing.T)) {
+	t.Helper()
+
+	tableName := "vector_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+
+	createTableStmt := fmt.Sprintf(`CREATE TABLE %s (
+		content String,
+		embedding Array(Float32)
+	) ENGINE = MergeTree ORDER BY tuple()`, tableName)
+
+	if _, err := pool.ExecContext(ctx, createTableStmt); err != nil {
+		t.Fatalf("failed to create table %s: %v", tableName, err)
+	}
+
+	return tableName, func(t *testing.T) {
+		if _, err := pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)); err != nil {
+			t.Errorf("failed to drop table %s: %v", tableName, err)
+		}
+	}
+}
+
+// getClickHouseVectorSearchStmts returns the insert and cosine-distance search
+// statements used by the ClickHouse semantic-search integration test.
+func getClickHouseVectorSearchStmts(vectorTableName string) (string, string) {
+	insertStmt := fmt.Sprintf("INSERT INTO %s (content, embedding) VALUES (?, ?)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT content, cosineDistance(embedding, ?) AS distance FROM %s ORDER BY distance ASC LIMIT 1", vectorTableName)
+	return insertStmt, searchStmt
 }

@@ -24,9 +24,11 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 
@@ -38,8 +40,8 @@ var (
 	_ prompts.Prompt = testutils.MockPrompt{}
 )
 
-// setUpServer create a new server with tools, toolsets, prompts, and promptsets.
-func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset, opts ...func(*Server)) (chi.Router, func()) {
+// setUpServer create a new server with tools, prompts, and groups.
+func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, prompts map[string]prompts.Prompt, groups map[string]group.Group, opts ...func(*Server)) (chi.Router, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -59,14 +61,16 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(nil, nil, nil, tools, toolsets, prompts, promptsets)
+	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, tools, prompts, groups)
+
+	mcp.InitializeProtocols(mcp.ProtocolOptions{})
 
 	server := Server{
 		version:         testutils.MockVersionString,
 		logger:          testLogger,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-		ResourceMgr:     resourceManager,
+		PrimitiveMgr:    primitiveManager,
 	}
 	for _, opt := range opts {
 		opt(&server)
@@ -141,5 +145,11 @@ func runRequest(ts *httptest.Server, method, path string, body io.Reader, header
 func withHTTPMaxRequestBytes(limit int64) func(*Server) {
 	return func(s *Server) {
 		s.httpMaxRequestBytes = limit
+	}
+}
+
+func withEnableDraftSpecs() func(*Server) {
+	return func(s *Server) {
+		s.enableDraftSpecs = true
 	}
 }
