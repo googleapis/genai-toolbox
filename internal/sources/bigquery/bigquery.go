@@ -754,12 +754,30 @@ func initBigQueryConnection(
 	}
 
 	if impersonateServiceAccount != "" {
+		// The impersonated token source mints tokens by calling the IAM
+		// Credentials API, authenticating those calls with base credentials
+		// discovered from ADC, so it goes stale after an on-disk re-auth the
+		// same way direct ADC usage does. Discover the base credentials
+		// explicitly, wrapped in the self-reloading source (see
+		// sources.NewReloadingDefaultCredentials), so the impersonation flow
+		// also recovers when ADC is rotated on disk. The quota-project guard
+		// is skipped: only the internal IAM mint call reads the base
+		// credentials' quota project, and refusing recovery over its
+		// attribution would trade a full outage of the source for it.
+		baseCred, err := sources.NewReloadingDefaultCredentials(ctx, sources.ADCReloadParams{
+			Name:                  name,
+			Scopes:                []string{CloudPlatformScope},
+			SkipQuotaProjectGuard: true,
+		})
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to prepare base credentials to impersonate %q: %w", impersonateServiceAccount, err)
+		}
 		// Create impersonated credentials token source
 		// This broader scope is needed for tools like conversational analytics
 		cloudPlatformTokenSource, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 			TargetPrincipal: impersonateServiceAccount,
 			Scopes:          credScopes,
-		})
+		}, option.WithCredentials(baseCred))
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
 		}
@@ -769,10 +787,21 @@ func initBigQueryConnection(
 			option.WithTokenSource(cloudPlatformTokenSource),
 		}
 	} else {
-		// Use default credentials
-		cred, err := google.FindDefaultCredentials(ctx, credScopes...)
+		// Use default credentials (Application Default Credentials), wrapped
+		// so that a mid-session `gcloud auth application-default login` is
+		// recovered by reloading ADC from disk instead of failing on every
+		// call until the process is restarted. Only the token source is
+		// replaced: the rest of the credential rides along via
+		// WithCredentials, so ADC metadata such as the quota project
+		// (X-Goog-User-Project, read from cred.JSON) is still applied to
+		// requests.
+		cred, err := sources.NewReloadingDefaultCredentials(ctx, sources.ADCReloadParams{
+			Name:            name,
+			Scopes:          credScopes,
+			QuotaProjectPin: quotaProject,
+		})
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scopes %v: %w", credScopes, err)
+			return nil, nil, nil, fmt.Errorf("failed to prepare default credentials for BigQuery source %q: %w", name, err)
 		}
 		tokenSource = cred.TokenSource
 		opts = []option.ClientOption{
@@ -910,11 +939,23 @@ func initDataplexConnection(
 		}
 
 		if impersonateServiceAccount != "" {
+			// As in initBigQueryConnection, give the impersonated token source
+			// self-reloading base credentials so it also recovers when ADC is
+			// rotated on disk, with the quota-project guard skipped for the
+			// same reason.
+			baseCred, err := sources.NewReloadingDefaultCredentials(ctx, sources.ADCReloadParams{
+				Name:                  name,
+				Scopes:                []string{CloudPlatformScope},
+				SkipQuotaProjectGuard: true,
+			})
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to prepare base credentials to impersonate %q: %w", impersonateServiceAccount, err)
+			}
 			// Create impersonated credentials token source
 			ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 				TargetPrincipal: impersonateServiceAccount,
 				Scopes:          credScopes,
-			})
+			}, option.WithCredentials(baseCred))
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
 			}
@@ -923,10 +964,21 @@ func initDataplexConnection(
 				option.WithTokenSource(ts),
 			}
 		} else {
-			// Use default credentials
-			cred, err := google.FindDefaultCredentials(ctx, credScopes...)
+			// Use default credentials, wrapped so a mid-session `gcloud auth
+			// application-default login` is recovered by reloading ADC from
+			// disk (see sources.NewReloadingDefaultCredentials), and keep
+			// WithCredentials so ADC metadata such as the quota project is
+			// preserved. No QuotaProjectPin: unlike the BigQuery clients,
+			// this client does not receive option.WithQuotaProject
+			// (pre-existing behavior, unchanged here), so it genuinely
+			// derives its quota project from the ADC file and the drift
+			// guard must stay active for it.
+			cred, err := sources.NewReloadingDefaultCredentials(ctx, sources.ADCReloadParams{
+				Name:   name,
+				Scopes: credScopes,
+			})
 			if err != nil {
-				return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
+				return nil, nil, fmt.Errorf("failed to prepare default credentials for the Dataplex client of source %q: %w", name, err)
 			}
 			opts = []option.ClientOption{
 				option.WithUserAgent(userAgent),
