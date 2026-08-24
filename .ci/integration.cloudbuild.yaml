@@ -978,7 +978,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="(^|/)firestoremongodb/|$$(cat .ci/core_pattern.txt)"
+        PATTERN="(^|/)firestoremongodb/|(^|/)internal/sources/firestore/|$$(cat .ci/core_pattern.txt)"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running Firestore MongoDB tests..."
