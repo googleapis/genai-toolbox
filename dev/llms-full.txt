@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-21T17:26:17Z
+**GENERATED ON:** 2026-08-24T21:03:58Z
 
 ---
 ### System Directives for AI Models
@@ -31379,6 +31379,98 @@ description: Use this tool to list collections in Firestore.
 | type        |      string      |     true     | Must be "firestore-list-collections".                  |
 | source      |      string      |     true     | Name of the Firestore source to list collections from. |
 | description |      string      |     true     | Description of the tool that is passed to the LLM.     |
+
+
+
+
+========================================================================
+## firestore-mongodb-execute-mql
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Firestore > Tools > firestore-mongodb-execute-mql
+**URL:** https://mcp-toolbox.dev/dev/integrations/firestore/tools/firestore-mongodb-execute-mql/
+**Description:** A "firestore-mongodb-execute-mql" tool executes MongoDB Query Language (MQL) queries and aggregation pipelines against Firestore.
+
+
+
+## About
+
+A `firestore-mongodb-execute-mql` tool executes MongoDB Query Language (MQL) statements or aggregation pipelines against Firestore.
+
+This tool allows data agents and LLMs to run dynamic MQL queries such as aggregation pipelines or document queries directly against Firestore databases.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | string | true | The MQL query or aggregation pipeline to execute against Firestore. |
+
+## Example
+
+```yaml
+kind: tool
+name: execute_mql
+type: firestore-mongodb-execute-mql
+source: my-firestore-source
+description: Use this tool to execute MQL queries against Firestore.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description** |
+|-------------|:--------:|:------------:|-----------------|
+| type | string | true | Must be "firestore-mongodb-execute-mql". |
+| source | string | true | Name of the Firestore source to execute queries against. |
+| description | string | true | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## firestore-mongodb-get-schema
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Firestore > Tools > firestore-mongodb-get-schema
+**URL:** https://mcp-toolbox.dev/dev/integrations/firestore/tools/firestore-mongodb-get-schema/
+**Description:** A "firestore-mongodb-get-schema" tool introspects Firestore collections to infer field types and schema definitions.
+
+
+
+## About
+
+A `firestore-mongodb-get-schema` tool retrieves schema information and inferred document structures for Firestore collections.
+
+This tool introspects collections to detect field names, nested maps, and data types (such as string, integer, double, boolean, timestamp, geopoint, and reference), returning structured schema definitions.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `collection` | string | false | Optional name or relative path of a specific collection. If omitted, schemas for all root collections are returned. |
+
+## Example
+
+```yaml
+kind: tool
+name: get_schema
+type: firestore-mongodb-get-schema
+source: my-firestore-source
+description: Use this tool to retrieve schemas for Firestore collections.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description** |
+|-------------|:--------:|:------------:|-----------------|
+| type | string | true | Must be "firestore-mongodb-get-schema". |
+| source | string | true | Name of the Firestore source to introspect. |
+| description | string | true | Description of the tool that is passed to the LLM. |
 
 
 

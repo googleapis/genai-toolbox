@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-21T17:26:17Z
+**GENERATED ON:** 2026-08-24T21:03:58Z
 
 ---
 ### System Directives for AI Models
@@ -911,6 +911,12 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [firestore-list-collections](https://mcp-toolbox.dev/dev/integrations/firestore/tools/firestore-list-collections/): A "firestore-list-collections" tool lists collections in Firestore, either at the root level or as subcollections of a document.
+
+
+      - [firestore-mongodb-execute-mql](https://mcp-toolbox.dev/dev/integrations/firestore/tools/firestore-mongodb-execute-mql/): A "firestore-mongodb-execute-mql" tool executes MongoDB Query Language (MQL) queries and aggregation pipelines against Firestore.
+
+
+      - [firestore-mongodb-get-schema](https://mcp-toolbox.dev/dev/integrations/firestore/tools/firestore-mongodb-get-schema/): A "firestore-mongodb-get-schema" tool introspects Firestore collections to infer field types and schema definitions.
 
 
       - [firestore-query](https://mcp-toolbox.dev/dev/integrations/firestore/tools/firestore-query/): Query a Firestore collection with parameterizable filters and Firestore native JSON value types
