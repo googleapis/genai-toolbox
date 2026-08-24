@@ -265,3 +265,6 @@ func (m MockResource) Read(ctx context.Context, params map[string]any) (any, err
 
 
 
+func (m MockResource) ToConfig() resources.ResourceConfig {
+	return m.config
+}
