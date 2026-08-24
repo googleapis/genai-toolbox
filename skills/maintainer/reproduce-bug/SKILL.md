@@ -31,7 +31,7 @@ version string, or the exact command and its output. Otherwise mark it
 Cite `file:line` in **your findings**, where the claim is about the tree as it
 is now. This skill's own pointers name files and symbols instead, since line
 numbers go stale between releases while symbols survive refactors. Resolve one
-with grep -rn '<symbol>' --include="*.go" and read it before citing a line.
+with `grep -rn '<symbol>' --include="*.go"` and read it before citing a line.
 
 Reproducing a bug proves it exists. Failing to reproduce proves much less, and
 only counts if the attempt was valid, so word the two differently.

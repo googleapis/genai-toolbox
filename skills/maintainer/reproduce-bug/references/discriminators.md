@@ -72,9 +72,12 @@ is behaving correctly.
 it: the fault is above the transport.
 
 **Traps.**
-- A failing tool returns **HTTP 200** with `isError: true` in the result, not an
-  HTTP error status. Reporters read the 200 as the server swallowing their
-  error.
+- An agent-fixable failure (bad SQL, missing record) returns **HTTP 200** with
+  `isError: true` in the result, which reporters read as the server swallowing
+  their error. An infrastructure or auth failure returns a **4XX/5XX** JSON-RPC
+  error instead, so a non-200 is not automatically wrong. Check which category
+  applies before judging the response: see the error taxonomy in
+  [repro-env.md](repro-env.md).
 - A request to `/api/*` judged against MCP expectations is a category error.
 - The bug may belong in an SDK repo. Say which one rather than closing flatly.
 
