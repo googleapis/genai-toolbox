@@ -940,7 +940,7 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "FIRESTORE_PROJECT=$_FIRESTORE_PROJECT"
+      - "FIRESTORE_PROJECT=$PROJECT_ID"
       - "FIRESTORE_DATABASE=$_FIRESTORE_DATABASE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
     secretEnv: ["CLIENT_ID"]
@@ -1781,5 +1781,4 @@ substitutions:
   _SNOWFLAKE_DATABASE: "test"
   _SNOWFLAKE_SCHEMA: "PUBLIC"
   _DATAPROC_CLUSTER: "dataproc-testing-cluster"
-  _FIRESTORE_PROJECT: "fs-onemcp-e2e-prod"
   _FIRESTORE_DATABASE: "mcp-toolbox-db-native-schema"
