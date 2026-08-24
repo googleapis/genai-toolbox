@@ -20,8 +20,8 @@ source documentation page into their `tools:` block.
 **Confirm.** Look up what is actually registered rather than trusting a list:
 
 ```bash
-grep -rn 'resourceType string = ' --include=*.go internal/tools/ | grep -i mysql
-grep -rn 'SourceType string = ' --include=*.go internal/sources/ | grep -i mysql
+grep -rn 'resourceType string = ' --include="*.go" internal/tools/ | grep -i mysql
+grep -rn 'SourceType string = ' --include="*.go" internal/sources/ | grep -i mysql
 ```
 
 Tool types are registered in `internal/tools/**` and source types in
