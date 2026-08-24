@@ -76,14 +76,12 @@ type BaseConfig struct {
 	Title       string               `yaml:"title,omitempty"`
 	MimeType    string               `yaml:"mimeType,omitempty"`
 	Annotations *ResourceAnnotations `yaml:"annotations,omitempty"`
-	Size        *int64               `yaml:"-"`
 }
 
 func (c BaseConfig) GetName() string        { return c.Name }
 func (c BaseConfig) GetTitle() string       { return c.Title }
 func (c BaseConfig) GetDescription() string { return c.Description }
 func (c BaseConfig) GetMimeType() string    { return c.MimeType }
-func (c BaseConfig) GetSize() *int64        { return c.Size }
 func (c BaseConfig) GetAnnotations() *ResourceAnnotations { return c.Annotations }
 
 // GetURI returns the URI of the resource configuration.
