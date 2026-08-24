@@ -105,7 +105,7 @@ it, the fix, and the traps, including which shapes are sometimes real bugs.
 between releases and their string is evidence about *their* build:
 
 ```bash
-grep -rn '<distinctive fragment>' --include=*.go internal/ cmd/   # where it is raised now
+grep -rn '<distinctive fragment>' --include="*.go" internal/ cmd/   # where it is raised now
 git log -S '<their exact error text>'                             # when the wording changed
 ```
 
