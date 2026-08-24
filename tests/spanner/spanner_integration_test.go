@@ -287,7 +287,7 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 
 	return func(t *testing.T) {
 		// tear down test
-		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+		op, err = adminClient.UpdateDatabaseDdl(context.WithoutCancel(ctx), &databasepb.UpdateDatabaseDdlRequest{
 			Database:   dbString,
 			Statements: []string{fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)},
 		})
@@ -296,7 +296,7 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 			return
 		}
 
-		opErr := op.Wait(ctx)
+		opErr := op.Wait(context.WithoutCancel(ctx))
 		if opErr != nil {
 			t.Errorf("Teardown failed: %s", opErr)
 		}
@@ -320,7 +320,7 @@ func setupSpannerGraph(t *testing.T, ctx context.Context, adminClient *database.
 
 	return func(t *testing.T) {
 		// tear down test
-		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+		op, err = adminClient.UpdateDatabaseDdl(context.WithoutCancel(ctx), &databasepb.UpdateDatabaseDdlRequest{
 			Database:   dbString,
 			Statements: []string{fmt.Sprintf("DROP PROPERTY GRAPH IF EXISTS %s", graphName)},
 		})
@@ -329,7 +329,7 @@ func setupSpannerGraph(t *testing.T, ctx context.Context, adminClient *database.
 			return
 		}
 
-		opErr := op.Wait(ctx)
+		opErr := op.Wait(context.WithoutCancel(ctx))
 		if opErr != nil {
 			t.Errorf("Teardown failed: %s", opErr)
 		}
