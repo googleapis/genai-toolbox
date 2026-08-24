@@ -154,11 +154,10 @@ Skip a dimension when it doesn't apply: say so, don't invent a finding.
   generic warnings.
   - *Reviewing a fix to a reported vulnerability* asks different questions than reviewing new
     code. (a) **Can the untrusted party actually reach the primitive the residual attack
-    needs?** Grep for it — a documented TOCTOU requiring a symlink isn't agent-reachable if
-    nothing in the tool surface creates one, which is usually the line between blocker and
-    tracked follow-up. (b) **Which way does the failure lean?** Over-rejection is a cost; a bug
-    in newly hand-rolled logic is a vulnerability. Don't ask a security PR to spend fail-open
-    risk buying back a narrow convenience.
+    needs?** Grep the tool surface for it — a residual weakness nothing exposed can set up is
+    usually the line between blocker and tracked follow-up. (b) **Which way does the failure
+    lean?** Over-rejection is a cost; a bug in newly hand-rolled logic is a vulnerability.
+    Don't ask a security PR to spend fail-open risk buying back a narrow convenience.
 - **Dependencies.** Call out new `go.mod` entries so the maintainer can vet necessity,
   maintenance, and license.
 
