@@ -892,7 +892,7 @@ type prmResponse struct {
 func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var server string
 	scopes := []string{}
-	for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
+	for _, authSvc := range s.PrimitiveMgr.AuthServices() {
 		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 			server = mSvc.GetAuthorizationServer()
 			scopes = mSvc.GetScopesRequired()
