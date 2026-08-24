@@ -1916,23 +1916,18 @@ func runFirestoreMongodbGetSchemaTest(t *testing.T, collectionName string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"]
+			got, ok := body["result"].(string)
 			if !ok {
 				t.Fatalf("unable to find result in response body")
 			}
 
-			gotJSON, err := json.Marshal(got)
-			if err != nil {
-				t.Fatalf("error marshaling result: %v", err)
-			}
-
 			if tc.wantRegex != "" {
-				matched, err := regexp.MatchString(tc.wantRegex, string(gotJSON))
+				matched, err := regexp.MatchString(tc.wantRegex, got)
 				if err != nil {
 					t.Fatalf("invalid regex pattern: %v", err)
 				}
 				if !matched {
-					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", string(gotJSON), tc.wantRegex)
+					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", got, tc.wantRegex)
 				}
 			}
 		})
@@ -2007,23 +2002,18 @@ func runFirestoreMongodbExecuteMQLTest(t *testing.T, collectionName string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"]
+			got, ok := body["result"].(string)
 			if !ok {
 				t.Fatalf("unable to find result in response body")
 			}
 
-			gotJSON, err := json.Marshal(got)
-			if err != nil {
-				t.Fatalf("error marshaling result: %v", err)
-			}
-
 			if tc.wantRegex != "" {
-				matched, err := regexp.MatchString(tc.wantRegex, string(gotJSON))
+				matched, err := regexp.MatchString(tc.wantRegex, got)
 				if err != nil {
 					t.Fatalf("invalid regex pattern: %v", err)
 				}
 				if !matched {
-					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", string(gotJSON), tc.wantRegex)
+					t.Fatalf("result does not match expected pattern.\nGot: %s\nWant pattern: %s", got, tc.wantRegex)
 				}
 			}
 		})
