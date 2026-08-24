@@ -53,7 +53,10 @@ We currently support different versions of the MCP protocol.
 
 | Constant | Description |
 | :--- | :--- |
-| `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-06-18`). |
+| `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2026-07-28`). |
+| `Protocol.MCP_LATEST` | Alias for the latest stable MCP version (currently `2026-07-28`). |
+| `Protocol.MCP_DRAFT` | Alias for the upcoming draft MCP version (currently `2026-07-28`). |
+| `Protocol.MCP_v20260728` | MCP Protocol version 2026-07-28. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
 | `Protocol.MCP_v20250326` | MCP Protocol version 2025-03-26. |
@@ -280,3 +283,25 @@ toolset = ToolboxToolset(
 
 Configure your OpenTelemetry `TracerProvider` and `MeterProvider` before creating the client. See the [toolbox-core OpenTelemetry documentation](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#opentelemetry) for a full setup example.
 
+### Per-call Telemetry Attributes
+
+Use `TelemetryAttributes` to attach model, user, and agent metadata to each tool invocation:
+
+```python
+from toolbox_adk import ToolboxToolset
+from toolbox_core import TelemetryAttributes
+
+def get_telemetry_attributes(tool_context):
+    return TelemetryAttributes(
+        llm_model="gemini-3.6-flash",
+        user_id=tool_context.state.get("user_id"),
+        agent_id="agent-abc",
+    )
+
+toolset = ToolboxToolset(
+    server_url="http://127.0.0.1:5000",
+    telemetry_attributes=get_telemetry_attributes,
+)
+```
+
+`telemetry_attributes` also accepts a static `TelemetryAttributes` instance or an async callable. When wrapping a core tool directly, pass the same argument to `ToolboxTool`. See the [toolbox-core telemetry attributes documentation](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#per-call-telemetry-attributes) for field details.

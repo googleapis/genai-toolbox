@@ -114,6 +114,7 @@ project: "my-project-id"
 #   - "https://www.googleapis.com/auth/drive.readonly"
 # maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
 # maximumBytesBilled: 10737418240 # Optional: Per-query bytes scanned cap (in bytes).
+# apiEndpoint: "http://localhost:9050" # Optional: Override the BigQuery API endpoint (proxy or local emulator).
 ```
 
 Initialize a BigQuery source that uses the client's access token:
@@ -135,6 +136,7 @@ useClientOAuth: true
 #   - "https://www.googleapis.com/auth/drive.readonly"
 # maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
 # maximumBytesBilled: 10737418240 # Optional: Per-query bytes scanned cap (in bytes).
+# apiEndpoint: "http://localhost:9050" # Optional: Override the BigQuery API endpoint (proxy or local emulator).
 ```
 
 ## Reference
@@ -151,3 +153,4 @@ useClientOAuth: true
 | impersonateServiceAccount |  string  |    false     | Service account email to impersonate when making BigQuery and Dataplex API calls. The authenticated principal must have the `roles/iam.serviceAccountTokenCreator` role on the target service account. [Learn More](https://cloud.google.com/iam/docs/service-account-impersonation)                                                                                                                                                                                                                                |
 | maxQueryResultRows             |   int    |    false     | The maximum number of rows to return from a query. Defaults to 50. |
 | maximumBytesBilled             |  int64   |    false     | The maximum bytes billed per query. When set, queries that exceed this limit fail before executing. |
+| apiEndpoint                    |  string  |    false     | Override the BigQuery API endpoint. |

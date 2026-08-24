@@ -61,7 +61,7 @@ instead of hardcoding your secrets into the configuration file.
 ## Advanced Usage
 
 ### SSRF Protection (SSRF Guard)
-By default, the HTTP source implements strict protection against Server-Side Request Forgery (SSRF) and DNS Rebinding (TOCTOU) attacks. It automatically intercepts, resolves, and blocks connection requests to private IP ranges, loopback ranges (such as `127.0.0.1`), and link-local ranges (e.g. AWS/GCP metadata service at `169.254.169.254`).
+By default, the HTTP source implements strict protection against Server-Side Request Forgery (SSRF) and DNS Rebinding (TOCTOU) attacks. It automatically intercepts, resolves, and blocks connection requests to private IP ranges, loopback ranges (such as `127.0.0.1`), link-local ranges (e.g. AWS/GCP metadata service at `169.254.169.254`), and the RFC 6598 shared address space (`100.64.0.0/10`, commonly used for Kubernetes node and Pod networking).
 
 To override the default protection or block custom ranges, configure `allowPrivateNetworks`, `allowedIpRanges`, and `customBlockedIpRanges`:
 

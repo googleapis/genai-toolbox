@@ -21,6 +21,8 @@ These JS SDKs act as clients for that service. They handle the communication nee
 By using these SDKs, you can easily leverage your Toolbox-managed tools directly
 within your JS applications or AI orchestration frameworks.
 
+<a class="btn btn-primary" href="https://js.mcp-toolbox.dev" role="button"><i class="fa-brands fa-js"></i> JavaScript API Reference</a>
+
 ## Which Package Should I Use?
 
 Choosing the right package depends on how you are building your application:
@@ -50,7 +52,7 @@ To get started using Toolbox tools with an application, follow these general ste
 
     Before using the SDKs, you need the main MCP Toolbox service running. Follow
     the instructions here: [**Toolbox Getting Started
-    Guide**](https://github.com/googleapis/mcp-toolbox?tab=readme-ov-file#getting-started)
+    Guide**](../../../../documentation/getting-started/local_quickstart_js.md)
 
 2. **Install the Appropriate SDK:**
 
@@ -69,5 +71,3 @@ To get started using Toolbox tools with an application, follow these general ste
 {{< notice note >}}
 Source code for [js-sdk](https://github.com/googleapis/mcp-toolbox-sdk-js)
 {{< /notice >}}
-
-## Explore the Javascript SDKs

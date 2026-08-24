@@ -412,7 +412,7 @@ func (s *Source) RestoreBackup(ctx context.Context, targetProject, targetInstanc
 	//    'projects/{project-id}/backups/{backup-uid}'. In this case, the Backup
 	//    field should be populated.
 	if backupRunID, err := strconv.ParseInt(backupID, 10, 64); err == nil {
-		if sourceProject == "" || targetInstance == "" {
+		if sourceProject == "" || sourceInstance == "" {
 			return nil, fmt.Errorf("source project and instance are required when restoring via backup ID")
 		}
 		request.RestoreBackupContext = &sqladmin.RestoreBackupContext{

@@ -25,6 +25,10 @@ This tool is intended for small-to-medium textual content an LLM can process
 directly. For bulk downloads of large files to the local filesystem, use
 `cloud-storage-download-object`.
 
+You can set `bucket` in the tool configuration. When set, `bucket` is removed
+from the runtime parameter schema and the configured bucket is always used. A
+configured `bucket` must be a non-empty string.
+
 [gcs-objects]: https://cloud.google.com/storage/docs/objects
 
 ## Compatible Sources
@@ -49,6 +53,15 @@ source: my-gcs-source
 description: Use this tool to read the content of a Cloud Storage object.
 ```
 
+```yaml
+kind: tool
+name: read_app_object
+type: cloud-storage-read-object
+source: my-gcs-source
+description: Use this tool to read text objects from the application bucket.
+bucket: my-app-bucket
+```
+
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                         |
@@ -56,3 +69,4 @@ description: Use this tool to read the content of a Cloud Storage object.
 | type        |  string  |     true     | Must be "cloud-storage-read-object".                    |
 | source      |  string  |     true     | Name of the Cloud Storage source to read the object from. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.      |
+| bucket      |  string  |    false     | Bucket to always read from. When set, the runtime `bucket` parameter is hidden. Must not be empty. |

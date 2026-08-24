@@ -89,6 +89,13 @@
   color: 8befd7
   description: 'Status: waiting for feedback from community or issue author.'
 
+- name: 'good first issue'
+  color: 7057ff
+  description: 'Good for newcomers'
+- name: 'ready for work'
+  color: 0e8a16
+  description: 'Ready to be picked up'
+
 - name: 'status: waiting for response'
   color: 8befd7
   description: 'Status: reviewer is awaiting feedback or responses from the author before proceeding.'

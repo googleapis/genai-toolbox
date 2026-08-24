@@ -22,6 +22,8 @@ These Python SDKs act as clients for that service. They handle the communication
 By using these SDKs, you can easily leverage your Toolbox-managed tools directly
 within your Python applications or AI orchestration frameworks.
 
+<a class="btn btn-primary" href="https://py.mcp-toolbox.dev" role="button"><i class="fa-brands fa-python"></i> Python API Reference</a>
+
 ## Which Package Should I Use?
 
 Choosing the right package depends on how you are building your application:
@@ -66,7 +68,7 @@ To get started using Toolbox tools with an application, follow these general ste
 
     Before using the SDKs, you need the main MCP Toolbox service running. Follow
     the instructions here: [**Toolbox Getting Started
-    Guide**](https://github.com/googleapis/mcp-toolbox?tab=readme-ov-file#getting-started)
+    Guide**](../../../../documentation/getting-started/local_quickstart.md)
 
 2. **Install the Appropriate SDK:**
 
@@ -97,6 +99,3 @@ To get started using Toolbox tools with an application, follow these general ste
 {{< notice note >}}
 Source code for [python-sdk](https://github.com/googleapis/mcp-toolbox-sdk-python)
 {{< /notice >}}
-
-
-## Explore the Python SDKs
