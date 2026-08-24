@@ -207,8 +207,8 @@ Use the output format below. Never post it yourself.
   check, not what's inconvenient to. Fetch the branch (`git fetch origin pull/<n>/head:pr<n>`,
   then `git worktree add /tmp/pr<n> pr<n>` so your tree stays clean) and drop a scratch
   `probe_test.go` *inside* the package under review — package-local placement is what reaches
-  unexported symbols. Delete it and `git worktree remove --force` after; never leave a scratch
-  test in `internal/`. Probes right-size verdicts as often as they confirm them: "this
+  unexported symbols. Delete it and `git worktree remove --force /tmp/pr<n>` after; never leave
+  a scratch test in `internal/`. Probes right-size verdicts as often as they confirm them: "this
   regresses X" often shrinks to "in one narrow case" once measured.
 - **When it's a genuine judgment call, ask** rather than issuing a confident wrong verdict,
   since a wrong "request changes" costs a contributor a cycle.
