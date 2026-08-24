@@ -454,6 +454,7 @@ func (r *FileTemplate) GetTitle() string       { return r.config.GetTitle() }
 func (r *FileTemplate) GetDescription() string { return r.config.GetDescription() }
 func (r *FileTemplate) GetMimeType() string    { return r.config.GetMimeType() }
 func (r *FileTemplate) GetURITemplate() string { return r.config.GetURITemplate() }
+func (r *FileTemplate) GetAnnotations() *resources.ResourceAnnotations { return r.config.GetAnnotations() }
 
 // Read retrieves the file content using template parameters.
 func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, error) {

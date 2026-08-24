@@ -221,10 +221,6 @@ func DecodeConfig(ctx context.Context, resourceType, name string, decoder *yaml.
 // ResourceTemplateConfig represents the uninitialized configuration for a resource template.
 type ResourceTemplateConfig interface {
 	ResourceTemplateConfigType() string
-	GetName() string
-	GetTitle() string
-	GetDescription() string
-	GetMimeType() string
 	GetURITemplate() string
 	SetDefaults()
 	Validate() error
@@ -237,6 +233,7 @@ type ResourceTemplate interface {
 	GetTitle() string
 	GetDescription() string
 	GetMimeType() string
+	GetAnnotations() *ResourceAnnotations
 	GetURITemplate() string
 	Read(ctx context.Context, params map[string]any) (any, error)
 	ToConfig() ResourceTemplateConfig

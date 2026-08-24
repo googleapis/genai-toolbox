@@ -331,3 +331,7 @@ func NewMockResourceTemplate(name, uriTemplate string) MockResourceTemplate {
 		},
 	}
 }
+
+func (m MockResourceTemplate) GetAnnotations() *resources.ResourceAnnotations {
+	return m.config.Annotations
+}

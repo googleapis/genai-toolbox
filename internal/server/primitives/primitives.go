@@ -15,12 +15,11 @@
 package primitives
 
 import (
-	"fmt"
-	"net/url"
-	"regexp"
-	"strings"
 	"cmp"
+	"fmt"
+	"regexp"
 	"slices"
+	"strings"
 	"sync"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -36,15 +35,15 @@ import (
 // groups is the source of truth for named collections; toolset views (manifests)
 // are derived from the group on demand by the callers that render them.
 type PrimitiveManager struct {
-	mu              sync.RWMutex
-	sources         map[string]sources.Source
-	authServices    map[string]auth.AuthService
-	embeddingModels map[string]embeddingmodels.EmbeddingModel
-	tools           map[string]tools.Tool
-	prompts         map[string]prompts.Prompt
-	resources       map[string]resources.Resource
-	resourceTemplates  map[string]resources.ResourceTemplate
-	groups          map[string]group.Group
+	mu                sync.RWMutex
+	sources           map[string]sources.Source
+	authServices      map[string]auth.AuthService
+	embeddingModels   map[string]embeddingmodels.EmbeddingModel
+	tools             map[string]tools.Tool
+	prompts           map[string]prompts.Prompt
+	resources         map[string]resources.Resource
+	resourceTemplates map[string]resources.ResourceTemplate
+	groups            map[string]group.Group
 }
 
 func NewPrimitiveManager(
@@ -58,15 +57,15 @@ func NewPrimitiveManager(
 	groupsMap map[string]group.Group,
 ) *PrimitiveManager {
 	primitiveMgr := &PrimitiveManager{
-		mu:                 sync.RWMutex{},
-		sources:            sourcesMap,
-		authServices:       authServicesMap,
-		embeddingModels:    embeddingModelsMap,
-		tools:              toolsMap,
-		prompts:            promptsMap,
-		resources:          resourcesMap,
-		resourceTemplates:  resourceTemplatesMap,
-		groups:             groupsMap,
+		mu:                sync.RWMutex{},
+		sources:           sourcesMap,
+		authServices:      authServicesMap,
+		embeddingModels:   embeddingModelsMap,
+		tools:             toolsMap,
+		prompts:           promptsMap,
+		resources:         resourcesMap,
+		resourceTemplates: resourceTemplatesMap,
+		groups:            groupsMap,
 	}
 
 	return primitiveMgr
@@ -143,7 +142,7 @@ func (r *PrimitiveManager) GetSourcesMap() map[string]sources.Source {
 	for k, v := range r.sources {
 		copiedMap[k] = v
 	}
-	return copiedMap	
+	return copiedMap
 }
 
 func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
@@ -175,7 +174,6 @@ func (r *PrimitiveManager) GroupsList() []group.Group {
 	return groupsList
 }
 
-
 // GetResourceTemplatesMap returns a copy of the resource templates map.
 func (r *PrimitiveManager) GetResourceTemplatesMap() map[string]resources.ResourceTemplate {
 	r.mu.RLock()
@@ -203,42 +201,22 @@ func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string) (resources.Res
 	defer r.mu.RUnlock()
 
 	for _, res := range r.resources {
-		if res.ToConfig().GetURI() == uri {
+		if res.GetURI() == uri {
 			return res, nil, nil, nil
 		}
 	}
 
-	parsedURI, err := url.Parse(uri)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("invalid URI: %w", err)
-	}
-
 	// Template matching for {path} anywhere in the URI
 	for _, rt := range r.resourceTemplates {
-		tmpl := rt.ToConfig().GetURITemplate()
+		tmpl := rt.GetURITemplate()
 		if strings.Contains(tmpl, "{path}") {
-			// Parse the template URI to isolate the path component
-			// Replace {path} with a dummy placeholder to make it a valid parseable URI
-			dummyTmpl := strings.ReplaceAll(tmpl, "{path}", "dummy_path_placeholder")
-			parsedTmpl, err := url.Parse(dummyTmpl)
-			if err != nil {
-				continue
-			}
-
-			if parsedURI.Scheme != parsedTmpl.Scheme || parsedURI.Host != parsedTmpl.Host {
-				continue
-			}
-
-			// Reconstruct the path template
-			pathTmpl := strings.ReplaceAll(parsedTmpl.Path, "dummy_path_placeholder", "{path}")
-
-			regexPattern := regexp.QuoteMeta(pathTmpl)
+			regexPattern := regexp.QuoteMeta(tmpl)
 			regexPattern = strings.ReplaceAll(regexPattern, "\\{path\\}", "(.*)")
 			re, err := regexp.Compile("^" + regexPattern + "$")
 			if err != nil {
 				continue
 			}
-			matches := re.FindStringSubmatch(parsedURI.Path)
+			matches := re.FindStringSubmatch(uri)
 			if len(matches) == 2 {
 				return nil, rt, map[string]any{"path": matches[1]}, nil
 			}
