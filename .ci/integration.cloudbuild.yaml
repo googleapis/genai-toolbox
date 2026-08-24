@@ -968,7 +968,7 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "FIRESTORE_MONGODB_PROJECT=$_FIRESTORE_MONGODB_PROJECT"
+      - "FIRESTORE_MONGODB_PROJECT=$PROJECT_ID"
       - "FIRESTORE_MONGODB_DATABASE=$_FIRESTORE_MONGODB_DATABASE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
     secretEnv: ["CLIENT_ID"]
@@ -1799,5 +1799,4 @@ substitutions:
   _SNOWFLAKE_DATABASE: "test"
   _SNOWFLAKE_SCHEMA: "PUBLIC"
   _DATAPROC_CLUSTER: "dataproc-testing-cluster"
-  _FIRESTORE_MONGODB_PROJECT: "fs-onemcp-e2e-prod"
   _FIRESTORE_MONGODB_DATABASE: "mcp-toolbox-db-native-schema"
