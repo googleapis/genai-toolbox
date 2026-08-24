@@ -59,6 +59,7 @@ type Resource interface {
 	GetSize() *int64
 	GetAnnotations() *ResourceAnnotations
 	Read(ctx context.Context, params map[string]any) (any, error)
+	ToConfig() ResourceConfig
 }
 
 type ResourceAnnotations struct {
