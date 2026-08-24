@@ -12,6 +12,9 @@ their binary for reasons that have nothing to do with their bug.
 
 ## Build and run
 
+General dev setup, cross-compilation, and linting are in
+[DEVELOPER.md](DEVELOPER.md). Below is only what a reproduction needs.
+
 ```bash
 go run . --help                         # every flag, authoritative
 go run .                                # serve on 127.0.0.1:5000, reads ./tools.yaml
@@ -138,9 +141,12 @@ curl -s -X POST http://127.0.0.1:5111/mcp -H "Content-Type: application/json" \
 # {"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"{\"echo\":\"hi\"}"}]}}
 ```
 
-A tool that fails returns HTTP 200 with `isError: true` in the result, not an
-HTTP error status. Reporters regularly misread this as the server swallowing
-their failure.
+Error shape decides the client-side verdict (`internal/util/errors.go`). An
+`AgentError`, anything the agent could fix such as bad SQL or a missing record,
+returns **HTTP 200 with `isError: true`**, which reporters misread as the server
+swallowing their failure. A `ClientServerError`, infrastructure or auth, returns
+a **4XX/5XX JSON-RPC error**. Check which category applies before calling either
+wrong: [DEVELOPER.md](DEVELOPER.md), "Tool Invocation & Error Handling".
 
 **3. `/api` REST.** Disabled by default. On current `main`, without
 `--enable-api` every `/api/*` path returns **HTTP 410** with a message pointing
@@ -157,18 +163,16 @@ parameter name to value.
 
 ## Tests
 
-```bash
-go test -race -v ./cmd/... ./internal/...     # unit
-go test -race -v ./tests/<source>             # integration, one source
-```
+Test commands and the integration-test environment setup live in
+[DEVELOPER.md](DEVELOPER.md), "Testing". Three things it does not say that
+matter when reproducing:
 
-Integration tests read credentials at package init and call `t.Fatal` when a
-variable is missing, so they fail rather than skip. The full variable list is in
-`.ci/integration.cloudbuild.yaml`. `tests/sqlite` is the exception: it creates a
-temporary database when `SQLITE_DATABASE` is unset, so it runs anywhere.
-
-There is no Makefile and no docker-compose in the repo. A local container for a
-real engine has to be started by hand.
+- Integration tests read credentials at package init and call `t.Fatal` on a
+  missing variable, so they fail rather than skip.
+- `tests/sqlite` is the exception, creating a temporary database when
+  `SQLITE_DATABASE` is unset, so it runs anywhere.
+- There is no Makefile and no docker-compose, so a local container for a real
+  engine has to be started by hand.
 
 ## Testing against the reporter's version
 
