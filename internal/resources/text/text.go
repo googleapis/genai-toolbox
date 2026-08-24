@@ -71,6 +71,11 @@ type Resource struct {
 
 var _ resources.Resource = &Resource{}
 
+func (r *Resource) GetSize() *int64 {
+	size := r.Size
+	return &size
+}
+
 func (r *Resource) Read(ctx context.Context, params map[string]any) (any, error) {
 	return r.Text, nil
 }
