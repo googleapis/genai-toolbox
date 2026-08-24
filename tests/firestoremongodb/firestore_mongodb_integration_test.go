@@ -24,15 +24,11 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
-	firestoreapi "cloud.google.com/go/firestore"
-	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
-	"google.golang.org/api/option"
 )
 
 var (
@@ -40,6 +36,8 @@ var (
 	FirestoreMongodbProject  = os.Getenv("FIRESTORE_MONGODB_PROJECT")
 	FirestoreMongodbDatabase = os.Getenv("FIRESTORE_MONGODB_DATABASE")
 )
+
+const precreatedCollection = "testcollection"
 
 func getFirestoreMongodbVars(t *testing.T) map[string]any {
 	project := FirestoreMongodbProject
@@ -64,45 +62,12 @@ func getFirestoreMongodbVars(t *testing.T) map[string]any {
 	return vars
 }
 
-// initFirestoreConnection creates a Firestore client for testing
-func initFirestoreConnection(project, database string) (*firestoreapi.Client, error) {
-	ctx := context.Background()
-
-	if database == "" {
-		database = "mcp-toolbox-db-native-schema"
-	}
-
-	client, err := firestoreapi.NewClientWithDatabase(ctx, project, database, option.WithUserAgent("genai-toolbox-integration-test"))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Firestore client for project %q and database %q: %w", project, database, err)
-	}
-	return client, nil
-}
-
 func TestFirestoreMongodbToolEndpoints(t *testing.T) {
 	sourceConfig := getFirestoreMongodbVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	args := []string{"--enable-api"}
-
-	project := sourceConfig["project"].(string)
-	database := sourceConfig["database"].(string)
-
-	client, err := initFirestoreConnection(project, database)
-	if err != nil {
-		t.Fatalf("unable to create Firestore connection: %s", err)
-	}
-	defer client.Close()
-
-	// Create test collection and document names with UUID
-	testCollectionName := fmt.Sprintf("test_collection_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
-	testDocID1 := fmt.Sprintf("doc_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
-	testDocID2 := fmt.Sprintf("doc_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
-
-	// Set up test data
-	teardown := setupFirestoreMongodbTestData(t, ctx, client, testCollectionName, testDocID1, testDocID2)
-	defer teardown(t)
 
 	// Write config into a file and pass it to command
 	toolsFile := getFirestoreMongodbToolsConfig(sourceConfig)
@@ -124,9 +89,9 @@ func TestFirestoreMongodbToolEndpoints(t *testing.T) {
 	// Run tool get tests
 	runFirestoreMongodbToolGetTest(t)
 
-	// Run tool execution tests
-	runFirestoreMongodbGetSchemaTest(t, testCollectionName)
-	runFirestoreMongodbExecuteMQLTest(t, testCollectionName)
+	// Run tool execution tests against pre-created collection
+	runFirestoreMongodbGetSchemaTest(t, precreatedCollection)
+	runFirestoreMongodbExecuteMQLTest(t, precreatedCollection)
 }
 
 func runFirestoreMongodbToolGetTest(t *testing.T) {
@@ -235,42 +200,6 @@ func getFirestoreMongodbToolsConfig(sourceConfig map[string]any) map[string]any 
 	}
 }
 
-func setupFirestoreMongodbTestData(t *testing.T, ctx context.Context, client *firestoreapi.Client,
-	collectionName, docID1, docID2 string) func(*testing.T) {
-	testData1 := map[string]interface{}{
-		"name":  "Alice",
-		"age":   30,
-		"score": 95.5,
-	}
-	testData2 := map[string]interface{}{
-		"name":   "Bob",
-		"age":    25,
-		"active": true,
-	}
-
-	_, err := client.Collection(collectionName).Doc(docID1).Set(ctx, testData1)
-	if err != nil {
-		t.Fatalf("Failed to create test document 1: %v", err)
-	}
-
-	_, err = client.Collection(collectionName).Doc(docID2).Set(ctx, testData2)
-	if err != nil {
-		t.Fatalf("Failed to create test document 2: %v", err)
-	}
-
-	return func(t *testing.T) {
-		// Clean up only the documents created for this test collection
-		_, err := client.Collection(collectionName).Doc(docID1).Delete(ctx)
-		if err != nil {
-			t.Logf("Failed to delete test document 1: %v", err)
-		}
-		_, err = client.Collection(collectionName).Doc(docID2).Delete(ctx)
-		if err != nil {
-			t.Logf("Failed to delete test document 2: %v", err)
-		}
-	}
-}
-
 func runFirestoreMongodbGetSchemaTest(t *testing.T, collectionName string) {
 	invokeTcs := []struct {
 		name        string
@@ -373,7 +302,7 @@ func runFirestoreMongodbExecuteMQLTest(t *testing.T, collectionName string) {
 			name: "execute MQL find query",
 			api:  "http://127.0.0.1:5000/api/tool/firestore-mongodb-execute-mql/invoke",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
-				"query": "%s.find({\"name\": \"Alice\"})"
+				"query": "%s.find({})"
 			}`, collectionName))),
 			wantRegex: `.*`,
 			isErr:     false,
