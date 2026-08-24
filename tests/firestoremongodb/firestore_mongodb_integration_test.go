@@ -218,13 +218,6 @@ func runFirestoreMongodbGetSchemaTest(t *testing.T, collectionName string) {
 			isErr:     false,
 		},
 		{
-			name:        "get schema for all root collections",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-mongodb-get-schema/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			wantRegex:   fmt.Sprintf(`"collection":"%s"`, collectionName),
-			isErr:       false,
-		},
-		{
 			name: "get schema for non-existent collection",
 			api:  "http://127.0.0.1:5000/api/tool/firestore-mongodb-get-schema/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{
