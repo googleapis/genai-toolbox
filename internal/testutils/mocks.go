@@ -235,6 +235,7 @@ func RegisterMockResource() {
 // MockResourceConfig is a mock implementation of resources.ResourceConfig
 type MockResourceConfig struct {
 	resources.ResourceConfigBase `yaml:",inline"`
+	Size                         *int64
 }
 
 func (m *MockResourceConfig) ResourceConfigType() string {
@@ -250,10 +251,12 @@ type MockResource struct {
 	config *MockResourceConfig
 }
 
-func (m MockResource) GetTitle() string { return m.config.GetTitle() }
-func (m MockResource) GetDescription() string { return m.config.GetDescription() }
-func (m MockResource) GetMimeType() string { return m.config.GetMimeType() }
-func (m MockResource) GetURI() string { return m.config.GetURI() }
+func (m MockResource) GetTitle() string                               { return m.config.GetTitle() }
+func (m MockResource) GetDescription() string                         { return m.config.GetDescription() }
+func (m MockResource) GetMimeType() string                            { return m.config.GetMimeType() }
+func (m MockResource) GetURI() string                                 { return m.config.GetURI() }
+func (m MockResource) GetSize() *int64                                { return m.config.Size }
+func (m MockResource) GetAnnotations() *resources.ResourceAnnotations { return m.config.Annotations }
 
 func (m MockResource) Read(ctx context.Context, params map[string]any) (any, error) {
 	return "mock resource data", nil

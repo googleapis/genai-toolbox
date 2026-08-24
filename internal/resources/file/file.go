@@ -241,6 +241,11 @@ type FileResource struct {
 	Size int64
 }
 
+func (r *FileResource) GetSize() *int64 {
+	size := r.Size
+	return &size
+}
+
 // Read retrieves the file content.
 func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, error) {
 	resolvedPath, err := filepath.EvalSymlinks(r.Config.absPath)
