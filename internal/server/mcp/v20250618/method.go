@@ -139,7 +139,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		}
 	}
 
-	authServices := primitiveMgr.GetAuthServiceMap()
+	authServices := primitiveMgr.AuthServices()
 
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
