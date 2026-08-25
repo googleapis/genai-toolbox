@@ -32,9 +32,12 @@ scorers:
   parameter_analysis:
     model_config: evals/model_configs/gemini_3.1_pro_model.yaml
   turn_count: {}
+  agent_steps: {}
   end_to_end_latency: {}
   tool_call_latency: {}
   token_consumption: {}
+  tokens_processed: {}
+  effective_billed_tokens: {}
 
 reporting:
   csv:

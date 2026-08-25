@@ -48,8 +48,9 @@ echo "prebuilt config: ${TOOLBOX_PREBUILT}"
 echo "harnesses:       ${EVAL_HARNESSES}"
 "${TOOLBOX_BIN}" --version  # built on Debian, exec'd here on Ubuntu
 
-# EvalBench resolves config paths against its own working directory.
-cp -r /workspace/evals /evalbench/evals
+# EvalBench resolves config paths against its own working directory. -T so a
+# rerun copies onto the existing directory instead of nesting inside it.
+cp -rT /workspace/evals /evalbench/evals
 
 # Resolve and check every harness before running any, so a typo fails in
 # seconds rather than after the first one has burned an hour.

@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Claude Code driving a locally-built Toolbox binary over stdio — the Claude
-# counterpart to gemini_cli.yaml.
+# Claude Code driving a locally-built Toolbox binary over stdio
 
 claude_code_version: "@anthropic-ai/claude-code@2.1.156"
 generator: claude_code
@@ -24,8 +23,6 @@ model: !ENV ${EVAL_CLAUDE_MODEL}
 # use_vertex, so the build must not set one.
 use_vertex: true
 vertex_project_id: !ENV ${EVAL_GCP_PROJECT_ID}
-# Not EVAL_GCP_PROJECT_REGION: Vertex serves Claude from its own region set,
-# and Opus 4.x is global-endpoint only.
 vertex_region: "global"
 
 # Also the concurrency limit, and each concurrent agent holds its own toolbox
@@ -37,8 +34,6 @@ env:
 
 setup:
   mcp_servers:
-    # Name is load-bearing: EvalBench canonicalizes to <server>__<tool>, which
-    # is what expected_trajectory entries in every evalset use.
     toolbox:
       command: !ENV ${TOOLBOX_BIN}
       args:
