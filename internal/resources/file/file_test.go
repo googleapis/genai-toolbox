@@ -31,6 +31,8 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/resources/file"
 )
 
+const defaultMaxFileSize = 5 * 1024 * 1024
+
 
 // TestFileResource_Validation verifies that the file resource correctly validates
 // configurations at boot and runtime, blocking invalid paths, missing fields,
@@ -627,21 +629,6 @@ func TestFileResource_ToConfigNonRegularFile(t *testing.T) {
 	}
 }
 
-// TestFileTemplate_AllowedPaths verifies that FileTemplate correctly
-// restricts read access to files within the specified AllowedPaths.
-
-// TestFileTemplate_SymlinkEscape verifies that FileTemplate strictly
-// evaluates symlinks and blocks access if the resolved target points
-// outside the configured sandbox.
-
-// TestFileTemplate_ExtensionValidation ensures that the FileTemplate
-// rejects files with non-allowlisted extensions (e.g., binary files),
-// mirroring the safety guarantees of static file resources.
-
-// TestFileTemplate_FileSizeLimit validates that the FileTemplate enforces
-// the safety byte limit (defaultMaxFileSize), accurately truncates output,
-// and successfully appends the server truncation warning.
-
 // TestFileResource_ToConfigAndType verifies that the file resource
 // and its config correctly return their type and can be converted back to config.
 func TestFileResource_ToConfigAndType(t *testing.T) {
@@ -656,7 +643,3 @@ func TestFileResource_ToConfigAndType(t *testing.T) {
 	}
 }
 
-// TestFileTemplate_ToConfigAndType verifies that the file template
-// and its config correctly return their type and can be converted back to config.
-
-const defaultMaxFileSize = 5 * 1024 * 1024
