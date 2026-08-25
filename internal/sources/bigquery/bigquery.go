@@ -159,8 +159,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:              client,
 		RestService:         restService,
 		TokenSource:         tokenSource,
-		MaxQueryResultRows:  r.MaxQueryResultRows,
-		MaximumBytesBilled:  r.MaximumBytesBilled,
 		ClientCreator:       clientCreator,
 		AuthTokenHeaderName: "Authorization",
 	}
@@ -290,8 +288,6 @@ type Source struct {
 	RestService               *bigqueryrestapi.Service
 	TokenSource               oauth2.TokenSource
 	AuthTokenHeaderName       string
-	MaxQueryResultRows        int
-	MaximumBytesBilled        int64
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
 	sessionMutex              sync.Mutex
