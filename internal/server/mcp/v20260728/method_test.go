@@ -1271,10 +1271,11 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 		parameters.Parameters{
 			&parameters.StringParameter{
 				CommonParameter: parameters.CommonParameter{
-					Name:   "api_key",
-					Type:   parameters.TypeString,
-					Desc:   "A secure api key",
-					Secure: true,
+					Name:     "api_key",
+					Type:     parameters.TypeString,
+					Desc:     "A secure api key",
+					Required: true,
+					Secure:   true,
 				},
 			},
 			parameters.NewStringParameter("query", "A standard search query"),
@@ -1391,6 +1392,34 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 			errContains: "parameter \"query\" is not secure and must not be passed in secureArguments",
 		},
 
+		{
+			desc: "Missing required secure parameter",
+			body: `{
+				"jsonrpc": "2.0",
+				"id": 1,
+				"method": "tools/call",
+				"params": {
+					"name": "secure_tool",
+					"arguments": {
+						"query": "hello"
+					},
+					"_meta": {
+						"io.modelcontextprotocol/protocolVersion": "2026-07-28",
+						"io.modelcontextprotocol/clientInfo": {
+							"name": "TestClient",
+							"version": "1.0"
+						},
+						"io.modelcontextprotocol/clientCapabilities": {
+							"extensions": {
+								"com.google.cloud/toolbox.v1": {}
+							}
+						}
+					}
+				}
+			}`,
+			wantErr:     true,
+			errContains: "missing required parameter",
+		},
 		{
 			desc: "Successful invocation with correct routing (extensions)",
 			body: `{

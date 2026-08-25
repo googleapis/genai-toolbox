@@ -252,17 +252,17 @@ parameters:
     secure: true
 ```
 
-When a parameter is marked as `secure: true`, it will not be presented to the agent as a configurable parameter. Instead, it relies on the application to set the parameter. If an application fails to set the parameter before the tool is called, execution is blocked and returns an `invalid_params` error.
+When a parameter is marked as `secure: true`, it will not be presented to the agent as a configurable parameter. Instead, it relies on the application to set the parameter. If an application fails to set the parameter before the tool is called, execution returns a tool error indicating that the required parameter was not provided.
 
 > **Note:** A parameter cannot have both `secure: true` and `authServices` specified.
 
 Here is how you set a secure parameter with the Toolbox Python SDK:
 
 ```python
-# Pass secure_args when loading or calling a tool via the Python SDK
+# Pass secure_params when loading or calling a tool via the Python SDK
 auth_tool = await toolbox.load_tool(
     "search_secure_data",
-    secure_args={"customer_id": "cust_12345"}
+    secure_params={"customer_id": "cust_12345"}
 )
 result = await auth_tool()
 ```
