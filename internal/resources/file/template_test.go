@@ -336,4 +336,3 @@ func TestFileTemplate_RelativePathMiddleURITemplate(t *testing.T) {
 		t.Errorf("Expected 'server logs', got %q", content)
 	}
 }
-

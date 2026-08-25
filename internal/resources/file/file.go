@@ -398,6 +398,7 @@ func (r *FileResource) GetCurrentSize() (int64, error) {
 type TemplateConfig struct {
 	resources.ResourceTemplateConfigBase `yaml:",inline"`
 	AllowedPaths                         []string `yaml:"allowedPaths,omitempty"`
+	MaxSize                              *int64   `yaml:"max_size,omitempty"`
 }
 
 // ResourceTemplateConfigType returns the resource template type identifier.
@@ -414,11 +415,24 @@ func (c *TemplateConfig) Validate() error {
 	if parsed.Scheme != "file" {
 		return fmt.Errorf("invalid scheme for file resource template %q: must be 'file'", c.Name)
 	}
+
+	if c.MaxSize != nil {
+		if *c.MaxSize <= 0 {
+			return fmt.Errorf("file resource template %q max_size must be greater than 0", c.Name)
+		} else if *c.MaxSize > 1024*1024*1024 {
+			return fmt.Errorf("file resource template %q max_size cannot exceed 1GB", c.Name)
+		}
+	}
 	return nil
 }
 
 // Initialize validates the configuration and initializes the file resource template.
 func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemplate, error) {
+	if c.MaxSize == nil {
+		limit := int64(defaultMaxFileSize)
+		c.MaxSize = &limit
+	}
+
 	// Validate and resolve allowed paths if specified
 	var unresolvedAllowedPaths []string
 	var resolvedAllowedPaths []string
@@ -468,17 +482,24 @@ type FileTemplate struct {
 }
 
 // GetName returns the resource template name.
-func (r *FileTemplate) GetName() string        { return r.config.GetName() }
+func (r *FileTemplate) GetName() string { return r.config.GetName() }
+
 // GetTitle returns the resource template title.
-func (r *FileTemplate) GetTitle() string       { return r.config.GetTitle() }
+func (r *FileTemplate) GetTitle() string { return r.config.GetTitle() }
+
 // GetDescription returns the resource template description.
 func (r *FileTemplate) GetDescription() string { return r.config.GetDescription() }
+
 // GetMimeType returns the MIME type of the resource template.
-func (r *FileTemplate) GetMimeType() string    { return r.config.GetMimeType() }
+func (r *FileTemplate) GetMimeType() string { return r.config.GetMimeType() }
+
 // GetURITemplate returns the URI template string.
 func (r *FileTemplate) GetURITemplate() string { return r.config.GetURITemplate() }
+
 // GetAnnotations returns the resource annotations.
-func (r *FileTemplate) GetAnnotations() *resources.ResourceAnnotations { return r.config.GetAnnotations() }
+func (r *FileTemplate) GetAnnotations() *resources.ResourceAnnotations {
+	return r.config.GetAnnotations()
+}
 
 // Read retrieves the file content using template parameters.
 func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, error) {
@@ -605,7 +626,7 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("security violation: file %q was swapped with a non-regular file during read", resolvedPath)
 	}
 
-	limit := int64(defaultMaxFileSize) // Templates don't currently expose MaxSize
+	limit := *r.config.MaxSize
 	limitedReader := io.LimitReader(f, limit+1)
 	content, err := io.ReadAll(limitedReader)
 	if err != nil {

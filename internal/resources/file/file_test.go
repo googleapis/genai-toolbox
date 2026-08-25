@@ -642,4 +642,3 @@ func TestFileResource_ToConfigAndType(t *testing.T) {
 		t.Errorf("expected ToConfig to return a valid config")
 	}
 }
-

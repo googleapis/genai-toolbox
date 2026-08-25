@@ -70,8 +70,8 @@ type ResourceAnnotations struct {
 
 // ConfigBase contains the common fields for all resource and template configurations.
 type ConfigBase struct {
-	Name        string               `yaml:"name"`
-	Type        string               `yaml:"type"`
+	Name        string               `yaml:"name" validate:"required"`
+	Type        string               `yaml:"type" validate:"required"`
 	Description string               `yaml:"description,omitempty"`
 	Title       string               `yaml:"title,omitempty"`
 	MimeType    string               `yaml:"mimeType,omitempty"`
@@ -155,11 +155,6 @@ func (c *ResourceConfigBase) Validate() error {
 	if err != nil || parsed.Scheme == "" {
 		return fmt.Errorf("invalid 'uri' field for resource %q: must be a valid RFC-compliant absolute URI with a scheme", c.Name)
 	}
-
-	// Normalize scheme and host to lowercase for consistent comparison and usage
-	parsed.Scheme = strings.ToLower(parsed.Scheme)
-	parsed.Host = strings.ToLower(parsed.Host)
-	c.URI = parsed.String()
 
 	return nil
 }
@@ -258,7 +253,9 @@ func (c *ResourceTemplateConfigBase) Validate() error {
 	if c.URITemplate == "" {
 		return fmt.Errorf("missing required 'uriTemplate' field for resource template %q", c.Name)
 	}
-	parsed, err := url.Parse(strings.ReplaceAll(c.URITemplate, "{path}", "path"))
+
+	rawForParse := strings.ReplaceAll(c.URITemplate, "{path}", "path")
+	parsed, err := url.Parse(rawForParse)
 	if err != nil || parsed.Scheme == "" {
 		return fmt.Errorf("invalid 'uriTemplate' field for resource template %q: must be a valid RFC-compliant absolute URI with a scheme", c.Name)
 	}
