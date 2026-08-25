@@ -1,0 +1,56 @@
+{
+  "scenarios": [
+    {
+      "id": "bigquery-catalog-01",
+      "starting_prompt": "What datasets are available in the bigquery-public-data project?",
+      "conversation_plan": "The user wants the dataset list for a named project. Accept a summary and end the conversation.",
+      "expected_trajectory": [
+        "toolbox__list_dataset_ids"
+      ],
+      "kind": "tools",
+      "max_turns": 1
+    },
+    {
+      "id": "bigquery-catalog-02",
+      "starting_prompt": "Give me an overview of the samples dataset in bigquery-public-data: its metadata, and which tables it contains.",
+      "conversation_plan": "The user wants dataset metadata and the table list together. Accept the answer and end the conversation.",
+      "expected_trajectory": [
+        "toolbox__get_dataset_info",
+        "toolbox__list_table_ids"
+      ],
+      "kind": "tools",
+      "max_turns": 1
+    },
+    {
+      "id": "bigquery-schema-01",
+      "starting_prompt": "What columns does bigquery-public-data.samples.shakespeare have, and what are their types?",
+      "conversation_plan": "The user wants the schema of one named table. Accept the answer and end the conversation.",
+      "expected_trajectory": [
+        "toolbox__get_table_info"
+      ],
+      "kind": "tools",
+      "max_turns": 1
+    },
+    {
+      "id": "bigquery-query-01",
+      "starting_prompt": "In bigquery-public-data.samples.shakespeare the columns are word, word_count, corpus and corpus_date. Which corpus has the highest total word_count?",
+      "conversation_plan": "The schema is given in the prompt, so the user expects a query and a single answer. Accept it and end the conversation.",
+      "expected_trajectory": [
+        "toolbox__execute_sql"
+      ],
+      "kind": "tools",
+      "max_turns": 1
+    },
+    {
+      "id": "bigquery-query-02",
+      "starting_prompt": "I don't know the schema of bigquery-public-data.samples.shakespeare. Find out what columns it has, then tell me the total word_count for the corpus named hamlet.",
+      "conversation_plan": "The user explicitly asked for schema inspection before the query. Accept the answer and end the conversation.",
+      "expected_trajectory": [
+        "toolbox__get_table_info",
+        "toolbox__execute_sql"
+      ],
+      "kind": "tools",
+      "max_turns": 1
+    }
+  ]
+}
