@@ -103,7 +103,7 @@ Skip a dimension when it doesn't apply: say so, don't invent a finding.
 
 - **Title & description.** Conventional Commits with the right `type(scope)` per
   `CONTRIBUTING.md`, plus `!`/`BREAKING CHANGE` for breaking
-  changes. Body follows `.github/PULL_REQUEST_TEMPLATE.md`: what, why, completed checklist,
+  changes. Body follows [`.github/PULL_REQUEST_TEMPLATE.md`](https://github.com/googleapis/mcp-toolbox/blob/main/.github/PULL_REQUEST_TEMPLATE.md): what, why, completed checklist,
   `Fixes #<n>`. Note a missing issue link; don't block on it alone.
 - **Correctness.** Cite `file:line` and name the failure case, never
   "looks risky".
