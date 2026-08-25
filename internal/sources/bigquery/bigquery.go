@@ -73,7 +73,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name, WriteMode: WriteModeAllowed} // set WriteMode default value to allowed
+	actual := Config{Name: name, WriteMode: WriteModeAllowed, MaxQueryResultRows: 50}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -130,6 +130,10 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	if r.WriteMode == "" {
+		r.WriteMode = WriteModeAllowed
+	}
+
 	if r.MaxQueryResultRows == 0 {
 		r.MaxQueryResultRows = 50
 	}
