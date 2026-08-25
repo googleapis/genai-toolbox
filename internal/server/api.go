@@ -24,6 +24,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/piipolicy"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -308,6 +309,28 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := tool.Invoke(ctx, src, params, accessToken)
+
+	if err == nil {
+		if policyName := tool.GetPiiPolicy(); policyName != "" {
+			if policy, ok := s.PrimitiveMgr.GetPiiPolicy(policyName); ok {
+				var combinedClaims map[string]any
+				if len(claimsFromAuth) > 0 {
+					combinedClaims = make(map[string]any)
+					for _, claims := range claimsFromAuth {
+						for k, v := range claims {
+							combinedClaims[k] = v
+						}
+					}
+				}
+				res, err = piipolicy.ApplyPolicy(ctx, policy, combinedClaims, res)
+				if err != nil {
+					err = fmt.Errorf("error applying pii policy %q: %w", policyName, err)
+				}
+			} else {
+				err = fmt.Errorf("pii policy %q not found", policyName)
+			}
+		}
+	}
 
 	// Determine what error to return to the users.
 	if err != nil {

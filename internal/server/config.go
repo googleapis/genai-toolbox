@@ -31,6 +31,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels/gemini"
 	"github.com/googleapis/mcp-toolbox/internal/group"
+	"github.com/googleapis/mcp-toolbox/internal/piipolicy"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -61,6 +62,8 @@ type ServerConfig struct {
 	// GroupConfigs defines groups of tools and prompts declared via `kind: group`
 	// (legacy `kind: toolset` configs are folded into groups at unmarshal).
 	GroupConfigs GroupConfigs
+	// PiiPolicyConfigs defines what PII masking policies are available.
+	PiiPolicyConfigs PiiPolicyConfigs
 	// IgnoreUnknownTools logs warnings and skips unknown/unsupported tool types instead of failing to start.
 	IgnoreUnknownTools bool
 	// LoggingFormat defines whether structured loggings are used.
@@ -165,8 +168,9 @@ type EmbeddingModelConfigs map[string]embeddingmodels.EmbeddingModelConfig
 type ToolConfigs map[string]tools.ToolConfig
 type PromptConfigs map[string]prompts.PromptConfig
 type GroupConfigs map[string]group.GroupConfig
+type PiiPolicyConfigs map[string]piipolicy.Config
 
-func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, PromptConfigs, GroupConfigs, error) {
+func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, PromptConfigs, GroupConfigs, PiiPolicyConfigs, error) {
 	// prepare configs map
 	var sourceConfigs SourceConfigs
 	var authServiceConfigs AuthServiceConfigs
@@ -174,6 +178,7 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 	var toolConfigs ToolConfigs
 	var promptConfigs PromptConfigs
 	var groupConfigs GroupConfigs
+	var piiPolicyConfigs PiiPolicyConfigs
 	// Legacy `kind: toolset` configs are collected here as tools-only groups, then
 	// folded into groupConfigs after the loop so explicit `kind: group` definitions
 	// take precedence regardless of document order.
@@ -182,7 +187,7 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 
 	file, err := parser.ParseBytes(raw, 0)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to parse YAML: %s", yaml.FormatError(err, false, false))
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to parse YAML: %s", yaml.FormatError(err, false, false))
 	}
 
 	decoder := yaml.NewDecoder(bytes.NewReader(raw))
@@ -194,17 +199,17 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 		var resource map[string]any
 		if err := decoder.DecodeFromNodeContext(ctx, doc.Body, &resource); err != nil {
 			if len(file.Docs) > 1 {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: %s", docIndex, yaml.FormatError(err, false, false))
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: %s", docIndex, yaml.FormatError(err, false, false))
 			}
-			return nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to decode YAML document: %s", yaml.FormatError(err, false, false))
+			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to decode YAML document: %s", yaml.FormatError(err, false, false))
 		}
 		var kind, name string
 		var ok bool
 		if kind, ok = resource["kind"].(string); !ok {
 			if len(file.Docs) > 1 {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'kind' field or it is not a string", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body))
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'kind' field or it is not a string", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body))
 			}
-			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string: %v", resource)
+			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string: %v", resource)
 		}
 		if name, ok = resource["name"].(string); !ok {
 			// A `kind: group` may omit `name` to target the default nameless group;
@@ -221,9 +226,9 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 				if fallbackToken == nil {
 					fallbackToken = keyToken(doc.Body, "kind")
 				}
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'name' field or it is not a string", formatDocLocation(docIndex, fallbackToken, doc.Body))
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'name' field or it is not a string", formatDocLocation(docIndex, fallbackToken, doc.Body))
 			}
-			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'name' field or it is not a string")
+			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'name' field or it is not a string")
 		}
 		// remove 'kind' from map for strict unmarshaling
 		delete(resource, "kind")
@@ -233,39 +238,39 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 			c, err := UnmarshalYAMLSourceConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if sourceConfigs == nil {
 				sourceConfigs = make(SourceConfigs)
 			}
 			if _, exists := sourceConfigs[name]; exists {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("source %q declared more than once", name)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("source %q declared more than once", name)
 			}
 			sourceConfigs[name] = c
 		case "authService":
 			c, err := UnmarshalYAMLAuthServiceConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if authServiceConfigs == nil {
 				authServiceConfigs = make(AuthServiceConfigs)
 			}
 			if _, exists := authServiceConfigs[name]; exists {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("authService %q declared more than once", name)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("authService %q declared more than once", name)
 			}
 			authServiceConfigs[name] = c
 		case "tool":
 			c, err := UnmarshalYAMLToolConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if c == nil {
 				continue
@@ -274,79 +279,92 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 				toolConfigs = make(ToolConfigs)
 			}
 			if _, exists := toolConfigs[name]; exists {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("tool %q declared more than once", name)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("tool %q declared more than once", name)
 			}
 			toolConfigs[name] = c
 		case "toolset":
 			c, err := UnmarshalYAMLToolsetConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if toolsetGroups == nil {
 				toolsetGroups = make(map[string]group.GroupConfig)
 			}
 			if _, exists := toolsetGroups[name]; exists {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("toolset %q declared more than once", name)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("toolset %q declared more than once", name)
 			}
 			toolsetGroups[name] = group.GroupConfig{Name: name, ToolNames: c.ToolNames}
 		case "embeddingModel":
 			c, err := UnmarshalYAMLEmbeddingModelConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if embeddingModelConfigs == nil {
 				embeddingModelConfigs = make(EmbeddingModelConfigs)
 			}
 			if _, exists := embeddingModelConfigs[name]; exists {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("embeddingModel %q declared more than once", name)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("embeddingModel %q declared more than once", name)
 			}
 			embeddingModelConfigs[name] = c
 		case "prompt":
 			c, err := UnmarshalYAMLPromptConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if promptConfigs == nil {
 				promptConfigs = make(PromptConfigs)
 			}
 			if _, exists := promptConfigs[name]; exists {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("prompt %q declared more than once", name)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("prompt %q declared more than once", name)
 			}
 			promptConfigs[name] = c
+		case "piiPolicy":
+			c, err := UnmarshalYAMLPiiPolicyConfig(ctx, name, resource)
+			if err != nil {
+				if len(file.Docs) > 1 {
+					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+				}
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+			}
+			if piiPolicyConfigs == nil {
+				piiPolicyConfigs = make(PiiPolicyConfigs)
+			}
+			piiPolicyConfigs[name] = c
 		case "group":
 			c, err := UnmarshalYAMLGroupConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if groupConfigs == nil {
 				groupConfigs = make(GroupConfigs)
 			}
 			if _, exists := groupConfigs[name]; exists {
 				if name == "" {
-					return nil, nil, nil, nil, nil, nil, fmt.Errorf("more than one default (nameless) group declared; only one is allowed")
+					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("more than one default (nameless) group declared; only one is allowed")
 				}
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("group %q declared more than once", name)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("group %q declared more than once", name)
 			}
 			groupConfigs[name] = c
 		default:
 			if len(file.Docs) > 1 {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("%s invalid kind %q", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body), kind)
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s invalid kind %q", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body), kind)
 			}
-			return nil, nil, nil, nil, nil, nil, fmt.Errorf("invalid kind %s", kind)
+			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("invalid kind %s", kind)
 		}
 	}
+
 	// Fold legacy toolsets into groups. An explicit `kind: group` of the same name
 	// takes precedence over a toolset (matching the prior server-side behavior); warn
 	// when a toolset is shadowed this way.
@@ -365,7 +383,7 @@ func UnmarshalPrimitiveConfig(ctx context.Context, raw []byte) (SourceConfigs, A
 		}
 	}
 
-	return sourceConfigs, authServiceConfigs, embeddingModelConfigs, toolConfigs, promptConfigs, groupConfigs, nil
+	return sourceConfigs, authServiceConfigs, embeddingModelConfigs, toolConfigs, promptConfigs, groupConfigs, piiPolicyConfigs, nil
 }
 
 func UnmarshalYAMLSourceConfig(ctx context.Context, name string, r map[string]any) (sources.SourceConfig, error) {
@@ -656,4 +674,39 @@ func keyToken(body ast.Node, key string) *token.Token {
 		}
 	}
 	return nil
+}
+
+func UnmarshalYAMLPiiPolicyConfig(ctx context.Context, name string, r map[string]any) (piipolicy.Config, error) {
+	dec, err := util.NewStrictDecoder(r)
+	if err != nil {
+		return piipolicy.Config{}, fmt.Errorf("error creating decoder: %w", err)
+	}
+	var actual piipolicy.Config
+	if err := dec.DecodeContext(ctx, &actual); err != nil {
+		return piipolicy.Config{}, fmt.Errorf("unable to parse as %s: %w", name, err)
+	}
+	actual.Name = name
+
+	// Validate actions in tiers
+	for i, tier := range actual.Tiers {
+		switch tier.Action {
+		case piipolicy.Unmask, piipolicy.MaskPartial, piipolicy.MaskFull, piipolicy.DenyField:
+			// valid
+		default:
+			return piipolicy.Config{}, fmt.Errorf("invalid action %q in tier %q (index %d). Must be one of: unmask, partial_mask, full_mask, deny_field", tier.Action, tier.Name, i)
+		}
+	}
+
+	// Validate and pre-compile regex patterns to fail fast
+	for i, rule := range actual.Rules {
+		if rule.Pattern != "" {
+			re, err := regexp.Compile(rule.Pattern)
+			if err != nil {
+				return piipolicy.Config{}, fmt.Errorf("invalid regex pattern %q in rule index %d: %w", rule.Pattern, i, err)
+			}
+			actual.Rules[i].CompiledRegex = re
+		}
+	}
+
+	return actual, nil
 }

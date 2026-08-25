@@ -1,0 +1,59 @@
+---
+title: "PII Policies"
+linkTitle: "PII Policies"
+weight: 4
+---
+
+The Model Context Protocol (MCP) Toolbox allows you to define policies to automatically detect and mask Personally Identifiable Information (PII) before it is sent back to large language models. This prevents sensitive data from leaking into the context window.
+
+## Configuration
+
+PII policies are defined in a configuration YAML file and linked to specific tools.
+
+### Example Policy
+
+```yaml
+kind: piipolicy
+name: default_policy
+defaultTier: "standard"
+tiers:
+  - name: "admin"
+    action: "unmask"
+    matchClaims:
+      role: "admin"
+  - name: "standard"
+    action: "partial_mask"
+rules:
+  - pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+  - pattern: '\b(?:\d[ -]*?){13,16}\b'
+  - column: "social_security_number"
+```
+
+## Tiers and Actions
+
+Tiers determine what action is applied based on the identity or claims of the requester (e.g., using JWT claims).
+
+Supported actions:
+- `unmask`: Do not mask the data.
+- `full_mask`: Replace the entire matched value with asterisks.
+- `partial_mask`: Replace the second half of the string with asterisks, keeping the first half visible.
+- `deny_field`: Completely remove the value (returns an empty string).
+
+## Rules
+
+Rules define what constitutes PII. They can be structural (column-based) or unstructured (regex pattern-based).
+
+- `pattern`: A regex pattern used to detect PII within strings.
+- `column`: Applies the policy directly to specific fields or map keys in structured data.
+
+## Connecting to a Tool
+
+To enforce a PII policy on an MCP tool, add the `piiPolicy` key to its configuration in `tools.yaml`:
+
+```yaml
+tools:
+  - name: "get_user_data"
+    source: "my_postgres_db"
+    type: "postgres-query"
+    piiPolicy: "default_policy"
+```

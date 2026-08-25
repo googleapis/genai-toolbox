@@ -39,6 +39,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/group"
+	"github.com/googleapis/mcp-toolbox/internal/piipolicy"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -139,14 +140,14 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, piiPoliciesMap, err := validateReloadEdits(ctx, toolsFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
 		return err
 	}
 
-	s.PrimitiveMgr.SetPrimitives(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap)
+	s.PrimitiveMgr.SetPrimitives(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, piiPoliciesMap)
 
 	return nil
 }
@@ -154,7 +155,7 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 // validateReloadEdits checks that the reloaded config configs can initialized without failing
 func validateReloadEdits(
 	ctx context.Context, toolsFile internal.Config,
-) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]prompts.Prompt, map[string]group.Group, error,
+) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]prompts.Prompt, map[string]group.Group, map[string]piipolicy.Config, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -179,17 +180,18 @@ func validateReloadEdits(
 		ToolConfigs:           toolsFile.Tools,
 		PromptConfigs:         toolsFile.Prompts,
 		GroupConfigs:          toolsFile.Groups,
+		PiiPolicyConfigs:      toolsFile.PiiPolicies,
 		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, piiPoliciesMap, err := server.InitializeConfigs(ctx, reloadedConfig)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
-		return nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, err
 	}
 
-	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, nil
+	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, piiPoliciesMap, nil
 }
 
 // Helper to check if a file has a newer ModTime than stored in the map

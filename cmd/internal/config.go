@@ -43,6 +43,7 @@ type Config struct {
 	Tools           server.ToolConfigs           `yaml:"tools"`
 	Prompts         server.PromptConfigs         `yaml:"prompts"`
 	Groups          server.GroupConfigs          `yaml:"groups"`
+	PiiPolicies     server.PiiPolicyConfigs      `yaml:"piiPolicies"`
 }
 
 type ConfigParser struct {
@@ -200,7 +201,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 
 	// Parse contents
-	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Prompts, config.Groups, err = server.UnmarshalPrimitiveConfig(ctx, raw)
+	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Prompts, config.Groups, config.PiiPolicies, err = server.UnmarshalPrimitiveConfig(ctx, raw)
 	if err != nil {
 		return config, err
 	}
@@ -231,7 +232,7 @@ func ConvertConfig(ctx context.Context, raw []byte) ([]byte, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 	encoder := yaml.NewEncoder(&buf, yaml.UseLiteralStyleIfMultiline(true))
 
-	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts", "groups"}
+	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts", "groups", "piiPolicies"}
 	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
@@ -271,6 +272,8 @@ func ConvertConfig(ctx context.Context, raw []byte) ([]byte, error) {
 					key = "toolset"
 				case "prompts":
 					key = "prompt"
+				case "piiPolicies":
+					key = "piiPolicy"
 				case "groups":
 					key = "group"
 				}
@@ -419,6 +422,7 @@ func mergeConfigs(files ...Config) (Config, error) {
 		Tools:           make(server.ToolConfigs),
 		Prompts:         make(server.PromptConfigs),
 		Groups:          make(server.GroupConfigs),
+		PiiPolicies:     make(server.PiiPolicyConfigs),
 	}
 
 	var conflicts []string
@@ -479,11 +483,19 @@ func mergeConfigs(files ...Config) (Config, error) {
 				merged.Groups[name] = grp
 			}
 		}
+		// Check for conflicts and merge piiPolicies
+		for name, piiPolicy := range file.PiiPolicies {
+			if _, exists := merged.PiiPolicies[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("piiPolicy '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.PiiPolicies[name] = piiPolicy
+			}
+		}
 	}
 
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
-		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, prompt and group has a unique name across all files", strings.Join(conflicts, "\n  - "))
+		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, prompt, group and piiPolicy has a unique name across all files", strings.Join(conflicts, "\n  - "))
 	}
 
 	// Ensure only one authService has mcpEnabled = true

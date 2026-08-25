@@ -222,7 +222,7 @@ func TestGroup_ToolsetManifest(t *testing.T) {
 		Name:      "mygroup",
 		ToolNames: []string{"tool1", "tool2"},
 	})
-	mgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
+	mgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil, nil)
 
 	manifest, err := g.ToolsetManifest("v1.2.3", mgr)
 	if err != nil {

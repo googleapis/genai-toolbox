@@ -25,6 +25,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/group"
+	"github.com/googleapis/mcp-toolbox/internal/piipolicy"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
@@ -498,6 +499,32 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	executionStart := time.Now()
 	results, err := tool.Invoke(ctx, src, params, accessToken)
 	executionDuration := time.Since(executionStart).Seconds()
+
+	// Apply PII policy masking if configured
+	if err == nil {
+		if piiPolicyName := tool.GetPiiPolicy(); piiPolicyName != "" {
+			if policy, exists := primitiveMgr.GetPiiPolicy(piiPolicyName); exists {
+				var combinedClaims map[string]any
+				if len(claimsFromAuth) > 0 {
+					// Merge all claims for policy evaluation
+					combinedClaims = make(map[string]any)
+					for _, claims := range claimsFromAuth {
+						for k, v := range claims {
+							combinedClaims[k] = v
+						}
+					}
+				}
+				results, err = piipolicy.ApplyPolicy(ctx, policy, combinedClaims, results)
+				if err != nil {
+					err = fmt.Errorf("error applying pii policy %q: %w", piiPolicyName, err)
+					return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+				}
+			} else {
+				err = fmt.Errorf("pii policy %q not found", piiPolicyName)
+				return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+			}
+		}
+	}
 
 	// Record tool execution duration metric
 	if instrumentationErr == nil {

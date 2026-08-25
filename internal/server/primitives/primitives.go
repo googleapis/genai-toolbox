@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/group"
+	"github.com/googleapis/mcp-toolbox/internal/piipolicy"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -38,6 +39,7 @@ type PrimitiveManager struct {
 	tools           map[string]tools.Tool
 	prompts         map[string]prompts.Prompt
 	groups          map[string]group.Group
+	piiPolicies     map[string]piipolicy.Config
 }
 
 func NewPrimitiveManager(
@@ -47,6 +49,7 @@ func NewPrimitiveManager(
 	toolsMap map[string]tools.Tool,
 	promptsMap map[string]prompts.Prompt,
 	groupsMap map[string]group.Group,
+	piiPoliciesMap map[string]piipolicy.Config,
 
 ) *PrimitiveManager {
 	primitiveMgr := &PrimitiveManager{
@@ -57,6 +60,7 @@ func NewPrimitiveManager(
 		tools:           toolsMap,
 		prompts:         promptsMap,
 		groups:          groupsMap,
+		piiPolicies:     piiPoliciesMap,
 	}
 
 	return primitiveMgr
@@ -105,7 +109,15 @@ func (r *PrimitiveManager) GetGroup(groupName string) (group.Group, bool) {
 	return g, ok
 }
 
-func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, groupsMap map[string]group.Group) {
+// GetPiiPolicy returns the pii policy of the given name.
+func (r *PrimitiveManager) GetPiiPolicy(policyName string) (piipolicy.Config, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	policy, ok := r.piiPolicies[policyName]
+	return policy, ok
+}
+
+func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, groupsMap map[string]group.Group, piiPoliciesMap map[string]piipolicy.Config) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sources = sourcesMap
@@ -114,6 +126,7 @@ func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, a
 	r.tools = toolsMap
 	r.prompts = promptsMap
 	r.groups = groupsMap
+	r.piiPolicies = piiPoliciesMap
 }
 
 // AuthServices returns a copy of the auth services map
