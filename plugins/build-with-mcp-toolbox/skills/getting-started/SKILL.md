@@ -98,7 +98,7 @@ user: ${POSTGRES_USER}
 password: ${POSTGRES_PASSWORD}
 ---
 kind: tool
-name: search-hotels-by-name
+name: search_hotels_by_name
 type: postgres-sql
 source: my-pg-source
 description: Search for hotels based on name.
@@ -111,7 +111,7 @@ statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
 kind: toolset
 name: my-toolset
 tools:
-  - search-hotels-by-name
+  - search_hotels_by_name
 ```
 
 Each rule below is a common first-run failure:
@@ -159,7 +159,7 @@ problem.
 
 ```bash
 # Runs the tool directly against the database. No server, no agent.
-toolbox invoke search-hotels-by-name '{"name": "Hilton"}' --config tools.yaml
+toolbox invoke search_hotels_by_name '{"name": "Hilton"}' --config tools.yaml
 ```
 
 Works with `--prebuilt` too. If this fails, the problem is credentials,
