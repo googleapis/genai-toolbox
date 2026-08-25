@@ -46,7 +46,6 @@ func (m mockParameter) Manifest() parameters.ParameterManifest         { return 
 func (m mockParameter) McpManifest() (parameters.ParameterMcpManifest, []string) {
 	return parameters.ParameterMcpManifest{}, nil
 }
-func (m mockParameter) GetSecure() bool { return false }
 
 type logEntry struct {
 	level  string

@@ -1274,7 +1274,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 					Name:     "api_key",
 					Type:     parameters.TypeString,
 					Desc:     "A secure api key",
-					Required: true,
+					Required: &[]bool{true}[0],
 					Secure:   true,
 				},
 			},
@@ -1299,11 +1299,13 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, groups)
 
 	tests := []struct {
-		desc        string
-		urlParams   map[string]string
-		body        string // raw JSON-RPC body
-		wantErr     bool
-		errContains string
+		desc            string
+		urlParams       map[string]string
+		body            string // raw JSON-RPC body
+		wantErr         bool
+		errContains     string
+		wantIsError     bool
+		wantContentText string
 	}{
 		{
 			desc: "Client does not support secure parameters",
@@ -1417,8 +1419,9 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 					}
 				}
 			}`,
-			wantErr:     true,
-			errContains: "missing required parameter",
+			wantErr:         false,
+			wantIsError:     true,
+			wantContentText: `provided parameters were invalid: parameter "api_key" is required`,
 		},
 		{
 			desc: "Successful invocation with correct routing (extensions)",
@@ -1502,6 +1505,27 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 				}
 				if got == nil {
 					t.Errorf("expected valid response, got nil")
+				}
+				if tt.wantIsError {
+					res, ok := got.(jsonrpc.JSONRPCResponse)
+					if !ok {
+						t.Fatalf("expected jsonrpc.JSONRPCResponse, got %T", got)
+					}
+					callResult, ok := res.Result.(CallToolResult)
+					if !ok {
+						t.Fatalf("expected CallToolResult, got %T", res.Result)
+					}
+					if !callResult.IsError {
+						t.Errorf("callResult.IsError = false, want true")
+					}
+					if tt.wantContentText != "" {
+						if len(callResult.Content) == 0 {
+							t.Fatalf("expected content in result, got empty")
+						}
+						if !strings.Contains(callResult.Content[0].Text, tt.wantContentText) {
+							t.Errorf("callResult.Content[0].Text = %q, want string containing %q", callResult.Content[0].Text, tt.wantContentText)
+						}
+					}
 				}
 			}
 		})
