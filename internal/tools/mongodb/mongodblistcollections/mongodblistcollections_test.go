@@ -151,6 +151,9 @@ func TestInvokeNormalizesNilCollectionList(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected []string result, got %T", got)
 	}
+	if collections == nil {
+		t.Fatal("expected an initialized empty collection list")
+	}
 	encoded, err := json.Marshal(collections)
 	if err != nil {
 		t.Fatalf("unable to marshal collections: %s", err)
