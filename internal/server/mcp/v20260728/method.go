@@ -918,7 +918,7 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 	res, resTmpl, params, err := primitiveMgr.GetResourceOrTemplateByURI(uri, g)
 	if err != nil {
 		err = fmt.Errorf("resource lookup failed: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.RESOURCE_NOT_FOUND, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
 	var content any

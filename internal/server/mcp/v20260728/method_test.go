@@ -1442,6 +1442,7 @@ func TestResourcesReadHandler(t *testing.T) {
 		rawBody     []byte
 		wantErr     bool
 		errContains string
+		errCode     int
 	}{
 		{
 			name:        "invalid json request",
@@ -1489,6 +1490,7 @@ func TestResourcesReadHandler(t *testing.T) {
 			},
 			wantErr:     true,
 			errContains: "resource lookup failed",
+			errCode:     jsonrpc.INVALID_PARAMS,
 		},
 	}
 
@@ -1510,6 +1512,15 @@ func TestResourcesReadHandler(t *testing.T) {
 				}
 				if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
 					t.Errorf("error = %v, want string containing %q", err, tt.errContains)
+				}
+				if tt.errCode != 0 {
+					if rpcErr, ok := got.(jsonrpc.JSONRPCError); ok {
+						if rpcErr.Error.Code != tt.errCode {
+							t.Errorf("expected jsonrpc error code %d, got %d", tt.errCode, rpcErr.Error.Code)
+						}
+					} else {
+						t.Errorf("expected jsonrpc.JSONRPCError, got %T", got)
+					}
 				}
 			} else {
 				if err != nil {
