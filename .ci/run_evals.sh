@@ -90,7 +90,7 @@ for harness in "${harnesses[@]}"; do
   if [ -d /evalbench/results ]; then
     dest="/workspace/results/${TOOLBOX_PREBUILT}"
     mkdir -p "${dest}"
-    mv /evalbench/results "${dest}/${harness}"
+    mv -T /evalbench/results "${dest}/${harness}"
   fi
 done
 

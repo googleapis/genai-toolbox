@@ -40,7 +40,5 @@ scorers:
   effective_billed_tokens: {}
 
 reporting:
-  csv:
-    output_directory: 'results'
-  # bigquery:
-  #   gcp_project_id: !ENV ${EVAL_GCP_PROJECT_ID}
+  bigquery:
+    gcp_project_id: !ENV ${EVAL_GCP_PROJECT_ID}
