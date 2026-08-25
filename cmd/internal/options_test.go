@@ -162,14 +162,14 @@ func TestCheckVersion(t *testing.T) {
 		remoteVersion       string
 		httpStatus          int
 		disableVersionCheck bool
-		wantWarnLog         string
+		wantInfoLog         string
 	}{
 		{
 			desc:           "outdated version logs warning",
 			currentVersion: "1.7.0",
 			remoteVersion:  "v1.8.0",
 			httpStatus:     http.StatusOK,
-			wantWarnLog:    "A newer version of MCP Toolbox is available: (v1.7.0 -> v1.8.0)",
+			wantInfoLog:    "A newer version of MCP Toolbox is available: (v1.7.0 -> v1.8.0)",
 		},
 		{
 			desc:           "up to date version logs nothing",
@@ -233,10 +233,19 @@ func TestCheckVersion(t *testing.T) {
 
 			opts.checkVersion(context.Background())
 			output := buf.String()
-			if tc.wantWarnLog == "" && strings.Contains(output, "WARN") {
-				t.Errorf("expected no warning log, but got: %s", output)
-			} else if tc.wantWarnLog != "" && !strings.Contains(output, tc.wantWarnLog) {
-				t.Errorf("expected warning log containing %q, but got: %s", tc.wantWarnLog, output)
+
+			if tc.wantInfoLog == "" {
+				if strings.Contains(output, "INFO") {
+					t.Errorf("expected no INFO log, but got: %s", output)
+				}
+				return
+			}
+
+			if !strings.Contains(output, "INFO") {
+				t.Errorf("expected log level to be INFO, but got: %s", output)
+			}
+			if !strings.Contains(output, tc.wantInfoLog) {
+				t.Errorf("expected info log containing %q, but got: %s", tc.wantInfoLog, output)
 			}
 		})
 	}

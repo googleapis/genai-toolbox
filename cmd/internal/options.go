@@ -365,6 +365,6 @@ func (opts *ToolboxOptions) checkVersion(ctx context.Context) {
 	current := "v" + opts.VersionNum
 
 	if semver.Compare(latest, current) > 0 {
-		opts.Logger.WarnContext(ctx, fmt.Sprintf("A newer version of MCP Toolbox is available: (%s -> %s). Download the latest version from https://github.com/googleapis/mcp-toolbox/releases", current, latest))
+		opts.Logger.InfoContext(ctx, fmt.Sprintf("A newer version of MCP Toolbox is available: (%s -> %s). Download the latest version from https://github.com/googleapis/mcp-toolbox/releases", current, latest))
 	}
 }
