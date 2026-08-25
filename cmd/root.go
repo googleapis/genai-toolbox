@@ -223,7 +223,7 @@ func scanWatchedFiles(watchingFolder bool, folderToWatch string, watchedFiles ma
 }
 
 // watchChanges checks for changes in the provided yaml config(s) or folder.
-func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server, pollTickerSecond int, onReload func() error) {
+func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server, opts *internal.ToolboxOptions) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -267,6 +267,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 
 	lastSeen := make(map[string]time.Time)
 	var pollTickerChan <-chan time.Time
+	pollTickerSecond := opts.Cfg.PollInterval
 	if pollTickerSecond > 0 {
 		ticker := time.NewTicker(time.Duration(pollTickerSecond) * time.Second)
 		defer ticker.Stop()
@@ -351,8 +352,21 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 		case <-debounce.C:
 			debounce.Stop()
 			logger.DebugContext(ctx, "File change detected, attempting to reload server...")
-			if err := onReload(); err != nil {
+
+			// Create a copy to avoid mutating the original opts if validation/reload fails
+			reloadedOpts := *opts
+			reloadedOpts.PrebuiltConfigs = slices.Clone(opts.PrebuiltConfigs)
+			reloadedOpts.Configs = slices.Clone(opts.Configs)
+			reloadedOpts.Cfg.Version = versionString
+
+			if _, err := reloadedOpts.LoadConfig(ctx, &internal.ConfigParser{}); err != nil {
+				logger.WarnContext(ctx, fmt.Sprintf("Error reloading config: %s", err))
+				continue
+			}
+
+			if err := handleDynamicReload(ctx, reloadedOpts.Cfg, s); err != nil {
 				logger.WarnContext(ctx, fmt.Sprintf("Error reloading server: %s", err))
+				continue
 			}
 		}
 	}
@@ -495,23 +509,8 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	if isCustomConfigured && !opts.Cfg.DisableReload {
 		watchDirs, watchedFiles := resolveWatcherInputs(opts.Config, opts.Configs, opts.ConfigFolder)
 
-		onReload := func() error {
-
-			// Create a copy to avoid mutating the original opts if validation/reload fails
-			reloadedOpts := *opts
-			reloadedOpts.PrebuiltConfigs = slices.Clone(opts.PrebuiltConfigs)
-			reloadedOpts.Configs = slices.Clone(opts.Configs)
-			reloadedOpts.Cfg.Version = versionString
-
-			if _, err := reloadedOpts.LoadConfig(ctx, &internal.ConfigParser{}); err != nil {
-				return fmt.Errorf("error reloading config: %w", err)
-			}
-
-			return handleDynamicReload(ctx, reloadedOpts.Cfg, s)
-		}
-
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
-		go watchChanges(ctx, watchDirs, watchedFiles, s, opts.Cfg.PollInterval, onReload)
+		go watchChanges(ctx, watchDirs, watchedFiles, s, opts)
 	}
 
 	// wait for either the server to error out or the command's context to be canceled
