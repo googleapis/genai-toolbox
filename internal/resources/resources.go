@@ -156,6 +156,11 @@ func (c *ResourceConfigBase) Validate() error {
 		return fmt.Errorf("invalid 'uri' field for resource %q: must be a valid RFC-compliant absolute URI with a scheme", c.Name)
 	}
 
+	// Normalize scheme and host to lowercase for consistent comparison and usage
+	parsed.Scheme = strings.ToLower(parsed.Scheme)
+	parsed.Host = strings.ToLower(parsed.Host)
+	c.URI = parsed.String()
+
 	return nil
 }
 
@@ -259,6 +264,12 @@ func (c *ResourceTemplateConfigBase) Validate() error {
 	if err != nil || parsed.Scheme == "" {
 		return fmt.Errorf("invalid 'uriTemplate' field for resource template %q: must be a valid RFC-compliant absolute URI with a scheme", c.Name)
 	}
+
+	// Normalize the scheme to lowercase for consistency with static resources
+	if idx := strings.Index(c.URITemplate, ":"); idx > 0 {
+		c.URITemplate = strings.ToLower(c.URITemplate[:idx]) + c.URITemplate[idx:]
+	}
+
 	return nil
 }
 
