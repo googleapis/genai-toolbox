@@ -48,7 +48,7 @@ Read these live, not from memory.
 ### Step 2: Pull the candidates
 
 ```bash
-CUTOFF=$(date -v-60d +%F)          # macOS; GNU: date -d '60 days ago' +%F
+CUTOFF=$(date -d '60 days ago' +%F 2>/dev/null || date -v-60d +%F)   # GNU, then BSD/macOS
 
 gh search issues --repo googleapis/mcp-toolbox --state open --updated "<$CUTOFF" \
   --limit 100 --json number,title,url,updatedAt,createdAt,labels,author,commentsCount
