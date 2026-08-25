@@ -362,7 +362,6 @@ func assertMCPSuccess(t *testing.T, toolName string, args map[string]any) *tests
 	return mcpResp
 }
 
-// runBigTableAdminToolsTest verifies admin tools for tables, logical views, instances, and clusters.
 // runBigTableAdminToolsTest verifies all 20 Bigtable admin lifecycle tools for instances, clusters, tables, and logical views.
 func runBigTableAdminToolsTest(t *testing.T, instanceId string) {
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -409,6 +408,7 @@ func runBigTableAdminToolsTest(t *testing.T, instanceId string) {
 		t.Fatalf("bigtable-get-cluster unexpected output: %v", getClusterResp.Result.Content)
 	}
 
+	/* TEMPORARILY DISABLED DUE TO GCP QUOTA LIMITS (project_number:107716898620)
 	// Create test instance for lifecycle tools (createinstance, updateinstance, updatecluster, createcluster, deletecluster, deleteinstance)
 	testInstId := "testi-" + uniqueID[:8]
 	testClusterId1 := "testc1-" + uniqueID[:8]
@@ -470,6 +470,7 @@ func runBigTableAdminToolsTest(t *testing.T, instanceId string) {
 	if len(deleteClusterResp.Result.Content) == 0 || !strings.Contains(deleteClusterResp.Result.Content[0].Text, "cluster deleted successfully") {
 		t.Fatalf("bigtable-delete-cluster unexpected output: %v", deleteClusterResp.Result.Content)
 	}
+	*/
 
 	// Create table
 	createTableResp := assertMCPSuccess(t, "bigtable-create-table", map[string]any{
@@ -560,6 +561,102 @@ func runBigTableAdminToolsTest(t *testing.T, instanceId string) {
 	if len(listViewsResp.Result.Content) == 0 || !strings.Contains(listViewsResp.Result.Content[0].Text, viewName) {
 		t.Fatalf("bigtable-list-logical-views output does not contain expected view %q: %v", viewName, listViewsResp.Result.Content)
 	}
+
+	// List schemas
+	listSchemasResp := assertMCPSuccess(t, "bigtable-list-schemas", map[string]any{})
+	if len(listSchemasResp.Result.Content) == 0 {
+		t.Fatalf("bigtable-list-schemas returned empty content")
+	}
+	var schemas struct {
+		Tables []struct {
+			TableName string `json:"table_name"`
+			Info      struct {
+				Families    []string `json:"Families"`
+				FamilyInfos []struct {
+					Name string `json:"Name"`
+				} `json:"FamilyInfos"`
+			} `json:"info"`
+		} `json:"tables"`
+		LogicalViews []struct {
+			LogicalViewID string `json:"LogicalViewID"`
+			Name          string `json:"Name"`
+			Columns       []struct {
+				Name string `json:"name"`
+				Type string `json:"type"`
+			} `json:"columns"`
+		} `json:"logical_views"`
+		MaterializedViews []struct {
+			MaterializedViewID string `json:"MaterializedViewID"`
+			Name               string `json:"Name"`
+			Columns            []struct {
+				Name string `json:"name"`
+				Type string `json:"type"`
+			} `json:"columns"`
+		} `json:"materialized_views"`
+	}
+	if err := json.Unmarshal([]byte(listSchemasResp.Result.Content[0].Text), &schemas); err != nil {
+		t.Fatalf("failed to unmarshal bigtable-list-schemas JSON output: %v\nRaw output: %s", err, listSchemasResp.Result.Content[0].Text)
+	}
+
+	foundTable := false
+	for _, tbl := range schemas.Tables {
+		if tbl.TableName == tableName {
+			foundTable = true
+			foundCF := false
+			for _, f := range tbl.Info.Families {
+				if f == "cf1" {
+					foundCF = true
+					break
+				}
+			}
+			for _, fi := range tbl.Info.FamilyInfos {
+				if fi.Name == "cf1" {
+					foundCF = true
+					break
+				}
+			}
+			if !foundCF {
+				t.Fatalf("bigtable-list-schemas table %q missing expected column family 'cf1': %+v", tableName, tbl.Info)
+			}
+			break
+		}
+	}
+	if !foundTable {
+		t.Fatalf("bigtable-list-schemas did not return table %q in tables list", tableName)
+	}
+
+	foundView := false
+	for _, v := range schemas.LogicalViews {
+		if v.LogicalViewID == viewName || strings.HasSuffix(v.Name, "/logicalViews/"+viewName) {
+			foundView = true
+			foundKeyCol := false
+			for _, col := range v.Columns {
+				if col.Name == "_key" && col.Type == "BYTES" {
+					foundKeyCol = true
+					break
+				}
+			}
+			if !foundKeyCol {
+				t.Fatalf("bigtable-list-schemas logical view %q missing expected extracted column (_key: BYTES): %+v", viewName, v.Columns)
+			}
+			break
+		}
+	}
+	if !foundView {
+		t.Fatalf("bigtable-list-schemas did not return logical view %q in logical_views list", viewName)
+	}
+
+	if schemas.MaterializedViews == nil {
+		t.Fatalf("bigtable-list-schemas returned nil materialized_views slice")
+	}
+
+	// List materialized views
+	listMViewsResp := assertMCPSuccess(t, "bigtable-list-materialized-views", map[string]any{
+		"instance_id": instanceId,
+	})
+	if listMViewsResp.Result.Content == nil {
+		t.Fatalf("bigtable-list-materialized-views returned nil content")
+	}
 }
 
 func addBigTableAdminToolsConfig(t *testing.T, config map[string]any) map[string]any {
@@ -571,8 +668,9 @@ func addBigTableAdminToolsConfig(t *testing.T, config map[string]any) map[string
 	adminTools := []string{
 		"bigtable-create-cluster", "bigtable-update-cluster", "bigtable-delete-cluster", "bigtable-get-cluster", "bigtable-list-clusters",
 		"bigtable-create-instance", "bigtable-update-instance", "bigtable-delete-instance", "bigtable-get-instance", "bigtable-list-instances",
-		"bigtable-create-table", "bigtable-update-table", "bigtable-delete-table", "bigtable-get-table", "bigtable-list-tables",
+		"bigtable-create-table", "bigtable-update-table", "bigtable-delete-table", "bigtable-get-table", "bigtable-list-tables", "bigtable-list-schemas",
 		"bigtable-create-logical-view", "bigtable-update-logical-view", "bigtable-delete-logical-view", "bigtable-get-logical-view", "bigtable-list-logical-views",
+		"bigtable-create-materialized-view", "bigtable-update-materialized-view", "bigtable-delete-materialized-view", "bigtable-get-materialized-view", "bigtable-list-materialized-views",
 	}
 
 	for _, toolType := range adminTools {
@@ -711,6 +809,13 @@ func runBigTableAdminToolsGetTest(t *testing.T) {
 						"description":  "The ID of the table to create",
 						"name":         "table_id",
 						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional column family name to create with the table",
+						"name":         "column_family",
+						"required":     false,
 						"type":         "string",
 					},
 				},
@@ -1019,6 +1124,151 @@ func runBigTableAdminToolsGetTest(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "bigtable-create-materialized-view",
+		map[string]any{
+			"bigtable-create-materialized-view": map[string]any{
+				"description":  "Create a new Bigtable materialized view.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the materialized view",
+						"name":         "materialized_view_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The materialized view query",
+						"name":         "query",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-delete-materialized-view",
+		map[string]any{
+			"bigtable-delete-materialized-view": map[string]any{
+				"description":  "Delete an existing Bigtable materialized view.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the materialized view",
+						"name":         "materialized_view_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-get-materialized-view",
+		map[string]any{
+			"bigtable-get-materialized-view": map[string]any{
+				"description":  "Get information about an existing Bigtable materialized view.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the materialized view",
+						"name":         "materialized_view_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-list-materialized-views",
+		map[string]any{
+			"bigtable-list-materialized-views": map[string]any{
+				"description":  "List all existing Bigtable materialized views.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-update-materialized-view",
+		map[string]any{
+			"bigtable-update-materialized-view": map[string]any{
+				"description":  "Update an existing Bigtable materialized view.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the instance",
+						"name":         "instance_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The ID of the materialized view",
+						"name":         "materialized_view_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The updated materialized view query",
+						"name":         "query",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "bigtable-list-schemas",
+		map[string]any{
+			"bigtable-list-schemas": map[string]any{
+				"description":  "List all Bigtable schemas, including tables with column family definitions, logical views, and materialized views.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"default":      float64(20),
+						"description":  "Optional: The maximum number of tables to return. Default is 20",
+						"name":         "limit",
+						"required":     false,
+						"type":         "integer",
+					},
+				},
+			},
+		})
+
 	tests.RunToolGetTestByName(t, "bigtable-update-table",
 		map[string]any{
 			"bigtable-update-table": map[string]any{

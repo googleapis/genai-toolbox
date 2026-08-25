@@ -143,6 +143,14 @@ func TestServerExtensions(t *testing.T) {
 			expectedUri: "com.google.cloud/toolbox.v1",
 			expectedVal: true,
 		},
+		{
+			name: "extension disabled after Initialize",
+			setup: func() {
+				Initialize([]string{"com.google.cloud/toolbox.v1"})
+			},
+			expectedUri: "com.google.cloud/toolbox.v1",
+			expectedVal: false,
+		},
 	}
 
 	for _, tc := range tests {

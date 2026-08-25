@@ -593,7 +593,7 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 		o(configs)
 	}
 
-	mcpVersion := "DRAFT-2026-v1"
+	mcpVersion := "2026-07-28"
 
 	header := map[string]string{}
 
@@ -628,8 +628,8 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 		}
 		if supportsSecure {
 			meta["io.modelcontextprotocol/clientCapabilities"] = map[string]any{
-				"experimental": map[string]any{
-					"com.google.cloud/toolbox.v1": true,
+				"extensions": map[string]any{
+					"com.google.cloud/toolbox.v1": map[string]any{},
 				},
 			}
 		}

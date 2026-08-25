@@ -22,6 +22,7 @@ description: >
 | `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                           | `5000`      |
 |              | `--tls-cert`               | Path to the PEM-encoded TLS certificate file.                                                                                                                             |             |
 |              | `--tls-key`                | Path to the PEM-encoded TLS private key file.                                                                                                                             |             |
+|              | `--toolbox-url`            | Specifies the absolute Toolbox URL (e.g., `https://my-toolbox.example.com`). Used as the resource field in the MCP PRM file when MCP Auth is enabled. Falls back to `TOOLBOX_URL` environment variable. |             |
 |              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. Optionally specify a toolset suffix (e.g., `<source>/<toolset>`) to load only that toolset. These prebuilt configs are intended for 'build-time' use cases, where agents are helping trusted developers build things. They are not secure enough for 'run time' use cases, where the agent will be talking to potentially untrusted developers. See [Prebuilt Tools Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values. |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                          |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                     |             |
@@ -59,6 +60,30 @@ toolbox invoke <tool-name> [params]
 - `params`: (Optional) A JSON string containing the parameters for the tool.
 
 For more detailed instructions, see [Invoke Tools via CLI](../documentation/configuration/tools/invoke_tool.md).
+
+</details>
+
+<details>
+<summary><code>migrate</code></summary>
+
+Rewrites configuration files from the legacy nested format (top-level `sources:`, `tools:`, `toolsets:` maps) into the flat format, where each resource is its own YAML document with a `kind` field.
+
+This subcommand also converts `toolset` primitive into `group` primitive.
+
+**Syntax:**
+
+```bash
+toolbox migrate --config <path>
+```
+
+**Flags:**
+
+- `--config`: (Optional) Path to a configuration file to migrate. Defaults to `tools.yaml` when no other config flag is set.
+- `--configs`: (Optional) Comma-separated list of configuration files to migrate.
+- `--config-folder`: (Optional) Path to a folder whose `.yaml` and `.yml` files should be migrated.
+- `--dry-run`: (Optional) Print the migrated configuration to stdout instead of writing it.
+
+`--config`, `--configs`, and `--config-folder` are mutually exclusive. Each file is rewritten in place, with the original kept alongside it with `.bak` appended (e.g., `tools.yaml.bak`); a file that needs no changes is left as is. Comments other than top-level ones are not preserved, so review the result before deleting the backup.
 
 </details>
 
@@ -221,7 +246,9 @@ visit [Toolbox UI](../documentation/configuration/toolbox-ui/index.md).
 
 ### Disabling MCP Extensions
 
-By default, Toolbox enables all supported MCP extensions (such as `com.google.cloud/toolbox.v1`). To disable specific extensions on the server, pass their URIs via the `--disable-ext` flag:
+By default, Toolbox advertises support for its own custom MCP extensions (e.g., `com.google.cloud/toolbox.v1`) during the client discovery phase. This extension signals to clients that they can leverage Toolbox-specific features that fall outside the official MCP specification (see the [Extension README](https://github.com/googleapis/mcp-toolbox/blob/main/extensions/2026-07-28/README.md) for a list of currently supported capabilities).
+
+Disabling an extension removes it from the server's advertised capabilities. To disable specific extensions on the server, pass their URIs via the `--disable-ext` flag:
 
 ```bash
 # Disable the Toolbox v1 extension

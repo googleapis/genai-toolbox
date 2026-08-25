@@ -78,7 +78,7 @@ parameters:
 ```
 
 | **field**      |    **type**    | **required** | **description**                                                                                                                                                                                                                        |
-| -------------- | :------------: | :----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|----------------|:--------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | name           |     string     |     true     | Name of the parameter.                                                                                                                                                                                                                 |
 | type           |     string     |     true     | Must be one of "string", "integer", "float", "boolean" "array"                                                                                                                                                                         |
 | description    |     string     |     true     | Natural language description of the parameter to describe it to the agent.                                                                                                                                                             |
@@ -89,6 +89,76 @@ parameters:
 | escape         |     string     |    false     | Only available for type `string`. Indicate the escaping delimiters used for the parameter. This field is intended to be used with templateParameters. Must be one of "single-quotes", "double-quotes", "backticks", "square-brackets". |
 | minValue       |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the minimum value allowed.                                                                                                                                                     |
 | maxValue       |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the maximum value allowed.                                                                                                                                                     |
+
+### Optional Parameters
+
+Parameters are **required by default**. Omitting `required` is the same as
+writing `required: true`, so an agent that calls the tool without the argument
+gets `parameter "airline" is required` back.
+
+There are two ways to make a parameter optional, and they behave differently:
+
+```yaml
+parameters:
+  # Optional with a fallback: omitted calls use "AA".
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
+    default: AA
+
+  # Optional with no fallback: omitted calls pass no value for the parameter,
+  # which a SQL statement binds as NULL.
+  - name: seat_class
+    type: string
+    description: Seat class to filter by
+    required: false
+```
+
+Providing a `default` also makes the parameter optional — it overrides
+`required: true` rather than conflicting with it. The full matrix:
+
+| `required` | `default`             | Effective behavior                                              |
+|:-----------|:----------------------|:----------------------------------------------------------------|
+| omitted    | omitted               | **Required.** Calls that omit the argument are rejected.         |
+| `true`     | omitted               | **Required.** Same as above.                                     |
+| `false`    | omitted               | Optional; omitted calls pass no value (`NULL` in SQL).           |
+| `true`     | a value               | **Optional**;  the `default` wins over `required: true`.         |
+| omitted    | a value               | Optional; omitted calls use the default.                         |
+| `false`    | a value               | Optional; omitted calls use the default.                         |
+
+This distinction also reaches the agent: a parameter that is effectively
+optional is advertised as not required in the tool manifest, so the model knows
+it may omit the argument.
+
+{{< notice warning >}}
+**`default: null` does not make a parameter optional.** In YAML, `default:
+null` (and the equivalent `default: ~`, or a `default:` key with nothing after
+it) parses to a null value, which Toolbox cannot distinguish from the field
+being absent altogether. The parameter therefore stays **required**, and calls
+that omit the argument fail at invocation time with `parameter "..." is
+required`.
+
+If you want "optional, with no value when the caller omits it", write
+`required: false` instead:
+
+```yaml
+# Does NOT work — the parameter is still required.
+- name: seat_class
+  type: string
+  description: Seat class to filter by
+  default: null
+
+# Works.
+- name: seat_class
+  type: string
+  description: Seat class to filter by
+  required: false
+```
+
+Note that an explicit empty value *is* a real default: `default: ""` makes a
+string parameter optional and substitutes the empty string. Only `null` is
+ignored.
+{{< /notice >}}
 
 ### Array Parameters
 
@@ -110,7 +180,7 @@ statement: |
 ```
 
 | **field**      |     **type**     | **required** | **description**                                                            |
-| -------------- | :--------------: | :----------: | -------------------------------------------------------------------------- |
+|----------------|:----------------:|:------------:|----------------------------------------------------------------------------|
 | name           |      string      |     true     | Name of the parameter.                                                     |
 | type           |      string      |     true     | Must be "array"                                                            |
 | description    |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
@@ -197,15 +267,7 @@ auth_tool = await toolbox.load_tool(
 result = await auth_tool()
 ```
 
-#### Unsupported Extension Behavior
-
-- **Protocol Version Support**: The secure parameter feature is strictly tied to the latest `v20260728` MCP protocol and the Toolbox experimental extension (`com.google.cloud/toolbox.v1`). For earlier protocol versions, tools with secure parameters will not be listed and will return a "tool not found" error if invoked.
-- **Automatic Tool Filtering (`tools/list`)**: If a client does not declare support for the `com.google.cloud/toolbox.v1` extension, any tool configured with secure parameters is automatically filtered out from `tools/list` responses so AI agents cannot discover or attempt to call tools they cannot invoke securely.
-- **Invocation Rejection (`tools/call`)**: If a client attempts to call a tool requiring secure parameters without supporting the extension, the server blocks execution and returns a `400 Bad Request` (`MISSING_REQUIRED_CLIENT_CAPABILITY`) error:
-  ```
-  missing required client capability: tool "<name>" requires com.google.cloud/toolbox.v1 extension which is not supported by the client
-  ```
-- **Actionable Guidance**: If callers encounter missing tools or extension errors, ensure that the calling client/SDK is upgraded to a version supporting `com.google.cloud/toolbox.v1`. If a parameter does not require transport-level hiding from the LLM agent, omit `secure: true` so standard clients can access the tool.
+> **Note:** Secure parameters require MCP protocol version `2026-07-28` and the `com.google.cloud/toolbox.v1` extension. For more details on extension capabilities and client requirements, see the [Extension README](https://github.com/googleapis/mcp-toolbox/blob/main/extensions/2026-07-28/README.md).
 
 ### Authenticated Parameters
 
@@ -235,10 +297,10 @@ parameters:
         field: sub
 ```
 
-| **field** | **type** | **required** | **description**                                                                             |
-| --------- | :------: | :----------: | ------------------------------------------------------------------------------------------- |
+| **field** | **type** | **required** | **description**                                                                  |
+|-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
 | name      |  string  |     true     | Name of the [authServices](../authentication/_index.md) used to verify the OIDC auth token. |
-| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.               |
+| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.    |
 
 ### Template Parameters
 
@@ -301,7 +363,7 @@ templateParameters:
 ```
 
 | **field**      |     **type**     |  **required**   | **description**                                                                     |
-| -------------- | :--------------: | :-------------: | ----------------------------------------------------------------------------------- |
+|----------------|:----------------:|:---------------:|-------------------------------------------------------------------------------------|
 | name           |      string      |      true       | Name of the template parameter.                                                     |
 | type           |      string      |      true       | Must be one of "string", "integer", "float", "boolean", "array"                     |
 | description    |      string      |      true       | Natural language description of the template parameter to describe it to the agent. |
@@ -344,12 +406,12 @@ and provide appropriate user experiences.
 
 ### Available Annotations
 
-| **annotation**  | **type** | **default** | **description**                                                     |
-| --------------- | :------: | :---------: | ------------------------------------------------------------------- |
-| readOnlyHint    |   bool   |    false    | Tool only reads data, no modifications to the environment.          |
-| destructiveHint |   bool   |    true     | Tool may create, update, or delete data.                            |
-| idempotentHint  |   bool   |    false    | Repeated calls with same arguments have no additional effect.       |
-| openWorldHint   |   bool   |    true     | Tool interacts with external entities beyond its local environment. |
+| **annotation**     |  **type**   | **default** | **description**                                                        |
+|--------------------|:-----------:|:-----------:|------------------------------------------------------------------------|
+| readOnlyHint       |    bool     |    false    | Tool only reads data, no modifications to the environment.             |
+| destructiveHint    |    bool     |    true     | Tool may create, update, or delete data.                               |
+| idempotentHint     |    bool     |    false    | Repeated calls with same arguments have no additional effect.          |
+| openWorldHint      |    bool     |    true     | Tool interacts with external entities beyond its local environment.    |
 
 ### Specifying Annotations
 
@@ -416,10 +478,10 @@ result = await tool("foo", bar="baz")
 
 ```javascript
 // Loading a single tool
-const tool = await client.loadTool("my-tool");
+const tool = await client.loadTool("my-tool")
 
 // Invoke the tool
-const result = await tool({ a: 5, b: 2 });
+const result = await tool({a: 5, b: 2})
 ```
 
 ### Go
@@ -432,5 +494,6 @@ tool, err = client.LoadTool("my-tool", ctx)
 inputs := map[string]any{"location": "London"}
 result, err := tool.Invoke(ctx, inputs)
 ```
+
 
 To see all supported sources and the specific tools they unlock, explore the full list of our [Integrations](../../../integrations/_index.md).

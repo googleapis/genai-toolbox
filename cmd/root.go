@@ -383,7 +383,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 
 			err = handleDynamicReload(ctx, reloadedConfig, s)
 			if err != nil {
-				errMsg := fmt.Errorf("unable to parse reloaded config at %q: %w", reloadedConfig, err)
+				errMsg := fmt.Errorf("unable to parse reloaded config at %+v: %w", reloadedConfig, err)
 				logger.WarnContext(ctx, errMsg.Error())
 				continue
 			}
