@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Agent evals for prebuilt tool configs.
+# Evals for prebuilt tool configs, exercised through coding-agent harnesses.
 #
 # One step per prebuilt config. Adding a database means adding a step, its
 # evalset, and its credentials on the trigger. EVAL_HARNESSES is a
