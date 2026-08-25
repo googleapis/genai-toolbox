@@ -17,9 +17,9 @@ package file
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"io"
 	"mime"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,9 +30,9 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/resources"
 )
 
-const(
+const (
 	defaultMaxFileSize = 5 * 1024 * 1024 // 5MB
-	resourceType = "file"
+	resourceType       = "file"
 )
 
 func init() {
@@ -60,10 +60,6 @@ type Config struct {
 	resources.BaseConfig `yaml:",inline"`
 	Path                 string `yaml:"path" validate:"required"`
 	MaxSize              *int64 `yaml:"max_size,omitempty"`
-
-	absPath         string
-	resolvedBaseDir string
-	isRelative      bool
 }
 
 var _ resources.ResourceConfig = &Config{}
@@ -113,42 +109,46 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		c.MaxSize = &limit
 	}
 
+	var absPath string
+	var resolvedBaseDir string
+	var isRelative bool
+
 	if filepath.IsAbs(c.Path) {
-		c.absPath = filepath.Clean(c.Path)
-		c.isRelative = false
+		absPath = filepath.Clean(c.Path)
+		isRelative = false
 	} else {
 		if !filepath.IsLocal(c.Path) {
 			return nil, fmt.Errorf("relative path %q is unsafe", c.Path)
 		}
-		c.isRelative = true
+		isRelative = true
 		baseDir := resources.GetBaseDirFromContext(ctx)
 		if baseDir == "" {
 			baseDir = "."
 		}
-		c.resolvedBaseDir = baseDir
-		c.absPath = filepath.Clean(filepath.Join(baseDir, c.Path))
+		resolvedBaseDir = baseDir
+		absPath = filepath.Clean(filepath.Join(baseDir, c.Path))
 	}
 
-	abs, err := filepath.Abs(c.absPath)
+	abs, err := filepath.Abs(absPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get absolute path for %q: %w", c.absPath, err)
+		return nil, fmt.Errorf("failed to get absolute path for %q: %w", absPath, err)
 	}
-	c.absPath = abs
+	absPath = abs
 
 	if c.Annotations == nil {
 		c.Annotations = &resources.ResourceAnnotations{}
 	}
 
 	if c.MimeType == "" {
-		ext := strings.ToLower(filepath.Ext(c.absPath))
+		ext := strings.ToLower(filepath.Ext(absPath))
 		c.MimeType = mime.TypeByExtension(ext)
 		if c.MimeType == "" {
 			c.MimeType = "text/plain"
 		}
 	}
 
-	if c.isRelative && c.resolvedBaseDir != "" {
-		absBase, err := filepath.Abs(c.resolvedBaseDir)
+	if isRelative && resolvedBaseDir != "" {
+		absBase, err := filepath.Abs(resolvedBaseDir)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get absolute path for base directory: %w", err)
 		}
@@ -157,41 +157,46 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 			if !os.IsNotExist(err) {
 				return nil, fmt.Errorf("failed to evaluate symlinks for base directory: %w", err)
 			}
-			c.resolvedBaseDir = absBase
+			resolvedBaseDir = absBase
 		} else {
-			c.resolvedBaseDir = resolvedBase
+			resolvedBaseDir = resolvedBase
 		}
 	}
 
-	resolvedPath, err := filepath.EvalSymlinks(c.absPath)
+	resolvedPath, err := filepath.EvalSymlinks(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			if err := validateExtension(c.absPath); err != nil {
+			if err := validateExtension(absPath); err != nil {
 				return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
 			}
-			return &FileResource{Config: *c}, nil
+			return &FileResource{
+				Config:          *c,
+				absPath:         absPath,
+				resolvedBaseDir: resolvedBaseDir,
+				isRelative:      isRelative,
+			}, nil
 		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q: %w", c.Name, err)
 	}
-	c.absPath = resolvedPath
+	absPath = resolvedPath
 
-	if c.isRelative && c.resolvedBaseDir != "" {
-		rel, err := filepath.Rel(c.resolvedBaseDir, c.absPath)
+	if isRelative && resolvedBaseDir != "" {
+		rel, err := filepath.Rel(resolvedBaseDir, absPath)
 		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-			return nil, fmt.Errorf("security violation: resolved path %q escapes base directory %q", c.absPath, c.resolvedBaseDir)
+			return nil, fmt.Errorf("security violation: resolved path %q escapes base directory %q", absPath, resolvedBaseDir)
 		}
 	}
 
-	if err := validateExtension(c.absPath); err != nil {
+	if err := validateExtension(absPath); err != nil {
 		return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
 	}
 
-	info, err := os.Stat(c.absPath)
+	info, err := os.Stat(absPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to stat file %q for resource %q: %w", c.absPath, c.Name, err)
+		return nil, fmt.Errorf("failed to stat file %q for resource %q: %w", absPath, c.Name, err)
 	}
 	if !info.Mode().IsRegular() {
-		return nil, fmt.Errorf("path %q for resource %q is not a regular file (devices, pipes, sockets are blocked)", c.absPath, c.Name)
+		return nil, fmt.Errorf("path %q for resource %q is not a regular file (devices, pipes, sockets are blocked)", absPath, c.Name)
 	}
 
 	size := info.Size()
@@ -199,8 +204,11 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		size = *c.MaxSize
 	}
 	return &FileResource{
-		Config: *c,
-		Size:   size,
+		Config:          *c,
+		Size:            size,
+		absPath:         absPath,
+		resolvedBaseDir: resolvedBaseDir,
+		isRelative:      isRelative,
 	}, nil
 }
 
@@ -208,6 +216,10 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 type FileResource struct {
 	Config
 	Size int64
+
+	absPath         string
+	resolvedBaseDir string
+	isRelative      bool
 }
 
 func (r *FileResource) GetSize() *int64 {
@@ -217,13 +229,13 @@ func (r *FileResource) GetSize() *int64 {
 
 // Read retrieves the file content.
 func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, error) {
-	resolvedPath, err := filepath.EvalSymlinks(r.Config.absPath)
+	resolvedPath, err := filepath.EvalSymlinks(r.absPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Config.Name, err)
 	}
 
-	if r.Config.isRelative && r.Config.resolvedBaseDir != "" {
-		resolvedBaseDir := r.Config.resolvedBaseDir
+	if r.isRelative && r.resolvedBaseDir != "" {
+		resolvedBaseDir := r.resolvedBaseDir
 		if resolved, err := filepath.EvalSymlinks(resolvedBaseDir); err == nil {
 			resolvedBaseDir = resolved
 		}
@@ -289,44 +301,45 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	return string(content), nil
 }
 
-// ToConfig returns the runtime config struct back to the caller.
-func (r *FileResource) ToConfig() resources.ResourceConfig {
-	cfgCopy := r.Config
-
+// GetAnnotations returns the resource annotations, dynamically computing the LastModified timestamp.
+func (r *FileResource) GetAnnotations() *resources.ResourceAnnotations {
+	var ret resources.ResourceAnnotations
 	if r.Config.Annotations != nil {
-		ann := *r.Config.Annotations
-		cfgCopy.Annotations = &ann
-	} else {
-		cfgCopy.Annotations = &resources.ResourceAnnotations{}
+		ret = *r.Config.Annotations
 	}
 
-	resolvedPath := r.Config.absPath
-	if resolved, err := filepath.EvalSymlinks(r.Config.absPath); err == nil {
+	resolvedPath := r.absPath
+	if resolved, err := filepath.EvalSymlinks(r.absPath); err == nil {
 		resolvedPath = resolved
 	}
 
-	if r.Config.isRelative && r.Config.resolvedBaseDir != "" {
-		resolvedBaseDir := r.Config.resolvedBaseDir
+	if r.isRelative && r.resolvedBaseDir != "" {
+		resolvedBaseDir := r.resolvedBaseDir
 		if resolved, err := filepath.EvalSymlinks(resolvedBaseDir); err == nil {
 			resolvedBaseDir = resolved
 		}
 		rel, err := filepath.Rel(resolvedBaseDir, resolvedPath)
 		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-			return &cfgCopy
+			return &ret
 		}
 	}
 
 	if info, err := os.Stat(resolvedPath); err == nil && info.Mode().IsRegular() {
-		cfgCopy.Annotations.LastModified = info.ModTime().Format(time.RFC3339)
+		ret.LastModified = info.ModTime().Format(time.RFC3339)
 	}
 
-	return &cfgCopy
+	return &ret
+}
+
+// ToConfig returns the underlying configuration.
+func (r *FileResource) ToConfig() resources.ResourceConfig {
+	return &r.Config
 }
 
 // Size dynamically retrieves the current size of the file on disk.
 func (r *FileResource) GetCurrentSize() (int64, error) {
-	resolvedPath := r.Config.absPath
-	if resolved, err := filepath.EvalSymlinks(r.Config.absPath); err == nil {
+	resolvedPath := r.absPath
+	if resolved, err := filepath.EvalSymlinks(r.absPath); err == nil {
 		resolvedPath = resolved
 	}
 

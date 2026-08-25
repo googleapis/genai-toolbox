@@ -14,7 +14,6 @@
 
 package file_test
 
-
 import (
 	"bytes"
 	"context"
@@ -33,7 +32,6 @@ import (
 )
 
 const defaultMaxFileSize = 5 * 1024 * 1024
-
 
 // TestFileResource_Validation verifies that the file resource correctly validates
 // configurations at boot and runtime, blocking invalid paths, missing fields,
@@ -366,18 +364,19 @@ func TestFileResource_Metadata(t *testing.T) {
 		t.Fatalf("Initialize failed: %v", err)
 	}
 
-	fileCfg := res.ToConfig().(*file.Config)
+	mimeType := res.GetMimeType()
 
-	if !strings.HasPrefix(fileCfg.MimeType, "text/markdown") && !strings.HasPrefix(fileCfg.MimeType, "text/plain") && fileCfg.MimeType != "" {
-		t.Errorf("expected reasonable MimeType, got: %v", fileCfg.MimeType)
+	if !strings.HasPrefix(mimeType, "text/markdown") && !strings.HasPrefix(mimeType, "text/plain") && mimeType != "" {
+		t.Errorf("expected reasonable MimeType, got: %v", mimeType)
 	}
 
-	if fileCfg.Annotations == nil || fileCfg.Annotations.LastModified == "" {
+	anns := res.GetAnnotations()
+	if anns == nil || anns.LastModified == "" {
 		t.Errorf("expected LastModified annotation to be set")
 	} else {
-		_, err := time.Parse(time.RFC3339, fileCfg.Annotations.LastModified)
+		_, err := time.Parse(time.RFC3339, anns.LastModified)
 		if err != nil {
-			t.Errorf("expected valid RFC3339 LastModified, got %q", fileCfg.Annotations.LastModified)
+			t.Errorf("expected valid RFC3339 LastModified, got %q", anns.LastModified)
 		}
 	}
 }
@@ -454,11 +453,11 @@ func TestFileResource_DynamicMetadata(t *testing.T) {
 	}
 	f.Close()
 
-	updatedCfg := res.ToConfig().(*file.Config)
-	if updatedCfg.Annotations.LastModified == initialTimestamp {
-		_, err := time.Parse(time.RFC3339, updatedCfg.Annotations.LastModified)
+	updatedAnns := res.GetAnnotations()
+	if updatedAnns.LastModified == initialTimestamp {
+		_, err := time.Parse(time.RFC3339, updatedAnns.LastModified)
 		if err != nil {
-			t.Errorf("Invalid RFC3339 LastModified: %q", updatedCfg.Annotations.LastModified)
+			t.Errorf("Invalid RFC3339 LastModified: %q", updatedAnns.LastModified)
 		}
 	}
 }
