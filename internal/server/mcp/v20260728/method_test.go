@@ -1319,7 +1319,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						"api_key": "secret"
 					},
 					"_meta": {
-						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
+						"io.modelcontextprotocol/protocolVersion": "2026-07-28",
 						"io.modelcontextprotocol/clientInfo": {
 							"name": "TestClient",
 							"version": "1.0"
@@ -1344,7 +1344,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						"api_key": "secret"
 					},
 					"_meta": {
-						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
+						"io.modelcontextprotocol/protocolVersion": "2026-07-28",
 						"io.modelcontextprotocol/clientInfo": {
 							"name": "TestClient",
 							"version": "1.0"
@@ -1374,7 +1374,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						"api_key": "secret"
 					},
 					"_meta": {
-						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
+						"io.modelcontextprotocol/protocolVersion": "2026-07-28",
 						"io.modelcontextprotocol/clientInfo": {
 							"name": "TestClient",
 							"version": "1.0"
@@ -1436,7 +1436,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 						"query": "hello"
 					},
 					"_meta": {
-						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
+						"io.modelcontextprotocol/protocolVersion": "2026-07-28",
 						"io.modelcontextprotocol/clientInfo": {
 							"name": "TestClient",
 							"version": "1.0"

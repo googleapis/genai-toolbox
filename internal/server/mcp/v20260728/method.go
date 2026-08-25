@@ -327,7 +327,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
-	toolArguments, err := validateAndMergeSecureParams(req, toolParams)
+	toolArguments, err := validateAndMergeSecureParams(&req, toolParams)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
@@ -803,7 +803,7 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 }
 
 // validateAndMergeSecureParams validates and merges standard and secure arguments based on secure parameter definitions.
-func validateAndMergeSecureParams(req CallToolRequest, paramDefs parameters.Parameters) (map[string]any, error) {
+func validateAndMergeSecureParams(req *CallToolRequest, paramDefs parameters.Parameters) (map[string]any, error) {
 	secureParamMap := make(map[string]bool)
 	for _, p := range paramDefs {
 		if p != nil && p.GetSecure() {
