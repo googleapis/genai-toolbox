@@ -78,7 +78,7 @@ https://raw.githubusercontent.com/googleapis/mcp-toolbox/v<version>/<path>
 | What a tool accepts and does | `internal/tools/<source>/<tooldir>/<tooldir>.go`, `Config` struct then `Invoke` |
 | What `--prebuilt <x>` serves, and which env vars it reads | `internal/prebuiltconfigs/tools/<x>.yaml`, the literal config: every tool name, every toolset, and the `${ENV_VAR}` behind each source field |
 | CLI flags | `cmd/root.go` |
-| Whether a source or tool exists at all | `https://api.github.com/repos/googleapis/mcp-toolbox/contents/internal/tools?ref=v<version>` |
+| Whether a source or tool exists at all | The Step 2 `llms.txt` index — one line per tool page, titled with the exact `type` |
 
 Deriving `<tooldir>`:
 
@@ -114,7 +114,7 @@ ConnectTimeout *int  `yaml:"connectTimeout" validate:"omitempty,gte=1"`
 - `oneof=` is the **complete** allowed set. Nothing outside it is valid.
 - A pointer (`*bool`, `*int`) distinguishes unset from zero, usually meaning the
   driver default applies when unset.
-- Tool configs inline `tools.ConfigBase`, which supplies `name`, `description`,
+- Tool configs embed `tools.ConfigBase`, which supplies `name`, `description`,
   `authRequired`, and `scopesRequired`. Do not report those as missing just
   because the tool's own struct omits them.
 
