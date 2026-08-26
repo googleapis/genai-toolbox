@@ -54,8 +54,10 @@ Every version publishes a machine-readable page index:
 https://mcp-toolbox.dev/v<version>/llms.txt
 ```
 
-- **Format:** one line per page, `- [Title](permalink): description`. Fetch it,
-  find the permalink, then fetch that page.
+- **Format:** one line per page, `- [Title](permalink): description`, indented
+  two spaces per nesting level. Tool pages sit six deep, so anchoring a search
+  at `^- [` finds only the six top-level sections. Fetch the index, find the
+  permalink, then fetch that page.
 - **Size:** ~120 KB. Its sibling `llms-full.txt` holds the whole corpus at ~2 MB,
   so reach for that only after a targeted page hunt has failed.
 - **Unreleased:** swap `/v<version>/` for `/dev/` to read `main`.
