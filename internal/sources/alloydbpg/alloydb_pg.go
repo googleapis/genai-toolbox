@@ -121,7 +121,8 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 		}
 		row := orderedmap.Row{}
 		for i, f := range fields {
-			row.Add(f.Name, v[i])
+			val := sources.NormalizeValue(v[i], f.DataTypeOID)
+			row.Add(f.Name, val)
 		}
 		out = append(out, row)
 	}

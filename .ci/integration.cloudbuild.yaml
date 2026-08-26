@@ -962,6 +962,35 @@ steps:
           exit 0
         fi
 
+  - id: "firestore-mongodb"
+    name: golang:1
+    waitFor: ["compile-test-binary", "detect-changes"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "FIRESTORE_MONGODB_PROJECT=$PROJECT_ID"
+      - "FIRESTORE_MONGODB_DATABASE=$_FIRESTORE_MONGODB_DATABASE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        PATTERN="(^|/)firestoremongodb/|(^|/)internal/sources/firestore/|$$(cat .ci/core_pattern.txt)"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Running Firestore MongoDB tests..."
+          .ci/test_with_coverage.sh \
+            "Firestore MongoDB" \
+            firestoremongodb \
+            firestoremongodb
+        else
+          echo "No relevant changes for Firestore MongoDB. Skipping shard."
+          exit 0
+        fi
+
   - id: "mongodb"
     name: golang:1
     waitFor: ["compile-test-binary", "detect-changes"]
@@ -1770,3 +1799,4 @@ substitutions:
   _SNOWFLAKE_DATABASE: "test"
   _SNOWFLAKE_SCHEMA: "PUBLIC"
   _DATAPROC_CLUSTER: "dataproc-testing-cluster"
+  _FIRESTORE_MONGODB_DATABASE: "mcp-toolbox-db-native-schema"
