@@ -242,6 +242,8 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorequerycollection"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestoreupdatedocument"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorevalidaterules"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/firestoremongodb/firestoremongodbexecutemql"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/firestoremongodb/firestoremongodbgetschema"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/http"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookeradddashboardelement"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookeradddashboardfilter"
