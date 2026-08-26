@@ -40,6 +40,7 @@ files rather than a checkout of the whole repository.
 ## Skills
 
 - [`getting-started`](skills/getting-started/SKILL.md)
+- [`answer-questions`](skills/answer-questions/SKILL.md)
 
 Each skill's `description` frontmatter is the authoritative statement of what it
 covers and when it triggers.
