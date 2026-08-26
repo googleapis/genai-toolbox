@@ -25,8 +25,8 @@ set -euo pipefail
 
 # Empty values fail quietly, which is why they are checked: ALLOW_LOOSE blanks
 # an undefined substitution, empty postgres credentials degrade to IAM auth so
-# every tool disappears, and an empty EVAL_REPORTING_PROJECT writes results to
-# the build project. Both still exit green.
+# every tool disappears, and an empty EVAL_REPORTING_PROJECT falls back to the
+# build project.
 required=("EVAL_GCP_PROJECT_REGION" "EVAL_REPORTING_PROJECT" "EVAL_HARNESSES")
 for prefix in ${EVAL_ENV_PREFIX}; do
   matched=($(compgen -v "${prefix}_" || true))

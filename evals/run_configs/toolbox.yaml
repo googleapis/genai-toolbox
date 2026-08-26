@@ -18,11 +18,17 @@
 
 dataset_config: !ENV ${EVAL_DATASET}
 dataset_format: gemini-cli-format
-orchestrator: agent
 
+# Viewer labels only; nothing reads them for scoring.
+eval_group: mcp-toolbox
+product_name: !ENV ${TOOLBOX_PREBUILT}
+
+# Orchestrator Configs
+orchestrator: agent
 model_config: !ENV ${EVAL_MODEL_CONFIG}
 simulated_user_model_config: evals/model_configs/gemini_3.1_pro_model.yaml
 
+# Scorer Configs
 scorers:
   trajectory_matcher: {}
   goal_completion:
@@ -39,6 +45,7 @@ scorers:
   tokens_processed: {}
   effective_billed_tokens: {}
 
+# Reporting Related Configs
 reporting:
   bigquery:
     gcp_project_id: !ENV ${EVAL_REPORTING_PROJECT}
