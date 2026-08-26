@@ -65,13 +65,13 @@ jobs:
             const report = fs.readFileSync('tier_report.txt', 'utf8');
             const title = '[Dashboard: Conformance] Weekly Server Tier Assessment Failure';
             
-            const prevIssues = await github.rest.issues.listForRepo({
+            const prevIssues = await github.paginate(github.rest.issues.listForRepo, {
               ...context.repo,
               state: 'open'
             });
             
             // Find any open issue matching the exact dashboard title
-            let existingIssue = prevIssues.data.find(issue => issue.title === title);
+            let existingIssue = prevIssues.find(issue => issue.title === title);
             
             if (report.includes('Tier Assessment: Tier 1')) {
               console.log('Tier 1 achieved! Closing open issue if it exists.');

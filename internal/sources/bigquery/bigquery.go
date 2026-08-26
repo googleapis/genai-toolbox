@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"sync"
@@ -72,7 +73,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{Name: name, WriteMode: WriteModeAllowed, MaxQueryResultRows: 50}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -85,7 +86,7 @@ type Config struct {
 	Type                      string              `yaml:"type" validate:"required"`
 	Project                   string              `yaml:"project" validate:"required"`
 	Location                  string              `yaml:"location"`
-	WriteMode                 string              `yaml:"writeMode"`
+	WriteMode                 string              `yaml:"writeMode" validate:"required,oneof=blocked protected allowed"`
 	AllowedDatasets           StringOrStringSlice `yaml:"allowedDatasets"`
 	UseClientOAuth            string              `yaml:"useClientOAuth"`
 	QuotaProject              string              `yaml:"quotaProject"`
@@ -93,6 +94,7 @@ type Config struct {
 	Scopes                    StringOrStringSlice `yaml:"scopes"`
 	MaxQueryResultRows        int                 `yaml:"maxQueryResultRows"`
 	MaximumBytesBilled        int64               `yaml:"maximumBytesBilled" validate:"gte=0"`
+	APIEndpoint               string              `yaml:"apiEndpoint"`
 }
 
 // StringOrStringSlice is a custom type that can unmarshal both a single string
@@ -148,6 +150,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("useClientOAuth cannot be used with impersonateServiceAccount")
 	}
 
+	endpoint := NormalizeEndpoint(r.APIEndpoint)
+
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
 	var tokenSource oauth2.TokenSource
@@ -159,15 +163,13 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:              client,
 		RestService:         restService,
 		TokenSource:         tokenSource,
-		MaxQueryResultRows:  r.MaxQueryResultRows,
-		MaximumBytesBilled:  r.MaximumBytesBilled,
 		ClientCreator:       clientCreator,
 		AuthTokenHeaderName: "Authorization",
 	}
 
 	if strings.ToLower(r.UseClientOAuth) == "false" || r.UseClientOAuth == "" {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.QuotaProject, r.ImpersonateServiceAccount, r.Scopes)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.QuotaProject, r.ImpersonateServiceAccount, r.Scopes, endpoint)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -184,7 +186,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			s.AuthTokenHeaderName = r.UseClientOAuth
 		}
 		// use client OAuth
-		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.QuotaProject, r.Name)
+		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.QuotaProject, r.Name, endpoint)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
@@ -226,10 +228,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s.AllowedDatasets = allowedDatasets
 	s.SessionProvider = s.newBigQuerySessionProvider()
-
-	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
-		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
-	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
 }
@@ -294,8 +292,6 @@ type Source struct {
 	RestService               *bigqueryrestapi.Service
 	TokenSource               oauth2.TokenSource
 	AuthTokenHeaderName       string
-	MaxQueryResultRows        int
-	MaximumBytesBilled        int64
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
 	sessionMutex              sync.Mutex
@@ -689,6 +685,35 @@ func NormalizeValue(v any) any {
 	return v
 }
 
+// NormalizeEndpoint canonicalizes a raw endpoint string for use with option.WithEndpoint.
+// Empty or whitespace-only input returns "" (no override). If no scheme is present,
+// "https://" is assumed. A default port (:443, or :80 for http) is appended when the
+// host carries none. Trailing slashes are stripped.
+func NormalizeEndpoint(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	if !strings.Contains(raw, "://") {
+		raw = "https://" + raw
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Host == "" {
+		return raw
+	}
+	if u.Port() == "" {
+		if u.Scheme == "http" {
+			u.Host = u.Hostname() + ":80"
+		} else {
+			u.Host = u.Hostname() + ":443"
+		}
+	}
+	if u.Path == "/" {
+		u.Path = ""
+	}
+	return u.String()
+}
+
 func initBigQueryConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
@@ -698,6 +723,7 @@ func initBigQueryConnection(
 	quotaProject string,
 	impersonateServiceAccount string,
 	scopes []string,
+	endpoint string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -747,6 +773,9 @@ func initBigQueryConnection(
 		}
 	}
 
+	if endpoint != "" {
+		opts = append(opts, option.WithEndpoint(endpoint))
+	}
 	if quotaProject != "" {
 		opts = append(opts, option.WithQuotaProject(quotaProject))
 	}
@@ -779,6 +808,7 @@ func initBigQueryConnectionWithOAuthToken(
 	userAgent string,
 	tokenString string,
 	wantRestService bool,
+	endpoint string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -791,6 +821,9 @@ func initBigQueryConnectionWithOAuthToken(
 	opts := []option.ClientOption{
 		option.WithUserAgent(userAgent),
 		option.WithTokenSource(ts),
+	}
+	if endpoint != "" {
+		opts = append(opts, option.WithEndpoint(endpoint))
 	}
 	if quotaProject != "" {
 		opts = append(opts, option.WithQuotaProject(quotaProject))
@@ -825,6 +858,7 @@ func newBigQueryClientCreator(
 	location string,
 	quotaProject string,
 	name string,
+	endpoint string,
 ) (func(string, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
@@ -832,7 +866,7 @@ func newBigQueryClientCreator(
 	}
 
 	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, quotaProject, name, userAgent, tokenString, wantRestService)
+		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, quotaProject, name, userAgent, tokenString, wantRestService, endpoint)
 	}, nil
 }
 

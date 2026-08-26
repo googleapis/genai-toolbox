@@ -29,6 +29,7 @@ aliases:
     *   `update_data_product`: Updates an existing Data Product.
     *   `create_data_asset`: Creates a new Data Asset under a Data Product.
     *   `update_data_asset`: Updates an existing Data Asset under a Data Product.
+    *   `update_data_product_aspects`: Updates aspects (like documentation or contracts) on a Data Product Entry.
     *   `generate_data_insights`: Creates a new Dataplex Data Documentation scan template and triggers the run.
     *   `get_data_insights`: Retrieves the final generated data insights for a completed scan.
     *   `generate_data_profile`: Creates a new Dataplex Data Profile scan template and triggers the run.
@@ -41,5 +42,5 @@ aliases:
     *   `get_run_status`: Retrieves the execution status of the latest background job run.
 *   **Toolsets:**
     *   `discovery`: Metadata discovery and search toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `search_dq_scans`).
-    *   `data-products`: Data Products and Data Assets curation and management toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `list_data_products`, `get_data_product`, `list_data_assets`, `get_data_asset`, `create_data_product`, `update_data_product`, `create_data_asset`, `update_data_asset`).
+    *   `data-products`: Data Products and Data Assets curation and management toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `list_data_products`, `get_data_product`, `list_data_assets`, `get_data_asset`, `create_data_product`, `update_data_product`, `create_data_asset`, `update_data_asset`, `update_data_product_aspects`, `get_operation`).
     *   `enrich`: Metadata enrichment pipeline orchestration and execution toolset (`search_entries`, `lookup_entry`, `lookup_context`, `generate_data_insights`, `get_data_insights`, `generate_data_profile`, `get_data_profile`, `discover_metadata`, `get_discovery_results`, `check_data_quality`, `get_data_quality_results`, `get_operation`, `get_run_status`).

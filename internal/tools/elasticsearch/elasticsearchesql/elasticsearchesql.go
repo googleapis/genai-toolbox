@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
@@ -87,16 +88,27 @@ func (c Config) Initialize(context.Context) (tools.Tool, error) {
 	}, nil
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
+	return nil
+}
 
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
 	var cancel context.CancelFunc
 	if t.Cfg.Timeout > 0 {
 		ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Cfg.Timeout)*time.Second)

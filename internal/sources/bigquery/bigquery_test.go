@@ -25,8 +25,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/internal/util"
-	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestParseFromYamlBigQuery(t *testing.T) {
@@ -45,11 +43,12 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
-					Name:      "my-instance",
-					Type:      bigquery.SourceType,
-					Project:   "my-project",
-					Location:  "",
-					WriteMode: "",
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "",
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
 				},
 			},
 		},
@@ -65,12 +64,13 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
-					Name:           "my-instance",
-					Type:           bigquery.SourceType,
-					Project:        "my-project",
-					Location:       "asia",
-					WriteMode:      "blocked",
-					UseClientOAuth: "",
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "asia",
+					WriteMode:          "blocked",
+					UseClientOAuth:     "",
+					MaxQueryResultRows: 50,
 				},
 			},
 		},
@@ -86,11 +86,13 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
-					Name:           "my-instance",
-					Type:           bigquery.SourceType,
-					Project:        "my-project",
-					Location:       "us",
-					UseClientOAuth: "true",
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "us",
+					UseClientOAuth:     "true",
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
 				},
 			},
 		},
@@ -106,11 +108,13 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
-					Name:           "my-instance",
-					Type:           bigquery.SourceType,
-					Project:        "my-project",
-					Location:       "us",
-					UseClientOAuth: "X-Custom-Auth",
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "us",
+					UseClientOAuth:     "X-Custom-Auth",
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
 				},
 			},
 		},
@@ -126,11 +130,13 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
-					Name:           "my-instance",
-					Type:           bigquery.SourceType,
-					Project:        "my-project",
-					Location:       "us",
-					UseClientOAuth: "true",
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "us",
+					UseClientOAuth:     "true",
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
 				},
 			},
 		},
@@ -146,11 +152,13 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
-					Name:           "my-instance",
-					Type:           bigquery.SourceType,
-					Project:        "my-project",
-					Location:       "us",
-					UseClientOAuth: "false",
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "us",
+					UseClientOAuth:     "false",
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
 				},
 			},
 		},
@@ -167,12 +175,14 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
-					Name:           "my-instance",
-					Type:           bigquery.SourceType,
-					Project:        "my-project",
-					Location:       "us",
-					UseClientOAuth: "true",
-					QuotaProject:   "billing-project",
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "us",
+					UseClientOAuth:     "true",
+					QuotaProject:       "billing-project",
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
 				},
 			},
 		},
@@ -189,11 +199,13 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
-					Name:            "my-instance",
-					Type:            bigquery.SourceType,
-					Project:         "my-project",
-					Location:        "us",
-					AllowedDatasets: []string{"my_dataset"},
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "us",
+					AllowedDatasets:    []string{"my_dataset"},
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
 				},
 			},
 		},
@@ -214,6 +226,8 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:                   "my-project",
 					Location:                  "us",
 					ImpersonateServiceAccount: "service-account@my-project.iam.gserviceaccount.com",
+					WriteMode:                 "allowed",
+					MaxQueryResultRows:        50,
 				},
 			},
 		},
@@ -231,11 +245,13 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
-					Name:     "my-instance",
-					Type:     bigquery.SourceType,
-					Project:  "my-project",
-					Location: "us",
-					Scopes:   []string{"https://www.googleapis.com/auth/bigquery", "https://www.googleapis.com/auth/cloud-platform"},
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "us",
+					Scopes:             []string{"https://www.googleapis.com/auth/bigquery", "https://www.googleapis.com/auth/cloud-platform"},
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
 				},
 			},
 		},
@@ -256,6 +272,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:            "my-project",
 					Location:           "us",
 					MaxQueryResultRows: 10,
+					WriteMode:          "allowed",
 				},
 			},
 		},
@@ -276,6 +293,28 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:            "my-project",
 					Location:           "us",
 					MaximumBytesBilled: 10737418240,
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
+				},
+			},
+		},
+		{
+			desc: "with api endpoint",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			apiEndpoint: http://localhost:9050
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					APIEndpoint:        "http://localhost:9050",
+					WriteMode:          "allowed",
+					MaxQueryResultRows: 50,
 				},
 			},
 		},
@@ -332,6 +371,17 @@ func TestFailParseFromYaml(t *testing.T) {
 			`,
 			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": [1:21] Key: 'Config.MaximumBytesBilled' Error:Field validation for 'MaximumBytesBilled' failed on the 'gte' tag\n>  1 | maximumBytesBilled: -1\n                           ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | type: bigquery",
 		},
+		{
+			desc: "invalid value for write mode",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			writeMode: foo
+			`,
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": [4:12] Key: 'Config.WriteMode' Error:Field validation for 'WriteMode' failed on the 'oneof' tag\n   1 | name: my-instance\n   2 | project: my-project\n   3 | type: bigquery\n>  4 | writeMode: foo\n                  ^\n",
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -347,107 +397,26 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 }
 
-func TestInitialize_MaxQueryResultRows(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	ctx = util.WithUserAgent(ctx, "test-agent")
-	tracer := noop.NewTracerProvider().Tracer("")
-
+func TestNormalizeEndpoint(t *testing.T) {
 	tcs := []struct {
 		desc string
-		cfg  bigquery.Config
-		want int
+		in   string
+		want string
 	}{
-		{
-			desc: "default value",
-			cfg: bigquery.Config{
-				Name:           "test-default",
-				Type:           bigquery.SourceType,
-				Project:        "test-project",
-				UseClientOAuth: "true",
-			},
-			want: 50,
-		},
-		{
-			desc: "configured value",
-			cfg: bigquery.Config{
-				Name:               "test-configured",
-				Type:               bigquery.SourceType,
-				Project:            "test-project",
-				UseClientOAuth:     "true",
-				MaxQueryResultRows: 100,
-			},
-			want: 100,
-		},
+		{desc: "empty", in: "", want: ""},
+		{desc: "whitespace only", in: "  ", want: ""},
+		{desc: "https with host, no port", in: "https://proxy.example.com", want: "https://proxy.example.com:443"},
+		{desc: "http with localhost and explicit port", in: "http://localhost:9050", want: "http://localhost:9050"},
+		{desc: "bare host defaults to https and port 443", in: "proxy.example.com", want: "https://proxy.example.com:443"},
+		{desc: "bare host with port keeps port and adds https", in: "host:8443", want: "https://host:8443"},
+		{desc: "root trailing slash stripped", in: "https://proxy.example.com/", want: "https://proxy.example.com:443"},
+		{desc: "custom path trailing slash preserved", in: "https://proxy.example.com/custom/path/", want: "https://proxy.example.com:443/custom/path/"},
 	}
-
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			src, err := tc.cfg.Initialize(ctx, tracer)
-			if err != nil {
-				t.Fatalf("Initialize failed: %v", err)
-			}
-			bqSrc, ok := src.(*bigquery.Source)
-			if !ok {
-				t.Fatalf("Expected *bigquery.Source, got %T", src)
-			}
-			if bqSrc.MaxQueryResultRows != tc.want {
-				t.Errorf("MaxQueryResultRows = %d, want %d", bqSrc.MaxQueryResultRows, tc.want)
-			}
-		})
-	}
-}
-
-func TestInitialize_MaximumBytesBilled(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	ctx = util.WithUserAgent(ctx, "test-agent")
-	tracer := noop.NewTracerProvider().Tracer("")
-
-	tcs := []struct {
-		desc string
-		cfg  bigquery.Config
-		want int64
-	}{
-		{
-			desc: "default value",
-			cfg: bigquery.Config{
-				Name:           "test-default",
-				Type:           bigquery.SourceType,
-				Project:        "test-project",
-				UseClientOAuth: "true",
-			},
-			want: 0,
-		},
-		{
-			desc: "configured value",
-			cfg: bigquery.Config{
-				Name:               "test-configured",
-				Type:               bigquery.SourceType,
-				Project:            "test-project",
-				UseClientOAuth:     "true",
-				MaximumBytesBilled: 10737418240,
-			},
-			want: 10737418240,
-		},
-	}
-
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			src, err := tc.cfg.Initialize(ctx, tracer)
-			if err != nil {
-				t.Fatalf("Initialize failed: %v", err)
-			}
-			bqSrc, ok := src.(*bigquery.Source)
-			if !ok {
-				t.Fatalf("Expected *bigquery.Source, got %T", src)
-			}
-			if bqSrc.MaximumBytesBilled != tc.want {
-				t.Errorf("MaximumBytesBilled = %d, want %d", bqSrc.MaximumBytesBilled, tc.want)
+			got := bigquery.NormalizeEndpoint(tc.in)
+			if got != tc.want {
+				t.Errorf("NormalizeEndpoint(%q) = %q, want %q", tc.in, got, tc.want)
 			}
 		})
 	}

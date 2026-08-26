@@ -169,7 +169,12 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 	return params, nil
 }
 
-func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, formatter embeddingmodels.VectorFormatter) (ParamValues, error) {
+// PrimitiveManagerI defines the minimal view of the primitive manager needed by parameters.
+type PrimitiveManagerI interface {
+	GetEmbeddingModel(string) (embeddingmodels.EmbeddingModel, bool)
+}
+
+func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, pMgr PrimitiveManagerI, formatter embeddingmodels.VectorFormatter) (ParamValues, error) {
 
 	type ParamToEmbed struct {
 		OriginalValue string
@@ -199,7 +204,7 @@ func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, em
 
 	// Batch embedding request sent to each model
 	for modelName, params := range parametersToEmbed {
-		model, ok := embeddingModelsMap[modelName]
+		model, ok := pMgr.GetEmbeddingModel(modelName)
 		if !ok {
 			return nil, fmt.Errorf("embedding model does not exist: %s", modelName)
 		}

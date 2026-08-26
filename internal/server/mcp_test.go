@@ -28,10 +28,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -45,7 +48,7 @@ const protocolVersion20241105 = "2024-11-05"
 const protocolVersion20250326 = "2025-03-26"
 const protocolVersion20250618 = "2025-06-18"
 const protocolVersion20251125 = "2025-11-25"
-const protocolVersionDraft = "DRAFT-2026-v1"
+const protocolVersion20260728 = "2026-07-28"
 const serverName = "Toolbox"
 
 var basicInputSchema = map[string]any{
@@ -116,8 +119,8 @@ var prompt2Args = []any{
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -461,24 +464,29 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5, testutils.MockToolUrlBinding}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets, withEnableDraftSpecs())
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups, withEnableDraftSpecs())
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
 
 	versTestCases := []struct {
-		name                      string
-		protocol                  string
-		idHeader                  bool
-		reqHeader                 []string
-		initWant                  map[string]any
-		invalidMethods            []string
-		meta                      map[string]any
-		wantToolsList             map[string]any
-		wantPromptsList           map[string]any
-		wantToolsListOnTool1      map[string]any
-		wantToolsListWithURLParam map[string]any
+		name                                   string
+		protocol                               string
+		idHeader                               bool
+		reqHeader                              []string
+		initWant                               map[string]any
+		invalidMethods                         []string
+		meta                                   map[string]any
+		wantToolsList                          map[string]any
+		wantPromptsList                        map[string]any
+		wantPromptsGet                         map[string]any
+		wantToolsListOnTool1                   map[string]any
+		wantToolsCallOnTool1                   map[string]any
+		wantToolsListWithURLParam              map[string]any
+		wantToolsCallWithURLParam              map[string]any
+		wantToolsCallWithURLParamOverrideError map[string]any
+		wantToolsCallWithParamError            map[string]any
 	}{
 		{
 			name:     "version 2024-11-05",
@@ -556,13 +564,13 @@ func TestMcpEndpoint(t *testing.T) {
 			invalidMethods: []string{"server/discover"},
 		},
 		{
-			name:           "version DRAFT",
-			protocol:       protocolVersionDraft,
+			name:           "version 2026-07-28",
+			protocol:       protocolVersion20260728,
 			idHeader:       false,
 			reqHeader:      []string{"Mcp-Protocol-Version", "Mcp-Method", "Mcp-Name"},
 			invalidMethods: []string{"ping"},
 			meta: map[string]any{
-				"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
+				"io.modelcontextprotocol/protocolVersion": protocolVersion20260728,
 				"io.modelcontextprotocol/clientInfo": map[string]any{
 					"version": "client-temp-version",
 					"name":    "client-name",
@@ -573,6 +581,7 @@ func TestMcpEndpoint(t *testing.T) {
 				"jsonrpc": "2.0",
 				"id":      "tools-list",
 				"result": map[string]any{
+					"resultType": "complete",
 					"tools": []any{
 						map[string]any{
 							"name":        "no_params",
@@ -603,12 +612,16 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 			wantPromptsList: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "prompts-list",
 				"result": map[string]any{
+					"resultType": "complete",
 					"prompts": []any{
 						map[string]any{
 							"name": "prompt1",
@@ -620,12 +633,35 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantPromptsGet: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "prompts-get-prompt2",
+				"result": map[string]any{
+					"resultType": "complete",
+					"messages": []any{
+						map[string]any{
+							"role": "user",
+							"content": map[string]any{
+								"type": "text",
+								"text": "substituted prompt2",
+							},
+						},
+					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 			wantToolsListOnTool1: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "tools-list-tool1",
 				"result": map[string]any{
+					"resultType": "complete",
 					"tools": []any{
 						map[string]any{
 							"name":        "no_params",
@@ -634,12 +670,32 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantToolsCallOnTool1: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-tool1",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `"no_params"`,
+						},
+					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 			wantToolsListWithURLParam: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "tools-list-url-binding",
 				"result": map[string]any{
+					"resultType": "complete",
 					"tools": []any{
 						map[string]any{
 							"name":        "no_params",
@@ -674,8 +730,89 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 					"ttlMs":      300000.0,
 					"cacheScope": "public",
+				},
+			},
+			wantToolsCallWithURLParam: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-url-binding",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `"url_binding_tool"`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `"bound-string"`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `42`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `true`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `3.14`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `"unbound-value"`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `["a","b"]`,
+						},
+						map[string]any{
+							"type": "text",
+							"text": `{"k":"v"}`,
+						},
+					},
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantToolsCallWithURLParamOverrideError: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-url-binding-override",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `parameter "param1" is bound by URL and cannot be provided in client arguments`,
+						},
+					},
+					"isError": true,
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantToolsCallWithParamError: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-param-error",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `provided parameters were invalid: parameter "param1" is required`,
+						},
+					},
+					"isError": true,
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
 				},
 			},
 		},
@@ -743,12 +880,18 @@ func TestMcpEndpoint(t *testing.T) {
 						"jsonrpc": "2.0",
 						"id":      "server-discover",
 						"result": map[string]any{
-							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "DRAFT-2026-v1"},
+							"resultType":        "complete",
+							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 							"capabilities": map[string]any{
+								"extensions": map[string]any{
+									"com.google.cloud/toolbox.v1": map[string]any{},
+								},
 								"tools":   map[string]any{"listChanged": false},
 								"prompts": map[string]any{"listChanged": false},
 							},
-							"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+							"_meta": map[string]any{
+								"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+							},
 						},
 					},
 				},
@@ -862,6 +1005,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					wantOverwrite: vtc.wantPromptsGet,
 				},
 				{
 					name: "tools/list on tool1_only",
@@ -1032,6 +1176,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					wantOverwrite: vtc.wantToolsCallOnTool1,
 				},
 				{
 					name: "call tool4 unauthorized tool",
@@ -1193,6 +1338,72 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					wantOverwrite: vtc.wantToolsCallWithURLParam,
+				},
+				{
+					name: "tools/call with URL param override returns error",
+					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14&param6=%5B%22a%22%2C%22b%22%5D&param7=%7B%22k%22%3A%22v%22%7D",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-url-binding-override",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "url_binding_tool",
+							"arguments": map[string]any{
+								"param1": "client-override",
+								"param5": "unbound-value",
+							},
+						},
+					},
+					methodName:     "tools/call",
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-url-binding-override",
+						"result": map[string]any{
+							"content": []any{
+								map[string]any{
+									"type": "text",
+									"text": `parameter "param1" is bound by URL and cannot be provided in client arguments`,
+								},
+							},
+							"isError": true,
+						},
+					},
+					wantOverwrite: vtc.wantToolsCallWithURLParamOverrideError,
+				},
+				{
+					name: "tools/call with insufficient parameters returns tool error",
+					url:  "/",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-param-error",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "some_params",
+							"arguments": map[string]any{},
+						},
+					},
+					methodName:     "tools/call",
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-param-error",
+						"result": map[string]any{
+							"content": []any{
+								map[string]any{
+									"type": "text",
+									"text": `provided parameters were invalid: parameter "param1" is required`,
+								},
+							},
+							"isError": true,
+						},
+					},
+					wantOverwrite: vtc.wantToolsCallWithParamError,
 				},
 			}
 			for i := range testCases {
@@ -1283,15 +1494,15 @@ func TestMcpEndpoint(t *testing.T) {
 func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
 
-	protocol := protocolVersionDraft
+	protocol := "DRAFT"
 	meta := map[string]any{
-		"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
+		"io.modelcontextprotocol/protocolVersion": protocol,
 		"io.modelcontextprotocol/clientInfo": map[string]any{
 			"version": "client-temp-version",
 			"name":    "client-name",
@@ -1315,8 +1526,8 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 		"error": map[string]interface{}{
 			"code": float64(-32022),
 			"data": map[string]interface{}{
-				"requested": "DRAFT-2026-v1",
-				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"},
+				"requested": "DRAFT",
+				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 			},
 			"message": "unsupported protocol version",
 		},
@@ -1367,8 +1578,8 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 func TestInvalidProtocolVersionHeader(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1413,7 +1624,7 @@ func TestInvalidProtocolVersionHeader(t *testing.T) {
 }
 
 func TestDeleteEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1428,7 +1639,7 @@ func TestDeleteEndpoint(t *testing.T) {
 }
 
 func TestGetEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1451,7 +1662,7 @@ func TestGetEndpoint(t *testing.T) {
 }
 
 func TestMcpRequestBodyLimit(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1483,7 +1694,7 @@ func TestMcpRequestBodyLimit(t *testing.T) {
 
 func TestMcpRequestBodyLimitOverride(t *testing.T) {
 	customLimit := int64(1 << 20)
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1513,7 +1724,7 @@ func TestMcpRequestBodyLimitOverride(t *testing.T) {
 }
 
 func TestSseEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1625,13 +1836,77 @@ func runSseRequest(ts *httptest.Server, path string, proto string) (*http.Respon
 	return resp, nil
 }
 
+// nonFlusherResponseWriter is an http.ResponseWriter that deliberately does not
+// implement http.Flusher, used to exercise sseHandler's missing-flusher path.
+type nonFlusherResponseWriter struct {
+	header http.Header
+	status int
+	body   bytes.Buffer
+}
+
+func (w *nonFlusherResponseWriter) Header() http.Header {
+	if w.header == nil {
+		w.header = make(http.Header)
+	}
+	return w.header
+}
+
+func (w *nonFlusherResponseWriter) Write(b []byte) (int, error) { return w.body.Write(b) }
+
+func (w *nonFlusherResponseWriter) WriteHeader(status int) { w.status = status }
+
+// TestSseHandlerWriterWithoutFlusher checks that when the ResponseWriter does
+// not implement http.Flusher, sseHandler reports a clean 500 instead of falling
+// through and dereferencing a nil flusher.
+func TestSseHandlerWriterWithoutFlusher(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	testLogger, err := log.NewStdLogger(os.Stderr, os.Stderr, "warn")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, testutils.MockVersionString, "", false, "", "toolbox")
+	if err != nil {
+		t.Fatalf("unable to setup otel: %s", err)
+	}
+	defer func() {
+		if err := otelShutdown(ctx); err != nil {
+			t.Fatalf("error shutting down OpenTelemetry: %s", err)
+		}
+	}()
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(testutils.MockVersionString)
+	if err != nil {
+		t.Fatalf("unable to create custom metrics: %s", err)
+	}
+
+	server := &Server{
+		version:         testutils.MockVersionString,
+		logger:          testLogger,
+		instrumentation: instrumentation,
+		sseManager:      newSseManager(ctx),
+		PrimitiveMgr:    primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil),
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/sse", nil).WithContext(ctx)
+	w := &nonFlusherResponseWriter{}
+
+	sseHandler(server, w, req)
+
+	if w.status != http.StatusInternalServerError {
+		t.Fatalf("expected status %d for a writer without a flusher, got %d", http.StatusInternalServerError, w.status)
+	}
+}
+
 func TestStdioSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, mockPrompts)
 
 	pr, pw, err := os.Pipe()
 	if err != nil {
@@ -1661,7 +1936,7 @@ func TestStdioSession(t *testing.T) {
 
 	sseManager := newSseManager(ctx)
 
-	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	server := &Server{
 		version:         testutils.MockVersionString,
@@ -1852,6 +2127,72 @@ func TestExtractMeta(t *testing.T) {
 
 			if tc.wantProtocolVersion != metaProtocolVersion {
 				t.Fatalf("meta protocol version mismatch: got %s, want %s", metaProtocolVersion, tc.wantProtocolVersion)
+			}
+		})
+	}
+}
+
+// TestMcpPromptScopingByGroup is an end-to-end HTTP test that a `prompts/list`
+// request sent to a group's MCP endpoint returns only the prompts belonging to
+// that group. It stands up the real server with two groups (each scoped to a
+// different prompt) and asserts each route surfaces just its own prompt.
+func TestMcpPromptScopingByGroup(t *testing.T) {
+	toolsMap := map[string]tools.Tool{}
+	promptsMap := map[string]prompts.Prompt{
+		testutils.MockPrompt1.Name: testutils.MockPrompt1,
+		testutils.MockPrompt2.Name: testutils.MockPrompt2,
+	}
+	groupA, err := group.GroupConfig{Name: "group_a", PromptNames: []string{testutils.MockPrompt1.Name}}.Initialize(toolsMap, promptsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize group_a: %s", err)
+	}
+	groupB, err := group.GroupConfig{Name: "group_b", PromptNames: []string{testutils.MockPrompt2.Name}}.Initialize(toolsMap, promptsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize group_b: %s", err)
+	}
+	groups := map[string]group.Group{"group_a": groupA, "group_b": groupB}
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	testCases := []struct {
+		name        string
+		url         string
+		wantPrompts []any
+	}{
+		{
+			name:        "group_a scopes to its own prompt",
+			url:         "/group_a",
+			wantPrompts: []any{map[string]any{"name": "prompt1"}},
+		},
+		{
+			name:        "group_b scopes to its own prompt",
+			url:         "/group_b",
+			wantPrompts: []any{map[string]any{"name": "prompt2", "arguments": prompt2Args}},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBody := jsonrpc.JSONRPCRequest{Jsonrpc: jsonrpcVersion, Id: "prompts-list", Request: jsonrpc.Request{Method: "prompts/list"}}
+			reqMarshal, err := json.Marshal(reqBody)
+			if err != nil {
+				t.Fatalf("unexpected error marshaling body: %s", err)
+			}
+			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), nil)
+			if err != nil {
+				t.Fatalf("unexpected error during request: %s", err)
+			}
+			if resp.StatusCode != http.StatusOK {
+				t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, http.StatusOK)
+			}
+			var got map[string]any
+			if err := json.Unmarshal(body, &got); err != nil {
+				t.Fatalf("unexpected error unmarshalling body: %s", err)
+			}
+			want := map[string]any{"jsonrpc": "2.0", "id": "prompts-list", "result": map[string]any{"prompts": tc.wantPrompts}}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("unexpected response: got %#v, want %#v", got, want)
 			}
 		})
 	}

@@ -15,33 +15,38 @@
 package primitives
 
 import (
+	"cmp"
+	"slices"
 	"sync"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
-// PrimitiveManager contains available primitives for the server. Should be initialized with NewPrimitiveManager().
+// PrimitiveManager contains available resources for the server. Should be initialized with NewPrimitiveManager().
+// groups is the source of truth for named collections; toolset views (manifests)
+// are derived from the group on demand by the callers that render them.
 type PrimitiveManager struct {
 	mu              sync.RWMutex
 	sources         map[string]sources.Source
 	authServices    map[string]auth.AuthService
 	embeddingModels map[string]embeddingmodels.EmbeddingModel
 	tools           map[string]tools.Tool
-	toolsets        map[string]tools.Toolset
 	prompts         map[string]prompts.Prompt
-	promptsets      map[string]prompts.Promptset
+	groups          map[string]group.Group
 }
 
 func NewPrimitiveManager(
 	sourcesMap map[string]sources.Source,
 	authServicesMap map[string]auth.AuthService,
 	embeddingModelsMap map[string]embeddingmodels.EmbeddingModel,
-	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
-	promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset,
+	toolsMap map[string]tools.Tool,
+	promptsMap map[string]prompts.Prompt,
+	groupsMap map[string]group.Group,
 
 ) *PrimitiveManager {
 	primitiveMgr := &PrimitiveManager{
@@ -50,9 +55,8 @@ func NewPrimitiveManager(
 		authServices:    authServicesMap,
 		embeddingModels: embeddingModelsMap,
 		tools:           toolsMap,
-		toolsets:        toolsetsMap,
 		prompts:         promptsMap,
-		promptsets:      promptsetsMap,
+		groups:          groupsMap,
 	}
 
 	return primitiveMgr
@@ -86,13 +90,6 @@ func (r *PrimitiveManager) GetTool(toolName string) (tools.Tool, bool) {
 	return tool, ok
 }
 
-func (r *PrimitiveManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	toolset, ok := r.toolsets[toolsetName]
-	return toolset, ok
-}
-
 func (r *PrimitiveManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -100,36 +97,27 @@ func (r *PrimitiveManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	return prompt, ok
 }
 
-func (r *PrimitiveManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {
+// GetGroup returns the group of the given name.
+func (r *PrimitiveManager) GetGroup(groupName string) (group.Group, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	promptset, ok := r.promptsets[promptsetName]
-	return promptset, ok
+	g, ok := r.groups[groupName]
+	return g, ok
 }
 
-func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
+func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, groupsMap map[string]group.Group) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sources = sourcesMap
 	r.authServices = authServicesMap
 	r.embeddingModels = embeddingModelsMap
 	r.tools = toolsMap
-	r.toolsets = toolsetsMap
 	r.prompts = promptsMap
-	r.promptsets = promptsetsMap
+	r.groups = groupsMap
 }
 
-func (r *PrimitiveManager) GetSourcesMap() map[string]sources.Source {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]sources.Source, len(r.sources))
-	for k, v := range r.sources {
-		copiedMap[k] = v
-	}
-	return copiedMap
-}
-
-func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
+// AuthServices returns a copy of the auth services map
+func (r *PrimitiveManager) AuthServices() map[string]auth.AuthService {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]auth.AuthService, len(r.authServices))
@@ -139,32 +127,21 @@ func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
 	return copiedMap
 }
 
-func (r *PrimitiveManager) GetEmbeddingModelMap() map[string]embeddingmodels.EmbeddingModel {
+// GroupsList returns a copy of the groups list sorted alphabetically by name
+func (r *PrimitiveManager) GroupsList() []group.Group {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	copiedMap := make(map[string]embeddingmodels.EmbeddingModel, len(r.embeddingModels))
-	for k, v := range r.embeddingModels {
-		copiedMap[k] = v
+	groupsList := make([]group.Group, 0, len(r.groups))
+	for k, g := range r.groups {
+		if k == "" {
+			continue
+		}
+		groupsList = append(groupsList, g)
 	}
-	return copiedMap
-}
 
-func (r *PrimitiveManager) GetToolsMap() map[string]tools.Tool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]tools.Tool, len(r.tools))
-	for k, v := range r.tools {
-		copiedMap[k] = v
-	}
-	return copiedMap
-}
+	slices.SortFunc(groupsList, func(a, b group.Group) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
 
-func (r *PrimitiveManager) GetPromptsMap() map[string]prompts.Prompt {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]prompts.Prompt, len(r.prompts))
-	for k, v := range r.prompts {
-		copiedMap[k] = v
-	}
-	return copiedMap
+	return groupsList
 }

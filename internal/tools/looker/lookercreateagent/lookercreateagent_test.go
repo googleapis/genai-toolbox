@@ -132,15 +132,6 @@ func (m MockSource) GetLookerSDK(ctx context.Context, s string) (*v4.LookerSDK, 
 	return &v4.LookerSDK{}, nil
 }
 
-type MockSourceProvider struct {
-	tools.SourceProvider
-	source MockSource
-}
-
-func (m MockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.source, true
-}
-
 func TestInvokeValidation(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -160,8 +151,7 @@ func TestInvokeValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
-
-	primitiveMgr := MockSourceProvider{source: MockSource{}}
+	src := MockSource{}
 
 	tcs := []struct {
 		desc    string
@@ -193,7 +183,7 @@ func TestInvokeValidation(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, err := tool.Invoke(ctx, primitiveMgr, tc.params, "")
+			_, err := tool.Invoke(ctx, src, tc.params, "")
 			if err == nil {
 				t.Fatalf("expect error, got nil")
 			}

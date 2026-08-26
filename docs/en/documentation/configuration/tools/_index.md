@@ -90,6 +90,76 @@ parameters:
 | minValue       |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the minimum value allowed.                                                                                                                                                     |
 | maxValue       |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the maximum value allowed.                                                                                                                                                     |
 
+### Optional Parameters
+
+Parameters are **required by default**. Omitting `required` is the same as
+writing `required: true`, so an agent that calls the tool without the argument
+gets `parameter "airline" is required` back.
+
+There are two ways to make a parameter optional, and they behave differently:
+
+```yaml
+parameters:
+  # Optional with a fallback: omitted calls use "AA".
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
+    default: AA
+
+  # Optional with no fallback: omitted calls pass no value for the parameter,
+  # which a SQL statement binds as NULL.
+  - name: seat_class
+    type: string
+    description: Seat class to filter by
+    required: false
+```
+
+Providing a `default` also makes the parameter optional — it overrides
+`required: true` rather than conflicting with it. The full matrix:
+
+| `required` | `default`             | Effective behavior                                              |
+|:-----------|:----------------------|:----------------------------------------------------------------|
+| omitted    | omitted               | **Required.** Calls that omit the argument are rejected.         |
+| `true`     | omitted               | **Required.** Same as above.                                     |
+| `false`    | omitted               | Optional; omitted calls pass no value (`NULL` in SQL).           |
+| `true`     | a value               | **Optional**;  the `default` wins over `required: true`.         |
+| omitted    | a value               | Optional; omitted calls use the default.                         |
+| `false`    | a value               | Optional; omitted calls use the default.                         |
+
+This distinction also reaches the agent: a parameter that is effectively
+optional is advertised as not required in the tool manifest, so the model knows
+it may omit the argument.
+
+{{< notice warning >}}
+**`default: null` does not make a parameter optional.** In YAML, `default:
+null` (and the equivalent `default: ~`, or a `default:` key with nothing after
+it) parses to a null value, which Toolbox cannot distinguish from the field
+being absent altogether. The parameter therefore stays **required**, and calls
+that omit the argument fail at invocation time with `parameter "..." is
+required`.
+
+If you want "optional, with no value when the caller omits it", write
+`required: false` instead:
+
+```yaml
+# Does NOT work — the parameter is still required.
+- name: seat_class
+  type: string
+  description: Seat class to filter by
+  default: null
+
+# Works.
+- name: seat_class
+  type: string
+  description: Seat class to filter by
+  required: false
+```
+
+Note that an explicit empty value *is* a real default: `default: ""` makes a
+string parameter optional and substitutes the empty string. Only `null` is
+ignored.
+{{< /notice >}}
+
 ### Array Parameters
 
 The `array` type is a list of items passed in as a single parameter.
@@ -341,6 +411,12 @@ Annotations appear in the `tools/list` MCP response:
   }
 }
 ```
+
+## URL Parameter Binding
+
+You can bind specific arguments to tools at the transport level using URL query parameters. This allows you to restrict clients to specific database instances, projects, or environments dynamically without modifying the server configuration.
+
+For a comprehensive guide, see the [URL Parameter Binding](./url_parameter_binding.md) documentation.
 
 ## Using tools with MCP Toolbox Client SDKs
 

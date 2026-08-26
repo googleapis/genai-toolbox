@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -23,6 +24,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/auth/google"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels/gemini"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/prompts/custom"
@@ -55,6 +57,20 @@ func TestParseEnv(t *testing.T) {
 			errString: `environment variable not found: "FOO" (line 1, column 1)`,
 		},
 		{
+			desc:      "multiple missing required vars reported together",
+			in:        "host: ${HOST}, user: ${USER_NAME}, pass: ${PASSWORD}",
+			want:      "host: , user: , pass: ",
+			err:       true,
+			errString: "environment variables not found:\n  - \"HOST\" (line 1, column 7)\n  - \"USER_NAME\" (line 1, column 22)\n  - \"PASSWORD\" (line 1, column 42)",
+		},
+		{
+			desc:      "repeated missing required var reported once",
+			in:        "a: ${HOST}, b: ${HOST}",
+			want:      "a: , b: ",
+			err:       true,
+			errString: `environment variable not found: "HOST" (line 1, column 4)`,
+		},
+		{
 			desc:    "without default without env, lenient",
 			in:      "${FOO}",
 			want:    "FOO",
@@ -76,7 +92,95 @@ func TestParseEnv(t *testing.T) {
 			want: "bar",
 		},
 		{
-			desc:         "with empty default",
+			desc: "skip commented out env var",
+			in:   "# ${FOO}",
+			want: "# ${FOO}",
+		},
+		{
+			desc: "skip commented out env var with preceding whitespace",
+			in:   "  # ${FOO}",
+			want: "  # ${FOO}",
+		},
+		{
+			desc: "skip commented out env var in inline comment",
+			in:   "port: 8080 # default is ${DEFAULT_PORT}",
+			want: "port: 8080 # default is ${DEFAULT_PORT}",
+		},
+		{
+			desc: "skip commented out env var in inline comment but parse active env var",
+			in:   "port: ${PORT} # default is ${DEFAULT_PORT}",
+			env: map[string]string{
+				"PORT": "9090",
+			},
+			want: "port: 9090 # default is ${DEFAULT_PORT}",
+		},
+		{
+			desc: "do not skip env var with hash inside double quotes",
+			in:   `url: "http://example.com/#${ANCHOR}"`,
+			env: map[string]string{
+				"ANCHOR": "section1",
+			},
+			want: `url: "http://example.com/#section1"`,
+		},
+		{
+			desc: "do not skip env var with hash inside single quotes",
+			in:   `url: 'http://example.com/#${ANCHOR}'`,
+			env: map[string]string{
+				"ANCHOR": "section1",
+			},
+			want: `url: 'http://example.com/#section1'`,
+		},
+		{
+			desc: "skip commented out env var but parse non-commented ones",
+			in:   "foo: ${BAR}\n# ${FOO}\nbaz: ${QUX}",
+			env: map[string]string{
+				"BAR": "bar_val",
+				"QUX": "qux_val",
+			},
+			want: "foo: bar_val\n# ${FOO}\nbaz: qux_val",
+		},
+		{
+			desc: "parse env vars after a comment containing multi-byte characters",
+			in: "# " + strings.Repeat("é", 30) + "\n" +
+				"foo: ${BAR}\n" +
+				"# " + strings.Repeat("é", 30) + "\n" +
+				"baz: ${QUX}\n",
+			env: map[string]string{
+				"BAR": "bar_val",
+				"QUX": "qux_val",
+			},
+			want: "# " + strings.Repeat("é", 30) + "\n" +
+				"foo: bar_val\n" +
+				"# " + strings.Repeat("é", 30) + "\n" +
+				"baz: qux_val\n",
+		},
+		{
+			desc: "skip commented out env var when comment contains multi-byte characters",
+			in:   "# " + strings.Repeat("é", 30) + " ${FOO}\nbar: ${BAR}\n",
+			env: map[string]string{
+				"BAR": "bar_val",
+			},
+			want: "# " + strings.Repeat("é", 30) + " ${FOO}\nbar: bar_val\n",
+		},
+		{
+			desc: "multiline yaml with mixed comments and env vars",
+			in: "database: my-db # Another comment in line ${SHOULD_BE_IGNORED}\n" +
+				"host: \"localhost\"\n" +
+				"# This is a comment, ${SHOULD_BE_IGNORED} won't be replaced!\n" +
+				"port: ${DB_PORT:5432}\n" +
+				"user: ${DB_USER}\n",
+			env: map[string]string{
+				"DB_USER": "my_user",
+			},
+			want: "database: my-db # Another comment in line ${SHOULD_BE_IGNORED}\n" +
+				"host: \"localhost\"\n" +
+				"# This is a comment, ${SHOULD_BE_IGNORED} won't be replaced!\n" +
+				"port: 5432\n" +
+				"user: my_user\n",
+			wantOptional: []string{"DB_PORT"},
+		},
+		{
+			desc:         "with default without env",
 			in:           "${FOO:}",
 			want:         "",
 			wantOptional: []string{"FOO"},
@@ -225,7 +329,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -245,6 +349,26 @@ type: gemini
 model: gemini-embedding-001
 apiKey: some-key
 dimension: 768
+`,
+		},
+		{
+			desc: "convert nested groups",
+			in: `
+            groups:
+                my_group:
+                    description: my group description
+                    tools:
+                        - example_tool
+                    prompts:
+                        - code_review`,
+			want: `
+kind: group
+name: my_group
+description: my group description
+tools:
+- example_tool
+prompts:
+- code_review
 `,
 		},
 		{
@@ -303,7 +427,7 @@ name: my-google-auth
 type: google
 clientId: testing-id
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -425,7 +549,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -469,14 +593,14 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset2
 tools:
 - example_tool
 ---
 tools:
 - example_tool
-kind: toolset
+kind: group
 name: example_toolset3
 ---
 kind: prompt
@@ -494,7 +618,7 @@ type: gemini
 `,
 		},
 		{
-			desc: "no convertion needed",
+			desc: "flat format only rewrites the toolset kind",
 			in: `
 kind: source
 name: my-pg-instance
@@ -543,7 +667,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolset
+kind: group
 name: example_toolset
 tools:
 - example_tool
@@ -561,10 +685,69 @@ tools:
 			isErr:  true,
 			errStr: `doc 1: invalid config format at key "toolsets": expected nested format keys and type map`,
 		},
+		{
+			// Toolsets are emitted as groups, but the error must still name the
+			// key the user wrote.
+			desc: "invalid toolset entry",
+			in: `
+            toolsets:
+                example_toolset: not-a-list`,
+			isErr:  true,
+			errStr: `doc 1: invalid config format at key "toolsets": unable to convert entryBody to MapSlice`,
+		},
+		{
+			// A toolset has no description of its own, so converting must not turn
+			// one into a group description.
+			desc: "convert flat toolset to group drops the description",
+			in: `
+kind: toolset
+name: example_toolset
+description: some description
+tools:
+- example_tool`,
+			want: `
+kind: group
+name: example_toolset
+tools:
+- example_tool
+`,
+		},
+		{
+			// A nested toolset body may be written as a map rather than a bare
+			// list, in which case it can carry a description too. Both
+			// spellings must produce the same group.
+			desc: "convert nested map-form toolset to group drops the description",
+			in: `
+toolsets:
+    example_toolset:
+        description: some description
+        tools:
+        - example_tool`,
+			want: `
+kind: group
+name: example_toolset
+tools:
+- example_tool
+`,
+		},
+		{
+			desc: "convert flat toolset to group with kind not first",
+			in: `
+tools:
+- example_tool
+kind: toolset
+name: example_toolset`,
+			want: `
+tools:
+- example_tool
+kind: group
+name: example_toolset
+`,
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			output, err := ConvertConfig([]byte(tc.in))
+			output, err := ConvertConfig(context.Background(), []byte(tc.in))
 			if tc.isErr {
 				if err == nil {
 					t.Fatalf("expected error")
@@ -651,8 +834,8 @@ func TestParseConfig(t *testing.T) {
 						},
 					},
 				},
-				Toolsets: server.ToolsetConfigs{
-					"example_toolset": tools.ToolsetConfig{
+				Groups: server.GroupConfigs{
+					"example_toolset": group.GroupConfig{
 						Name:      "example_toolset",
 						ToolNames: []string{"example_tool"},
 					},
@@ -775,8 +958,8 @@ func TestParseConfig(t *testing.T) {
 						},
 					},
 				},
-				Toolsets: server.ToolsetConfigs{
-					"example_toolset": tools.ToolsetConfig{
+				Groups: server.GroupConfigs{
+					"example_toolset": group.GroupConfig{
 						Name:      "example_toolset",
 						ToolNames: []string{"example_tool"},
 					},
@@ -811,7 +994,7 @@ func TestParseConfig(t *testing.T) {
 				Sources:      nil,
 				AuthServices: nil,
 				Tools:        nil,
-				Toolsets:     nil,
+				Groups:       nil,
 				Prompts: server.PromptConfigs{
 					"my-prompt": &custom.Config{
 						Name:        "my-prompt",
@@ -843,7 +1026,7 @@ func TestParseConfig(t *testing.T) {
 			if diff := cmp.Diff(tc.wantConfig.Tools, configFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantConfig.Toolsets, configFile.Toolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Groups, configFile.Groups); diff != "" {
 				t.Fatalf("incorrect toolsets parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantConfig.Prompts, configFile.Prompts); diff != "" {
@@ -906,6 +1089,36 @@ func TestParseConfigFailure(t *testing.T) {
 			statement: SELECT *;
 			`,
 			wantError: "invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed",
+		},
+		{
+			// Toolsets are parsed as groups, so unknown fields are now rejected by
+			// the group's strict decoder instead of being silently dropped.
+			description: "unknown field in toolset",
+			in: `
+			kind: toolset
+			name: my_toolset
+			tools:
+			- example_tool
+			descriptoin: typo
+			`,
+			wantError: "unable to unmarshal group",
+		},
+		{
+			// Toolsets are parsed as groups, so a toolset and a group of the same
+			// name now collide instead of the group silently winning.
+			description: "toolset and group share a name",
+			in: `
+			kind: toolset
+			name: my_collection
+			tools:
+			- example_tool
+---
+			kind: group
+			name: my_collection
+			tools:
+			- example_tool
+			`,
+			wantError: `group "my_collection" declared more than once`,
 		},
 	}
 	for _, tc := range tcs {
@@ -1029,8 +1242,8 @@ func TestParseConfigWithAuth(t *testing.T) {
 						},
 					},
 				},
-				Toolsets: server.ToolsetConfigs{
-					"example_toolset": tools.ToolsetConfig{
+				Groups: server.GroupConfigs{
+					"example_toolset": group.GroupConfig{
 						Name:      "example_toolset",
 						ToolNames: []string{"example_tool"},
 					},
@@ -1137,8 +1350,8 @@ func TestParseConfigWithAuth(t *testing.T) {
 						},
 					},
 				},
-				Toolsets: server.ToolsetConfigs{
-					"example_toolset": tools.ToolsetConfig{
+				Groups: server.GroupConfigs{
+					"example_toolset": group.GroupConfig{
 						Name:      "example_toolset",
 						ToolNames: []string{"example_tool"},
 					},
@@ -1163,7 +1376,7 @@ func TestParseConfigWithAuth(t *testing.T) {
 			if diff := cmp.Diff(tc.wantConfig.Tools, configFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantConfig.Toolsets, configFile.Toolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Groups, configFile.Groups); diff != "" {
 				t.Fatalf("incorrect toolsets parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantConfig.Prompts, configFile.Prompts); diff != "" {
@@ -1319,8 +1532,8 @@ func TestEnvVarReplacement(t *testing.T) {
 						HeaderParams: []parameters.Parameter{parameters.NewStringParameter("Language", "language string")},
 					},
 				},
-				Toolsets: server.ToolsetConfigs{
-					"ACTUAL_TOOLSET_NAME": tools.ToolsetConfig{
+				Groups: server.GroupConfigs{
+					"ACTUAL_TOOLSET_NAME": group.GroupConfig{
 						Name:      "ACTUAL_TOOLSET_NAME",
 						ToolNames: []string{"example_tool"},
 					},
@@ -1467,8 +1680,8 @@ func TestEnvVarReplacement(t *testing.T) {
 						HeaderParams: []parameters.Parameter{parameters.NewStringParameter("Language", "language string")},
 					},
 				},
-				Toolsets: server.ToolsetConfigs{
-					"ACTUAL_TOOLSET_NAME": tools.ToolsetConfig{
+				Groups: server.GroupConfigs{
+					"ACTUAL_TOOLSET_NAME": group.GroupConfig{
 						Name:      "ACTUAL_TOOLSET_NAME",
 						ToolNames: []string{"example_tool"},
 					},
@@ -1505,7 +1718,7 @@ func TestEnvVarReplacement(t *testing.T) {
 			if diff := cmp.Diff(tc.wantConfig.Tools, configFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantConfig.Toolsets, configFile.Toolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Groups, configFile.Groups); diff != "" {
 				t.Fatalf("incorrect toolsets parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantConfig.Prompts, configFile.Prompts); diff != "" {
@@ -1703,49 +1916,56 @@ func TestPrebuiltTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	tcs := []struct {
-		name        string
-		in          []byte
-		wantToolset server.ToolsetConfigs
+		name       string
+		in         []byte
+		wantGroups server.GroupConfigs
 	}{
 		{
 			name: "alloydb omni prebuilt tools",
 			in:   alloydb_omni_config,
-			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
+			wantGroups: server.GroupConfigs{
+				"data": group.GroupConfig{
+					Name:        "data",
+					Description: "Use these skills when you need to explore the database structure, identify schema objects like views and triggers, and execute SQL queries to interact with your data.",
+					ToolNames:   []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
 				},
-				"performance": tools.ToolsetConfig{
-					Name:      "performance",
-					ToolNames: []string{"execute_sql", "get_query_plan", "list_query_stats", "get_column_cardinality", "list_table_stats", "list_database_stats", "list_active_queries"},
+				"performance": group.GroupConfig{
+					Name:        "performance",
+					Description: "Use these skills when you need to analyze query performance, generate execution plans, check table/column statistics, and monitor overall database activity.",
+					ToolNames:   []string{"execute_sql", "get_query_plan", "list_query_stats", "get_column_cardinality", "list_table_stats", "list_database_stats", "list_active_queries"},
 				},
-				"monitor": tools.ToolsetConfig{
-					Name:      "monitor",
-					ToolNames: []string{"database_overview", "list_active_queries", "long_running_transactions", "list_locks", "list_database_stats", "list_pg_settings"},
+				"monitor": group.GroupConfig{
+					Name:        "monitor",
+					Description: "Use these skills when you need to troubleshoot production issues by identifying locks, tracking long-running transactions, and getting a high-level view of server state.",
+					ToolNames:   []string{"database_overview", "list_active_queries", "long_running_transactions", "list_locks", "list_database_stats", "list_pg_settings"},
 				},
-				"optimize": tools.ToolsetConfig{
-					Name:      "optimize",
-					ToolNames: []string{"list_pg_settings", "list_memory_configurations", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_columnar_configurations", "list_columnar_recommended_columns"},
+				"optimize": group.GroupConfig{
+					Name:        "optimize",
+					Description: "Use these skills when you need to fine-tune the database engine settings, manage extensions, or optimize the columnar engine for better analytical performance.",
+					ToolNames:   []string{"list_pg_settings", "list_memory_configurations", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_columnar_configurations", "list_columnar_recommended_columns"},
 				},
-				"health": tools.ToolsetConfig{
-					Name:      "health",
-					ToolNames: []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "list_tablespaces", "database_overview", "list_autovacuum_configurations"},
+				"health": group.GroupConfig{
+					Name:        "health",
+					Description: "Use these skills when you need to audit database health, identify storage bloat, find broken indexes, and verify tablespace or maintenance configurations.",
+					ToolNames:   []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "list_tablespaces", "database_overview", "list_autovacuum_configurations"},
 				},
-				"replication": tools.ToolsetConfig{
-					Name:      "replication",
-					ToolNames: []string{"replication_stats", "list_replication_slots", "list_publication_tables", "database_overview"},
+				"replication": group.GroupConfig{
+					Name:        "replication",
+					Description: "Use these skills when you need to monitor the health of database replication, manage sync states between nodes, and audit publication tables for distributed setups.",
+					ToolNames:   []string{"replication_stats", "list_replication_slots", "list_publication_tables", "database_overview"},
 				},
-				"access-control": tools.ToolsetConfig{
-					Name:      "access-control",
-					ToolNames: []string{"list_roles", "list_pg_settings", "database_overview"},
+				"access-control": group.GroupConfig{
+					Name:        "access-control",
+					Description: "Use these skills when you need to manage user roles, inspect permissions, and verify security-related configuration parameters.",
+					ToolNames:   []string{"list_roles", "list_pg_settings", "database_overview"},
 				},
 			},
 		},
 		{
 			name: "alloydb postgres admin prebuilt tools",
 			in:   alloydb_admin_config,
-			wantToolset: server.ToolsetConfigs{
-				"alloydb_postgres_admin_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"alloydb_postgres_admin_tools": group.GroupConfig{
 					Name:      "alloydb_postgres_admin_tools",
 					ToolNames: []string{"create_cluster", "wait_for_operation", "create_instance", "list_clusters", "list_instances", "list_users", "create_user", "get_cluster", "get_instance", "get_user"},
 				},
@@ -1754,8 +1974,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "cloudsql pg admin prebuilt tools",
 			in:   cloudsqlpg_admin_config,
-			wantToolset: server.ToolsetConfigs{
-				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"cloud_sql_postgres_admin_tools": group.GroupConfig{
 					Name:      "cloud_sql_postgres_admin_tools",
 					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck", "clone_instance", "create_backup", "restore_backup"},
 				},
@@ -1764,8 +1984,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "cloudsql mysql admin prebuilt tools",
 			in:   cloudsqlmysql_admin_config,
-			wantToolset: server.ToolsetConfigs{
-				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"cloud_sql_mysql_admin_tools": group.GroupConfig{
 					Name:      "cloud_sql_mysql_admin_tools",
 					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance", "create_backup", "restore_backup"},
 				},
@@ -1774,8 +1994,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "cloudsql mssql admin prebuilt tools",
 			in:   cloudsqlmssql_admin_config,
-			wantToolset: server.ToolsetConfigs{
-				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"cloud_sql_mssql_admin_tools": group.GroupConfig{
 					Name:      "cloud_sql_mssql_admin_tools",
 					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance", "create_backup", "restore_backup"},
 				},
@@ -1784,56 +2004,65 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "alloydb prebuilt tools",
 			in:   alloydb_config,
-			wantToolset: server.ToolsetConfigs{
-				"admin": tools.ToolsetConfig{
-					Name:      "admin",
-					ToolNames: []string{"create_cluster", "get_cluster", "list_clusters", "create_instance", "get_instance", "list_instances", "database_overview", "wait_for_operation"},
+			wantGroups: server.GroupConfigs{
+				"admin": group.GroupConfig{
+					Name:        "admin",
+					Description: "Use these skills when you need to provision new AlloyDB clusters and instances, monitor their creation status, and retrieve high-level configuration or health data for the environment.",
+					ToolNames:   []string{"create_cluster", "get_cluster", "list_clusters", "create_instance", "get_instance", "list_instances", "database_overview", "wait_for_operation"},
 				},
-				"access-management": tools.ToolsetConfig{
-					Name:      "access-management",
-					ToolNames: []string{"create_user", "list_users", "get_user", "list_roles", "list_pg_settings", "database_overview"},
+				"access-management": group.GroupConfig{
+					Name:        "access-management",
+					Description: "Use these skills when you need to manage database users, inspect permissions and roles, and verify global configuration parameters related to security and access control.",
+					ToolNames:   []string{"create_user", "list_users", "get_user", "list_roles", "list_pg_settings", "database_overview"},
 				},
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
+				"data": group.GroupConfig{
+					Name:        "data",
+					Description: "Use these skills when you need to explore the database schema, identify objects like views and triggers, and execute custom SQL queries to interact with your data.",
+					ToolNames:   []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
 				},
-				"monitor": tools.ToolsetConfig{
-					Name:      "monitor",
-					ToolNames: []string{"list_active_queries", "list_query_stats", "get_query_plan", "get_query_metrics", "get_system_metrics", "long_running_transactions", "list_locks", "list_database_stats"},
+				"monitor": group.GroupConfig{
+					Name:        "monitor",
+					Description: "Use these skills when you need to troubleshoot slow performance, analyze query execution plans, identify resource-heavy processes, and monitor system-level PromQL metrics.",
+					ToolNames:   []string{"list_active_queries", "list_query_stats", "get_query_plan", "get_query_metrics", "get_system_metrics", "long_running_transactions", "list_locks", "list_database_stats"},
 				},
-				"health": tools.ToolsetConfig{
-					Name:      "health",
-					ToolNames: []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "get_column_cardinality", "list_autovacuum_configurations", "list_tablespaces", "database_overview", "get_instance"},
+				"health": group.GroupConfig{
+					Name:        "health",
+					Description: "Use these skills when you need to optimize storage, identify index issues, analyze table statistics, or manage autovacuum and tablespace configurations to maintain peak database health.",
+					ToolNames:   []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "get_column_cardinality", "list_autovacuum_configurations", "list_tablespaces", "database_overview", "get_instance"},
 				},
-				"optimize": tools.ToolsetConfig{
-					Name:      "optimize",
-					ToolNames: []string{"list_available_extensions", "list_installed_extensions", "list_memory_configurations", "list_pg_settings", "database_overview", "get_cluster"},
+				"optimize": group.GroupConfig{
+					Name:        "optimize",
+					Description: "Use these skills when you need to discover and manage PostgreSQL extensions or fine-tune engine-level settings such as memory allocation and server configuration parameters.",
+					ToolNames:   []string{"list_available_extensions", "list_installed_extensions", "list_memory_configurations", "list_pg_settings", "database_overview", "get_cluster"},
 				},
-				"replication": tools.ToolsetConfig{
-					Name:      "replication",
-					ToolNames: []string{"replication_stats", "list_replication_slots", "list_publication_tables", "list_instances", "get_instance", "database_overview"},
+				"replication": group.GroupConfig{
+					Name:        "replication",
+					Description: "Use these skills when you need to monitor replication health, manage sync states between nodes, and ensure the high availability and data distribution of your AlloyDB cluster.",
+					ToolNames:   []string{"replication_stats", "list_replication_slots", "list_publication_tables", "list_instances", "get_instance", "database_overview"},
 				},
 			},
 		},
 		{
 			name: "bigquery prebuilt tools",
 			in:   bigquery_config,
-			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_dataset_ids", "list_table_ids", "get_dataset_info", "get_table_info", "search_catalog"},
+			wantGroups: server.GroupConfigs{
+				"data": group.GroupConfig{
+					Name:        "data",
+					Description: "Use these skills when you need to handle large-scale data exploration and dataset management. Use when users need to find data assets or run SQL at scale. Provides metadata discovery and query execution across the data warehouse.",
+					ToolNames:   []string{"execute_sql", "list_dataset_ids", "list_table_ids", "get_dataset_info", "get_table_info", "search_catalog"},
 				},
-				"analytics": tools.ToolsetConfig{
-					Name:      "analytics",
-					ToolNames: []string{"analyze_contribution", "ask_data_insights", "forecast", "search_catalog"},
+				"analytics": group.GroupConfig{
+					Name:        "analytics",
+					Description: `Use these skills when you need to handle advanced data intelligence and predictive tasks. Use when a user asks "why" data changed or needs future projections. Provides automated insight generation and time-series forecasting.`,
+					ToolNames:   []string{"analyze_contribution", "ask_data_insights", "forecast", "search_catalog"},
 				},
 			},
 		},
 		{
 			name: "clickhouse prebuilt tools",
 			in:   clickhouse_config,
-			wantToolset: server.ToolsetConfigs{
-				"clickhouse_database_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"clickhouse_database_tools": group.GroupConfig{
 					Name:      "clickhouse_database_tools",
 					ToolNames: []string{"execute_sql", "list_databases", "list_tables"},
 				},
@@ -1842,98 +2071,114 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "cloudsqlpg prebuilt tools",
 			in:   cloudsqlpg_config,
-			wantToolset: server.ToolsetConfigs{
-				"admin": tools.ToolsetConfig{
-					Name:      "admin",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
+			wantGroups: server.GroupConfigs{
+				"admin": group.GroupConfig{
+					Name:        "admin",
+					Description: "Use these skills when you need to provision new Cloud SQL instances, create databases and users, clone existing environments, and monitor the progress of long-running operations.",
+					ToolNames:   []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
 				},
-				"lifecycle": tools.ToolsetConfig{
-					Name:      "lifecycle",
-					ToolNames: []string{"create_backup", "restore_backup", "postgres_upgrade_precheck", "wait_for_operation", "database_overview", "get_instance", "list_instances"},
+				"lifecycle": group.GroupConfig{
+					Name:        "lifecycle",
+					Description: "Use these skills when you need to manage the lifecycle of your instances, including performing backups and restores, checking major version upgrade compatibility, and monitoring overall instance status.",
+					ToolNames:   []string{"create_backup", "restore_backup", "postgres_upgrade_precheck", "wait_for_operation", "database_overview", "get_instance", "list_instances"},
 				},
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
+				"data": group.GroupConfig{
+					Name:        "data",
+					Description: "Use these skills when you need to explore the database structure, discover schema objects like views or stored procedures, and execute custom SQL queries to interact with your data.",
+					ToolNames:   []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
 				},
-				"monitor": tools.ToolsetConfig{
-					Name:      "monitor",
-					ToolNames: []string{"get_system_metrics", "get_query_metrics", "list_query_stats", "get_query_plan", "list_database_stats", "list_active_queries", "long_running_transactions", "list_locks"},
+				"monitor": group.GroupConfig{
+					Name:        "monitor",
+					Description: "Use these skills when you need to troubleshoot performance bottlenecks, analyze query execution plans, identify resource-heavy processes, and monitor system-level PromQL metrics.",
+					ToolNames:   []string{"get_system_metrics", "get_query_metrics", "list_query_stats", "get_query_plan", "list_database_stats", "list_active_queries", "long_running_transactions", "list_locks"},
 				},
-				"health": tools.ToolsetConfig{
-					Name:      "health",
-					ToolNames: []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "get_column_cardinality", "list_autovacuum_configurations", "list_tablespaces", "database_overview", "list_pg_settings"},
+				"health": group.GroupConfig{
+					Name:        "health",
+					Description: "Use these skills when you need to audit database health, identify storage bloat, find invalid indexes, analyze table statistics, and manage maintenance configurations like autovacuum.",
+					ToolNames:   []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "get_column_cardinality", "list_autovacuum_configurations", "list_tablespaces", "database_overview", "list_pg_settings"},
 				},
-				"view-config": tools.ToolsetConfig{
-					Name:      "view-config",
-					ToolNames: []string{"list_available_extensions", "list_installed_extensions", "list_memory_configurations", "list_pg_settings", "database_overview", "get_instance"},
+				"view-config": group.GroupConfig{
+					Name:        "view-config",
+					Description: "Use these skills when you need to discover and manage PostgreSQL extensions or fine-tune engine-level settings such as memory allocation and server configuration parameters.",
+					ToolNames:   []string{"list_available_extensions", "list_installed_extensions", "list_memory_configurations", "list_pg_settings", "database_overview", "get_instance"},
 				},
-				"replication": tools.ToolsetConfig{
-					Name:      "replication",
-					ToolNames: []string{"replication_stats", "list_replication_slots", "list_publication_tables", "list_roles", "list_pg_settings", "database_overview"},
+				"replication": group.GroupConfig{
+					Name:        "replication",
+					Description: "Use these skills when you need to monitor replication health, manage sync states between nodes, and audit database roles and security settings to ensure environment integrity.",
+					ToolNames:   []string{"replication_stats", "list_replication_slots", "list_publication_tables", "list_roles", "list_pg_settings", "database_overview"},
 				},
 				"vectorassist": {
-					Name:      "vectorassist",
-					ToolNames: []string{"execute_sql", "define_spec", "modify_spec", "apply_spec", "generate_query", "improve_query_recall", "list_specs", "get_spec", "delete_spec"},
+					Name:        "vectorassist",
+					Description: "Use these skills to set up and optimize production-ready vector workloads by simply expressing your intent and performance requirements.",
+					ToolNames:   []string{"execute_sql", "define_spec", "modify_spec", "apply_spec", "generate_query", "improve_query_recall", "list_specs", "get_spec", "delete_spec"},
 				},
 			},
 		},
 		{
 			name: "cloudsqlmysql prebuilt tools",
 			in:   cloudsqlmysql_config,
-			wantToolset: server.ToolsetConfigs{
-				"admin": tools.ToolsetConfig{
-					Name:      "admin",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+			wantGroups: server.GroupConfigs{
+				"admin": group.GroupConfig{
+					Name:        "admin",
+					Description: "Use these skills when you need to provision new Cloud SQL for MySQL instances, create databases and users, and monitor the progress of infrastructure operations.",
+					ToolNames:   []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
 				},
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries"},
+				"data": group.GroupConfig{
+					Name:        "data",
+					Description: "Use these skills when you need to explore your database schema, execute SQL queries to interact with your data, and inspect how MySQL plans to execute your statements.",
+					ToolNames:   []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries"},
 				},
-				"monitor": tools.ToolsetConfig{
-					Name:      "monitor",
-					ToolNames: []string{"get_query_plan", "list_active_queries", "list_all_locks", "get_query_metrics", "get_system_metrics", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes", "show_query_stats"},
+				"monitor": group.GroupConfig{
+					Name:        "monitor",
+					Description: "Use these skills when you need to troubleshoot slow queries, analyze system-level PromQL metrics, and identify structural performance issues like table fragmentation or missing unique indexes.",
+					ToolNames:   []string{"get_query_plan", "list_active_queries", "list_all_locks", "get_query_metrics", "get_system_metrics", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes", "show_query_stats"},
 				},
-				"lifecycle": tools.ToolsetConfig{
-					Name:      "lifecycle",
-					ToolNames: []string{"create_backup", "restore_backup", "clone_instance", "list_instances", "get_instance", "wait_for_operation"},
+				"lifecycle": group.GroupConfig{
+					Name:        "lifecycle",
+					Description: "Use these skills when you need to manage the durability and safety of your data by creating backups, restoring from previous states, or cloning instances for recovery and testing.",
+					ToolNames:   []string{"create_backup", "restore_backup", "clone_instance", "list_instances", "get_instance", "wait_for_operation"},
 				},
 			},
 		},
 		{
 			name: "cloudsqlmssql prebuilt tools",
 			in:   cloudsqlmssql_config,
-			wantToolset: server.ToolsetConfigs{
-				"admin": tools.ToolsetConfig{
-					Name:      "admin",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+			wantGroups: server.GroupConfigs{
+				"admin": group.GroupConfig{
+					Name:        "admin",
+					Description: "Use these skills when you need to provision new Cloud SQL for SQL Server instances, create databases and users, and monitor the progress of long-running operations.",
+					ToolNames:   []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
 				},
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables"},
+				"data": group.GroupConfig{
+					Name:        "data",
+					Description: "Use these skills when you need to explore the database schema and execute SQL queries to interact with your data.",
+					ToolNames:   []string{"execute_sql", "list_tables"},
 				},
-				"monitor": tools.ToolsetConfig{
-					Name:      "monitor",
-					ToolNames: []string{"get_system_metrics"},
+				"monitor": group.GroupConfig{
+					Name:        "monitor",
+					Description: "Use these skills when you need to troubleshoot slow queries and analyze system-level PromQL metrics.",
+					ToolNames:   []string{"get_system_metrics"},
 				},
-				"lifecycle": tools.ToolsetConfig{
-					Name:      "lifecycle",
-					ToolNames: []string{"create_backup", "restore_backup", "clone_instance", "list_instances", "get_instance", "wait_for_operation"},
+				"lifecycle": group.GroupConfig{
+					Name:        "lifecycle",
+					Description: "Use these skills when you need to manage the lifecycle and durability of your data, including creating backups, restoring from existing backups, and cloning instances for testing or migration.",
+					ToolNames:   []string{"create_backup", "restore_backup", "clone_instance", "list_instances", "get_instance", "wait_for_operation"},
 				},
 			},
 		},
 		{
 			name: "dataplex prebuilt tools",
 			in:   dataplex_config,
-			wantToolset: server.ToolsetConfigs{
-				"discovery": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"discovery": group.GroupConfig{
 					Name:      "discovery",
 					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "search_dq_scans"},
 				},
-				"data-products": tools.ToolsetConfig{
+				"data-products": group.GroupConfig{
 					Name:      "data-products",
-					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "list_data_products", "get_data_product", "list_data_assets", "get_data_asset", "create_data_product", "update_data_product", "create_data_asset", "update_data_asset"},
+					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "list_data_products", "get_data_product", "list_data_assets", "get_data_asset", "create_data_product", "update_data_product", "create_data_asset", "update_data_asset", "update_data_product_aspects", "get_operation"},
 				},
-				"enrich": tools.ToolsetConfig{
+				"enrich": group.GroupConfig{
 					Name:      "enrich",
 					ToolNames: []string{"search_entries", "lookup_entry", "lookup_context", "generate_data_insights", "get_data_insights", "generate_data_profile", "get_data_profile", "discover_metadata", "get_discovery_results", "check_data_quality", "get_data_quality_results", "get_operation", "get_run_status"},
 				},
@@ -1942,18 +2187,19 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "dataproc prebuilt tools",
 			in:   dataproc_config,
-			wantToolset: server.ToolsetConfigs{
-				"dataproc_tools": tools.ToolsetConfig{
-					Name:      "dataproc_tools",
-					ToolNames: []string{"list_clusters", "get_cluster", "list_jobs", "get_job"},
+			wantGroups: server.GroupConfigs{
+				"dataproc_tools": group.GroupConfig{
+					Name:        "dataproc_tools",
+					Description: "Skills to interact with your Dataproc clusters and jobs.",
+					ToolNames:   []string{"list_clusters", "get_cluster", "list_jobs", "get_job"},
 				},
 			},
 		},
 		{
 			name: "serverless spark prebuilt tools",
 			in:   serverless_spark_config,
-			wantToolset: server.ToolsetConfigs{
-				"serverless_spark_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"serverless_spark_tools": group.GroupConfig{
 					Name:      "serverless_spark_tools",
 					ToolNames: []string{"list_batches", "get_batch", "cancel_batch", "create_pyspark_batch", "create_spark_batch", "get_session_template", "list_sessions", "get_session"},
 				},
@@ -1962,12 +2208,13 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "firestore prebuilt tools",
 			in:   firestoreconfig,
-			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"get_documents", "add_documents", "update_document", "delete_documents", "query_collection", "list_collections"},
+			wantGroups: server.GroupConfigs{
+				"data": group.GroupConfig{
+					Name:        "data",
+					Description: "Handles NoSQL document operations and collection hierarchy exploration. Use for CRUD tasks and data retrieval. Provides flexible document manipulation and structured querying.",
+					ToolNames:   []string{"get_documents", "add_documents", "update_document", "delete_documents", "query_collection", "list_collections"},
 				},
-				"security": tools.ToolsetConfig{
+				"security": group.GroupConfig{
 					Name:      "security",
 					ToolNames: []string{"get_rules", "validate_rules"},
 				},
@@ -1976,12 +2223,12 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "mysql prebuilt tools",
 			in:   mysql_config,
-			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"data": group.GroupConfig{
 					Name:      "data",
 					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries"},
 				},
-				"monitor": tools.ToolsetConfig{
+				"monitor": group.GroupConfig{
 					Name:      "monitor",
 					ToolNames: []string{"get_query_plan", "list_active_queries", "list_all_locks", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes", "show_query_stats"},
 				},
@@ -1990,8 +2237,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "mssql prebuilt tools",
 			in:   mssql_config,
-			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"data": group.GroupConfig{
 					Name:      "data",
 					ToolNames: []string{"execute_sql", "list_tables"},
 				},
@@ -2000,28 +2247,30 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "looker prebuilt tools",
 			in:   looker_config,
-			wantToolset: server.ToolsetConfigs{
-				"looker_tools": tools.ToolsetConfig{
-					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "add_dashboard_filter", "generate_embed_url"},
+			wantGroups: server.GroupConfigs{
+				"looker_tools": group.GroupConfig{
+					Name:        "looker_tools",
+					Description: "These skills are designed for data discovery and business intelligence.",
+					ToolNames:   []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "get_field_value_suggestions", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "add_dashboard_filter", "generate_embed_url", "get_dashboard", "update_dashboard_element", "create_dashboard_layout", "update_dashboard_layout_component"},
 				},
 			},
 		},
 		{
 			name: "looker dev prebuilt tools",
 			in:   looker_dev_config,
-			wantToolset: server.ToolsetConfigs{
-				"looker_dev_tools": tools.ToolsetConfig{
-					Name:      "looker_dev_tools",
-					ToolNames: []string{"health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_project_directories", "create_project_directory", "delete_project_directory", "validate_project", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns", "get_lookml_tests", "run_lookml_tests", "create_view_from_table", "list_git_branches", "get_git_branch", "create_git_branch", "switch_git_branch", "delete_git_branch"},
+			wantGroups: server.GroupConfigs{
+				"looker_dev_tools": group.GroupConfig{
+					Name:        "looker_dev_tools",
+					Description: "These skills are built for LookML developers, data engineers, and administrators who manage the backbone of Looker.",
+					ToolNames:   []string{"health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_project_directories", "create_project_directory", "delete_project_directory", "validate_project", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns", "get_lookml_tests", "run_lookml_tests", "create_view_from_table", "list_git_branches", "get_git_branch", "create_git_branch", "switch_git_branch", "delete_git_branch"},
 				},
 			},
 		},
 		{
 			name: "looker-conversational-analytics prebuilt tools",
 			in:   lookerca_config,
-			wantToolset: server.ToolsetConfigs{
-				"looker_conversational_analytics_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"looker_conversational_analytics_tools": group.GroupConfig{
 					Name:      "looker_conversational_analytics_tools",
 					ToolNames: []string{"ask_data_insights", "get_models", "get_explores"},
 				},
@@ -2030,24 +2279,24 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "postgres prebuilt tools",
 			in:   postgresconfig,
-			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"data": group.GroupConfig{
 					Name:      "data",
 					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
 				},
-				"monitor": tools.ToolsetConfig{
+				"monitor": group.GroupConfig{
 					Name:      "monitor",
 					ToolNames: []string{"list_query_stats", "get_query_plan", "list_database_stats", "list_active_queries", "long_running_transactions", "list_locks"},
 				},
-				"health": tools.ToolsetConfig{
+				"health": group.GroupConfig{
 					Name:      "health",
 					ToolNames: []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "get_column_cardinality", "list_autovacuum_configurations", "list_tablespaces", "database_overview", "list_pg_settings"},
 				},
-				"view-config": tools.ToolsetConfig{
+				"view-config": group.GroupConfig{
 					Name:      "view-config",
 					ToolNames: []string{"list_available_extensions", "list_installed_extensions", "list_memory_configurations", "list_pg_settings", "database_overview"},
 				},
-				"replication": tools.ToolsetConfig{
+				"replication": group.GroupConfig{
 					Name:      "replication",
 					ToolNames: []string{"replication_stats", "list_replication_slots", "list_publication_tables", "list_roles", "list_pg_settings", "database_overview"},
 				},
@@ -2056,36 +2305,37 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "spanner prebuilt tools",
 			in:   spanner_config,
-			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
+			wantGroups: server.GroupConfigs{
+				"data": group.GroupConfig{
+					Name:        "data",
+					Description: "Use these skills when you need to explore the database structure, discover schema objects like tables and graphs, and execute custom SQL queries to interact with your data.",
+					ToolNames:   []string{"execute_sql", "execute_sql_readonly", "list_tables", "list_graphs"},
 				},
-				"data_with_discovery": tools.ToolsetConfig{
+				"data_with_discovery": group.GroupConfig{
 					Name:      "data_with_discovery",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs", "search_catalog"},
+					ToolNames: []string{"execute_sql", "execute_sql_readonly", "list_tables", "list_graphs", "search_catalog"},
 				},
 			},
 		},
 		{
 			name: "spanner pg prebuilt tools",
 			in:   spannerpg_config,
-			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"data": group.GroupConfig{
 					Name:      "data",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+					ToolNames: []string{"execute_sql", "execute_sql_readonly", "list_tables"},
 				},
-				"data_with_discovery": tools.ToolsetConfig{
+				"data_with_discovery": group.GroupConfig{
 					Name:      "data_with_discovery",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "search_catalog"},
+					ToolNames: []string{"execute_sql", "execute_sql_readonly", "list_tables", "search_catalog"},
 				},
 			},
 		},
 		{
 			name: "mindsdb prebuilt tools",
 			in:   mindsdb_config,
-			wantToolset: server.ToolsetConfigs{
-				"mindsdb-tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"mindsdb-tools": group.GroupConfig{
 					Name:      "mindsdb-tools",
 					ToolNames: []string{"execute_sql", "parameterized_sql"},
 				},
@@ -2094,8 +2344,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "sqlite prebuilt tools",
 			in:   sqlite_config,
-			wantToolset: server.ToolsetConfigs{
-				"sqlite_database_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"sqlite_database_tools": group.GroupConfig{
 					Name:      "sqlite_database_tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
 				},
@@ -2104,8 +2354,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "neo4j prebuilt tools",
 			in:   neo4jconfig,
-			wantToolset: server.ToolsetConfigs{
-				"neo4j_database_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"neo4j_database_tools": group.GroupConfig{
 					Name:      "neo4j_database_tools",
 					ToolNames: []string{"execute_cypher", "get_schema"},
 				},
@@ -2114,18 +2364,26 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "alloydb postgres observability prebuilt tools",
 			in:   alloydbobsvconfig,
-			wantToolset: server.ToolsetConfigs{
-				"alloydb_postgres_cloud_monitoring_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"alloydb_postgres_cloud_monitoring_tools": group.GroupConfig{
 					Name:      "alloydb_postgres_cloud_monitoring_tools",
 					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+				"alloydb_postgres_database_insights_tools": group.GroupConfig{
+					Name:      "alloydb_postgres_database_insights_tools",
+					ToolNames: []string{"get_advanced_aggregated_query_stats", "get_advanced_aggregated_wait_event_stats", "get_advanced_time_series_query_stats", "get_advanced_time_series_wait_event_stats", "get_index_recommendations"},
+				},
+				"alloydb_postgres_observability_tools": group.GroupConfig{
+					Name:      "alloydb_postgres_observability_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics", "get_advanced_aggregated_query_stats", "get_advanced_aggregated_wait_event_stats", "get_advanced_time_series_query_stats", "get_advanced_time_series_wait_event_stats", "get_index_recommendations"},
 				},
 			},
 		},
 		{
 			name: "cloudsql postgres observability prebuilt tools",
 			in:   cloudsqlpgobsvconfig,
-			wantToolset: server.ToolsetConfigs{
-				"cloud_sql_postgres_cloud_monitoring_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"cloud_sql_postgres_cloud_monitoring_tools": group.GroupConfig{
 					Name:      "cloud_sql_postgres_cloud_monitoring_tools",
 					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
 				},
@@ -2134,8 +2392,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "cloudsql mysql observability prebuilt tools",
 			in:   cloudsqlmysqlobsvconfig,
-			wantToolset: server.ToolsetConfigs{
-				"cloud_sql_mysql_cloud_monitoring_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"cloud_sql_mysql_cloud_monitoring_tools": group.GroupConfig{
 					Name:      "cloud_sql_mysql_cloud_monitoring_tools",
 					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
 				},
@@ -2144,8 +2402,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "cloudsql mssql observability prebuilt tools",
 			in:   cloudsqlmssqlobsvconfig,
-			wantToolset: server.ToolsetConfigs{
-				"cloud_sql_mssql_cloud_monitoring_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"cloud_sql_mssql_cloud_monitoring_tools": group.GroupConfig{
 					Name:      "cloud_sql_mssql_cloud_monitoring_tools",
 					ToolNames: []string{"get_system_metrics"},
 				},
@@ -2154,16 +2412,16 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "cloud healthcare prebuilt tools",
 			in:   cloudhealthcare_config,
-			wantToolset: server.ToolsetConfigs{
-				"cloud_healthcare_dataset_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"cloud_healthcare_dataset_tools": group.GroupConfig{
 					Name:      "cloud_healthcare_dataset_tools",
 					ToolNames: []string{"get_dataset", "list_dicom_stores", "list_fhir_stores"},
 				},
-				"cloud_healthcare_fhir_tools": tools.ToolsetConfig{
+				"cloud_healthcare_fhir_tools": group.GroupConfig{
 					Name:      "cloud_healthcare_fhir_tools",
 					ToolNames: []string{"get_fhir_store", "get_fhir_store_metrics", "get_fhir_resource", "fhir_patient_search", "fhir_patient_everything", "fhir_fetch_page"},
 				},
-				"cloud_healthcare_dicom_tools": tools.ToolsetConfig{
+				"cloud_healthcare_dicom_tools": group.GroupConfig{
 					Name:      "cloud_healthcare_dicom_tools",
 					ToolNames: []string{"get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
 				},
@@ -2172,22 +2430,24 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "cloud storage prebuilt tools",
 			in:   cloudstorage_config,
-			wantToolset: server.ToolsetConfigs{
-				"cloud-storage-buckets": tools.ToolsetConfig{
-					Name:      "cloud-storage-buckets",
-					ToolNames: []string{"list_buckets", "create_bucket", "get_bucket_metadata", "get_bucket_iam_policy", "delete_bucket"},
+			wantGroups: server.GroupConfigs{
+				"cloud-storage-buckets": group.GroupConfig{
+					Name:        "cloud-storage-buckets",
+					Description: "Use these tools when you need to administer cloud storage buckets, including listing and creating buckets, inspecting bucket metadata and access control policies, and deleting buckets.",
+					ToolNames:   []string{"list_buckets", "create_bucket", "get_bucket_metadata", "get_bucket_iam_policy", "delete_bucket"},
 				},
-				"cloud-storage-objects": tools.ToolsetConfig{
-					Name:      "cloud-storage-objects",
-					ToolNames: []string{"list_objects", "get_object_metadata", "read_object", "download_object", "write_object", "upload_object", "copy_object", "move_object", "delete_object"},
+				"cloud-storage-objects": group.GroupConfig{
+					Name:        "cloud-storage-objects",
+					Description: "Use these tools when you need to manage files and objects in cloud storage — listing, reading, writing, copying, moving, or deleting objects and retrieving their metadata.",
+					ToolNames:   []string{"list_objects", "get_object_metadata", "read_object", "download_object", "write_object", "upload_object", "copy_object", "move_object", "delete_object"},
 				},
 			},
 		},
 		{
 			name: "Snowflake prebuilt tool",
 			in:   snowflake_config,
-			wantToolset: server.ToolsetConfigs{
-				"snowflake_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"snowflake_tools": group.GroupConfig{
 					Name:      "snowflake_tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
 				},
@@ -2196,18 +2456,19 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "Oracle prebuilt tools",
 			in:   oracle_config,
-			wantToolset: server.ToolsetConfigs{
-				"oracle_database_tools": tools.ToolsetConfig{
-					Name:      "oracle_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "get_query_plan", "list_top_sql_by_resource", "list_tablespace_usage", "list_invalid_objects"},
+			wantGroups: server.GroupConfigs{
+				"oracle_database_tools": group.GroupConfig{
+					Name:        "oracle_database_tools",
+					Description: "Use these skills to manage and monitor Oracle databases by executing SQL statements, exploring schema metadata, analyzing query performance, monitoring active sessions and resource consumption, and managing storage and object health.",
+					ToolNames:   []string{"execute_sql", "list_tables", "list_active_sessions", "get_query_plan", "list_top_sql_by_resource", "list_tablespace_usage", "list_invalid_objects"},
 				},
 			},
 		},
 		{
 			name: "Conversational Analytics with Data Agent prebuilt tools",
 			in:   conversationalanalytics_config,
-			wantToolset: server.ToolsetConfigs{
-				"conversational_analytics_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"conversational_analytics_tools": group.GroupConfig{
 					Name:      "conversational_analytics_tools",
 					ToolNames: []string{"list_accessible_data_agents", "get_data_agent_info", "ask_data_agent"},
 				},
@@ -2216,8 +2477,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "Elasticsearch prebuilt tools",
 			in:   elasticsearch_config,
-			wantToolset: server.ToolsetConfigs{
-				"elasticsearch-tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"elasticsearch-tools": group.GroupConfig{
 					Name:      "elasticsearch-tools",
 					ToolNames: []string{"execute_esql_query"},
 				},
@@ -2226,8 +2487,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "Oceanbase prebuilt tools",
 			in:   oceanbase_config,
-			wantToolset: server.ToolsetConfigs{
-				"oceanbase_database_tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"oceanbase_database_tools": group.GroupConfig{
 					Name:      "oceanbase_database_tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
 				},
@@ -2236,8 +2497,8 @@ func TestPrebuiltTools(t *testing.T) {
 		{
 			name: "Singlestore prebuilt tools",
 			in:   singlestore_config,
-			wantToolset: server.ToolsetConfigs{
-				"singlestore-database-tools": tools.ToolsetConfig{
+			wantGroups: server.GroupConfigs{
+				"singlestore-database-tools": group.GroupConfig{
 					Name:      "singlestore-database-tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
 				},
@@ -2252,7 +2513,7 @@ func TestPrebuiltTools(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
-			if diff := cmp.Diff(tc.wantToolset, configFile.Toolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantGroups, configFile.Groups); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			// Prebuilt configs do not have prompts, so assert empty maps.
@@ -2261,9 +2522,9 @@ func TestPrebuiltTools(t *testing.T) {
 			}
 
 			t.Run("check toolset sizes", func(t *testing.T) {
-				for tsName, ts := range configFile.Toolsets {
+				for tsName, ts := range configFile.Groups {
 					if len(ts.ToolNames) > 10 {
-						t.Logf("WARNING: Toolset %q in config %q has %d tools, which is larger than the recommended maximum of 10.", tsName, tc.name, len(ts.ToolNames))
+						t.Logf("WARNING: Group %q in config %q has %d tools, which is larger than the recommended maximum of 10.", tsName, tc.name, len(ts.ToolNames))
 					}
 				}
 			})
@@ -2275,13 +2536,13 @@ func TestMergeConfigs(t *testing.T) {
 	file1 := Config{
 		Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 		Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}},
-		Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
+		Groups:          server.GroupConfigs{"set1": group.GroupConfig{Name: "set1"}},
 		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 	}
 	file2 := Config{
 		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
 		Tools:        server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
-		Toolsets:     server.ToolsetConfigs{"set2": tools.ToolsetConfig{Name: "set2"}},
+		Groups:       server.GroupConfigs{"set2": group.GroupConfig{Name: "set2"}},
 	}
 	fileWithConflicts := Config{
 		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
@@ -2308,8 +2569,8 @@ func TestMergeConfigs(t *testing.T) {
 				Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 				AuthServices:    server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
 				Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}, "tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
-				Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
 				Prompts:         server.PromptConfigs{},
+				Groups:          server.GroupConfigs{"set1": group.GroupConfig{Name: "set1"}, "set2": group.GroupConfig{Name: "set2"}},
 				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 			},
 			wantErr: false,
@@ -2333,8 +2594,8 @@ func TestMergeConfigs(t *testing.T) {
 				AuthServices:    make(server.AuthServiceConfigs),
 				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 				Tools:           file1.Tools,
-				Toolsets:        file1.Toolsets,
 				Prompts:         server.PromptConfigs{},
+				Groups:          file1.Groups,
 			},
 		},
 		{
@@ -2345,8 +2606,8 @@ func TestMergeConfigs(t *testing.T) {
 				AuthServices:    make(server.AuthServiceConfigs),
 				EmbeddingModels: make(server.EmbeddingModelConfigs),
 				Tools:           make(server.ToolConfigs),
-				Toolsets:        make(server.ToolsetConfigs),
 				Prompts:         server.PromptConfigs{},
+				Groups:          make(server.GroupConfigs),
 			},
 		},
 	}
@@ -2477,6 +2738,94 @@ tools:
 				}
 				if !strings.Contains(err.Error(), tc.errSubstr) {
 					t.Errorf("error %q does not contain expected substring %q", err.Error(), tc.errSubstr)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestParseConfigGroupNameValidation(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		description string
+		in          string
+		wantErr     bool
+		errContains string
+	}{
+		{
+			description: "group with integer name is rejected",
+			in: `
+kind: group
+name: 123
+`,
+			wantErr:     true,
+			errContains: "missing 'name' field or it is not a string",
+		},
+		{
+			description: "group with boolean name is rejected",
+			in: `
+kind: group
+name: true
+`,
+			wantErr:     true,
+			errContains: "missing 'name' field or it is not a string",
+		},
+		{
+			description: "group with absent name is accepted as default group",
+			in: `
+kind: group
+description: the default group
+`,
+			wantErr: false,
+		},
+		{
+			description: "group with null name is accepted as default group",
+			in: `
+kind: group
+name: ~
+description: the default group
+`,
+			wantErr: false,
+		},
+		{
+			description: "group with quoted numeric name is accepted",
+			in: `
+kind: group
+name: "123"
+`,
+			wantErr: false,
+		},
+		{
+			description: "non-group resource with integer name is rejected",
+			in: `
+kind: tool
+name: 42
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT 1
+`,
+			wantErr:     true,
+			errContains: "missing 'name' field or it is not a string",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.description, func(t *testing.T) {
+			parser := ConfigParser{}
+			_, err := parser.ParseConfig(ctx, testutils.FormatYaml(tc.in))
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				if tc.errContains != "" && !strings.Contains(err.Error(), tc.errContains) {
+					t.Errorf("error %q does not contain %q", err.Error(), tc.errContains)
 				}
 			} else {
 				if err != nil {

@@ -24,7 +24,6 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	bqutil "github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
@@ -177,9 +176,6 @@ func TestInvokeDatasetRestrictions(t *testing.T) {
 		Type:   "bigquery-execute-sql",
 		Source: "my-bq-source",
 	}
-	sourcesMap := map[string]sources.Source{
-		"my-bq-source": testSrc,
-	}
 	tool, err := cfg.Initialize(ctx)
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
@@ -251,14 +247,12 @@ func TestInvokeDatasetRestrictions(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			provider := &bqutil.MockSourceProvider{Source: testSrc}
-
 			data := map[string]any{
 				"sql":     tc.sql,
 				"dry_run": true,
 			}
 
-			params, err := executeSqlTool.GetParameters(sourcesMap)
+			params, err := executeSqlTool.GetParameters(testSrc)
 			if err != nil {
 				t.Fatalf("failed to get parameters: %v", err)
 			}
@@ -267,7 +261,7 @@ func TestInvokeDatasetRestrictions(t *testing.T) {
 				t.Fatalf("unexpected error parsing parameters: %v", err)
 			}
 
-			_, err = tool.Invoke(ctx, provider, paramVals, "")
+			_, err = tool.Invoke(ctx, testSrc, paramVals, "")
 			if tc.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil")

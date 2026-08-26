@@ -93,17 +93,6 @@ func (m mockSpannerSource) InvokeSearchCatalog(ctx context.Context, params map[s
 func (m mockSpannerSource) SourceType() string             { return "spanner" }
 func (m mockSpannerSource) ToConfig() sources.SourceConfig { return nil }
 
-type mockSourceProvider struct {
-	source sources.Source
-}
-
-func (m mockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	if m.source != nil {
-		return m.source, true
-	}
-	return nil, false
-}
-
 func TestConfig_Initialize(t *testing.T) {
 	cfg := spannersearchcatalog.Config{
 		ConfigBase: tools.ConfigBase{
@@ -137,7 +126,6 @@ func TestTool_Invoke(t *testing.T) {
 			},
 		},
 	}
-	sourceProvider := mockSourceProvider{source: mockSource}
 
 	cfg := spannersearchcatalog.Config{
 		ConfigBase: tools.ConfigBase{
@@ -158,7 +146,7 @@ func TestTool_Invoke(t *testing.T) {
 		},
 	}
 
-	resp, err := tool.Invoke(ctx, sourceProvider, params, tools.AccessToken(""))
+	resp, err := tool.Invoke(ctx, mockSource, params, tools.AccessToken(""))
 	if err != nil {
 		t.Fatalf("Invoke failed: %v", err)
 	}

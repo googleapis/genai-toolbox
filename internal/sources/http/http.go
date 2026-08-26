@@ -35,6 +35,20 @@ import (
 const SourceType string = "http"
 const maxErrorBodyLogBytes = 1024
 
+// cgnatRange is the RFC 6598 shared address space (100.64.0.0/10). It is not
+// globally routable, so net.IP.IsPrivate reports false for it, but cloud
+// providers and Kubernetes CNIs use it for internal node and Pod networking.
+// The default SSRF guard treats it as private and blocks it.
+var cgnatRange = mustParseCIDR("100.64.0.0/10")
+
+func mustParseCIDR(cidr string) *net.IPNet {
+	_, ipNet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		panic(fmt.Sprintf("invalid CIDR %q: %v", cidr, err))
+	}
+	return ipNet
+}
+
 // validate interface
 var _ sources.SourceConfig = Config{}
 
@@ -133,7 +147,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	ua, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		fmt.Printf("Error in User Agent retrieval: %s", err)
+		warnMsg := fmt.Sprintf("Error in User Agent retrieval: %s", err)
+		logger.WarnContext(ctx, warnMsg)
 	}
 	if r.DefaultHeaders == nil {
 		r.DefaultHeaders = make(map[string]string)
@@ -260,7 +275,7 @@ func (g *SSRFGuard) IsIPBlocked(ip net.IP) bool {
 
 	// Default strict RFC 1918 / Link-Local / Loopback protection
 	if !g.AllowPrivateNetworks {
-		if !ip.IsGlobalUnicast() || ip.IsPrivate() {
+		if !ip.IsGlobalUnicast() || ip.IsPrivate() || cgnatRange.Contains(ip) {
 			return true
 		}
 	}
