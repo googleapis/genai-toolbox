@@ -1,3 +1,7 @@
+// WARNING: The langchaingo library is currently not compatible with modern Google AI
+// models (such as Gemini 2.5+ and 3.0+) because it lacks support for thought_signature
+// on multi-turn function calling. This sample code is currently untested with available Gemini models.
+
 package main
 
 import (
