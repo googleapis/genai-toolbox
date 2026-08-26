@@ -63,6 +63,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.UserAgentMetadata == nil {
 		c.UserAgentMetadata = []string{}
 	}
+	if c.DisableExt == nil {
+		c.DisableExt = []string{}
+	}
 	if c.HttpMaxRequestBytes == 0 {
 		c.HttpMaxRequestBytes = server.DefaultHTTPMaxRequestBytes
 	}
@@ -254,6 +257,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--tls-key", "key.pem"},
 			want: withDefaults(server.ServerConfig{
 				KeyFile: "key.pem",
+			}),
+		},
+		{
+			desc: "disable ext",
+			args: []string{"--disable-ext", "io.modelcontextprotocol/tasks"},
+			want: withDefaults(server.ServerConfig{
+				DisableExt: []string{"io.modelcontextprotocol/tasks"},
 			}),
 		},
 	}
@@ -666,12 +676,12 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 		{
 			desc:      "--config and --configs",
 			args:      []string{"--config", "my.yaml", "--configs", "a.yaml,b.yaml"},
-			errString: "--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously",
+			errString: "if any flags in the group [config configs config-folder tools-file tools-files tools-folder] are set none of the others can be; [config configs] were all set",
 		},
 		{
 			desc:      "--config-folder and --configs",
 			args:      []string{"--config-folder", "./", "--configs", "a.yaml,b.yaml"},
-			errString: "--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously",
+			errString: "if any flags in the group [config configs config-folder tools-file tools-files tools-folder] are set none of the others can be; [config-folder configs] were all set",
 		},
 	}
 
@@ -876,18 +886,18 @@ tools:
 				if len(cfg.ToolConfigs) != 2 {
 					return fmt.Errorf("expected exactly 2 tools, got %d", len(cfg.ToolConfigs))
 				}
-				if _, ok := cfg.ToolsetConfigs["sqlite_database_tools"]; !ok {
-					return fmt.Errorf("expected toolset 'sqlite_database_tools' not found")
+				if _, ok := cfg.GroupConfigs["sqlite_database_tools"]; !ok {
+					return fmt.Errorf("expected group 'sqlite_database_tools' not found")
 				}
-				if len(cfg.ToolsetConfigs) != 2 {
+				// Legacy toolsets are folded into groups, and the default nameless
+				// collection is seeded later as a derived group, so only the named
+				// group remains in the parsed config.
+				if len(cfg.GroupConfigs) != 1 {
 					var names []string
-					for k := range cfg.ToolsetConfigs {
+					for k := range cfg.GroupConfigs {
 						names = append(names, k)
 					}
-					return fmt.Errorf("expected exactly 2 toolsets (including default), got %d: %v", len(cfg.ToolsetConfigs), names)
-				}
-				if _, ok := cfg.ToolsetConfigs[""]; !ok {
-					return fmt.Errorf("expected default toolset '' not found")
+					return fmt.Errorf("expected exactly 1 group, got %d: %v", len(cfg.GroupConfigs), names)
 				}
 				return nil
 			},

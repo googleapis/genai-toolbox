@@ -64,7 +64,7 @@ func TestParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -100,7 +100,7 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
@@ -132,15 +132,6 @@ func (m MockSource) GetLookerSDK(ctx context.Context, s string) (*v4.LookerSDK, 
 	return &v4.LookerSDK{}, nil
 }
 
-type MockSourceProvider struct {
-	tools.SourceProvider
-	source MockSource
-}
-
-func (m MockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.source, true
-}
-
 func TestInvokeValidation(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -160,8 +151,7 @@ func TestInvokeValidation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
-
-	resourceMgr := MockSourceProvider{source: MockSource{}}
+	src := MockSource{}
 
 	tcs := []struct {
 		desc    string
@@ -177,7 +167,7 @@ func TestInvokeValidation(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, err := tool.Invoke(ctx, resourceMgr, tc.params, "")
+			_, err := tool.Invoke(ctx, src, tc.params, "")
 			if err == nil {
 				t.Fatalf("expect error, got nil")
 			}

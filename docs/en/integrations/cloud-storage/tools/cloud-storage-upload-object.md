@@ -38,6 +38,9 @@ file.
 | source        |  string  |     true     | Absolute local filesystem path of the file to upload. Relative paths and paths containing `..` are rejected.       |
 | content_type  |  string  |    false     | MIME type to record on the uploaded object. When empty, it is inferred from the source file extension when possible. |
 
+If `bucket` is configured on the tool, it is removed from the parameter list and
+the configured bucket is used for every invocation.
+
 ## Example
 
 ```yaml
@@ -46,6 +49,15 @@ name: upload_object
 type: cloud-storage-upload-object
 source: my-gcs-source
 description: Use this tool to upload a local file to Cloud Storage.
+```
+
+```yaml
+kind: tool
+name: upload_reports
+type: cloud-storage-upload-object
+source: my-gcs-source
+description: Use this tool to upload local report files to Cloud Storage.
+bucket: analytics-exports
 ```
 
 ## Output Format
@@ -66,3 +78,4 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-upload-object".                 |
 | source      |  string  |     true     | Name of the Cloud Storage source to upload objects to. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.     |
+| bucket      |  string  |    false     | Cloud Storage bucket to use for every invocation. When set, `bucket` is hidden from the tool parameters. |

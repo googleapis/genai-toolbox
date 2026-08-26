@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudstorage/cloudstoragecommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -62,6 +63,8 @@ type Config struct {
 	Type             string                 `yaml:"type" validate:"required"`
 	Source           string                 `yaml:"source" validate:"required"`
 	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Project          *string                `yaml:"project,omitempty"`
+	Prefix           *string                `yaml:"prefix,omitempty"`
 }
 
 // validate interface
@@ -76,11 +79,16 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	projectParam := parameters.NewStringParameterWithDefault(projectKey, "", "Project ID to list buckets in. When empty, the source's configured project is used.")
-	prefixParam := parameters.NewStringParameterWithDefault(prefixKey, "", "Filter results to buckets whose names begin with this prefix.")
-	maxResultsParam := parameters.NewIntParameterWithDefault(maxResultsKey, 0, "Maximum number of buckets to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.")
-	pageTokenParam := parameters.NewStringParameterWithDefault(pageTokenKey, "", "A previously-returned page token for retrieving the next page of results.")
-	allParameters := parameters.Parameters{projectParam, prefixParam, maxResultsParam, pageTokenParam}
+	maxResultsParam := parameters.NewIntParameter(maxResultsKey, "Maximum number of buckets to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.", parameters.WithIntDefault(0))
+	pageTokenParam := parameters.NewStringParameter(pageTokenKey, "A previously-returned page token for retrieving the next page of results.", parameters.WithStringDefault(""))
+	allParameters := parameters.Parameters{}
+	if cfg.Project == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(projectKey, "Project ID to list buckets in. When empty, the source's configured project is used.", parameters.WithStringDefault("")))
+	}
+	if cfg.Prefix == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(prefixKey, "Filter results to buckets whose names begin with this prefix.", parameters.WithStringDefault("")))
+	}
+	allParameters = append(allParameters, maxResultsParam, pageTokenParam)
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -99,19 +107,30 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
+	return nil
+}
 
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
 	mapParams := params.AsMap()
-	project, _ := mapParams[projectKey].(string)
-	prefix, _ := mapParams[prefixKey].(string)
+	project := cloudstoragecommon.ResolveString(t.Cfg.Project, mapParams, projectKey)
+	prefix := cloudstoragecommon.ResolveString(t.Cfg.Prefix, mapParams, prefixKey)
 	pageToken, _ := mapParams[pageTokenKey].(string)
 	maxResults, _ := mapParams[maxResultsKey].(int)
 	if maxResults < 0 {

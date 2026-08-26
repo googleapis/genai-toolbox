@@ -65,10 +65,10 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("filter", `A filter constraining the jobs to list. Filters are case-sensitive and have the following syntax: field = value [AND [field = value]] ... where field is clusterName, status.state, or labels.[KEY], and [KEY] is a label key. value can be * to match all values. status.state can be one of the following: PENDING, RUNNING, CANCEL_PENDING, JOB_STATE_CANCELLED, DONE, ERROR, or ATTEMPT_FAILURE. Only the logical AND operator is supported; space-separated items are treated as having an implicit AND operator. Filtering by clusterName is recommended to improve query performance.`, false),
-		parameters.NewStringParameterWithRequired("jobStateMatcher", "Specifies if the job state matcher should match ALL jobs, only ACTIVE jobs, or only NON_ACTIVE jobs. Defaults to ALL. Supported values: ALL, ACTIVE, NON_ACTIVE.", false),
-		parameters.NewIntParameterWithDefault("pageSize", 20, "The maximum number of jobs to return in a single page (default 20)"),
-		parameters.NewStringParameterWithRequired("pageToken", "A page token, received from a previous `ListJobs` call", false),
+		parameters.NewStringParameter("filter", `A filter constraining the jobs to list. Filters are case-sensitive and have the following syntax: field = value [AND [field = value]] ... where field is clusterName, status.state, or labels.[KEY], and [KEY] is a label key. value can be * to match all values. status.state can be one of the following: PENDING, RUNNING, CANCEL_PENDING, JOB_STATE_CANCELLED, DONE, ERROR, or ATTEMPT_FAILURE. Only the logical AND operator is supported; space-separated items are treated as having an implicit AND operator. Filtering by clusterName is recommended to improve query performance.`, parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("jobStateMatcher", "Specifies if the job state matcher should match ALL jobs, only ACTIVE jobs, or only NON_ACTIVE jobs. Defaults to ALL. Supported values: ALL, ACTIVE, NON_ACTIVE.", parameters.WithStringRequired(false)),
+		parameters.NewIntParameter("pageSize", "The maximum number of jobs to return in a single page (default 20)", parameters.WithIntDefault(20)),
+		parameters.NewStringParameter("pageToken", "A page token, received from a previous `ListJobs` call", parameters.WithStringRequired(false)),
 	}
 
 	return Tool{
@@ -89,27 +89,20 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) validate(srcs map[string]sources.Source) error {
-	_, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	return err
-}
-
-func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	if err := t.validate(srcs); err != nil {
-		return nil, err
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return t.BaseTool.GetParameters(srcs)
-}
-
-func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
-	if err := t.validate(srcs); err != nil {
-		return tools.Manifest{}, err
-	}
-	return t.BaseTool.Manifest(srcs)
+	return nil
 }
 
 type compatibleSource interface {
@@ -117,12 +110,11 @@ type compatibleSource interface {
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, kind)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
-
 	paramMap := params.AsMap()
 	var pageSize *int
 	if ps, ok := paramMap["pageSize"]; ok && ps != nil {

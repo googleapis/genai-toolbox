@@ -95,14 +95,26 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return nil
+}
+
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
 	storeID, err := common.ValidateAndFetchStoreID(params, source.AllowedDICOMStores())
 	if err != nil {
@@ -127,26 +139,26 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return false, err
+func (t Tool) RequiresClientAuthorization(source sources.Source) (bool, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.UseClientAuthorization(), nil
+	return s.UseClientAuthorization(), nil
 }
 
 // buildParams builds the tool's parameters. When the source pins exactly one store
 // (singleStore), the store param is omitted; otherwise it is included.
 func buildParams(singleStore bool) parameters.Parameters {
 	params := parameters.Parameters{
-		parameters.NewStringParameterWithDefault(studyInstanceUIDKey, "", "The UID of the DICOM study"),
-		parameters.NewStringParameterWithDefault(patientNameKey, "", "The name of the patient"),
-		parameters.NewStringParameterWithDefault(patientIDKey, "", "The ID of the patient"),
-		parameters.NewStringParameterWithDefault(accessionNumberKey, "", "The accession number of the study"),
-		parameters.NewStringParameterWithDefault(referringPhysicianNameKey, "", "The name of the referring physician"),
-		parameters.NewStringParameterWithDefault(studyDateKey, "", "The date of the study in the format `YYYYMMDD`. You can also specify a date range in the format `YYYYMMDD-YYYYMMDD`"),
-		parameters.NewBooleanParameterWithDefault(common.EnablePatientNameFuzzyMatchingKey, false, `Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is "John^Doe", then "jo", "Do" and "John Doe" will all match. However "ohn" will not match`),
-		parameters.NewArrayParameterWithDefault(common.IncludeAttributesKey, []any{}, "List of attributeIDs, such as DICOM tag IDs or keywords. Set to [\"all\"] to return all available tags.", parameters.NewStringParameter("attributeID", "The attributeID to include. Set to 'all' to return all available tags")),
+		parameters.NewStringParameter(studyInstanceUIDKey, "The UID of the DICOM study", parameters.WithStringDefault("")),
+		parameters.NewStringParameter(patientNameKey, "The name of the patient", parameters.WithStringDefault("")),
+		parameters.NewStringParameter(patientIDKey, "The ID of the patient", parameters.WithStringDefault("")),
+		parameters.NewStringParameter(accessionNumberKey, "The accession number of the study", parameters.WithStringDefault("")),
+		parameters.NewStringParameter(referringPhysicianNameKey, "The name of the referring physician", parameters.WithStringDefault("")),
+		parameters.NewStringParameter(studyDateKey, "The date of the study in the format `YYYYMMDD`. You can also specify a date range in the format `YYYYMMDD-YYYYMMDD`", parameters.WithStringDefault("")),
+		parameters.NewBooleanParameter(common.EnablePatientNameFuzzyMatchingKey, `Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is "John^Doe", then "jo", "Do" and "John Doe" will all match. However "ohn" will not match`, parameters.WithBooleanDefault(false)),
+		parameters.NewArrayParameter(common.IncludeAttributesKey, "List of attributeIDs, such as DICOM tag IDs or keywords. Set to [\"all\"] to return all available tags.", parameters.NewStringParameter("attributeID", "The attributeID to include. Set to 'all' to return all available tags"), parameters.WithArrayDefault([]any{})),
 	}
 	if !singleStore {
 		params = append(params, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
@@ -155,23 +167,22 @@ func buildParams(singleStore bool) parameters.Parameters {
 }
 
 // resolveParams builds the tool's parameters using the source's configured FHIR/DICOM stores.
-func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, err
+func (t Tool) resolveParams(source sources.Source) (parameters.Parameters, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-
 	return buildParams(len(s.AllowedDICOMStores()) == 1), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.
-func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	return t.resolveParams(srcs)
+func (t Tool) GetParameters(source sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(source)
 }
 
 // Manifest returns the tool's manifest, resolved against the source.
-func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
-	allParameters, err := t.resolveParams(srcs)
+func (t Tool) Manifest(source sources.Source) (tools.Manifest, error) {
+	allParameters, err := t.resolveParams(source)
 	if err != nil {
 		return tools.Manifest{}, err
 	}

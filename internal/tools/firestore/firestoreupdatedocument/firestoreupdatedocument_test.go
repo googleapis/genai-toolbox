@@ -94,7 +94,7 @@ func TestNewConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tt.yaml))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tt.yaml))
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error but got none")
@@ -200,8 +200,8 @@ func TestTool_ParseParams(t *testing.T) {
 			StaticParameters: parameters.Parameters{
 				parameters.NewStringParameter("documentPath", "Document path"),
 				parameters.NewMapParameter("documentData", "Document data", ""),
-				parameters.NewArrayParameterWithRequired("updateMask", "Update mask", false, parameters.NewStringParameter("field", "Field")),
-				parameters.NewBooleanParameterWithDefault("returnData", false, "Return data"),
+				parameters.NewArrayParameter("updateMask", "Update mask", parameters.NewStringParameter("field", "Field"), parameters.WithArrayRequired(false)),
+				parameters.NewBooleanParameter("returnData", "Return data", parameters.WithBooleanDefault(false)),
 			},
 		},
 	}

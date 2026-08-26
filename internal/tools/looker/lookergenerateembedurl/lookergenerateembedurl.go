@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -51,6 +52,7 @@ type compatibleSource interface {
 	LookerApiSettings() *rtl.ApiSettings
 	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
 	LookerSessionLength() int64
+	GetHostURL(context.Context, *v4.LookerSDK) (string, error)
 }
 
 type Config struct {
@@ -72,8 +74,8 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	typeParameter := parameters.NewStringParameterWithDefault("type", "", "Type of Looker content to embed (ie. dashboards, looks, query-visualization)")
-	idParameter := parameters.NewStringParameterWithDefault("id", "", "The ID of the content to embed.")
+	typeParameter := parameters.NewStringParameter("type", "Type of Looker content to embed (ie. dashboards, looks, query-visualization)", parameters.WithStringDefault(""))
+	idParameter := parameters.NewStringParameter("id", "The ID of the content to embed.", parameters.WithStringDefault(""))
 	params := parameters.Parameters{
 		typeParameter,
 		idParameter,
@@ -97,16 +99,27 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
+	return nil
+}
 
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
@@ -128,14 +141,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 
+	hostURL, err := source.GetHostURL(ctx, sdk)
+	if err != nil {
+		logger.WarnContext(ctx, "failed to dynamically resolve public host URL, utilizing fallback", "error", err)
+	}
+
 	forceLogoutLogin := true
 	sessionLength := source.LookerSessionLength()
 	req := v4.EmbedParams{
-		TargetUrl:        fmt.Sprintf("%s/embed/%s/%s", source.LookerApiSettings().BaseUrl, *embedType_ptr, *contentId_ptr),
+		TargetUrl:        fmt.Sprintf("%s/embed/%s/%s", hostURL, *embedType_ptr, *contentId_ptr),
 		SessionLength:    &sessionLength,
 		ForceLogoutLogin: &forceLogoutLogin,
 	}
-	logger.ErrorContext(ctx, "Making request %v", req)
+	logger.DebugContext(ctx, "Making request %v", req)
 	resp, err := sdk.CreateEmbedUrlAsMe(req, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "status=401") {
@@ -143,23 +161,23 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		return nil, util.ProcessGeneralError(err)
 	}
-	logger.ErrorContext(ctx, "Got response %v", resp)
+	logger.DebugContext(ctx, "Got response %v", resp)
 
 	return resp, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return false, err
+func (t Tool) RequiresClientAuthorization(source sources.Source) (bool, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.UseClientAuthorization(), nil
+	return s.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return "", err
+func (t Tool) GetAuthTokenHeaderName(source sources.Source) (string, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return "", fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.GetAuthTokenHeaderName(), nil
+	return s.GetAuthTokenHeaderName(), nil
 }

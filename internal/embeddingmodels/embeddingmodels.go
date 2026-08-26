@@ -57,3 +57,14 @@ func FormatVectorForPgvector(vectorFloats []float32) any {
 }
 
 var _ VectorFormatter = FormatVectorForPgvector
+
+// FormatVectorForClickHouse returns the raw []float32 slice, which the
+// clickhouse-go driver binds natively to Array(Float32) parameters.
+func FormatVectorForClickHouse(vectorFloats []float32) any {
+	if len(vectorFloats) == 0 {
+		return []float32{}
+	}
+	return vectorFloats
+}
+
+var _ VectorFormatter = FormatVectorForClickHouse

@@ -14,7 +14,8 @@
 
 name: tests
 
-on:
+# zizmor flags pull_request_target, but this fallback workflow never checks out code.
+on: # zizmor: ignore[dangerous-triggers]
   push:
     branches:
       - "main"

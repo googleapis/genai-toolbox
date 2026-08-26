@@ -14,7 +14,8 @@
 
 name: "CF: Deploy Docs Preview"
 
-on:
+# zizmor flags workflow_run input, but this workflow safely sanitizes the untrusted PR number artifact before use.
+on: # zizmor: ignore[dangerous-triggers]
   workflow_run:
     workflows: ["CF: Build Docs Preview"]
     types:
@@ -46,6 +47,8 @@ jobs:
     steps:
       - name: Checkout base repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
 
       - name: Download Artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -58,8 +61,8 @@ jobs:
       - name: Read PR Number
         id: get_pr
         run: |
-          if [ -n "${{ github.event.inputs.pr_number }}" ]; then
-            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          if [ -n "${GITHUB_EVENT_INPUTS_PR_NUMBER}" ]; then
+            PR_NUMBER="${GITHUB_EVENT_INPUTS_PR_NUMBER}"
           else
             PR_NUMBER=$(cat downloaded-artifact/pr_number.txt)
           fi
@@ -68,6 +71,8 @@ jobs:
             exit 1
           fi
           echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_EVENT_INPUTS_PR_NUMBER: ${{ github.event.inputs.pr_number }}
 
       - name: Deploy to Cloudflare Pages
         id: cf_deploy
@@ -79,10 +84,13 @@ jobs:
 
       - name: Post Preview URL Comment
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          PR_NUMBER: ${{ steps.get_pr.outputs.pr_number }}
+          DEPLOY_URL: ${{ steps.cf_deploy.outputs.pages-deployment-alias-url }}
         with:
           script: |
-            const prNumber = parseInt('${{ steps.get_pr.outputs.pr_number }}', 10);
-            const deployUrl = '${{ steps.cf_deploy.outputs.pages-deployment-alias-url }}';
+            const prNumber = parseInt(process.env.PR_NUMBER, 10);
+            const deployUrl = process.env.DEPLOY_URL;
             const marker = '<!-- cf-preview-comment-marker -->';
 
             // Fetch all comments on the PR

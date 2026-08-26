@@ -22,6 +22,7 @@ import (
 
 	"cloud.google.com/go/spanner"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -66,16 +67,12 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	// Define parameters for the tool
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault(
+		parameters.NewStringParameter(
 			"table_names",
-			"",
-			"Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed.",
-		),
-		parameters.NewStringParameterWithDefault(
+			"Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter(
 			"output_format",
-			"detailed",
-			"Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema.",
-		),
+			"Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema.", parameters.WithStringDefault("detailed")),
 	}
 
 	if cfg.Description == "" {
@@ -111,12 +108,11 @@ func getStatement(dialect string) string {
 	}
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
-
 	paramsMap := params.AsMap()
 
 	// Get the appropriate SQL statement based on dialect
@@ -161,8 +157,20 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
+}
+
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return nil
 }
 
 // PostgreSQL statement for listing tables

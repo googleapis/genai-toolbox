@@ -1,35 +1,75 @@
 <!-- This file has been used in local_quickstart.md, local_quickstart_go.md & local_quickstart_js.md -->
 <!-- [START configure_toolbox] -->
+
 In this section, we will download Toolbox, configure our tools in a
 `tools.yaml`, and then run the Toolbox server.
 
-1. Download the latest version of Toolbox as a binary:
+1.  Download the latest version of Toolbox as a binary:
 
     {{< notice tip >}}
-  Select the
-  [correct binary](https://github.com/googleapis/mcp-toolbox/releases)
-  corresponding to your OS and CPU architecture.
+    Select the
+    [correct binary](https://github.com/googleapis/mcp-toolbox/releases)
+    corresponding to your OS and CPU architecture.
     {{< /notice >}}
-    <!-- {x-release-please-start-version} -->
+      <!-- {x-release-please-start-version} -->
+
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.5.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/$OS/toolbox
     ```
+
+      <!-- {x-release-please-end} -->
+
+1.  [Optional] Verify the downloaded binary's authenticity and integrity:
+
+    We recommend verifying the digital signature of the downloaded binary before running it.
+
+    {{< tabpane persist=header >}}
+    {{< tab header="Linux" lang="bash" >}}
+
+    # 1. Download the detached GPG signature file (.asc)
+
+    <!-- {x-release-please-start-version} -->
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/$OS/toolbox.asc
     <!-- {x-release-please-end} -->
 
-1. Make the binary executable:
+    # 2. Import Google's public GPG signing key
+
+    curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --import
+
+    # 3. Verify the signature against the downloaded binary
+
+    gpg --verify toolbox.asc toolbox
+    {{< /tab >}}
+    {{< tab header="macOS" lang="bash" >}}
+
+    # Verify the code signature
+
+    codesign -v --verbose=4 toolbox
+
+    {{< /tab >}}
+    {{< tab header="Windows" lang="powershell" >}}
+
+    # Verify the Authenticode digital signature
+
+    Get-AuthenticodeSignature .\toolbox.exe | Format-List
+
+    {{< /tab >}}
+    {{< /tabpane >}}
+
+1.  Make the binary executable (on Linux and macOS):
 
     ```bash
     chmod +x toolbox
     ```
 
-1. Write the following into a `tools.yaml` file. Be sure to update any fields
-   such as `user`, `password`, or `database` that you may have customized in the
-   previous step.
+1.  Write the following into a `tools.yaml` file. Be sure to update any fields
+    such as `user`, `password`, or `database` that you may have customized in the
+    previous step.
 
     {{< notice tip >}}
-  In practice, use environment variable replacement with the format ${ENV_NAME}
-  instead of hardcoding your secrets into the configuration file.
+    In practice, use environment variable replacement with the format ${ENV_NAME}
+    instead of hardcoding your secrets into the configuration file.
     {{< /notice >}}
 
     ```yaml
@@ -69,7 +109,7 @@ In this section, we will download Toolbox, configure our tools in a
     type: postgres-sql
     source: my-pg-source
     description: >-
-       Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
+      Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
     parameters:
       - name: hotel_id
         type: string
@@ -120,14 +160,14 @@ In this section, we will download Toolbox, configure our tools in a
 
     For more info on tools, check out the `Resources` section of the docs.
 
-1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
+1.  Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
     ./toolbox --config "tools.yaml"
     ```
 
     {{< notice note >}}
-Toolbox enables dynamic reloading by default. To disable, use the
-`--disable-reload` flag.
+    Toolbox enables dynamic reloading by default. To disable, use the
+    `--disable-reload` flag.
     {{< /notice >}}
-<!-- [END configure_toolbox] -->
+    <!-- [END configure_toolbox] -->

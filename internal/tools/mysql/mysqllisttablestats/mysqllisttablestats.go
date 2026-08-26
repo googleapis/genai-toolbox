@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -106,11 +107,11 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("table_schema", "", "(Optional) The database where statistics  is to be executed. Check all tables visible to the current user if not specified"),
-		parameters.NewStringParameterWithDefault("table_name", "", "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified."),
-		parameters.NewStringParameterWithDefault("sort_by", "", "(Optional) The column to sort by"),
-		parameters.NewIntParameterWithDefault("limit", 10, "(Optional) Max rows to return, default is 10"),
-		parameters.NewStringParameterWithRequired("connected_schema", "(Optional) The connected db", false),
+		parameters.NewStringParameter("table_schema", "(Optional) The database where statistics  is to be executed. Check all tables visible to the current user if not specified", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("table_name", "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("sort_by", "(Optional) The column to sort by", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "(Optional) Max rows to return, default is 10", parameters.WithIntDefault(10)),
+		parameters.NewStringParameter("connected_schema", "(Optional) The connected db", parameters.WithStringRequired(false)),
 	}
 
 	return Tool{
@@ -130,12 +131,11 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
-
 	paramsMap := params.AsMap()
 
 	table_schema, ok := paramsMap["table_schema"].(string)
@@ -179,6 +179,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
+}
+
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return nil
 }

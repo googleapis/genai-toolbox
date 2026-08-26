@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -75,23 +76,28 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	dashIdParameter := parameters.NewStringParameter("dashboard_id", "The id of the dashboard where this tile will exist")
 	params = append(params, dashIdParameter)
-	titleParameter := parameters.NewStringParameterWithDefault("title", "", "The title of the Dashboard Element")
+	titleParameter := parameters.NewStringParameter("title", "The title of the Dashboard Element", parameters.WithStringDefault(""))
 	params = append(params, titleParameter)
-	vizParameter := parameters.NewMapParameterWithDefault("vis_config",
-		map[string]any{},
+	vizParameter := parameters.NewMapParameter(
+		"vis_config",
 		"The visualization config for the query",
 		"",
+		parameters.WithMapDefault(map[string]any{}),
 	)
+
 	params = append(params, vizParameter)
-	dashFilters := parameters.NewArrayParameterWithRequired("dashboard_filters",
+	dashFilters := parameters.NewArrayParameter(
+		"dashboard_filters",
 		`An array of dashboard filters like [{"dashboard_filter_name": "name", "field": "view_name.field_name"}, ...]`,
-		false,
-		parameters.NewMapParameterWithDefault("dashboard_filter",
-			map[string]any{},
+		parameters.NewMapParameter(
+			"dashboard_filter",
 			`A dashboard filter like {"dashboard_filter_name": "name", "field": "view_name.field_name"}`,
 			"",
+			parameters.WithMapDefault(map[string]any{}),
 		),
+		parameters.WithArrayRequired(false),
 	)
+
 	params = append(params, dashFilters)
 
 	// finish tool setup
@@ -112,8 +118,20 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
+}
+
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return nil
 }
 
 var (
@@ -121,12 +139,11 @@ var (
 	visType  string = "vis"
 )
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
-
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
@@ -253,18 +270,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return data, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return false, err
+func (t Tool) RequiresClientAuthorization(source sources.Source) (bool, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.UseClientAuthorization(), nil
+	return s.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return "", err
+func (t Tool) GetAuthTokenHeaderName(source sources.Source) (string, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return "", fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.GetAuthTokenHeaderName(), nil
+	return s.GetAuthTokenHeaderName(), nil
 }

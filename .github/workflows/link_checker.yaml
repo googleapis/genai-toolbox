@@ -27,6 +27,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Identify Changed Files
         id: changed-files
@@ -54,7 +55,7 @@ jobs:
 
       - name: Restore lychee cache
         if: steps.changed-files.outputs.HAS_CHANGES == 'true'
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .lycheecache
           key: cache-lychee-${{ github.sha }}

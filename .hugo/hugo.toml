@@ -53,6 +53,8 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
     no = 'Sorry to hear that. Please <a href="https://github.com/googleapis/mcp-toolbox/issues/new">tell us how we can improve</a>.'
   [params.ui.readingtime]
       enable = true
+  [params.mermaid]
+    version = "11.16.0"
 
 [[params.versions]]
   version = "dev"
@@ -60,6 +62,22 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 
 # Add a new version block here before every release
 # The order of versions in this file is mirrored into the dropdown
+
+[[params.versions]]
+  version = "v1.9.0"
+  url = "https://mcp-toolbox.dev/v1.9.0/"
+
+[[params.versions]]
+  version = "v1.8.0"
+  url = "https://mcp-toolbox.dev/v1.8.0/"
+
+[[params.versions]]
+  version = "v1.7.0"
+  url = "https://mcp-toolbox.dev/v1.7.0/"
+
+[[params.versions]]
+  version = "v1.6.0"
+  url = "https://mcp-toolbox.dev/v1.6.0/"
 
 [[params.versions]]
   version = "v1.5.0"

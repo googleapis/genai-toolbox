@@ -21,6 +21,10 @@ returned by the Cloud Storage API — fields such as `Name`, `Size`, `ContentTyp
 `Updated`, `StorageClass`, `MD5`, etc.), `prefixes` (the common prefixes when
 `delimiter` is set), and `nextPageToken` (empty when there are no more pages).
 
+You can set `bucket`, `prefix`, or `delimiter` in the tool configuration. When
+set, that field is removed from the runtime parameter schema and the configured
+value is always used. A configured `bucket` must be a non-empty string.
+
 [gcs-buckets]: https://cloud.google.com/storage/docs/buckets
 
 ## Compatible Sources
@@ -47,6 +51,17 @@ source: my-gcs-source
 description: Use this tool to list objects in a Cloud Storage bucket.
 ```
 
+```yaml
+kind: tool
+name: list_log_objects
+type: cloud-storage-list-objects
+source: my-gcs-source
+description: Use this tool to list log objects in a Cloud Storage bucket.
+bucket: my-log-bucket
+prefix: logs/
+delimiter: /
+```
+
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                         |
@@ -54,3 +69,6 @@ description: Use this tool to list objects in a Cloud Storage bucket.
 | type        |  string  |     true     | Must be "cloud-storage-list-objects".                   |
 | source      |  string  |     true     | Name of the Cloud Storage source to list objects from.  |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.      |
+| bucket      |  string  |    false     | Bucket to always list from. When set, the runtime `bucket` parameter is hidden. Must not be empty. |
+| prefix      |  string  |    false     | Object prefix to always use. When set, the runtime `prefix` parameter is hidden. |
+| delimiter   |  string  |    false     | Delimiter to always use. When set, the runtime `delimiter` parameter is hidden. |

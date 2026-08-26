@@ -69,9 +69,9 @@ func TestParseFromYamlmindsdbsql(t *testing.T) {
 					Source:    "my-mindsdbsql-instance",
 					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 				},
 			},
@@ -80,7 +80,7 @@ func TestParseFromYamlmindsdbsql(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -146,9 +146,9 @@ func TestParseFromYamlWithTemplateParamsmindsdbsql(t *testing.T) {
 					Source:    "my-mindsdbsql-instance",
 					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 					TemplateParameters: []parameters.Parameter{
 						parameters.NewStringParameter("tableName", "The table to select hotels from."),
@@ -161,7 +161,7 @@ func TestParseFromYamlWithTemplateParamsmindsdbsql(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

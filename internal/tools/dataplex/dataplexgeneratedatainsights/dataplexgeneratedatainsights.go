@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -63,7 +64,7 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	resourcePath := parameters.NewStringParameter("resourcePath", "The fully-qualified BigQuery resource path of the dataset or table to analyze. Format: //bigquery.googleapis.com/projects/{project}/datasets/{dataset} or //bigquery.googleapis.com/projects/{project}/datasets/{dataset}/tables/{table}.")
 	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1'). This should match the location of the BigQuery resource or the published location of the asset in the catalog.")
-	publish := parameters.NewBooleanParameterWithDefault("publish", false, "Optional. If true, automatically publishes the results to the Knowledge Catalog upon successful completion. False by default.")
+	publish := parameters.NewBooleanParameter("publish", "Optional. If true, automatically publishes the results to the Knowledge Catalog upon successful completion. False by default.", parameters.WithBooleanDefault(false))
 
 	allParameters := parameters.Parameters{resourcePath, location, publish}
 
@@ -83,16 +84,27 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
+	return nil
+}
 
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
 	paramsMap := params.AsMap()
 	resourcePath, _ := paramsMap["resourcePath"].(string)
 	location, _ := paramsMap["location"].(string)

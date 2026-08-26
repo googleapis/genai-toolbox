@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -75,12 +76,12 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	actionParameter := parameters.NewStringParameterWithRequired("action", "The vacuum action to run. Can be 'models', or 'explores'.", true)
-	projectParameter := parameters.NewStringParameterWithDefault("project", "", "The Looker project to vacuum (optional).")
-	modelParameter := parameters.NewStringParameterWithDefault("model", "", "The Looker model to vacuum (optional).")
-	exploreParameter := parameters.NewStringParameterWithDefault("explore", "", "The Looker explore to vacuum (optional).")
-	timeframeParameter := parameters.NewIntParameterWithDefault("timeframe", 90, "The timeframe in days to analyze.")
-	minQueriesParameter := parameters.NewIntParameterWithDefault("min_queries", 1, "The minimum number of queries for a model or explore to be considered used.")
+	actionParameter := parameters.NewStringParameter("action", "The vacuum action to run. Can be 'models', or 'explores'.", parameters.WithStringRequired(true))
+	projectParameter := parameters.NewStringParameter("project", "The Looker project to vacuum (optional).", parameters.WithStringDefault(""))
+	modelParameter := parameters.NewStringParameter("model", "The Looker model to vacuum (optional).", parameters.WithStringDefault(""))
+	exploreParameter := parameters.NewStringParameter("explore", "The Looker explore to vacuum (optional).", parameters.WithStringDefault(""))
+	timeframeParameter := parameters.NewIntParameter("timeframe", "The timeframe in days to analyze.", parameters.WithIntDefault(90))
+	minQueriesParameter := parameters.NewIntParameter("min_queries", "The minimum number of queries for a model or explore to be considered used.", parameters.WithIntDefault(1))
 
 	allParameters := parameters.Parameters{
 		actionParameter,
@@ -107,16 +108,27 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
+	return nil
+}
 
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
 	sdk, err := source.GetLookerSDK(ctx, string(accessToken))
 	if err != nil {
 		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
@@ -168,12 +180,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return res, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return false, err
+func (t Tool) RequiresClientAuthorization(source sources.Source) (bool, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.UseClientAuthorization(), nil
+	return s.UseClientAuthorization(), nil
 }
 
 // =================================================================================================================
@@ -449,10 +461,10 @@ func (t *vacuumTool) getUsedExploreFields(ctx context.Context, model, explore st
 // END LOOKER HEALTH VACUUM CORE LOGIC
 // =================================================================================================================
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return "", err
+func (t Tool) GetAuthTokenHeaderName(source sources.Source) (string, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return "", fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.GetAuthTokenHeaderName(), nil
+	return s.GetAuthTokenHeaderName(), nil
 }
