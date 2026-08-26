@@ -2010,6 +2010,32 @@ func TestFailParametersUnmarshal(t *testing.T) {
 			},
 			err: "parameter \"my_string\" cannot have both 'secure' set to true and 'authServices' specified",
 		},
+		{
+			name: "both secure and default",
+			in: []map[string]any{
+				{
+					"name":        "my_string",
+					"type":        "string",
+					"description": "this param",
+					"secure":      true,
+					"default":     "def_val",
+				},
+			},
+			err: "parameter \"my_string\" cannot have both 'secure' set to true and 'default' specified",
+		},
+		{
+			name: "both secure and required false",
+			in: []map[string]any{
+				{
+					"name":        "my_string",
+					"type":        "string",
+					"description": "this param",
+					"secure":      true,
+					"required":    false,
+				},
+			},
+			err: "parameter \"my_string\" cannot have both 'secure' set to true and 'required' set to false",
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -2464,6 +2490,90 @@ func TestProcessParametersValidation(t *testing.T) {
 			wantErr: true,
 			errStr:  `parameter "p1" cannot have both 'secure' set to true and 'authServices' specified`,
 		},
+		{
+			name:           "valid - secure with required true",
+			templateParams: nil,
+			params: parameters.Parameters{
+				&parameters.StringParameter{
+					CommonParameter: parameters.CommonParameter{
+						Name:     "p1",
+						Type:     parameters.TypeString,
+						Desc:     "desc",
+						Secure:   true,
+						Required: ptr(true),
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:           "invalid - both secure and default",
+			templateParams: nil,
+			params: parameters.Parameters{
+				&parameters.StringParameter{
+					CommonParameter: parameters.CommonParameter{
+						Name:   "p1",
+						Type:   parameters.TypeString,
+						Desc:   "desc",
+						Secure: true,
+					},
+					Default: ptr("def"),
+				},
+			},
+			wantErr: true,
+			errStr:  `parameter "p1" cannot have both 'secure' set to true and 'default' specified`,
+		},
+		{
+			name: "invalid - both secure and default in templateParams",
+			templateParams: parameters.Parameters{
+				&parameters.StringParameter{
+					CommonParameter: parameters.CommonParameter{
+						Name:   "p1",
+						Type:   parameters.TypeString,
+						Desc:   "desc",
+						Secure: true,
+					},
+					Default: ptr("def"),
+				},
+			},
+			params:  nil,
+			wantErr: true,
+			errStr:  `parameter "p1" cannot have both 'secure' set to true and 'default' specified`,
+		},
+		{
+			name:           "invalid - both secure and required false",
+			templateParams: nil,
+			params: parameters.Parameters{
+				&parameters.StringParameter{
+					CommonParameter: parameters.CommonParameter{
+						Name:     "p1",
+						Type:     parameters.TypeString,
+						Desc:     "desc",
+						Secure:   true,
+						Required: ptr(false),
+					},
+				},
+			},
+			wantErr: true,
+			errStr:  `parameter "p1" cannot have both 'secure' set to true and 'required' set to false`,
+		},
+		{
+			name: "invalid - both secure and required false in templateParams",
+			templateParams: parameters.Parameters{
+				&parameters.StringParameter{
+					CommonParameter: parameters.CommonParameter{
+						Name:     "p1",
+						Type:     parameters.TypeString,
+						Desc:     "desc",
+						Secure:   true,
+						Required: ptr(false),
+					},
+				},
+			},
+			params:  nil,
+			wantErr: true,
+			errStr:  `parameter "p1" cannot have both 'secure' set to true and 'required' set to false`,
+		},
 	}
 
 	for _, tc := range tcs {
@@ -2477,4 +2587,8 @@ func TestProcessParametersValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

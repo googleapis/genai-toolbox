@@ -254,7 +254,7 @@ parameters:
 
 When a parameter is marked as `secure: true`, it will not be presented to the agent as a configurable parameter. Instead, it relies on the application to set the parameter. If an application fails to set the parameter before the tool is called, execution returns a tool error indicating that the required parameter was not provided.
 
-> **Note:** A parameter cannot have both `secure: true` and `authServices` specified.
+> **Note:** Secure parameters are always required and cannot be optional. A parameter cannot have `secure: true` alongside `authServices`, `default`, or `required: false`.
 
 Here is how you set a secure parameter with the Toolbox Python SDK:
 

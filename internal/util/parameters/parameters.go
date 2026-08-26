@@ -311,10 +311,10 @@ func ProcessParameters(templateParams Parameters, params Parameters) (Parameters
 		return nil, nil, err
 	}
 
-	// verify "secure" flag is not specified together with "authServices"
+	// verify parameter restrictions
 	for _, p := range allParameters {
-		if p.GetSecure() && len(p.GetAuthServices()) > 0 {
-			return nil, nil, fmt.Errorf("parameter %q cannot have both 'secure' set to true and 'authServices' specified", p.GetName())
+		if err := validateParameter(p); err != nil {
+			return nil, nil, err
 		}
 	}
 
@@ -325,6 +325,22 @@ func ProcessParameters(templateParams Parameters, params Parameters) (Parameters
 	}
 
 	return allParameters, paramManifest, nil
+}
+
+// validateParameter validates that parameter configuration adheres to system constraints.
+func validateParameter(p Parameter) error {
+	if p.GetSecure() {
+		if len(p.GetAuthServices()) > 0 {
+			return fmt.Errorf("parameter %q cannot have both 'secure' set to true and 'authServices' specified", p.GetName())
+		}
+		if p.GetDefault() != nil {
+			return fmt.Errorf("parameter %q cannot have both 'secure' set to true and 'default' specified", p.GetName())
+		}
+		if !p.GetRequired() {
+			return fmt.Errorf("parameter %q cannot have both 'secure' set to true and 'required' set to false", p.GetName())
+		}
+	}
+	return nil
 }
 
 type Parameter interface {
@@ -387,8 +403,8 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 		return nil, err
 	}
 
-	if param.GetSecure() && len(param.GetAuthServices()) > 0 {
-		return nil, fmt.Errorf("parameter %q cannot have both 'secure' set to true and 'authServices' specified", param.GetName())
+	if err := validateParameter(param); err != nil {
+		return nil, err
 	}
 
 	return param, nil
