@@ -41,4 +41,4 @@ scorers:
 
 reporting:
   bigquery:
-    gcp_project_id: !ENV ${EVAL_GCP_PROJECT_ID}
+    gcp_project_id: !ENV ${EVAL_REPORTING_PROJECT}
