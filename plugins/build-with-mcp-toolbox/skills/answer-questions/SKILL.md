@@ -14,16 +14,21 @@ description: >-
 # Answer Toolbox questions from the docs and the code
 
 Toolbox ships roughly monthly across ~40 integrations, so config keys, tool
-`type` strings, and flags all move. Recalled answers fail in the most expensive
-way: a plausible field name that the server rejects at startup. Look it up, then
-say where you looked.
+`type` strings, and flags all move. Look it up, then say where you looked.
 
 **Never state a config key, tool `type`, flag, or "yes, it supports that"
 without reading it in this session.**
 
-Work the steps in order. Step 1 decides which URLs the rest of them fetch.
+## Which version
 
-## Step 1: Pin the version
+**Answer for the latest release and say so.** It is the version in the
+[Reference](#reference) links below, bumped by the same release-please run that
+ships the server. Do not go hunting for an installed binary: most questions (does
+Toolbox support X, what does this tool do, how do I start) never need one.
+
+Pin to the user's own build only when they ask something specific to a version:
+they quote a startup error, ask why their `tools.yaml` is rejected, ask what
+changed between releases, or name a version themselves.
 
 ```bash
 toolbox --version    # toolbox version 1.9.0+binary.darwin.arm64
@@ -37,14 +42,11 @@ field after `+` is the build type, which decides the tree to read:
 | `binary`, `container` | A release | Tag `v<version>` |
 | `dev` | Built from source | The user's checkout, else `main` |
 
-No server installed yet (they are choosing a source, or asking an SDK question)?
-Use the latest release and say which one you assumed.
-
-Read docs and code at the **same** version. Skew is what makes you recommend a
-field that does not exist yet, and it explains nearly every apparent
+Whichever version you land on, read docs and code at the **same** one. Skew makes
+you recommend fields that do not exist yet, and it explains nearly every apparent
 docs-versus-code conflict.
 
-## Step 2: Docs first
+## Step 1: Docs first
 
 Every version publishes a machine-readable page index:
 
@@ -60,13 +62,12 @@ https://mcp-toolbox.dev/v<version>/llms.txt
 
 Docs are authoritative for concepts, quickstarts, deployment, and anything the
 user will read themselves. They are not authoritative for the exact set of
-config keys, which is Step 3.
+config keys, which is Step 2.
 
-## Step 3: Code for exact behavior
+## Step 2: Code for exact behavior
 
 Go to the code when the docs are silent, ambiguous, or stale, or when the
-question is what something exactly accepts or does. No checkout needed, and no
-auth:
+question is exactly what something accepts or does. No checkout, no auth:
 
 ```
 https://raw.githubusercontent.com/googleapis/mcp-toolbox/v<version>/<path>
@@ -78,7 +79,7 @@ https://raw.githubusercontent.com/googleapis/mcp-toolbox/v<version>/<path>
 | What a tool accepts and does | `internal/tools/<source>/<tooldir>/<tooldir>.go`, `Config` struct then `Invoke` |
 | What `--prebuilt <x>` serves, and which env vars it reads | `internal/prebuiltconfigs/tools/<x>.yaml`, the literal config: every tool name, every toolset, and the `${ENV_VAR}` behind each source field |
 | CLI flags | `cmd/root.go` |
-| Whether a source or tool exists at all | The Step 2 `llms.txt` index — one line per tool page, titled with the exact `type` |
+| Whether a source or tool exists at all | The Step 1 `llms.txt` index (one line per tool page, titled with the exact `type`) |
 
 Deriving `<tooldir>`:
 
@@ -108,7 +109,9 @@ ConnectTimeout *int  `yaml:"connectTimeout" validate:"omitempty,gte=1"`
 ```
 
 - `yaml:"..."` is the exact key in `tools.yaml`: camelCase, never the Go field
-  name.
+  name. The one key absent from every Config is `kind`: it selects which struct
+  to decode into and is stripped before decoding, so do not call it invalid just
+  because no struct tag carries it.
 - `validate:"required"` means required. Anything else (`omitempty`, or no
   `validate` tag at all) is optional.
 - `oneof=` is the **complete** allowed set. Nothing outside it is valid.
@@ -118,7 +121,7 @@ ConnectTimeout *int  `yaml:"connectTimeout" validate:"omitempty,gte=1"`
   `authRequired`, and `scopesRequired`. Do not report those as missing just
   because the tool's own struct omits them.
 
-## Step 4: Label every claim
+## Step 3: Label every claim
 
 Attribute inline and carry the version. An unlabeled answer is indistinguishable
 from a guess.
@@ -135,18 +138,17 @@ docs bug.
 
 ## Rules
 
-- **Answer for the user's version, not for `main`.** When something exists on
-  `main` but not their tag, say so precisely: "not in v1.9.0, landed after it,
-  currently in `dev`, shipping in the next release." Never hand a release user a
-  config key only `main` accepts.
+- **Answer for the release, not for `main`.** When something exists on `main` but
+  not the version you are answering for, say so precisely: "not in v1.9.0, landed
+  after it, currently in `dev`, shipping in the next release." Never hand a
+  release user a config key only `main` accepts.
 - **Do not invent field names or tool types.** If it is not in the struct tags,
-  the prebuilt YAML, or `--help`, it does not exist. Say that.
+  the prebuilt YAML, or `--help`, it does not exist. Say so, and say what you
+  searched (version, docs pages, code paths) so the next step is obvious. "I
+  could not find it" is a valid answer; a plausible-looking key is not.
 - **Prefer what the user can verify locally.** `toolbox --help`, `toolbox invoke
   <tool> '<json>' --config tools.yaml`, and the server's own startup error settle
   a question about *their* setup better than any URL.
-- **"I could not find it" is a valid answer.** Say what you searched (version,
-  docs pages, code paths) so the next step is obvious. Do not fill the gap with a
-  plausible-looking key.
 - **Answer the question that was asked.** One line with a citation beats a tour
   of the configuration system.
 
