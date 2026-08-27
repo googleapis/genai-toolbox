@@ -165,7 +165,7 @@ func TestAnnotations(t *testing.T) {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	annotations := tool.GetAnnotations()
+	annotations := tool.GetAnnotations(nil)
 	if annotations == nil {
 		t.Fatal("mcp manifest annotations is nil")
 	}

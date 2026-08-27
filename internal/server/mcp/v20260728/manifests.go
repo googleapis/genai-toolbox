@@ -138,7 +138,7 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 		if tool.HasSecureParams() && !supportsSecureParams {
 			continue
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(), urlParams)
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(src), urlParams)
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	res := ListToolsResult{

@@ -274,6 +274,7 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[string]sources.Source, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
+		var src sources.Source
 		t, err := func() (tools.Tool, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
@@ -286,16 +287,16 @@ func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[strin
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
 			}
-			if !cfg.SkipSourceValidation {
-				srcName := t.GetSourceName()
-				var src sources.Source
+
+			if srcName := t.GetSourceName(); srcName != "" && sourcesMap != nil {
 				var ok bool
-				if srcName != "" {
-					src, ok = sourcesMap[srcName]
-					if !ok {
-						return nil, fmt.Errorf("unable to retrieve source %s for tool %s", srcName, name)
-					}
+				src, ok = sourcesMap[srcName]
+				if !ok && !cfg.SkipSourceValidation {
+					return nil, fmt.Errorf("unable to retrieve source %q for tool %q", srcName, name)
 				}
+			}
+
+			if !cfg.SkipSourceValidation {
 				err = t.ValidateSource(src)
 				if err != nil {
 					return nil, err
@@ -306,6 +307,11 @@ func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[strin
 		if err != nil {
 			return nil, err
 		}
+
+		if tools.ShouldSuppress(ctx, t, src) {
+			continue
+		}
+
 		toolsMap[name] = t
 	}
 	toolNames := make([]string, 0, len(toolsMap))
@@ -351,17 +357,20 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 
 	groupsMap := make(map[string]group.Group)
 	for name, gc := range groupConfigs {
-		if cfg.IgnoreUnknownTools {
-			filteredToolNames := make([]string, 0, len(gc.ToolNames))
-			for _, tn := range gc.ToolNames {
-				if _, ok := toolsMap[tn]; ok {
-					filteredToolNames = append(filteredToolNames, tn)
-				} else {
-					l.WarnContext(ctx, fmt.Sprintf("Skipping missing tool %q in group %q", tn, name))
-				}
+		filteredToolNames := make([]string, 0, len(gc.ToolNames))
+		for _, tn := range gc.ToolNames {
+			if _, ok := toolsMap[tn]; ok {
+				filteredToolNames = append(filteredToolNames, tn)
+			} else if _, isTool := cfg.ToolConfigs[tn]; isTool {
+				l.InfoContext(ctx, fmt.Sprintf("Removing suppressed tool %q from group %q", tn, name))
+			} else if cfg.IgnoreUnknownTools {
+				l.WarnContext(ctx, fmt.Sprintf("Skipping missing tool %q in group %q", tn, name))
+			} else {
+				// Keep it so that Initialize returns the expected error
+				filteredToolNames = append(filteredToolNames, tn)
 			}
-			gc.ToolNames = filteredToolNames
 		}
+		gc.ToolNames = filteredToolNames
 
 		g, err := func() (group.Group, error) {
 			_, span := instrumentation.Tracer.Start(
