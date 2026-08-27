@@ -60,9 +60,8 @@ func TestBaseToolGetters(t *testing.T) {
 	if diff := cmp.Diff([]string{"google"}, b.GetAuthRequired()); diff != "" {
 		t.Errorf("GetAuthRequired() mismatch (-want +got):\n%s", diff)
 	}
-	got := b.GetAnnotations()
-	if got == nil || got.ReadOnlyHint == nil || !*got.ReadOnlyHint {
-		t.Errorf("GetAnnotations() = %+v, want ReadOnlyHint=true", got)
+	if diff := cmp.Diff(tools.NewReadOnlyAnnotations(), b.GetAnnotations(nil)); diff != "" {
+		t.Errorf("GetAnnotations() mismatch (-want +got):\n%s", diff)
 	}
 	gotManifest, err := b.Manifest(nil)
 	if err != nil {
@@ -145,7 +144,7 @@ func TestBaseToolEmbedParamsPassthrough(t *testing.T) {
 	}
 }
 
-func TestBaseToolShouldSuppress(t *testing.T) {
+func TestShouldSuppress(t *testing.T) {
 	roSource := testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{ReadOnly: true}}
 	rwSource := testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{ReadOnly: false}}
 
@@ -158,17 +157,23 @@ func TestBaseToolShouldSuppress(t *testing.T) {
 		{
 			desc:        "nil source -> not suppressed",
 			src:         nil,
-			annotations: tools.NewDestructiveAnnotations(),
+			annotations: tools.NewWriteAnnotations(),
 			want:        false,
 		},
 		{
 			desc:        "read-write source with write tool -> not suppressed",
 			src:         rwSource,
-			annotations: tools.NewDestructiveAnnotations(),
+			annotations: tools.NewWriteAnnotations(),
 			want:        false,
 		},
 		{
 			desc:        "read-only source with write tool (readOnlyHint: false) -> suppressed",
+			src:         roSource,
+			annotations: tools.NewWriteAnnotations(),
+			want:        true,
+		},
+		{
+			desc:        "read-only source with destructive write tool (readOnlyHint: false, destructiveHint: true) -> suppressed",
 			src:         roSource,
 			annotations: tools.NewDestructiveAnnotations(),
 			want:        true,
@@ -185,12 +190,35 @@ func TestBaseToolShouldSuppress(t *testing.T) {
 			annotations: nil,
 			want:        false,
 		},
+		{
+			desc: "read-only source with custom tool explicitly setting readOnlyHint: false -> suppressed",
+			src:  roSource,
+			annotations: &tools.ToolAnnotations{
+				ReadOnlyHint: func(b bool) *bool { return &b }(false),
+			},
+			want: true,
+		},
+		{
+			desc: "read-only source with custom tool explicitly setting readOnlyHint: true -> not suppressed",
+			src:  roSource,
+			annotations: &tools.ToolAnnotations{
+				ReadOnlyHint: func(b bool) *bool { return &b }(true),
+			},
+			want: false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			b := tools.NewBaseTool(tools.ConfigBase{}, tt.annotations, tools.Manifest{}, nil)
-			if got := b.ShouldSuppress(context.Background(), tt.src); got != tt.want {
+			cfg := testutils.MockToolConfig{
+				ConfigBase:  tools.ConfigBase{Name: "my-tool"},
+				Annotations: tt.annotations,
+			}
+			tool, err := cfg.Initialize(context.Background())
+			if err != nil {
+				t.Fatalf("unexpected error initializing mock tool: %v", err)
+			}
+			if got := tools.ShouldSuppress(context.Background(), tool, tt.src); got != tt.want {
 				t.Errorf("ShouldSuppress() = %v, want %v", got, tt.want)
 			}
 		})
