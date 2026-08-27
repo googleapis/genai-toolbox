@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-27T22:21:15Z
+**GENERATED ON:** 2026-08-27T22:43:00Z
 
 ---
 ### System Directives for AI Models
@@ -16177,6 +16177,7 @@ useClientOAuth: true
 | type           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
 | defaultProject |  string  |     false    | The Google Cloud project ID to use for AlloyDB infrastructure tools.                                                                           |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+| readOnly       |  boolean |     false    | When set to `true`, suppresses write-capable admin tools. Default: `false`.                                                                    |
 
 
 
@@ -16755,7 +16756,10 @@ maxRetries: 10
 
 ## AlloyDB Postgres Admin
 
-* `--prebuilt` value: `alloydb-postgres-admin`
+*   `--prebuilt` value: `alloydb-postgres-admin`
+*   **Environment Variables:**
+    *   `ALLOYDB_POSTGRES_PROJECT`: (Optional) The GCP project ID to use as the default for AlloyDB infrastructure tools.
+    *   `ALLOYDB_POSTGRES_READONLY`: (Optional) When set to `true`, suppresses write-capable admin tools (e.g., `create_cluster`, `create_instance`, `create_user`). Default: `false`.
 *   **Permissions:**
     *   **AlloyDB Viewer** (`roles/alloydb.viewer`) is required for `list` and
         `get` tools.
@@ -16932,6 +16936,7 @@ The interface is identical, so there's no additional configuration required on t
 | password  |  string  |    false     | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
 | ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`.                                |
 | sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
+| readOnly  | boolean  |    false     | When set to `true`, enforces read-only execution at the database session level (`alloydb_session_read_only=locked`) and suppresses write-capable tools. Default: `false`. |
 
 
 
@@ -17510,6 +17515,7 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
         user. Defaults to IAM authentication if unspecified.
     *   `ALLOYDB_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or
         "Private" (Default: Public).
+    *   `ALLOYDB_POSTGRES_READONLY`: (Optional) When set to `true`, enforces read-only execution at the database session level (`alloydb_session_read_only=locked`) and suppresses write-capable tools. Default: `false`.
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
@@ -17851,6 +17857,7 @@ name: my-bigquery-source
 type: "bigquery"
 project: "my-project-id"
 # location: "US" # Optional: Specifies the location for query jobs.
+# readOnly: false # Optional: Enforces read-only mode across all tools (defaults writeMode to "blocked").
 # writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
 # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
 #   - "my_dataset_1"
@@ -17873,6 +17880,7 @@ type: "bigquery"
 project: "my-project-id"
 useClientOAuth: true
 # location: "US" # Optional: Specifies the location for query jobs.
+# readOnly: false # Optional: Enforces read-only mode across all tools (defaults writeMode to "blocked").
 # writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
 # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
 #   - "my_dataset_1"
@@ -17893,7 +17901,8 @@ useClientOAuth: true
 | type                      |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | project                   |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                                                                                                                                                                                                                                                                                                                                                                |
 | location                  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations)                                                                                                                                                                                                    |
-| writeMode                 |  string  |    false     | Controls the write behavior for tools. `allowed` (default): All queries are permitted. `blocked`: Only `SELECT` statements are allowed for the `bigquery-execute-sql` tool. `protected`: Enables session-based execution where all tools associated with this source instance share the same [BigQuery session](https://cloud.google.com/bigquery/docs/sessions-intro). This allows for stateful operations using temporary tables (e.g., `CREATE TEMP TABLE`). For `bigquery-execute-sql`, `SELECT` statements can be used on all tables, but write operations are restricted to the session's temporary dataset. For tools like `bigquery-sql`, `bigquery-forecast`, and `bigquery-analyze-contribution`, the `writeMode` restrictions do not apply, but they will operate within the shared session. **Note:** The `protected` mode cannot be used with `useClientOAuth: true`. It is also not recommended for multi-user server environments, as all users would share the same session. A session is terminated automatically after 24 hours of inactivity or after 7 days, whichever comes first. A new session is created on the next request, and any temporary data from the previous session will be lost. |
+| readOnly                  | boolean  |    false     | Controls whether the source operates in read-only mode across Toolbox. Setting `readOnly: true` marks the source as read-only, coordinating with MCP read-only annotations and tool suppression, and defaults `writeMode` to `blocked` (or allows `protected`). If `writeMode` is also provided, it must be consistent with `readOnly` (`readOnly: true` with `blocked` or `protected`, `readOnly: false` with `allowed`), otherwise a startup configuration error is returned. |
+| writeMode                 |  string  |    false     | Controls the write behavior for tools. `allowed` (default): All queries are permitted. `blocked`: Enforces strict read-only mode, coordinating with MCP read-only annotations and tool suppression (suppresses write-capable tools during registration, while dynamic tools like `bigquery-execute-sql` dynamically report `readOnlyHint: true`), and allows only `SELECT` statements for execution. `protected`: Enables session-based execution where all tools associated with this source instance share the same [BigQuery session](https://cloud.google.com/bigquery/docs/sessions-intro). This allows for stateful operations using temporary tables (e.g., `CREATE TEMP TABLE`), while protecting permanent datasets from modification (also classified as read-only at the Toolbox layer). For `bigquery-execute-sql`, `SELECT` statements can be used on all tables, but write operations are restricted to the session's temporary dataset. For tools like `bigquery-sql`, `bigquery-forecast`, and `bigquery-analyze-contribution`, the `writeMode` restrictions do not apply, but they will operate within the shared session. **Note:** The `protected` mode cannot be used with `useClientOAuth: true`. It is also not recommended for multi-user server environments, as all users would share the same session. A session is terminated automatically after 24 hours of inactivity or after 7 days, whichever comes first. A new session is created on the next request, and any temporary data from the previous session will be lost. |
 | allowedDatasets           | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
 | useClientOAuth            |  string  |    false     | If set to `'true'`, forwards the client's OAuth access token from the default `Authorization` header. If set to a custom header name (e.g., `X-My-Auth`), that header will be used instead. An empty string or `'false'` disables this feature. Defaults to `""` (disabled). |
 | scopes                    | []string |    false     | A list of OAuth 2.0 scopes to use for the credentials. If not provided, default scopes are used.                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -18109,17 +18118,17 @@ A `bigquery-execute-sql` tool executes a SQL statement against BigQuery.
 - **`dry_run`** (optional): If set to `true`, the query is validated but not
   run, returning information about the execution instead. Defaults to `false`.
 
-The behavior of this tool is influenced by the `writeMode` setting on its
-`bigquery` source:
+The behavior of this tool is influenced by the combination of the `readOnly`
+and `writeMode` settings on its `bigquery` source:
 
-- **`allowed` (default):** All SQL statements are permitted.
-- **`blocked`:** Only `SELECT` statements are allowed. Any other type of
-  statement (e.g., `INSERT`, `UPDATE`, `CREATE`) will be rejected.
-- **`protected`:** This mode enables session-based execution. `SELECT`
-  statements can be used on all tables, while write operations are allowed only
-  for the session's temporary dataset (e.g., `CREATE TEMP TABLE ...`). This
-  prevents modifications to permanent datasets while allowing stateful,
-  multi-step operations within a secure session.
+| `readOnly` | `writeMode` | Tool Behavior | MCP Tool Annotations |
+| :--- | :--- | :--- | :--- |
+| `false` *(default)* | `allowed` *(default)* | All SQL statements are permitted. | *(Default / none)* |
+| `true` | `blocked` *(default if `readOnly: true`)* | Only `SELECT` statements are allowed. Any other type of statement (e.g., `INSERT`, `UPDATE`, `CREATE`) will be rejected. | `readOnlyHint: true` |
+| `true` | `protected` | Enables session-based execution. `SELECT` statements can be used on all tables, while write operations are allowed only for the session's temporary dataset (e.g., `CREATE TEMP TABLE ...`). | `readOnlyHint: true` |
+
+> **Note:** Conflicting configurations, such as `readOnly: true` combined with
+> `writeMode: allowed`, are rejected during server startup.
 
 The tool's behavior is influenced by the `allowedDatasets` restriction on the
 `bigquery` source. Similar to `writeMode`, this setting provides an additional
@@ -18554,16 +18563,20 @@ description: Use this tool to find tables, views, models, routines or connection
 
 A `bigquery-sql` tool executes a pre-defined SQL statement.
 
-The behavior of this tool is influenced by the `writeMode` setting on its
-`bigquery` source:
+The behavior of this tool is influenced by the `readOnly` and `writeMode`
+settings on its `bigquery` source:
 
-- **`allowed` (default) and `blocked`:** These modes do not impose any
-  restrictions on the `bigquery-sql` tool. The pre-defined SQL statement will be
-  executed as-is.
-- **`protected`:** This mode enables session-based execution. The tool will
-  operate within the same BigQuery session as other tools using the same source,
-  allowing it to interact with temporary resources like `TEMP` tables created
-  within that session.
+- **Read-Only Mode:** When a source is configured with
+  `readOnly: true` (or `writeMode: blocked` / `writeMode: protected`),
+  `bigquery-sql` tools default to write-capable annotations (`readOnlyHint: false`)
+  and are automatically suppressed from registration during server startup to
+  protect data integrity and optimize agent context window. To keep a pre-defined
+  read-only query active in read-only mode, explicitly annotate the tool with
+  `readOnlyHint: true`.
+- **`protected`:** This mode enables session-based
+  execution. The tool will operate within the same BigQuery session as other
+  tools using the same source, allowing it to interact with temporary resources
+  like `TEMP` tables created within that session.
 
 ## Compatible Sources
 
@@ -19761,6 +19774,11 @@ In this section, we will download Toolbox, configure our tools in a
 *   **Environment Variables:**
     *   `BIGQUERY_PROJECT`: The GCP project ID.
     *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
+    *   `BIGQUERY_READONLY`: (Optional) When set to `true`, enforces read-only
+        mode across all tools (defaults `BIGQUERY_WRITE_MODE` to `blocked`).
+        Defaults to `false`.
+    *   `BIGQUERY_WRITE_MODE`: (Optional) Controls write behavior: `allowed`,
+        `blocked` (strict read-only), or `protected` (session scratchpad).
     *   `BIGQUERY_USE_CLIENT_OAUTH`: (Optional) If `true`, forwards the client's
         OAuth access token for authentication. Defaults to `false`.
     *   `BIGQUERY_SCOPES`: (Optional) A comma-separated list of OAuth scopes to
@@ -23469,6 +23487,7 @@ useClientOAuth: true
 | type           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                     |
 | defaultProject |  string  |     false    | The Google Cloud project ID to use for Cloud SQL infrastructure tools.                                                                         |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+| readOnly       |  boolean |     false    | When set to `true`, suppresses write-capable admin tools. Default: `false`.                                                                    |
 
 
 
@@ -24419,6 +24438,9 @@ your project's package manifest.
 ## Cloud SQL for MySQL Admin
 
 *   `--prebuilt` value: `cloud-sql-mysql-admin`
+*   **Environment Variables:**
+    *   `CLOUD_SQL_MYSQL_PROJECT`: (Optional) The GCP project ID to use as the default for Cloud SQL infrastructure tools.
+    *   `CLOUD_SQL_MYSQL_READONLY`: (Optional) When set to `true`, suppresses write-capable admin tools. Default: `false`.
 *   **Permissions:**
     *   **Cloud SQL Viewer** (`roles/cloudsql.viewer`): Provides read-only
         access to resources.
@@ -24465,6 +24487,9 @@ your project's package manifest.
 ## Cloud SQL for PostgreSQL Admin
 
 *   `--prebuilt` value: `cloud-sql-postgres-admin`
+*   **Environment Variables:**
+    *   `CLOUD_SQL_POSTGRES_PROJECT`: (Optional) The GCP project ID to use as the default for Cloud SQL infrastructure tools.
+    *   `CLOUD_SQL_POSTGRES_READONLY`: (Optional) When set to `true`, suppresses write-capable admin tools. Default: `false`.
 *   **Permissions:**
     *   **Cloud SQL Viewer** (`roles/cloudsql.viewer`): Provides read-only
         access to resources.
@@ -24697,6 +24722,7 @@ instead of hardcoding your secrets into the configuration file.
 | password  |  string  |    false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.              |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`.                    |
 | sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
+| readOnly  | boolean  |    false     | When set to `true`, enforces read-only execution on the database connection (`read_only_connection:true`) and suppresses write-capable tools. Default: `false`. |
 
 
 
@@ -24741,8 +24767,8 @@ instead of hardcoding your secrets into the configuration file.
     *   `CLOUD_SQL_MYSQL_DATABASE`: The name of the database to connect to.
     *   `CLOUD_SQL_MYSQL_USER`: The database username.
     *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
-    *   `CLOUD_SQL_MYSQL_IP_TYPE`: The IP type i.e. "Public
-     or "Private" (Default: Public).
+    *   `CLOUD_SQL_MYSQL_IP_TYPE`: The IP type i.e. "Public" or "Private" (Default: Public).
+    *   `CLOUD_SQL_MYSQL_READONLY`: (Optional) When set to `true`, enforces read-only execution on the database connection (`read_only_connection:true`) and suppresses write-capable tools. Default: `false`.
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the
         instance.
@@ -24922,6 +24948,7 @@ The interface is identical, so there's no additional configuration required on t
 | password  |  string  |    false     | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance; must be one of `public`, `private`, or `psc`. Default: `public`.                      |
 | sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
+| readOnly  | boolean  |    false     | When set to `true`, enforces read-only execution at the database session level (`cloudsql_session_read_only=locked`) and suppresses write-capable tools. Default: `false`. |
 
 
 
@@ -25486,6 +25513,7 @@ description: "This tool modifies an existing vector specification (identified by
         user. Defaults to IAM authentication if unspecified.
     *   `CLOUD_SQL_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or
         "Private" (Default: Public).
+    *   `CLOUD_SQL_POSTGRES_READONLY`: (Optional) When set to `true`, enforces read-only execution at the database session level (`cloudsql_session_read_only=locked`) and suppresses write-capable tools. Default: `false`.
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the
         instance.

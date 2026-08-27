@@ -645,21 +645,41 @@ SQL or Python code, the data retrieved, and the final text answer.&lt;/p&gt;</de
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;dry_run&lt;/code&gt;&lt;/strong&gt; (optional): If set to &lt;code&gt;true&lt;/code&gt;, the query is validated but not
 run, returning information about the execution instead. Defaults to &lt;code&gt;false&lt;/code&gt;.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;The behavior of this tool is influenced by the &lt;code&gt;writeMode&lt;/code&gt; setting on its
-&lt;code&gt;bigquery&lt;/code&gt; source:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;&lt;code&gt;allowed&lt;/code&gt; (default):&lt;/strong&gt; All SQL statements are permitted.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;&lt;code&gt;blocked&lt;/code&gt;:&lt;/strong&gt; Only &lt;code&gt;SELECT&lt;/code&gt; statements are allowed. Any other type of
-statement (e.g., &lt;code&gt;INSERT&lt;/code&gt;, &lt;code&gt;UPDATE&lt;/code&gt;, &lt;code&gt;CREATE&lt;/code&gt;) will be rejected.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;&lt;code&gt;protected&lt;/code&gt;:&lt;/strong&gt; This mode enables session-based execution. &lt;code&gt;SELECT&lt;/code&gt;
-statements can be used on all tables, while write operations are allowed only
-for the session&amp;rsquo;s temporary dataset (e.g., &lt;code&gt;CREATE TEMP TABLE ...&lt;/code&gt;). This
-prevents modifications to permanent datasets while allowing stateful,
-multi-step operations within a secure session.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;The tool&amp;rsquo;s behavior is influenced by the &lt;code&gt;allowedDatasets&lt;/code&gt; restriction on the
-&lt;code&gt;bigquery&lt;/code&gt; source. Similar to &lt;code&gt;writeMode&lt;/code&gt;, this setting provides an additional
-layer of security by controlling which datasets can be accessed:&lt;/p&gt;</description></item><item><title>bigquery-forecast</title><link>https://mcp-toolbox.dev/dev/integrations/bigquery/tools/bigquery-forecast/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/bigquery/tools/bigquery-forecast/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The behavior of this tool is influenced by the combination of the &lt;code&gt;readOnly&lt;/code&gt;
+and &lt;code&gt;writeMode&lt;/code&gt; settings on its &lt;code&gt;bigquery&lt;/code&gt; source:&lt;/p&gt;
+&lt;table&gt;
+	&lt;thead&gt;
+			&lt;tr&gt;
+					&lt;th style="text-align: left"&gt;&lt;code&gt;readOnly&lt;/code&gt;&lt;/th&gt;
+					&lt;th style="text-align: left"&gt;&lt;code&gt;writeMode&lt;/code&gt;&lt;/th&gt;
+					&lt;th style="text-align: left"&gt;Tool Behavior&lt;/th&gt;
+					&lt;th style="text-align: left"&gt;MCP Tool Annotations&lt;/th&gt;
+			&lt;/tr&gt;
+	&lt;/thead&gt;
+	&lt;tbody&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;code&gt;false&lt;/code&gt; &lt;em&gt;(default)&lt;/em&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;code&gt;allowed&lt;/code&gt; &lt;em&gt;(default)&lt;/em&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;All SQL statements are permitted.&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;em&gt;(Default / none)&lt;/em&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;code&gt;true&lt;/code&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;code&gt;blocked&lt;/code&gt; &lt;em&gt;(default if &lt;code&gt;readOnly: true&lt;/code&gt;)&lt;/em&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;Only &lt;code&gt;SELECT&lt;/code&gt; statements are allowed. Any other type of statement (e.g., &lt;code&gt;INSERT&lt;/code&gt;, &lt;code&gt;UPDATE&lt;/code&gt;, &lt;code&gt;CREATE&lt;/code&gt;) will be rejected.&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;code&gt;readOnlyHint: true&lt;/code&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td style="text-align: left"&gt;&lt;code&gt;true&lt;/code&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;code&gt;protected&lt;/code&gt;&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;Enables session-based execution. &lt;code&gt;SELECT&lt;/code&gt; statements can be used on all tables, while write operations are allowed only for the session&amp;rsquo;s temporary dataset (e.g., &lt;code&gt;CREATE TEMP TABLE ...&lt;/code&gt;).&lt;/td&gt;
+					&lt;td style="text-align: left"&gt;&lt;code&gt;readOnlyHint: true&lt;/code&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+	&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Conflicting configurations, such as &lt;code&gt;readOnly: true&lt;/code&gt; combined with
+&lt;code&gt;writeMode: allowed&lt;/code&gt;, are rejected during server startup.&lt;/p&gt;</description></item><item><title>bigquery-forecast</title><link>https://mcp-toolbox.dev/dev/integrations/bigquery/tools/bigquery-forecast/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/bigquery/tools/bigquery-forecast/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;bigquery-forecast&lt;/code&gt; tool forecasts time series data in BigQuery.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;bigquery-forecast&lt;/code&gt; constructs and executes a &lt;code&gt;SELECT * FROM AI.FORECAST(...)&lt;/code&gt;
 query based on the provided parameters:&lt;/p&gt;
@@ -785,16 +805,20 @@ DATASET, MODEL, ROUTINE, TABLE, VIEW.&lt;/li&gt;
 &lt;div class="compatibility-section"&gt;
  &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>bigquery-sql</title><link>https://mcp-toolbox.dev/dev/integrations/bigquery/tools/bigquery-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/bigquery/tools/bigquery-sql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;bigquery-sql&lt;/code&gt; tool executes a pre-defined SQL statement.&lt;/p&gt;
-&lt;p&gt;The behavior of this tool is influenced by the &lt;code&gt;writeMode&lt;/code&gt; setting on its
-&lt;code&gt;bigquery&lt;/code&gt; source:&lt;/p&gt;
+&lt;p&gt;The behavior of this tool is influenced by the &lt;code&gt;readOnly&lt;/code&gt; and &lt;code&gt;writeMode&lt;/code&gt;
+settings on its &lt;code&gt;bigquery&lt;/code&gt; source:&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;&lt;code&gt;allowed&lt;/code&gt; (default) and &lt;code&gt;blocked&lt;/code&gt;:&lt;/strong&gt; These modes do not impose any
-restrictions on the &lt;code&gt;bigquery-sql&lt;/code&gt; tool. The pre-defined SQL statement will be
-executed as-is.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;&lt;code&gt;protected&lt;/code&gt;:&lt;/strong&gt; This mode enables session-based execution. The tool will
-operate within the same BigQuery session as other tools using the same source,
-allowing it to interact with temporary resources like &lt;code&gt;TEMP&lt;/code&gt; tables created
-within that session.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Read-Only Mode:&lt;/strong&gt; When a source is configured with
+&lt;code&gt;readOnly: true&lt;/code&gt; (or &lt;code&gt;writeMode: blocked&lt;/code&gt; / &lt;code&gt;writeMode: protected&lt;/code&gt;),
+&lt;code&gt;bigquery-sql&lt;/code&gt; tools default to write-capable annotations (&lt;code&gt;readOnlyHint: false&lt;/code&gt;)
+and are automatically suppressed from registration during server startup to
+protect data integrity and optimize agent context window. To keep a pre-defined
+read-only query active in read-only mode, explicitly annotate the tool with
+&lt;code&gt;readOnlyHint: true&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;protected&lt;/code&gt;:&lt;/strong&gt; This mode enables session-based
+execution. The tool will operate within the same BigQuery session as other
+tools using the same source, allowing it to interact with temporary resources
+like &lt;code&gt;TEMP&lt;/code&gt; tables created within that session.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
 
@@ -11246,7 +11270,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode217s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode493s0hbhb"&gt;
 
 
 
@@ -13514,6 +13538,12 @@ browser) for each request.&lt;/li&gt;
 					&lt;td style="text-align: center"&gt;false&lt;/td&gt;
 					&lt;td&gt;If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to &lt;code&gt;false&lt;/code&gt;.&lt;/td&gt;
 			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;readOnly&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;boolean&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;false&lt;/td&gt;
+					&lt;td&gt;When set to &lt;code&gt;true&lt;/code&gt;, suppresses write-capable admin tools. Default: &lt;code&gt;false&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
 	&lt;/tbody&gt;
 &lt;/table&gt;</description></item><item><title>AlloyDB for PostgreSQL Source</title><link>https://mcp-toolbox.dev/dev/integrations/alloydb/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/alloydb/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;&lt;a href="https://cloud.google.com/alloydb/docs"&gt;AlloyDB for PostgreSQL&lt;/a&gt; is a fully-managed, PostgreSQL-compatible
@@ -14170,6 +14200,12 @@ browser) for each request.&lt;/li&gt;
 					&lt;td style="text-align: center"&gt;boolean&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;false&lt;/td&gt;
 					&lt;td&gt;If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to &lt;code&gt;false&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;readOnly&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;boolean&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;false&lt;/td&gt;
+					&lt;td&gt;When set to &lt;code&gt;true&lt;/code&gt;, suppresses write-capable admin tools. Default: &lt;code&gt;false&lt;/code&gt;.&lt;/td&gt;
 			&lt;/tr&gt;
 	&lt;/tbody&gt;
 &lt;/table&gt;</description></item><item><title>Cloud SQL for SQL Server Source</title><link>https://mcp-toolbox.dev/dev/integrations/cloud-sql-mssql/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/cloud-sql-mssql/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
@@ -22490,6 +22526,7 @@ IAM authentication if unspecified.&lt;/li&gt;
 user. Defaults to IAM authentication if unspecified.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;ALLOYDB_POSTGRES_IP_TYPE&lt;/code&gt;: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or
 &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ALLOYDB_POSTGRES_READONLY&lt;/code&gt;: (Optional) When set to &lt;code&gt;true&lt;/code&gt;, enforces read-only execution at the database session level (&lt;code&gt;alloydb_session_read_only=locked&lt;/code&gt;) and suppresses write-capable tools. Default: &lt;code&gt;false&lt;/code&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
@@ -22539,6 +22576,12 @@ each database in the AlloyDB instance.&lt;/li&gt;
 &lt;/ul&gt;</description></item><item><title>AlloyDB Postgres Admin</title><link>https://mcp-toolbox.dev/dev/integrations/alloydb-admin/prebuilt-configs/alloydb-postgres-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/alloydb-admin/prebuilt-configs/alloydb-postgres-admin/</guid><description>&lt;h2 id="alloydb-postgres-admin"&gt;AlloyDB Postgres Admin&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;--prebuilt&lt;/code&gt; value: &lt;code&gt;alloydb-postgres-admin&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Environment Variables:&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ALLOYDB_POSTGRES_PROJECT&lt;/code&gt;: (Optional) The GCP project ID to use as the default for AlloyDB infrastructure tools.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ALLOYDB_POSTGRES_READONLY&lt;/code&gt;: (Optional) When set to &lt;code&gt;true&lt;/code&gt;, suppresses write-capable admin tools (e.g., &lt;code&gt;create_cluster&lt;/code&gt;, &lt;code&gt;create_instance&lt;/code&gt;, &lt;code&gt;create_user&lt;/code&gt;). Default: &lt;code&gt;false&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;AlloyDB Viewer&lt;/strong&gt; (&lt;code&gt;roles/alloydb.viewer&lt;/code&gt;) is required for &lt;code&gt;list&lt;/code&gt; and
@@ -22598,6 +22641,11 @@ long-running operations.&lt;/li&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;BIGQUERY_PROJECT&lt;/code&gt;: The GCP project ID.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;BIGQUERY_LOCATION&lt;/code&gt;: (Optional) The dataset location.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;BIGQUERY_READONLY&lt;/code&gt;: (Optional) When set to &lt;code&gt;true&lt;/code&gt;, enforces read-only
+mode across all tools (defaults &lt;code&gt;BIGQUERY_WRITE_MODE&lt;/code&gt; to &lt;code&gt;blocked&lt;/code&gt;).
+Defaults to &lt;code&gt;false&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;BIGQUERY_WRITE_MODE&lt;/code&gt;: (Optional) Controls write behavior: &lt;code&gt;allowed&lt;/code&gt;,
+&lt;code&gt;blocked&lt;/code&gt; (strict read-only), or &lt;code&gt;protected&lt;/code&gt; (session scratchpad).&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;BIGQUERY_USE_CLIENT_OAUTH&lt;/code&gt;: (Optional) If &lt;code&gt;true&lt;/code&gt;, forwards the client&amp;rsquo;s
 OAuth access token for authentication. Defaults to &lt;code&gt;false&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;BIGQUERY_SCOPES&lt;/code&gt;: (Optional) A comma-separated list of OAuth scopes to
@@ -22678,8 +22726,8 @@ documentation&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;CLOUD_SQL_MYSQL_DATABASE&lt;/code&gt;: The name of the database to connect to.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;CLOUD_SQL_MYSQL_USER&lt;/code&gt;: The database username.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;CLOUD_SQL_MYSQL_PASSWORD&lt;/code&gt;: The password for the database user.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;CLOUD_SQL_MYSQL_IP_TYPE&lt;/code&gt;: The IP type i.e. &amp;ldquo;Public
-or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CLOUD_SQL_MYSQL_IP_TYPE&lt;/code&gt;: The IP type i.e. &amp;ldquo;Public&amp;rdquo; or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CLOUD_SQL_MYSQL_READONLY&lt;/code&gt;: (Optional) When set to &lt;code&gt;true&lt;/code&gt;, enforces read-only execution on the database connection (&lt;code&gt;read_only_connection:true&lt;/code&gt;) and suppresses write-capable tools. Default: &lt;code&gt;false&lt;/code&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
@@ -22709,6 +22757,13 @@ primary or unique key contraint.&lt;/li&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;code&gt;--prebuilt&lt;/code&gt; value: &lt;code&gt;cloud-sql-mysql-admin&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Environment Variables:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;CLOUD_SQL_MYSQL_PROJECT&lt;/code&gt;: (Optional) The GCP project ID to use as the default for Cloud SQL infrastructure tools.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CLOUD_SQL_MYSQL_READONLY&lt;/code&gt;: (Optional) When set to &lt;code&gt;true&lt;/code&gt;, suppresses write-capable admin tools. Default: &lt;code&gt;false&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;&lt;/p&gt;
@@ -22743,21 +22798,7 @@ all resources.
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;strong&gt;Tools:&lt;/strong&gt;&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;create_instance&lt;/code&gt;: Creates a new Cloud SQL for MySQL instance.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;get_instance&lt;/code&gt;: Gets information about a Cloud SQL instance.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;list_instances&lt;/code&gt;: Lists Cloud SQL instances in a project.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;create_database&lt;/code&gt;: Creates a new database in a Cloud SQL instance.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;list_databases&lt;/code&gt;: Lists all databases for a Cloud SQL instance.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;create_user&lt;/code&gt;: Creates a new user in a Cloud SQL instance.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;wait_for_operation&lt;/code&gt;: Waits for a Cloud SQL operation to complete.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;clone_instance&lt;/code&gt;: Creates a clone for an existing Cloud SQL for MySQL instance.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;create_backup&lt;/code&gt;: Creates a backup on a Cloud SQL instance.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;restore_backup&lt;/code&gt;: Restores a backup of a Cloud SQL instance.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;</description></item><item><title>Cloud SQL for MySQL Observability</title><link>https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/cloud-sql-for-mysql-observability/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/cloud-sql-for-mysql-observability/</guid><description>&lt;h2 id="cloud-sql-for-mysql-observability"&gt;Cloud SQL for MySQL Observability&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Tools:&lt;/strong&gt;&lt;/p&gt;</description></item><item><title>Cloud SQL for MySQL Observability</title><link>https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/cloud-sql-for-mysql-observability/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/cloud-sql-for-mysql-observability/</guid><description>&lt;h2 id="cloud-sql-for-mysql-observability"&gt;Cloud SQL for MySQL Observability&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;--prebuilt&lt;/code&gt; value: &lt;code&gt;cloud-sql-mysql-observability&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
@@ -22790,6 +22831,7 @@ IAM authentication if unspecified.&lt;/li&gt;
 user. Defaults to IAM authentication if unspecified.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;CLOUD_SQL_POSTGRES_IP_TYPE&lt;/code&gt;: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or
 &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CLOUD_SQL_POSTGRES_READONLY&lt;/code&gt;: (Optional) When set to &lt;code&gt;true&lt;/code&gt;, enforces read-only execution at the database session level (&lt;code&gt;cloudsql_session_read_only=locked&lt;/code&gt;) and suppresses write-capable tools. Default: &lt;code&gt;false&lt;/code&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
@@ -22840,6 +22882,12 @@ each database in the postgreSQL instance.&lt;/li&gt;
 &lt;/ul&gt;</description></item><item><title>Cloud SQL for PostgreSQL Admin</title><link>https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/prebuilt-configs/cloud-sql-for-postgresql-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/cloud-sql-admin/prebuilt-configs/cloud-sql-for-postgresql-admin/</guid><description>&lt;h2 id="cloud-sql-for-postgresql-admin"&gt;Cloud SQL for PostgreSQL Admin&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;--prebuilt&lt;/code&gt; value: &lt;code&gt;cloud-sql-postgres-admin&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Environment Variables:&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;CLOUD_SQL_POSTGRES_PROJECT&lt;/code&gt;: (Optional) The GCP project ID to use as the default for Cloud SQL infrastructure tools.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CLOUD_SQL_POSTGRES_READONLY&lt;/code&gt;: (Optional) When set to &lt;code&gt;true&lt;/code&gt;, suppresses write-capable admin tools. Default: &lt;code&gt;false&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;Cloud SQL Viewer&lt;/strong&gt; (&lt;code&gt;roles/cloudsql.viewer&lt;/code&gt;): Provides read-only
