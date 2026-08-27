@@ -32,8 +32,8 @@ draft comment when one adds value.
 
 **Read source-of-truth live, not from memory** (labels/routing drift):
 - `gh label list --repo googleapis/mcp-toolbox --limit 200`: the only valid label names. Never propose one not listed.
-- `.github/blunderbuss.yml`: which `product:` labels route to which team.
-- `.github/ISSUE_TEMPLATE/bug_report.yml`: required bug fields (for the completeness check).
+- [`.github/blunderbuss.yml`](https://github.com/googleapis/mcp-toolbox/blob/main/.github/blunderbuss.yml): which `product:` labels route to which team.
+- [`.github/ISSUE_TEMPLATE/bug_report.yml`](https://github.com/googleapis/mcp-toolbox/blob/main/.github/ISSUE_TEMPLATE/bug_report.yml): required bug fields (for the completeness check).
 - [references/maintainer-playbook.md](references/maintainer-playbook.md): the **authoritative**
   taxonomy, priority/status definitions, SLO targets, and comment templates. Read it to classify;
   this skill only adds how to apply them in a propose-only workflow.

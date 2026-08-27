@@ -73,7 +73,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{Name: name, WriteMode: WriteModeAllowed, MaxQueryResultRows: 50}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ type Config struct {
 	Type                      string              `yaml:"type" validate:"required"`
 	Project                   string              `yaml:"project" validate:"required"`
 	Location                  string              `yaml:"location"`
-	WriteMode                 string              `yaml:"writeMode"`
+	WriteMode                 string              `yaml:"writeMode" validate:"required,oneof=blocked protected allowed"`
 	AllowedDatasets           StringOrStringSlice `yaml:"allowedDatasets"`
 	UseClientOAuth            string              `yaml:"useClientOAuth"`
 	QuotaProject              string              `yaml:"quotaProject"`
@@ -163,8 +163,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:              client,
 		RestService:         restService,
 		TokenSource:         tokenSource,
-		MaxQueryResultRows:  r.MaxQueryResultRows,
-		MaximumBytesBilled:  r.MaximumBytesBilled,
 		ClientCreator:       clientCreator,
 		AuthTokenHeaderName: "Authorization",
 	}
@@ -230,10 +228,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s.AllowedDatasets = allowedDatasets
 	s.SessionProvider = s.newBigQuerySessionProvider()
-
-	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
-		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
-	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
 }
@@ -298,8 +292,6 @@ type Source struct {
 	RestService               *bigqueryrestapi.Service
 	TokenSource               oauth2.TokenSource
 	AuthTokenHeaderName       string
-	MaxQueryResultRows        int
-	MaximumBytesBilled        int64
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
 	sessionMutex              sync.Mutex
