@@ -91,6 +91,10 @@ type Source struct {
 	Db *sql.DB
 }
 
+func (s *Source) IsReadOnly() bool {
+	return false
+}
+
 func (s *Source) SourceType() string {
 	// Returns Cloud SQL MSSQL source type
 	return SourceType

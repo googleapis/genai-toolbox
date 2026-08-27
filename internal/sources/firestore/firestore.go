@@ -97,6 +97,10 @@ type Source struct {
 	RulesClient *firebaserules.Service
 }
 
+func (s *Source) IsReadOnly() bool {
+	return false
+}
+
 func (s *Source) SourceType() string {
 	// Returns Firestore source type
 	return SourceType
