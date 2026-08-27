@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"time"
 
@@ -229,7 +230,9 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams)
+	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
+	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
+	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams, hasSecureParamsSupport)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -248,7 +251,7 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 
 // toolsCallHandler generate a response for tools call.
 func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
-	authServices := primitiveMgr.GetAuthServiceMap()
+	authServices := primitiveMgr.AuthServices()
 
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
@@ -275,7 +278,6 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	}
 
 	toolName := req.Params.Name
-	toolArgument := req.Params.Arguments
 	logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
 
 	// Update span name and set gen_ai attributes
@@ -298,6 +300,13 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
+	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
+	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
+	if tool.HasSecureParams() && !hasSecureParamsSupport {
+		err = fmt.Errorf("missing required client capability: tool %q requires com.google.cloud/toolbox.v1 extension which is not supported by the client", toolName)
+		return jsonrpc.NewError(id, jsonrpc.MISSING_REQUIRED_CLIENT_CAPABILITY, err.Error(), nil), err
+	}
+
 	srcName := tool.GetSourceName()
 	var src sources.Source
 	if srcName != "" {
@@ -313,6 +322,15 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
+	toolParams, err := tool.GetParameters(src)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+
+	toolArguments, err := validateAndMergeSecureParams(&req, toolParams)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
 	// Populate gen_ai attributes for operation duration metric
 	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
 		genAIAttrs.OperationName = "execute_tool"
@@ -347,10 +365,9 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		}
 	}
 
-	// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
 	var data map[string]any
-	if toolArgument != nil {
-		aMarshal, err := json.Marshal(toolArgument)
+	if toolArguments != nil {
+		aMarshal, err := json.Marshal(toolArguments)
 		if err != nil {
 			err = fmt.Errorf("unable to marshal tools argument: %w", err)
 			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -415,12 +432,6 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 
 	if err := mcputil.ValidateScopes(ctx, tool.GetScopesRequired(), authServices); err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
-	}
-
-	toolParams, err := tool.GetParameters(src)
-	if err != nil {
-		err = fmt.Errorf("error getting parameters for tool: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	// Auto-populate arguments from URL parameters
@@ -829,7 +840,9 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams)
+	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
+	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
+	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams, hasSecureParamsSupport)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
@@ -839,4 +852,35 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 		Id:      id,
 		Result:  result,
 	}, nil
+}
+
+// validateAndMergeSecureParams validates and merges standard and secure arguments based on secure parameter definitions.
+func validateAndMergeSecureParams(req *CallToolRequest, paramDefs parameters.Parameters) (map[string]any, error) {
+	secureParamMap := make(map[string]bool)
+	for _, p := range paramDefs {
+		if p != nil && p.GetSecure() {
+			secureParamMap[p.GetName()] = true
+		}
+	}
+
+	// Validate that secure parameters are only passed in secureArguments
+	for argName := range req.Params.Arguments {
+		if secureParamMap[argName] {
+			return nil, fmt.Errorf("parameter %q is secure and must not be passed in standard arguments", argName)
+		}
+	}
+
+	// Validate that non-secure parameters are not passed in secureArguments
+	for argName := range req.Params.SecureArguments {
+		if !secureParamMap[argName] {
+			return nil, fmt.Errorf("parameter %q is not secure and must not be passed in secureArguments", argName)
+		}
+	}
+
+	// Merge standard arguments and secure arguments.
+	toolArgument := make(map[string]any)
+	maps.Copy(toolArgument, req.Params.Arguments)
+	maps.Copy(toolArgument, req.Params.SecureArguments)
+
+	return toolArgument, nil
 }

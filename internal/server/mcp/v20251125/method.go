@@ -139,7 +139,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		}
 	}
 
-	authServices := primitiveMgr.GetAuthServiceMap()
+	authServices := primitiveMgr.AuthServices()
 
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
@@ -173,6 +173,11 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 
 	tool, ok := primitiveMgr.GetTool(toolName)
 	if !ok {
+		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
+	if tool.HasSecureParams() {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}

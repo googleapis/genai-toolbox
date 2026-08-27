@@ -21,6 +21,7 @@ This file (symlinked as `CLAUDE.md`, `AGENTS.md`, and `.gemini/styleguide.md`) p
 -   `internal/sources/`: Implementations of database sources (e.g., Postgres, BigQuery).
 -   `internal/tools/`: Implementations of specific tools for each source.
 -   `tests/`: Integration tests.
+-   `evals/`: Evalsets and harness configs for evaluating the prebuilt tool configs with [EvalBench](https://github.com/googlecloudplatform/evalbench); run by `.ci/evals.cloudbuild.yaml`.
 -   `docs/en`: Project documentation. Separated logically into:
     - `documentation/`: Documentation and concepts (Section I).
     - `integrations/`: Reference architectures for DB connectivity and tools (Section II).

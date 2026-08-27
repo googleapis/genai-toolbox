@@ -308,7 +308,8 @@ type Tool struct {
 	 */
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
-	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
+	ToolInputSchema   InputSchema  `json:"inputSchema,omitempty"`
+	SecureInputSchema *InputSchema `json:"secureInputSchema,omitempty"`
 	// Optional additional tool information.
 	Annotations *ToolAnnotations `json:"annotations,omitempty"`
 	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
@@ -338,6 +339,10 @@ type CallToolRequestParams struct {
 	 * Arguments to use for the tool call.
 	 */
 	Arguments map[string]any `json:"arguments,omitempty"`
+	/**
+	 * Secure arguments to use for the tool call.
+	 */
+	SecureArguments map[string]any `json:"secureArguments,omitempty"`
 }
 
 // The sender or recipient of messages and data in a conversation.
