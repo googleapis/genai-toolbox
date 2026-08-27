@@ -109,11 +109,11 @@ func (opts *ToolboxOptions) Setup(ctx context.Context) (context.Context, func(co
 	ctx = util.WithLogger(ctx, logger)
 	opts.Logger = logger
 
-	opts.checkVersion(ctx)
-
 	ctx = util.WithIgnoreUnknownTools(ctx, opts.Cfg.IgnoreUnknownTools)
 
 	logger.InfoContext(ctx, fmt.Sprintf("Starting MCP Toolbox for Databases version %s", opts.Cfg.Version))
+
+	go opts.checkVersion(context.WithoutCancel(ctx))
 
 	// Set up OpenTelemetry
 	otelShutdown, err := telemetry.SetupOTel(ctx, opts.Cfg.Version, opts.Cfg.TelemetryOTLP, opts.Cfg.TelemetryGCP, opts.Cfg.TelemetryGCPProject, opts.Cfg.TelemetryServiceName)
@@ -365,6 +365,6 @@ func (opts *ToolboxOptions) checkVersion(ctx context.Context) {
 	current := "v" + opts.VersionNum
 
 	if semver.Compare(latest, current) > 0 {
-		opts.Logger.InfoContext(ctx, fmt.Sprintf("A newer version of MCP Toolbox is available: (%s -> %s). Download the latest version from https://github.com/googleapis/mcp-toolbox/releases", current, latest))
+		opts.Logger.InfoContext(ctx, fmt.Sprintf("A newer version of MCP Toolbox is available: (%s -> %s). Visit https://github.com/googleapis/mcp-toolbox/releases to view the latest release.", current, latest))
 	}
 }
