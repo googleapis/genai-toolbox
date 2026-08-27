@@ -129,6 +129,9 @@ Skip a dimension when it doesn't apply: say so, don't invent a finding.
   documentation: could an agent pick this tool and fill its parameters from that text alone, at a
   token cost worth paying? Flag ones that restate the field name, omit units/format/allowed
   values, or run long without adding information.
+  - *Evals measure exactly this.* For a PR editing `internal/prebuiltconfigs/tools/<config>.yaml`,
+    note that the next step is a maintainer applying the `evals: run` label, which scopes the run
+    to the configs that PR touched. Like integration tests, un-run evals aren't a blocker.
 - **Tests.** New logic or a bug fix needs tests; missing them is usually request-changes.
   - *Coverage:* happy path, edge cases, and for a fix, a test that fails without it. A new
     source/tool follows the unit + integration pattern and is wired into
@@ -143,10 +146,6 @@ Skip a dimension when it doesn't apply: say so, don't invent a finding.
   - *Un-run integration tests aren't a blocker.* They need GCP credentials an external
     contributor's PR can't trigger, so green CI doesn't mean they ran. Note that the next step is
     a maintainer running them via the `tests: run` label or a `/gcbrun` comment.
-- **Evals (prebuilt configs).** A PR editing `internal/prebuiltconfigs/tools/<config>.yaml` changes
-  what an agent sees, and tool/parameter description wording is exactly what evals measure. Note
-  that the next step is a maintainer applying the `evals: run` label, which scopes the run to the
-  configs that PR touched. Not a blocker — evals are not part of the pull request gate.
 - **Docs.** Changes to how a user configures or interacts with MCP toolbox need matching updates
   under `docs/en/`. New sources/tools have CI-enforced page structure per `DEVELOPER.md`, enforced by
   `.ci/lint-docs-*.sh`. A violation breaks the build, so it's blocking.
