@@ -44,6 +44,14 @@ for var in "${required[@]}"; do
   fi
 done
 
+# A missing file means a local run and an unset pattern means a step that opted
+# out; both run rather than silently skipping.
+if [[ -f /workspace/changed_files.txt && -n "${EVAL_CHANGED_PATTERN:-}" ]] &&
+   ! grep -qE "${EVAL_CHANGED_PATTERN}|${EVAL_COMMON_PATTERN}" /workspace/changed_files.txt; then
+  echo "no changes affecting ${TOOLBOX_PREBUILT}; skipping"
+  exit 0
+fi
+
 echo "prebuilt config: ${TOOLBOX_PREBUILT}"
 echo "harnesses:       ${EVAL_HARNESSES}"
 "${TOOLBOX_BIN}" --version  # built on Debian, exec'd here on Ubuntu

@@ -20,6 +20,24 @@
 # steps inherit _EVAL_HARNESSES unless they set their own.
 
 steps:
+  # On a PR this narrows the run to the databases the PR touched. On the
+  # nightly, main diffed against main is empty, so the fallback path matches
+  # every step's pattern and everything runs.
+  - id: "detect-changes"
+    name: "gcr.io/cloud-builders/git"
+    waitFor: ["-"]
+    entrypoint: "bash"
+    args:
+      - -c
+      - |
+        git fetch --unshallow || true
+        git fetch origin main > /dev/null 2>&1
+        git diff --name-only origin/main...HEAD > /workspace/changed_files.txt
+        if [ ! -s /workspace/changed_files.txt ]; then
+          echo "No changed files detected. Writing a representative CI path to run all eval steps."
+          echo ".ci/evals.cloudbuild.yaml" > /workspace/changed_files.txt
+        fi
+
   - id: "build-toolbox"
     name: golang:1
     waitFor: ["-"]
@@ -38,7 +56,7 @@ steps:
 
   - id: "evals-cloud-sql-postgres"
     name: "${_EVALBENCH_IMAGE}"
-    waitFor: ["build-toolbox", "pull-evalbench"]
+    waitFor: ["build-toolbox", "pull-evalbench", "detect-changes"]
     dir: /evalbench
     entrypoint: bash
     args: ["/workspace/.ci/run_evals.sh"]
@@ -47,6 +65,7 @@ steps:
       - "EVAL_DATASET=evals/evalsets/cloud-sql-postgres.json"
       - "EVAL_ENV_PREFIX=CLOUD_SQL_POSTGRES"
       - "EVAL_HARNESSES=claude_cli gemini_cli"
+      - "EVAL_CHANGED_PATTERN=(^|/)internal/prebuiltconfigs/tools/cloud-sql-postgres\\.yaml|(^|/)evals/evalsets/cloud-sql-postgres\\.json"
 
       - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
       - "CLOUD_SQL_POSTGRES_REGION=${_REGION}"
@@ -59,7 +78,7 @@ steps:
 
   - id: "evals-cloud-sql-mysql"
     name: "${_EVALBENCH_IMAGE}"
-    waitFor: ["build-toolbox", "pull-evalbench"]
+    waitFor: ["build-toolbox", "pull-evalbench", "detect-changes"]
     dir: /evalbench
     entrypoint: bash
     args: ["/workspace/.ci/run_evals.sh"]
@@ -67,6 +86,7 @@ steps:
       - "TOOLBOX_PREBUILT=cloud-sql-mysql"
       - "EVAL_DATASET=evals/evalsets/cloud-sql-mysql.json"
       - "EVAL_ENV_PREFIX=CLOUD_SQL_MYSQL"
+      - "EVAL_CHANGED_PATTERN=(^|/)internal/prebuiltconfigs/tools/cloud-sql-mysql\\.yaml|(^|/)evals/evalsets/cloud-sql-mysql\\.json"
 
       - "CLOUD_SQL_MYSQL_PROJECT=$PROJECT_ID"
       - "CLOUD_SQL_MYSQL_REGION=${_REGION}"
@@ -101,6 +121,9 @@ options:
     - "EVAL_CLAUDE_MODEL=${_CLAUDE_MODEL}"
     - "EVAL_GCP_PROJECT_ID=$PROJECT_ID"
     - "EVAL_REPORTING_PROJECT=${_EVAL_REPORTING_PROJECT}"
+    - "EVAL_GROUP=${_EVAL_GROUP}"
+    # OR'd into every step's EVAL_CHANGED_PATTERN: paths that affect all of them.
+    - "EVAL_COMMON_PATTERN=(^|/)evals/(run_configs|model_configs)/|\\.ci/evals\\.cloudbuild\\.yaml|\\.ci/run_evals\\.sh"
     - "EVAL_GCP_PROJECT_REGION=${_VERTEX_LOCATION}"
     - "UV_CACHE_DIR=/tmp/uv-cache"
 
@@ -110,6 +133,8 @@ timeout: 7200s
 # step when one is missing.
 substitutions:
   _EVAL_HARNESSES: "claude_cli"
+  # Presubmit runs override this so their rows stay out of the scheduled runs.
+  _EVAL_GROUP: "mcp-toolbox"
   _GEMINI_MODEL: "gemini-3.7-flash"
   _CLAUDE_MODEL: "claude-opus-4-8"
   _EVALBENCH_IMAGE: "us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server:latest"
