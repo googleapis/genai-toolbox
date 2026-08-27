@@ -20,6 +20,20 @@
 # steps inherit _EVAL_HARNESSES unless they set their own.
 
 steps:
+  # Narrows a pull request run to the databases it touched. Empty on a scheduled
+  # build, which run_evals.sh runs in full.
+  - id: "detect-changes"
+    name: "gcr.io/cloud-builders/git"
+    waitFor: ["-"]
+    entrypoint: "bash"
+    args:
+      - -c
+      - |
+        git fetch --unshallow || true
+        git fetch origin main > /dev/null 2>&1
+        git diff --name-only origin/main...HEAD > /workspace/changed_files.txt
+        cat /workspace/changed_files.txt
+
   - id: "build-toolbox"
     name: golang:1
     waitFor: ["-"]
@@ -38,7 +52,7 @@ steps:
 
   - id: "evals-cloud-sql-postgres"
     name: "${_EVALBENCH_IMAGE}"
-    waitFor: ["build-toolbox", "pull-evalbench"]
+    waitFor: ["build-toolbox", "pull-evalbench", "detect-changes"]
     dir: /evalbench
     entrypoint: bash
     args: ["/workspace/.ci/run_evals.sh"]
@@ -59,7 +73,7 @@ steps:
 
   - id: "evals-cloud-sql-mysql"
     name: "${_EVALBENCH_IMAGE}"
-    waitFor: ["build-toolbox", "pull-evalbench"]
+    waitFor: ["build-toolbox", "pull-evalbench", "detect-changes"]
     dir: /evalbench
     entrypoint: bash
     args: ["/workspace/.ci/run_evals.sh"]
@@ -101,6 +115,7 @@ options:
     - "EVAL_CLAUDE_MODEL=${_CLAUDE_MODEL}"
     - "EVAL_GCP_PROJECT_ID=$PROJECT_ID"
     - "EVAL_REPORTING_PROJECT=${_EVAL_REPORTING_PROJECT}"
+    - "EVAL_GROUP=${_EVAL_GROUP}"
     - "EVAL_GCP_PROJECT_REGION=${_VERTEX_LOCATION}"
     - "UV_CACHE_DIR=/tmp/uv-cache"
 
@@ -110,6 +125,8 @@ timeout: 7200s
 # step when one is missing.
 substitutions:
   _EVAL_HARNESSES: "claude_cli"
+  # Presubmit runs override this so their rows stay out of the scheduled runs.
+  _EVAL_GROUP: "mcp-toolbox"
   _GEMINI_MODEL: "gemini-3.7-flash"
-  _CLAUDE_MODEL: "claude-opus-4-6"
+  _CLAUDE_MODEL: "claude-opus-4-8"
   _EVALBENCH_IMAGE: "us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server:latest"

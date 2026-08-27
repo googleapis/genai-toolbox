@@ -44,6 +44,21 @@ for var in "${required[@]}"; do
   fi
 done
 
+# Paths that put every step in scope.
+common_pattern='(^|/)evals/(run_configs|model_configs)/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
+
+# Exact-line matches, since git diff emits repo-relative paths. Only a non-empty
+# list can narrow the run: empty means a scheduled build, or a checkout the diff
+# failed against.
+if [[ -s /workspace/changed_files.txt ]] &&
+   ! grep -qxF -e "${EVAL_DATASET}" \
+               -e "internal/prebuiltconfigs/tools/${TOOLBOX_PREBUILT}.yaml" \
+               /workspace/changed_files.txt &&
+   ! grep -qE "${common_pattern}" /workspace/changed_files.txt; then
+  echo "no changes affecting ${TOOLBOX_PREBUILT}; skipping"
+  exit 0
+fi
+
 echo "prebuilt config: ${TOOLBOX_PREBUILT}"
 echo "harnesses:       ${EVAL_HARNESSES}"
 "${TOOLBOX_BIN}" --version  # built on Debian, exec'd here on Ubuntu
