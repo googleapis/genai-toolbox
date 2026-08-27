@@ -874,10 +874,7 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}, nil
 }
 
-// validateAndMergeSecureParams validates and merges standard and secure arguments based on secure parameter definitions.
-// It returns (toolArguments, agentErr, protocolErr).
-// - agentErr is returned when secure parameters are passed in standard arguments (an agent tool-call error).
-// - protocolErr is returned when non-secure parameters are passed in secureArguments or required secure parameters are missing (a host protocol violation).
+// validateAndMergeSecureParams validates and merges standard and secure arguments.
 func validateAndMergeSecureParams(ctx context.Context, req *CallToolRequest, paramDefs parameters.Parameters) (map[string]any, error, error) {
 	secureParamMap := make(map[string]bool)
 	urlParams, _ := util.UrlParamsFromContext(ctx)
@@ -895,15 +892,14 @@ func validateAndMergeSecureParams(ctx context.Context, req *CallToolRequest, par
 		}
 	}
 
-	// 2. Validate that non-secure parameters are not passed in secureArguments (Host protocol error)
+	// Validate that non-secure parameters are not passed in secureArguments (Protocol error)
 	for argName := range req.Params.SecureArguments {
 		if !secureParamMap[argName] {
 			return nil, nil, fmt.Errorf("parameter %q is not secure and must not be passed in secureArguments", argName)
 		}
 	}
 
-	// 3. Validate that required secure parameters are present in secureArguments (Host protocol error)
-	// (unless they are bound via URL parameters or sourced from another parameter)
+	// Validate that required secure parameters are present in secureArguments (Protocol error)
 	for _, p := range paramDefs {
 		if p != nil && p.GetSecure() {
 			name := p.GetName()
