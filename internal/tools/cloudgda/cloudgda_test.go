@@ -135,6 +135,10 @@ func (f *fakeSource) UseClientAuthorization() bool {
 	return f.useClientOAuth
 }
 
+func (f *fakeSource) IsReadOnly() bool {
+	return false
+}
+
 func (f *fakeSource) SourceType() string {
 	return "cloud-gemini-data-analytics"
 }
