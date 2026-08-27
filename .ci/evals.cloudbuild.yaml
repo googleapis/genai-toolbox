@@ -111,5 +111,5 @@ timeout: 7200s
 substitutions:
   _EVAL_HARNESSES: "claude_cli"
   _GEMINI_MODEL: "gemini-3.7-flash"
-  _CLAUDE_MODEL: "claude-opus-4-6"
+  _CLAUDE_MODEL: "claude-opus-4-8"
   _EVALBENCH_IMAGE: "us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server:latest"
