@@ -654,44 +654,52 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 	}
 
 	tcs := []struct {
-		name            string
-		arguments       map[string]any
-		secureArguments map[string]any
-		supportsSecure  bool
-		wantError       bool
-		wantErrorMsg    string
-		wantBodyMatch   string
+		name             string
+		arguments        map[string]any
+		secureArguments  map[string]any
+		supportsSecure   bool
+		wantRpcErrorCode int
+		wantIsError      bool
+		wantErrorMsg     string
+		wantBodyMatch    string
 	}{
 		{
-			name:            "client doesn't support secure-params",
-			arguments:       map[string]any{"id": 3},
-			secureArguments: map[string]any{"name": "Alice"},
-			supportsSecure:  false,
-			wantError:       true,
-			wantErrorMsg:    "requires com.google.cloud/toolbox.v1 extension which is not supported by the client",
+			name:             "client doesn't support secure-params",
+			arguments:        map[string]any{"id": 3},
+			secureArguments:  map[string]any{"name": "Alice"},
+			supportsSecure:   false,
+			wantRpcErrorCode: jsonrpc.MISSING_REQUIRED_CLIENT_CAPABILITY,
+			wantErrorMsg:     "requires com.google.cloud/toolbox.v1 extension which is not supported by the client",
 		},
 		{
 			name:            "secure parameter passed in standard arguments",
 			arguments:       map[string]any{"id": 3, "name": "Alice"},
 			secureArguments: nil,
 			supportsSecure:  true,
-			wantError:       true,
+			wantIsError:     true,
 			wantErrorMsg:    `parameter "name" is secure and must not be passed in standard arguments`,
 		},
 		{
-			name:            "standard parameter passed in secureArguments",
-			arguments:       nil,
-			secureArguments: map[string]any{"id": 3, "name": "Alice"},
+			name:             "standard parameter passed in secureArguments",
+			arguments:        nil,
+			secureArguments:  map[string]any{"id": 3, "name": "Alice"},
+			supportsSecure:   true,
+			wantRpcErrorCode: jsonrpc.INVALID_PARAMS,
+			wantErrorMsg:     `parameter "id" is not secure and must not be passed in secureArguments`,
+		},
+		{
+			name:            "missing required secure parameter",
+			arguments:       map[string]any{"id": 3},
+			secureArguments: map[string]any{},
 			supportsSecure:  true,
-			wantError:       true,
-			wantErrorMsg:    `parameter "id" is not secure and must not be passed in secureArguments`,
+			wantIsError:     true,
+			wantErrorMsg:    `parameter "name" is required`,
 		},
 		{
 			name:            "successful invocation with correct routing",
 			arguments:       map[string]any{"id": 3},
 			secureArguments: map[string]any{"name": "Alice"},
 			supportsSecure:  true,
-			wantError:       false,
 			wantBodyMatch:   wantMatch,
 		},
 	}
@@ -703,21 +711,52 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 				t.Fatalf("unexpected native error: %s", err)
 			}
 			if statusCode != http.StatusOK {
-				t.Fatalf("expected status 200, got %d (error code: %d, msg: %q)", statusCode, mcpResp.Error.Code, mcpResp.Error.Message)
+				t.Fatalf("expected status 200, got %d", statusCode)
 			}
 
-			if tc.wantError {
-				AssertMCPError(t, mcpResp, tc.wantErrorMsg)
-			} else {
-				if mcpResp.Result.IsError {
-					t.Fatalf("expected successful execution, got error: %v", mcpResp.Result)
+			if tc.wantRpcErrorCode != 0 {
+				if mcpResp.Error == nil {
+					t.Fatalf("expected JSON-RPC error with code %d, but got success result: %v", tc.wantRpcErrorCode, mcpResp.Result)
 				}
-				got := getMCPResultText(t, mcpResp)
-				gotBytes, _ := json.Marshal(got)
-				gotStr := string(gotBytes)
-				if !strings.Contains(gotStr, tc.wantBodyMatch) {
-					t.Fatalf(`expected %q to contain %q`, gotStr, tc.wantBodyMatch)
+				if mcpResp.Error.Code != tc.wantRpcErrorCode {
+					t.Fatalf("expected error code %d, got %d (msg: %q)", tc.wantRpcErrorCode, mcpResp.Error.Code, mcpResp.Error.Message)
 				}
+				if !strings.Contains(mcpResp.Error.Message, tc.wantErrorMsg) {
+					t.Fatalf("expected error message containing %q, got %q", tc.wantErrorMsg, mcpResp.Error.Message)
+				}
+				return
+			}
+
+			if tc.wantIsError {
+				if mcpResp.Error != nil {
+					t.Fatalf("expected agent error (isError: true), but got protocol error: code %d, msg %q", mcpResp.Error.Code, mcpResp.Error.Message)
+				}
+				if !mcpResp.Result.IsError {
+					t.Fatalf("expected mcpResp.Result.IsError = true, got false")
+				}
+				var contentText string
+				for _, c := range mcpResp.Result.Content {
+					if c.Type == "text" {
+						contentText += c.Text
+					}
+				}
+				if !strings.Contains(contentText, tc.wantErrorMsg) {
+					t.Fatalf("expected agent error containing %q, got %q", tc.wantErrorMsg, contentText)
+				}
+				return
+			}
+
+			if mcpResp.Error != nil {
+				t.Fatalf("unexpected JSON-RPC error: code %d, msg %q", mcpResp.Error.Code, mcpResp.Error.Message)
+			}
+			if mcpResp.Result.IsError {
+				t.Fatalf("expected successful execution, got error: %v", mcpResp.Result)
+			}
+			got := getMCPResultText(t, mcpResp)
+			gotBytes, _ := json.Marshal(got)
+			gotStr := string(gotBytes)
+			if !strings.Contains(gotStr, tc.wantBodyMatch) {
+				t.Fatalf(`expected %q to contain %q`, gotStr, tc.wantBodyMatch)
 			}
 		})
 	}

@@ -327,9 +327,29 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
-	toolArguments, err := validateAndMergeSecureParams(&req, toolParams)
-	if err != nil {
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	toolArguments, agentErr, protocolErr := validateAndMergeSecureParams(&req, toolParams)
+	if protocolErr != nil {
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, protocolErr.Error(), nil), protocolErr
+	}
+	if agentErr != nil {
+		text := TextContent{
+			Type: "text",
+			Text: agentErr.Error(),
+		}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result: CallToolResult{
+				Result: Result{
+					ResultType: resultTypeComplete,
+					Result: jsonrpc.Result{
+						Meta: meta,
+					},
+				},
+				Content: []TextContent{text},
+				IsError: true,
+			},
+		}, nil
 	}
 	// Populate gen_ai attributes for operation duration metric
 	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
@@ -855,7 +875,10 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 }
 
 // validateAndMergeSecureParams validates and merges standard and secure arguments based on secure parameter definitions.
-func validateAndMergeSecureParams(req *CallToolRequest, paramDefs parameters.Parameters) (map[string]any, error) {
+// It returns (toolArguments, agentErr, protocolErr).
+// - protocolErr is returned when non-secure parameters are passed in secureArguments (a host protocol violation).
+// - agentErr is returned when secure parameters are passed in standard arguments (an agent tool-call error).
+func validateAndMergeSecureParams(req *CallToolRequest, paramDefs parameters.Parameters) (map[string]any, error, error) {
 	secureParamMap := make(map[string]bool)
 	for _, p := range paramDefs {
 		if p != nil && p.GetSecure() {
@@ -863,17 +886,17 @@ func validateAndMergeSecureParams(req *CallToolRequest, paramDefs parameters.Par
 		}
 	}
 
-	// Validate that secure parameters are only passed in secureArguments
-	for argName := range req.Params.Arguments {
-		if secureParamMap[argName] {
-			return nil, fmt.Errorf("parameter %q is secure and must not be passed in standard arguments", argName)
+	// Validate that non-secure parameters are not passed in secureArguments (Host protocol error)
+	for argName := range req.Params.SecureArguments {
+		if !secureParamMap[argName] {
+			return nil, nil, fmt.Errorf("parameter %q is not secure and must not be passed in secureArguments", argName)
 		}
 	}
 
-	// Validate that non-secure parameters are not passed in secureArguments
-	for argName := range req.Params.SecureArguments {
-		if !secureParamMap[argName] {
-			return nil, fmt.Errorf("parameter %q is not secure and must not be passed in secureArguments", argName)
+	// Validate that secure parameters are not passed in standard arguments (Agent tool-call error)
+	for argName := range req.Params.Arguments {
+		if secureParamMap[argName] {
+			return nil, fmt.Errorf("parameter %q is secure and must not be passed in standard arguments", argName), nil
 		}
 	}
 
@@ -882,5 +905,5 @@ func validateAndMergeSecureParams(req *CallToolRequest, paramDefs parameters.Par
 	maps.Copy(toolArgument, req.Params.Arguments)
 	maps.Copy(toolArgument, req.Params.SecureArguments)
 
-	return toolArgument, nil
+	return toolArgument, nil, nil
 }

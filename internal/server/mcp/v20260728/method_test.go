@@ -1475,8 +1475,9 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 					}
 				}
 			}`,
-			wantErr:     true,
-			errContains: "parameter \"api_key\" is secure and must not be passed in standard arguments",
+			wantErr:         false,
+			wantIsError:     true,
+			wantContentText: `parameter "api_key" is secure and must not be passed in standard arguments`,
 		},
 		{
 			desc: "Standard parameter passed in secureArguments",
