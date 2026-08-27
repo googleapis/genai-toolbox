@@ -110,7 +110,7 @@ func TestGenerateToolManifest(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations, nil)
+			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations, nil, nil)
 			gotM := got.Metadata
 			if diff := cmp.Diff(tc.wantMetadata, gotM); diff != "" {
 				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
@@ -209,7 +209,7 @@ func TestParamManifest(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			gotSchema, gotAuthParam := generateParamManifest(tc.in, tc.urlParams)
+			gotSchema, gotAuthParam := generateParamManifest(tc.in, nil, tc.urlParams)
 			if diff := cmp.Diff(tc.wantSchema, gotSchema); diff != "" {
 				t.Fatalf("unexpected manifest (-want +got):\n%s", diff)
 			}
@@ -400,5 +400,47 @@ func TestGenerateListPromptsResult(t *testing.T) {
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Fatalf("unexpected list tools result (-want +got):\n%s", diff)
+	}
+}
+
+func TestParamManifestCompositions(t *testing.T) {
+	in := parameters.Parameters{
+		parameters.NewStringParameter("foo", "bar"),
+		parameters.NewStringParameter("baz", "qux"),
+	}
+	cfg := &tools.InputSchemaConfig{
+		AnyOf: []any{
+			"foo",
+			map[string]any{"required": []string{"baz"}},
+		},
+		OneOf: []any{
+			"baz",
+		},
+		AllOf: []any{
+			map[string]any{"required": []string{"foo", "baz"}},
+		},
+	}
+	gotSchema, _ := generateParamManifest(in, cfg, nil)
+	wantSchema := InputSchema{
+		Type: "object",
+		Properties: map[string]parameters.ParameterMcpManifest{
+			"foo": {Type: "string", Description: "bar"},
+			"baz": {Type: "string", Description: "qux"},
+		},
+		Required: []string{"foo", "baz"},
+		AnyOf: []any{
+			map[string]any{"required": []string{"foo"}},
+			map[string]any{"required": []string{"baz"}},
+		},
+		OneOf: []any{
+			map[string]any{"required": []string{"baz"}},
+		},
+		AllOf: []any{
+			map[string]any{"required": []string{"foo", "baz"}},
+		},
+	}
+
+	if diff := cmp.Diff(wantSchema, gotSchema); diff != "" {
+		t.Fatalf("unexpected manifest with compositions (-want +got):\n%s", diff)
 	}
 }

@@ -179,6 +179,9 @@ type InputSchema struct {
 	Type       string                                     `json:"type"`
 	Properties map[string]parameters.ParameterMcpManifest `json:"properties"`
 	Required   []string                                   `json:"required"`
+	AnyOf      []any                                      `json:"anyOf,omitempty"`
+	OneOf      []any                                      `json:"oneOf,omitempty"`
+	AllOf      []any                                      `json:"allOf,omitempty"`
 }
 
 // Used by the client to invoke a tool provided by the server.

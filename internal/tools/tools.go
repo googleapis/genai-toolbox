@@ -139,6 +139,7 @@ type Tool interface {
 	GetParameters(sources.Source) (parameters.Parameters, error)
 	GetScopesRequired() []string
 	ValidateSource(sources.Source) error
+	GetInputSchema() *InputSchemaConfig
 }
 
 // PrimitiveManagerI defines the minimal view of the primitives.PrimitiveManager
@@ -177,6 +178,13 @@ type ToolMeta interface {
 	GetDescription() string
 	GetAuthRequired() []string
 	GetScopesRequired() []string
+	GetInputSchema() *InputSchemaConfig
+}
+
+type InputSchemaConfig struct {
+	AnyOf []any `yaml:"anyOf,omitempty" json:"anyOf,omitempty"`
+	OneOf []any `yaml:"oneOf,omitempty" json:"oneOf,omitempty"`
+	AllOf []any `yaml:"allOf,omitempty" json:"allOf,omitempty"`
 }
 
 // ConfigBase owns the YAML fields that every tool's Config shares and that
@@ -185,16 +193,18 @@ type ToolMeta interface {
 // configs omit description: and rely on a canned per-tool string), so
 // post-Initialize ConfigBase.Description holds the resolved value.
 type ConfigBase struct {
-	Name           string   `yaml:"name"           validate:"required"`
-	Description    string   `yaml:"description"`
-	AuthRequired   []string `yaml:"authRequired"`
-	ScopesRequired []string `yaml:"scopesRequired"`
+	Name           string             `yaml:"name"           validate:"required"`
+	Description    string             `yaml:"description"`
+	AuthRequired   []string           `yaml:"authRequired"`
+	ScopesRequired []string           `yaml:"scopesRequired"`
+	InputSchema    *InputSchemaConfig `yaml:"inputSchema,omitempty"`
 }
 
-func (c ConfigBase) GetName() string             { return c.Name }
-func (c ConfigBase) GetDescription() string      { return c.Description }
-func (c ConfigBase) GetAuthRequired() []string   { return c.AuthRequired }
-func (c ConfigBase) GetScopesRequired() []string { return c.ScopesRequired }
+func (c ConfigBase) GetName() string                    { return c.Name }
+func (c ConfigBase) GetDescription() string             { return c.Description }
+func (c ConfigBase) GetAuthRequired() []string          { return c.AuthRequired }
+func (c ConfigBase) GetScopesRequired() []string        { return c.ScopesRequired }
+func (c ConfigBase) GetInputSchema() *InputSchemaConfig { return c.InputSchema }
 
 // BaseTool provides default implementations of various methods on the Tool
 // interface. Tools embed BaseTool to drop their boilerplate and override
@@ -218,11 +228,12 @@ func NewBaseTool[T ToolMeta](cfg T, annotations *ToolAnnotations, metadata Manif
 	}
 }
 
-func (b BaseTool[T]) GetName() string                  { return b.Cfg.GetName() }
-func (b BaseTool[T]) GetDescription() string           { return b.Cfg.GetDescription() }
-func (b BaseTool[T]) GetAuthRequired() []string        { return b.Cfg.GetAuthRequired() }
-func (b BaseTool[T]) GetScopesRequired() []string      { return b.Cfg.GetScopesRequired() }
-func (b BaseTool[T]) GetAnnotations() *ToolAnnotations { return b.annotations }
+func (b BaseTool[T]) GetName() string                    { return b.Cfg.GetName() }
+func (b BaseTool[T]) GetDescription() string             { return b.Cfg.GetDescription() }
+func (b BaseTool[T]) GetAuthRequired() []string          { return b.Cfg.GetAuthRequired() }
+func (b BaseTool[T]) GetScopesRequired() []string        { return b.Cfg.GetScopesRequired() }
+func (b BaseTool[T]) GetAnnotations() *ToolAnnotations   { return b.annotations }
+func (b BaseTool[T]) GetInputSchema() *InputSchemaConfig { return b.Cfg.GetInputSchema() }
 
 // Manifest returns the precomputed metadata. It and GetParameters stay trivial
 // and never call each other: embedded methods have no virtual dispatch, so a
