@@ -127,7 +127,7 @@ type Tool interface {
 	GetSourceName() string
 	GetDescription() string
 	GetAuthRequired() []string
-	GetAnnotations() *ToolAnnotations
+	GetAnnotations(sources.Source) *ToolAnnotations
 	Invoke(context.Context, sources.Source, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, PrimitiveManagerI) (parameters.ParamValues, error)
 	Manifest(sources.Source) (Manifest, error)
@@ -140,7 +140,6 @@ type Tool interface {
 	GetScopesRequired() []string
 	ValidateSource(sources.Source) error
 	HasSecureParams() bool
-	ShouldSuppress(context.Context, sources.Source) bool
 }
 
 // PrimitiveManagerI defines the minimal view of the primitives.PrimitiveManager
@@ -229,12 +228,12 @@ func NewBaseTool[T ToolMeta](cfg T, annotations *ToolAnnotations, metadata Manif
 	}
 }
 
-func (b BaseTool[T]) GetName() string                  { return b.Cfg.GetName() }
-func (b BaseTool[T]) GetDescription() string           { return b.Cfg.GetDescription() }
-func (b BaseTool[T]) GetAuthRequired() []string        { return b.Cfg.GetAuthRequired() }
-func (b BaseTool[T]) HasSecureParams() bool            { return b.hasSecureParams }
-func (b BaseTool[T]) GetScopesRequired() []string      { return b.Cfg.GetScopesRequired() }
-func (b BaseTool[T]) GetAnnotations() *ToolAnnotations { return b.annotations }
+func (b BaseTool[T]) GetName() string                                  { return b.Cfg.GetName() }
+func (b BaseTool[T]) GetDescription() string                           { return b.Cfg.GetDescription() }
+func (b BaseTool[T]) GetAuthRequired() []string                        { return b.Cfg.GetAuthRequired() }
+func (b BaseTool[T]) HasSecureParams() bool                            { return b.hasSecureParams }
+func (b BaseTool[T]) GetScopesRequired() []string                      { return b.Cfg.GetScopesRequired() }
+func (b BaseTool[T]) GetAnnotations(_ sources.Source) *ToolAnnotations { return b.annotations }
 
 // Manifest returns the precomputed metadata. It and GetParameters stay trivial
 // and never call each other: embedded methods have no virtual dispatch, so a
@@ -276,16 +275,17 @@ func (b BaseTool[T]) EmbedParams(ctx context.Context, paramValues parameters.Par
 // By default, if the source is read-only and the tool's ReadOnlyHint is explicitly false,
 // the tool is suppressed. Unannotated tools (ReadOnlyHint == nil) or read-only tools
 // (ReadOnlyHint == true) are not suppressed.
-func (b BaseTool[T]) ShouldSuppress(ctx context.Context, src sources.Source) bool {
-	if src == nil || !src.IsReadOnly() {
+func ShouldSuppress(ctx context.Context, t Tool, src sources.Source) bool {
+	if t == nil || src == nil || !src.IsReadOnly() {
 		return false
 	}
 
-	toolName := b.GetName()
+	toolName := t.GetName()
 	l, _ := util.LoggerFromContext(ctx)
 
-	if b.annotations != nil && b.annotations.ReadOnlyHint != nil {
-		if !*b.annotations.ReadOnlyHint {
+	ann := t.GetAnnotations(src)
+	if ann != nil && ann.ReadOnlyHint != nil {
+		if !*ann.ReadOnlyHint {
 			if l != nil {
 				l.InfoContext(ctx, fmt.Sprintf("Suppressing write-capable tool %q bound to read-only source", toolName))
 			}

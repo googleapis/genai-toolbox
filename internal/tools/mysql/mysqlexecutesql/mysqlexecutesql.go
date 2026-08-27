@@ -127,9 +127,20 @@ func (t Tool) ValidateSource(source sources.Source) error {
 	return nil
 }
 
-// ShouldSuppress returns false because single execute_sql tools for MySQL
-// are secured at the database connection layer via connection-string locking parameters.
-// They must remain exposed in read-only mode.
-func (t Tool) ShouldSuppress(ctx context.Context, source sources.Source) bool {
-	return false
+// GetAnnotations dynamically returns readOnlyHint: true and destructiveHint: false
+// when the connected database source is in read-only mode.
+func (t Tool) GetAnnotations(src sources.Source) *tools.ToolAnnotations {
+	base := t.BaseTool.GetAnnotations(src)
+	if src == nil || !src.IsReadOnly() {
+		return base
+	}
+
+	res := tools.NewReadOnlyAnnotations()
+	if base != nil {
+		copied := *base
+		copied.ReadOnlyHint = res.ReadOnlyHint
+		copied.DestructiveHint = res.DestructiveHint
+		return &copied
+	}
+	return res
 }
