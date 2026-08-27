@@ -140,6 +140,7 @@ type Tool interface {
 	GetScopesRequired() []string
 	ValidateSource(sources.Source) error
 	HasSecureParams() bool
+	ShouldSuppress(context.Context, sources.Source) bool
 }
 
 // PrimitiveManagerI defines the minimal view of the primitives.PrimitiveManager
@@ -268,4 +269,34 @@ func (b BaseTool[T]) GetAuthTokenHeaderName(_ sources.Source) (string, error) {
 
 func (b BaseTool[T]) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, pMgr PrimitiveManagerI) (parameters.ParamValues, error) {
 	return parameters.EmbedParams(ctx, b.StaticParameters, paramValues, pMgr, nil)
+}
+
+// ShouldSuppress returns true if the tool should be suppressed from registration
+// when its data source is in read-only mode, and logs relevant warnings or info messages.
+// By default, if the source is read-only and the tool's ReadOnlyHint is explicitly false,
+// the tool is suppressed. Unannotated tools (ReadOnlyHint == nil) or read-only tools
+// (ReadOnlyHint == true) are not suppressed.
+func (b BaseTool[T]) ShouldSuppress(ctx context.Context, src sources.Source) bool {
+	if src == nil || !src.IsReadOnly() {
+		return false
+	}
+
+	toolName := b.GetName()
+	l, _ := util.LoggerFromContext(ctx)
+
+	if b.annotations != nil && b.annotations.ReadOnlyHint != nil {
+		if !*b.annotations.ReadOnlyHint {
+			if l != nil {
+				l.InfoContext(ctx, fmt.Sprintf("Suppressing write-capable tool %q bound to read-only source", toolName))
+			}
+			return true
+		}
+		return false
+	}
+
+	if l != nil {
+		l.WarnContext(ctx, fmt.Sprintf("Tool %q lacks ReadOnlyHint annotation; executing this tool may fail if it attempts write operations. If this tool is meant to be read-only, please add 'readOnlyHint: true' to its annotations. Otherwise, add 'readOnlyHint: false' to suppress it in read-only mode and save agent context window.", toolName))
+	}
+
+	return false
 }
