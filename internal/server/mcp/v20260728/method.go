@@ -876,27 +876,49 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 
 // validateAndMergeSecureParams validates and merges standard and secure arguments based on secure parameter definitions.
 // It returns (toolArguments, agentErr, protocolErr).
-// - protocolErr is returned when non-secure parameters are passed in secureArguments (a host protocol violation).
 // - agentErr is returned when secure parameters are passed in standard arguments (an agent tool-call error).
-func validateAndMergeSecureParams(req *CallToolRequest, paramDefs parameters.Parameters) (map[string]any, error, error) {
+// - protocolErr is returned when non-secure parameters are passed in secureArguments or required secure parameters are missing (a host protocol violation).
+func validateAndMergeSecureParams(ctx context.Context, req *CallToolRequest, paramDefs parameters.Parameters) (map[string]any, error, error) {
 	secureParamMap := make(map[string]bool)
+	urlParams, _ := util.UrlParamsFromContext(ctx)
+
 	for _, p := range paramDefs {
 		if p != nil && p.GetSecure() {
 			secureParamMap[p.GetName()] = true
 		}
 	}
 
-	// Validate that non-secure parameters are not passed in secureArguments (Host protocol error)
+	// 1. Validate that secure parameters are not passed in standard arguments (Agent tool-call error)
+	for argName := range req.Params.Arguments {
+		if secureParamMap[argName] {
+			return nil, fmt.Errorf("parameter %q is secure and must not be passed in standard arguments", argName), nil
+		}
+	}
+
+	// 2. Validate that non-secure parameters are not passed in secureArguments (Host protocol error)
 	for argName := range req.Params.SecureArguments {
 		if !secureParamMap[argName] {
 			return nil, nil, fmt.Errorf("parameter %q is not secure and must not be passed in secureArguments", argName)
 		}
 	}
 
-	// Validate that secure parameters are not passed in standard arguments (Agent tool-call error)
-	for argName := range req.Params.Arguments {
-		if secureParamMap[argName] {
-			return nil, fmt.Errorf("parameter %q is secure and must not be passed in standard arguments", argName), nil
+	// 3. Validate that required secure parameters are present in secureArguments (Host protocol error)
+	// (unless they are bound via URL parameters or sourced from another parameter)
+	for _, p := range paramDefs {
+		if p != nil && p.GetSecure() {
+			name := p.GetName()
+			if p.GetValueFromParam() == "" {
+				if _, bound := urlParams[name]; !bound {
+					if parameters.CheckParamRequired(p.GetRequired(), p.GetDefault()) {
+						if req.Params.SecureArguments == nil {
+							return nil, nil, fmt.Errorf("missing required secure parameter %q in secureArguments", name)
+						}
+						if _, ok := req.Params.SecureArguments[name]; !ok {
+							return nil, nil, fmt.Errorf("missing required secure parameter %q in secureArguments", name)
+						}
+					}
+				}
+			}
 		}
 	}
 

@@ -1535,9 +1535,8 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 					}
 				}
 			}`,
-			wantErr:         false,
-			wantIsError:     true,
-			wantContentText: `provided parameters were invalid: parameter "api_key" is required`,
+			wantErr:     true,
+			errContains: `missing required secure parameter "api_key" in secureArguments`,
 		},
 		{
 			desc: "Successful invocation with correct routing (extensions)",

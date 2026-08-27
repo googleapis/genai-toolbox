@@ -688,12 +688,12 @@ func RunMCPSecureToolInvokeTest(t *testing.T, options ...McpTestOption) {
 			wantErrorMsg:     `parameter "id" is not secure and must not be passed in secureArguments`,
 		},
 		{
-			name:            "missing required secure parameter",
-			arguments:       map[string]any{"id": 3},
-			secureArguments: map[string]any{},
-			supportsSecure:  true,
-			wantIsError:     true,
-			wantErrorMsg:    `parameter "name" is required`,
+			name:             "missing required secure parameter",
+			arguments:        map[string]any{"id": 3},
+			secureArguments:  map[string]any{},
+			supportsSecure:   true,
+			wantRpcErrorCode: jsonrpc.INVALID_PARAMS,
+			wantErrorMsg:     `missing required secure parameter "name" in secureArguments`,
 		},
 		{
 			name:            "successful invocation with correct routing",
