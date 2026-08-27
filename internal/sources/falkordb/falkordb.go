@@ -249,12 +249,18 @@ func ConvertValue(value any) any {
 	case falkordb.Edge:
 		return ConvertValue(&v)
 	case *falkordb.Node:
+		if v == nil {
+			return nil
+		}
 		return map[string]any{
 			"id":         v.ID,
 			"labels":     v.Labels,
 			"properties": ConvertValue(v.Properties),
 		}
 	case *falkordb.Edge:
+		if v == nil {
+			return nil
+		}
 		return map[string]any{
 			"id":            v.ID,
 			"type":          v.Relation,

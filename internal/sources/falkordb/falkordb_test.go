@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package falkordb_test
+package falkordb
 
 import (
 	"context"
@@ -22,7 +22,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/falkordb"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
@@ -43,9 +42,9 @@ func TestParseFromYamlFalkorDB(t *testing.T) {
 			graph: my_graph
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-falkordb-instance": falkordb.Config{
+				"my-falkordb-instance": Config{
 					Name:  "my-falkordb-instance",
-					Type:  falkordb.SourceType,
+					Type:  SourceType,
 					Host:  "my-host",
 					Port:  "6379",
 					Graph: "my_graph",
@@ -69,16 +68,16 @@ func TestParseFromYamlFalkorDB(t *testing.T) {
 			    insecureSkipVerify: true
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-falkordb-instance": falkordb.Config{
+				"my-falkordb-instance": Config{
 					Name:           "my-falkordb-instance",
-					Type:           falkordb.SourceType,
+					Type:           SourceType,
 					Host:           "my-host",
 					Port:           "6380",
 					Username:       "my_user",
 					Password:       "my_pass",
 					Graph:          "my_graph",
 					QueryTimeoutMs: 5000,
-					TLS: falkordb.TLSConfig{
+					TLS: TLSConfig{
 						Enabled:            true,
 						InsecureSkipVerify: true,
 					},
@@ -144,6 +143,56 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 }
 
+func TestValidateTLS(t *testing.T) {
+	tcs := []struct {
+		desc               string
+		enabled            bool
+		insecureSkipVerify bool
+		wantErr            bool
+	}{
+		{
+			desc:               "insecureSkipVerify without tls is rejected",
+			enabled:            false,
+			insecureSkipVerify: true,
+			wantErr:            true,
+		},
+		{
+			desc:               "tls disabled without insecureSkipVerify is accepted",
+			enabled:            false,
+			insecureSkipVerify: false,
+			wantErr:            false,
+		},
+		{
+			desc:               "insecureSkipVerify with tls enabled is accepted",
+			enabled:            true,
+			insecureSkipVerify: true,
+			wantErr:            false,
+		},
+		{
+			desc:               "tls enabled with verification is accepted",
+			enabled:            true,
+			insecureSkipVerify: false,
+			wantErr:            false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			cfg := Config{
+				Name: "my-falkordb-instance",
+				TLS: TLSConfig{
+					Enabled:            tc.enabled,
+					InsecureSkipVerify: tc.insecureSkipVerify,
+				},
+			}
+			err := cfg.validateTLS()
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("validateTLS() error = %v, wantErr %t", err, tc.wantErr)
+			}
+		})
+	}
+}
+
 func TestConvertValue(t *testing.T) {
 	// Edges returned by falkordb-go's result parser carry their endpoint IDs
 	// in unexported fields, so tests populate Source/Destination instead;
@@ -180,6 +229,8 @@ func TestConvertValue(t *testing.T) {
 		want any
 	}{
 		{desc: "nil", in: nil, want: nil},
+		{desc: "nil node pointer", in: (*falkordbgo.Node)(nil), want: nil},
+		{desc: "nil edge pointer", in: (*falkordbgo.Edge)(nil), want: nil},
 		{desc: "string passes through", in: "hello", want: "hello"},
 		{desc: "int64 passes through", in: int64(42), want: int64(42)},
 		{desc: "float64 passes through", in: 1.5, want: 1.5},
@@ -227,7 +278,7 @@ func TestConvertValue(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := falkordb.ConvertValue(tc.in)
+			got := ConvertValue(tc.in)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect conversion (-want +got):\n%s", diff)
 			}
