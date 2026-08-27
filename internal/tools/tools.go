@@ -116,7 +116,7 @@ type AccessToken string
 
 func (token AccessToken) ParseBearerToken() (string, error) {
 	headerParts := strings.Split(string(token), " ")
-	if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
+	if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" || headerParts[1] == "" {
 		return "", util.NewClientServerError("authorization header must be in the format 'Bearer <token>'", http.StatusUnauthorized, nil)
 	}
 	return headerParts[1], nil
