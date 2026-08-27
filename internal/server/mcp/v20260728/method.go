@@ -885,7 +885,7 @@ func validateAndMergeSecureParams(ctx context.Context, req *CallToolRequest, par
 		}
 	}
 
-	// 1. Validate that secure parameters are not passed in standard arguments (Agent tool-call error)
+	// Validate that secure parameters are not passed in standard arguments (Agent error)
 	for argName := range req.Params.Arguments {
 		if secureParamMap[argName] {
 			return nil, fmt.Errorf("parameter %q is secure and must not be passed in standard arguments", argName), nil
