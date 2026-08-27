@@ -2204,7 +2204,15 @@ func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
 				t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
 			}
-			got = details
+			var filteredDetails []queryListDetails
+			for _, d := range details {
+				// Filter out background replication processes such as WAL senders on AlloyDB/Cloud SQL
+				if strings.HasPrefix(d.Query, "START_REPLICATION") || d.User == "alloydbreplica" || d.ApplicationName == "wal_uploader" {
+					continue
+				}
+				filteredDetails = append(filteredDetails, d)
+			}
+			got = filteredDetails
 
 			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b queryListDetails) bool {
 				return a.Query == b.Query
