@@ -148,6 +148,11 @@ run_go_test() {
       return
   fi
 
+  if [ "$name" == "langchain" ]; then
+      echo -e "\nSkipping framework '${name}': Excluded as LangChain Go does not support newer Gemini models."
+      return
+  fi
+
   echo "--- Running Go Test: $name ---"
   (
     cd "$dir"

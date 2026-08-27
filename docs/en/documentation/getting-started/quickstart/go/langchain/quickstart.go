@@ -59,6 +59,7 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize the Google AI client (LLM).
+	// Using Gemini 2.0 flash as LangchainGo does not support newer models
 	llm, err := googleai.New(ctx, googleai.WithAPIKey(genaiKey), googleai.WithDefaultModel("gemini-2.0-flash"))
 	if err != nil {
 		log.Fatalf("Failed to create Google AI client: %v", err)
