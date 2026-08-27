@@ -192,7 +192,9 @@ label is removed once the build starts, so apply it again to re-run after a new
 commit.
 
 Unlike a docs preview, a run compiles and executes the PR's code against live
-test infrastructure — review the diff first on anything from a fork.
+test infrastructure — review the diff first on anything from a fork. Labelling
+works by commenting `/gcbrun`, which on a fork PR also releases the integration
+test triggers that were waiting on it.
 
 See [Adding Prebuilt Config Evals](./DEVELOPER.md#adding-prebuilt-config-evals)
 for what the evalsets cover.
