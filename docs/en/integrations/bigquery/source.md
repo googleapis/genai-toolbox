@@ -64,7 +64,7 @@ By **default**, Toolbox will use your [Application Default Credentials
 When using this method, you need to ensure the IAM identity associated with your
 ADC (such as a service account) has the correct permissions for the queries you
 intend to run. Common roles include `roles/bigquery.user` (which includes
-permissions to run jobs and read data) or `roles/bigbigquery.dataViewer`.
+permissions to run jobs and read data) or `roles/bigquery.dataViewer`.
 Follow this [guide][set-adc] to set up your ADC.
 
 If you are running on Google Compute Engine (GCE) or Google Kubernetes Engine
