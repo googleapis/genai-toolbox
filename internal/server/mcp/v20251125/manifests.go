@@ -107,6 +107,10 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
+		// Skip a Tool that requires secure params as they are not supported in this protocol version.
+		if tool.HasSecureParams() {
+			continue
+		}
 		srcName := tool.GetSourceName()
 		var src sources.Source
 		if srcName != "" {
