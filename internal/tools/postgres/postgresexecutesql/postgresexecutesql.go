@@ -123,3 +123,10 @@ func (t Tool) ValidateSource(source sources.Source) error {
 	}
 	return nil
 }
+
+// ShouldSuppress returns false because single execute_sql tools for Postgres/AlloyDB
+// are secured at the database connection layer via connection-string locking parameters
+// (cloudsql_session_read_only=locked). They must remain exposed in read-only mode.
+func (t Tool) ShouldSuppress(ctx context.Context, source sources.Source) bool {
+	return false
+}

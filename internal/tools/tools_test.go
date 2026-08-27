@@ -19,6 +19,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -140,5 +142,57 @@ func TestBaseToolEmbedParamsPassthrough(t *testing.T) {
 	}
 	if diff := cmp.Diff(values, got); diff != "" {
 		t.Errorf("EmbedParams() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestBaseToolShouldSuppress(t *testing.T) {
+	roSource := testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{ReadOnly: true}}
+	rwSource := testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{ReadOnly: false}}
+
+	tests := []struct {
+		desc        string
+		src         sources.Source
+		annotations *tools.ToolAnnotations
+		want        bool
+	}{
+		{
+			desc:        "nil source -> not suppressed",
+			src:         nil,
+			annotations: tools.NewDestructiveAnnotations(),
+			want:        false,
+		},
+		{
+			desc:        "read-write source with write tool -> not suppressed",
+			src:         rwSource,
+			annotations: tools.NewDestructiveAnnotations(),
+			want:        false,
+		},
+		{
+			desc:        "read-only source with write tool (readOnlyHint: false) -> suppressed",
+			src:         roSource,
+			annotations: tools.NewDestructiveAnnotations(),
+			want:        true,
+		},
+		{
+			desc:        "read-only source with read tool (readOnlyHint: true) -> not suppressed",
+			src:         roSource,
+			annotations: tools.NewReadOnlyAnnotations(),
+			want:        false,
+		},
+		{
+			desc:        "read-only source with nil annotations -> not suppressed",
+			src:         roSource,
+			annotations: nil,
+			want:        false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			b := tools.NewBaseTool(tools.ConfigBase{}, tt.annotations, tools.Manifest{}, nil)
+			if got := b.ShouldSuppress(context.Background(), tt.src); got != tt.want {
+				t.Errorf("ShouldSuppress() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
