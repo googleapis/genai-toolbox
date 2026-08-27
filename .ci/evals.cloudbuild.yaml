@@ -20,9 +20,11 @@
 # steps inherit _EVAL_HARNESSES unless they set their own.
 
 steps:
-  # On a PR this narrows the run to the databases the PR touched. On the
-  # nightly, main diffed against main is empty, so the fallback path matches
-  # every step's pattern and everything runs.
+  # On a PR this narrows the run to the databases the PR touched. On a
+  # scheduled run, main diffed against main is empty, and the fallback path is
+  # what keeps the full matrix running: it must stay matched by
+  # EVAL_COMMON_PATTERN below, or every step skips and the build goes green
+  # having evaluated nothing.
   - id: "detect-changes"
     name: "gcr.io/cloud-builders/git"
     waitFor: ["-"]
