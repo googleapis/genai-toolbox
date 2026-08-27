@@ -44,10 +44,17 @@ for var in "${required[@]}"; do
   fi
 done
 
-# A missing file means a local run and an unset pattern means a step that opted
-# out; both run rather than silently skipping.
-if [[ -f /workspace/changed_files.txt && -n "${EVAL_CHANGED_PATTERN:-}" ]] &&
-   ! grep -qE "${EVAL_CHANGED_PATTERN}|${EVAL_COMMON_PATTERN}" /workspace/changed_files.txt; then
+# Paths that put every step in scope.
+common_pattern='(^|/)evals/(run_configs|model_configs)/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
+
+# Exact-line matches, since git diff emits repo-relative paths. Only a non-empty
+# list can narrow the run: empty means a scheduled build, or a checkout the diff
+# failed against.
+if [[ -s /workspace/changed_files.txt ]] &&
+   ! grep -qxF -e "${EVAL_DATASET}" \
+               -e "internal/prebuiltconfigs/tools/${TOOLBOX_PREBUILT}.yaml" \
+               /workspace/changed_files.txt &&
+   ! grep -qE "${common_pattern}" /workspace/changed_files.txt; then
   echo "no changes affecting ${TOOLBOX_PREBUILT}; skipping"
   exit 0
 fi

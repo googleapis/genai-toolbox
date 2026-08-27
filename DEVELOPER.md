@@ -394,9 +394,9 @@ To cover a new prebuilt config:
   config's `TOOLBOX_PREBUILT`, `EVAL_DATASET`, and connection settings.
   `EVAL_ENV_PREFIX` names the prefix those settings share, which is how
   [run_evals.sh](.ci/run_evals.sh) knows which ones to require. Set
-  `EVAL_HARNESSES` to run more than the default harness, and
-  `EVAL_CHANGED_PATTERN` to the paths that should put the step in scope on a
-  pull request.
+  `EVAL_HARNESSES` to run more than the default harness. On a pull request the
+  step runs when its evalset or its prebuilt config changed; both paths are
+  derived from the settings above, so there is nothing else to configure.
 
 Evals call real models against live infrastructure, so they are neither free nor
 deterministic, and they are not part of the pull request gate. Like integration
