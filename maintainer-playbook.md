@@ -184,15 +184,15 @@ for security reasons, so a maintainer must deploy the preview:
 #### Running Prebuilt Config Evals
 
 Evals are not part of the pull request gate — they call real models against live
-databases, so they run on a schedule and otherwise on request. Run them on a PR
-that changes a prebuilt config, its evalset, or the eval CI itself:
+databases, so they run on a schedule and otherwise on request.
 
-1. **Inspect Changes:** A run builds and executes the PR's code against live
-   test infrastructure, so review the diff first — especially anything under
-   `.ci/` or `.github/workflows/`.
-1. **Run Evals:** Apply the `evals: run` label. Only the prebuilt configs the PR
-   touched are evaluated; the rest skip. The label is removed once the build
-   starts, so apply it again to re-run after a new commit.
+Apply the `evals: run` label to a PR that changes a prebuilt config, its
+evalset, or the eval CI. Only the configs that PR touched are evaluated. The
+label is removed once the build starts, so apply it again to re-run after a new
+commit.
+
+Unlike a docs preview, a run compiles and executes the PR's code against live
+test infrastructure — review the diff first on anything from a fork.
 
 See [Adding Prebuilt Config Evals](./DEVELOPER.md#adding-prebuilt-config-evals)
 for what the evalsets cover.
