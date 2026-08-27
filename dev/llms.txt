@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-27T17:59:30Z
+**GENERATED ON:** 2026-08-27T21:15:44Z
 
 ---
 ### System Directives for AI Models
@@ -877,6 +877,34 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/elasticsearch/prebuilt-configs/): Prebuilt configurations for Elasticsearch.
 
       - [Elasticsearch](https://mcp-toolbox.dev/dev/integrations/elasticsearch/prebuilt-configs/elasticsearch/): Details of the Elasticsearch prebuilt configuration.
+
+  - [FalkorDB](https://mcp-toolbox.dev/dev/integrations/falkordb/): No description provided.
+
+    - [FalkorDB Source](https://mcp-toolbox.dev/dev/integrations/falkordb/source/): FalkorDB is a low-latency, open source graph database built for GenAI workloads
+
+
+    - [Tools](https://mcp-toolbox.dev/dev/integrations/falkordb/tools/): No description provided.
+
+      - [falkordb-cypher](https://mcp-toolbox.dev/dev/integrations/falkordb/tools/falkordb-cypher/): A "falkordb-cypher" tool executes a pre-defined Cypher statement against a FalkorDB graph.
+
+
+      - [falkordb-execute-cypher](https://mcp-toolbox.dev/dev/integrations/falkordb/tools/falkordb-execute-cypher/): A "falkordb-execute-cypher" tool executes an arbitrary Cypher query against a FalkorDB graph.
+
+
+      - [falkordb-schema](https://mcp-toolbox.dev/dev/integrations/falkordb/tools/falkordb-schema/): A "falkordb-schema" tool extracts the schema of a FalkorDB graph.
+
+
+      - [falkordb-list-graphs](https://mcp-toolbox.dev/dev/integrations/falkordb/tools/falkordb-list-graphs/): A "falkordb-list-graphs" tool lists the graphs stored on a FalkorDB instance.
+
+
+    - [Samples](https://mcp-toolbox.dev/dev/integrations/falkordb/samples/): No description provided.
+
+      - [Quickstart (MCP with FalkorDB)](https://mcp-toolbox.dev/dev/integrations/falkordb/samples/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and FalkorDB as the source.
+
+
+    - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/falkordb/prebuilt-configs/): Prebuilt configurations for FalkorDB.
+
+      - [FalkorDB](https://mcp-toolbox.dev/dev/integrations/falkordb/prebuilt-configs/falkordb/): Details of the FalkorDB prebuilt configuration.
 
   - [Firebird](https://mcp-toolbox.dev/dev/integrations/firebird/): No description provided.
 
