@@ -327,7 +327,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
-	toolArguments, agentErr, protocolErr := validateAndMergeSecureParams(&req, toolParams)
+	toolArguments, agentErr, protocolErr := validateAndMergeSecureParams(ctx, &req, toolParams)
 	if protocolErr != nil {
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, protocolErr.Error(), nil), protocolErr
 	}
