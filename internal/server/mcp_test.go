@@ -31,6 +31,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
@@ -500,8 +501,9 @@ func TestMcpEndpoint(t *testing.T) {
 				"result": map[string]any{
 					"protocolVersion": "2024-11-05",
 					"capabilities": map[string]any{
-						"tools":   map[string]any{"listChanged": false},
-						"prompts": map[string]any{"listChanged": false},
+						"tools":     map[string]any{"listChanged": false},
+						"prompts":   map[string]any{"listChanged": false},
+						"resources": map[string]any{},
 					},
 					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
@@ -519,8 +521,9 @@ func TestMcpEndpoint(t *testing.T) {
 				"result": map[string]any{
 					"protocolVersion": "2025-03-26",
 					"capabilities": map[string]any{
-						"tools":   map[string]any{"listChanged": false},
-						"prompts": map[string]any{"listChanged": false},
+						"tools":     map[string]any{"listChanged": false},
+						"prompts":   map[string]any{"listChanged": false},
+						"resources": map[string]any{},
 					},
 					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
@@ -538,8 +541,9 @@ func TestMcpEndpoint(t *testing.T) {
 				"result": map[string]any{
 					"protocolVersion": "2025-06-18",
 					"capabilities": map[string]any{
-						"tools":   map[string]any{"listChanged": false},
-						"prompts": map[string]any{"listChanged": false},
+						"tools":     map[string]any{"listChanged": false},
+						"prompts":   map[string]any{"listChanged": false},
+						"resources": map[string]any{},
 					},
 					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
@@ -557,8 +561,9 @@ func TestMcpEndpoint(t *testing.T) {
 				"result": map[string]any{
 					"protocolVersion": "2025-11-25",
 					"capabilities": map[string]any{
-						"tools":   map[string]any{"listChanged": false},
-						"prompts": map[string]any{"listChanged": false},
+						"tools":     map[string]any{"listChanged": false},
+						"prompts":   map[string]any{"listChanged": false},
+						"resources": map[string]any{},
 					},
 					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
@@ -851,8 +856,9 @@ func TestMcpEndpoint(t *testing.T) {
 							"resultType":        "complete",
 							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 							"capabilities": map[string]any{
-								"tools":   map[string]any{"listChanged": false},
-								"prompts": map[string]any{"listChanged": false},
+								"tools":     map[string]any{"listChanged": false},
+								"prompts":   map[string]any{"listChanged": false},
+								"resources": map[string]any{},
 							},
 							"_meta": map[string]any{
 								"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
@@ -2044,3 +2050,65 @@ func TestMcpPromptScopingByGroup(t *testing.T) {
 // request sent to a group's MCP endpoint returns only the resources belonging to
 // that group. It stands up the real server with two groups (each scoped to a
 // different resource) and asserts each route surfaces just its own resource.
+func TestMcpResourceScopingByGroup(t *testing.T) {
+	toolsMap := map[string]tools.Tool{}
+	promptsMap := map[string]prompts.Prompt{}
+	resourcesMap := map[string]resources.Resource{
+		"res1": testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
+		"res2": testutils.NewMockResource("res2", "file:///res2", "Title 2", "Title 2", "application/json", nil, nil),
+	}
+	groupA, err := group.GroupConfig{Name: "group_a", ResourceNames: []string{"res1"}}.Initialize(toolsMap, promptsMap, resourcesMap, nil)
+	if err != nil {
+		t.Fatalf("unable to initialize group_a: %s", err)
+	}
+	groupB, err := group.GroupConfig{Name: "group_b", ResourceNames: []string{"res2"}}.Initialize(toolsMap, promptsMap, resourcesMap, nil)
+	if err != nil {
+		t.Fatalf("unable to initialize group_b: %s", err)
+	}
+	groups := map[string]group.Group{"group_a": groupA, "group_b": groupB}
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, resourcesMap, nil, groups)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	testCases := []struct {
+		name          string
+		url           string
+		wantResources []any
+	}{
+		{
+			name:          "group_a scopes to its own resource",
+			url:           "/group_a",
+			wantResources: []any{map[string]any{"name": "res1", "uri": "file:///res1"}},
+		},
+		{
+			name:          "group_b scopes to its own resource",
+			url:           "/group_b",
+			wantResources: []any{map[string]any{"name": "res2", "uri": "file:///res2", "description": "Title 2", "mimeType": "application/json"}},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBody := jsonrpc.JSONRPCRequest{Jsonrpc: jsonrpcVersion, Id: "resources-list", Request: jsonrpc.Request{Method: "resources/list"}}
+			reqMarshal, err := json.Marshal(reqBody)
+			if err != nil {
+				t.Fatalf("unexpected error marshaling body: %s", err)
+			}
+			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), nil)
+			if err != nil {
+				t.Fatalf("unexpected error during request: %s", err)
+			}
+			if resp.StatusCode != http.StatusOK {
+				t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, http.StatusOK)
+			}
+			var got map[string]any
+			if err := json.Unmarshal(body, &got); err != nil {
+				t.Fatalf("unexpected error unmarshalling body: %s", err)
+			}
+			want := map[string]any{"jsonrpc": "2.0", "id": "resources-list", "result": map[string]any{"resources": tc.wantResources}}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("unexpected response: got %#v, want %#v", got, want)
+			}
+		})
+	}
+}

@@ -470,6 +470,16 @@ func TestUpdateServer(t *testing.T) {
 	if diff := cmp.Diff(gotTemplate, newResourceTemplates["example-template"]); diff != "" {
 		t.Errorf("error updating server, resource templates (-want +got):\n%s", diff)
 	}
+
+	gotResource, _ = s.PrimitiveMgr.GetResource("example-resource")
+	if diff := cmp.Diff(gotResource, newResources["example-resource"]); diff != "" {
+		t.Errorf("error updating server, resources (-want +got):\n%s", diff)
+	}
+
+	gotTemplate, _ = s.PrimitiveMgr.GetResourceTemplate("example-template")
+	if diff := cmp.Diff(gotTemplate, newResourceTemplates["example-template"]); diff != "" {
+		t.Errorf("error updating server, resource templates (-want +got):\n%s", diff)
+	}
 }
 
 func TestEndpointSecurityAllowedOrigin(t *testing.T) {

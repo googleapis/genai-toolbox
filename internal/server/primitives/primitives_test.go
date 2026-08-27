@@ -48,7 +48,7 @@ func TestUpdateServer(t *testing.T) {
 	}
 	newResources := map[string]resources.Resource{"example-resource": nil}
 	newResourceTemplates := map[string]resources.ResourceTemplate{"example-template": nil}
-	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newResources, newResourceTemplates, newGroups)
+	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newResources,newResourceTemplates, newGroups)
 
 	gotSource, _ := primMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
@@ -88,6 +88,7 @@ func TestUpdateServer(t *testing.T) {
 	if diff := cmp.Diff(gotTemplate, newResourceTemplates["example-template"]); diff != "" {
 		t.Errorf("error updating server, resource templates (-want +got):\n%s", diff)
 	}
+
 	updateSource := map[string]sources.Source{
 		"example-source2": &alloydbpg.Source{
 			Config: alloydbpg.Config{
@@ -97,7 +98,7 @@ func TestUpdateServer(t *testing.T) {
 		},
 	}
 
-	primMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newResources, newResourceTemplates, newGroups)
+	primMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newResources,newResourceTemplates, newGroups)
 	gotSource, _ = primMgr.GetSource("example-source2")
 	if diff := cmp.Diff(gotSource, updateSource["example-source2"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
@@ -109,7 +110,7 @@ func TestUpdateServer(t *testing.T) {
 // fallback to matching and extracting parameters for URI templates.
 func TestPrimitiveManager_GetResourceOrTemplateByURI(t *testing.T) {
 	primMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil, nil, nil)
-
+	
 	resourcesMap := map[string]resources.Resource{
 		"static-res": testutils.NewMockResource("static-res", "file:///mock/resource/1", "", "", "", nil, nil),
 	}
@@ -117,13 +118,14 @@ func TestPrimitiveManager_GetResourceOrTemplateByURI(t *testing.T) {
 		"test-tmpl": testutils.NewMockResourceTemplate("test-tmpl", "file:///logs/{path}", "", "", "", nil),
 	}
 
+	
 	gConfig := group.GroupConfig{
-		Name:                  "",
-		ResourceNames:         []string{"static-res"},
+		Name: "",
+		ResourceNames: []string{"static-res"},
 		ResourceTemplateNames: []string{"test-tmpl"},
 	}
 	groups := map[string]group.Group{"": group.NewGroup(gConfig)}
-
+	
 	primMgr.SetPrimitives(nil, nil, nil, nil, nil, resourcesMap, templatesMap, groups)
 	g, _ := primMgr.GetGroup("")
 

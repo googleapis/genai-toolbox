@@ -55,9 +55,9 @@ type Resource interface {
 	GetTitle() string
 	GetDescription() string
 	GetMimeType() string
+	GetAnnotations() *ResourceAnnotations
 	GetURI() string
 	GetSize() *int64
-	GetAnnotations() *ResourceAnnotations
 	Read(ctx context.Context, params map[string]any) (any, error)
 	ToConfig() ResourceConfig
 }

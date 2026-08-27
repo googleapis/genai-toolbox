@@ -626,6 +626,9 @@ tools:
 
 func float64Ptr(f float64) *float64 { return &f }
 
+
+
+
 func TestParseConfig(t *testing.T) {
 	testutils.RegisterMockResource()
 
@@ -638,6 +641,8 @@ func TestParseConfig(t *testing.T) {
 		}
 		return &cfg, nil
 	})
+
+
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1074,7 +1079,6 @@ func TestParseConfigFailure(t *testing.T) {
 		})
 	}
 }
-
 func TestParseConfigWithAuth(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {

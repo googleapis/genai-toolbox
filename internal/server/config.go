@@ -771,15 +771,17 @@ func UnmarshalYAMLResourceTemplateConfig(ctx context.Context, name string, r map
 			if err != nil || parsed.Scheme == "" {
 				return nil, fmt.Errorf("invalid 'uriTemplate' field for resourceTemplate %q: must be a valid RFC-compliant absolute URI with a scheme", name)
 			}
-
-			// Update the map with the normalized URI
-			r["uriTemplate"] = uriStr
 		}
 	} else {
 		return nil, fmt.Errorf("missing required 'uriTemplate' field for resourceTemplate %q", name)
 	}
 
-	dec, err := util.NewStrictDecoder(r)
+	yamlBytes, err := yaml.Marshal(r)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling resource config for %q: %s", name, err)
+	}
+
+	dec := yaml.NewDecoder(bytes.NewReader(yamlBytes), yaml.UseOrderedMap(), yaml.Strict())
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %s", err)
 	}

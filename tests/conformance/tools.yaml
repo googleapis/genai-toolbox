@@ -49,3 +49,15 @@ arguments:
     description: "First test argument"
   - name: "arg2"
     description: "Second test argument"
+---
+kind: resource
+name: test_text_resource
+type: text
+text: "This is a simple text resource for testing."
+---
+kind: resourceTemplate
+name: test_file_template
+type: file
+uriTemplate: "file:///tests/{path}"
+allowedPaths:
+  - tests

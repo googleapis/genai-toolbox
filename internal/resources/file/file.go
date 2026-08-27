@@ -51,7 +51,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 				Name: name,
 				Type: resourceType,
 			},
-			URI: fmt.Sprintf("file://%s", name),
+			URI: fmt.Sprintf("file://%s", url.PathEscape(name)),
 		},
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
@@ -95,6 +95,7 @@ var allowedExts = map[string]bool{
 	".yaml": true, ".yml": true, ".xml": true, ".sql": true,
 }
 
+// validateExtension ensures the file has an allowed extension.
 func validateExtension(path string) error {
 	ext := strings.ToLower(filepath.Ext(path))
 	if !allowedExts[ext] {
@@ -103,6 +104,7 @@ func validateExtension(path string) error {
 	return nil
 }
 
+// Validate performs specific validation including URI scheme and file size limits.
 func (c *Config) Validate() error {
 	if err := c.ResourceConfigBase.Validate(); err != nil {
 		return err
@@ -253,9 +255,12 @@ type FileResource struct {
 	isRelative      bool
 }
 
+// GetSize returns the dynamically evaluated size of the file.
 func (r *FileResource) GetSize() *int64 {
-	size := r.Size
-	return &size
+	if size, err := r.GetCurrentSize(); err == nil {
+		return &size
+	}
+	return &r.Size // Fallback to the size calculated at initialization
 }
 
 // Read retrieves the file content.
@@ -462,11 +467,17 @@ type FileTemplate struct {
 	resolvedAllowedPaths   []string
 }
 
+// GetName returns the resource template name.
 func (r *FileTemplate) GetName() string        { return r.config.GetName() }
+// GetTitle returns the resource template title.
 func (r *FileTemplate) GetTitle() string       { return r.config.GetTitle() }
+// GetDescription returns the resource template description.
 func (r *FileTemplate) GetDescription() string { return r.config.GetDescription() }
+// GetMimeType returns the MIME type of the resource template.
 func (r *FileTemplate) GetMimeType() string    { return r.config.GetMimeType() }
+// GetURITemplate returns the URI template string.
 func (r *FileTemplate) GetURITemplate() string { return r.config.GetURITemplate() }
+// GetAnnotations returns the resource annotations.
 func (r *FileTemplate) GetAnnotations() *resources.ResourceAnnotations { return r.config.GetAnnotations() }
 
 // Read retrieves the file content using template parameters.

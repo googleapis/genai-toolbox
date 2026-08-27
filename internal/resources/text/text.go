@@ -17,6 +17,7 @@ package text
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
@@ -38,7 +39,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 				Type:     resourceType,
 				MimeType: "text/plain",
 			},
-			URI:      fmt.Sprintf("text://%s", name),
+			URI: fmt.Sprintf("text://%s", url.PathEscape(name)),
 		},
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
@@ -50,15 +51,17 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 // Config represents the uninitialized textual resource configuration from YAML.
 type Config struct {
 	resources.ResourceConfigBase `yaml:",inline"`
-	Text                 string `yaml:"text" validate:"required"`
+	Text                         string `yaml:"text" validate:"required"`
 }
 
 var _ resources.ResourceConfig = &Config{}
 
+// ResourceConfigType returns the resource type identifier.
 func (c *Config) ResourceConfigType() string {
 	return resourceType
 }
 
+// Initialize computes the size of the text and returns an initialized textual resource.
 func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 	size := int64(len(c.Text))
 
@@ -68,20 +71,23 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 // Resource represents the initialized textual resource that returns plain text payloads.
 type Resource struct {
 	Config
-	Size   int64
+	Size int64
 }
 
 var _ resources.Resource = &Resource{}
 
+// GetSize returns the pre-computed size of the text content.
 func (r *Resource) GetSize() *int64 {
 	size := r.Size
 	return &size
 }
 
+// Read retrieves the static text content.
 func (r *Resource) Read(ctx context.Context, params map[string]any) (any, error) {
 	return r.Text, nil
 }
 
+// ToConfig returns the underlying uninitialized configuration.
 func (r *Resource) ToConfig() resources.ResourceConfig {
 	return &r.Config
 }
