@@ -178,6 +178,7 @@ func (t MockTool) HasSecureParams() bool {
 	}
 	return false
 }
+
 // MockPrompt is used to mock prompts in tests
 type MockPrompt struct {
 	Name        string
