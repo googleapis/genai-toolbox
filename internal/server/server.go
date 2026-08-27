@@ -219,11 +219,6 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d prompts: %s", len(promptsMap), strings.Join(promptNames, ", ")))
 
-	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, instrumentation, l)
-	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, err
-	}
-
 	// initialize and validate the resources from configs
 	resourcesMap := make(map[string]resources.Resource)
 	for name, rc := range cfg.ResourceConfigs {
@@ -286,6 +281,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d resource templates: %s", len(resourceTemplatesMap), strings.Join(resourceTemplateNames, ", ")))
 
+	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, instrumentation, l)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, nil, err
+	}
+
 	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groupsMap, nil
 }
 
@@ -323,7 +323,9 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 		promptsMap[name] = p
 	}
 
-	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, instrumentation, l)
+	resourcesMap := make(map[string]resources.Resource)
+	resourceTemplatesMap := make(map[string]resources.ResourceTemplate)
+	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, instrumentation, l)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -382,7 +384,7 @@ func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[strin
 // then initializes and validates every group. The default group's derived
 // toolset/promptset views preserve the legacy behavior of returning everything
 // for clients that connect without naming a collection.
-func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]group.Group, error) {
+func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, resourcesMap map[string]resources.Resource, resourceTemplatesMap map[string]resources.ResourceTemplate, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]group.Group, error) {
 	allToolNames := make([]string, 0, len(toolsMap))
 	for name := range toolsMap {
 		allToolNames = append(allToolNames, name)
@@ -393,6 +395,17 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 		allPromptNames = append(allPromptNames, name)
 	}
 	slices.Sort(allPromptNames)
+
+	allResourceNames := make([]string, 0, len(resourcesMap))
+	for name := range resourcesMap {
+		allResourceNames = append(allResourceNames, name)
+	}
+	slices.Sort(allResourceNames)
+	allResourceTemplateNames := make([]string, 0, len(resourceTemplatesMap))
+	for name := range resourceTemplatesMap {
+		allResourceTemplateNames = append(allResourceTemplateNames, name)
+	}
+	slices.Sort(allResourceTemplateNames)
 
 	// Legacy `kind: toolset` configs are already folded into cfg.GroupConfigs at
 	// unmarshal. Copy them over, then seed the default nameless group with all tools
@@ -408,7 +421,7 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 		}
 		groupConfigs[name] = gc
 	}
-	groupConfigs[""] = group.GroupConfig{Name: "", Description: defaultDescription, ToolNames: allToolNames, PromptNames: allPromptNames}
+	groupConfigs[""] = group.GroupConfig{Name: "", Description: defaultDescription, ToolNames: allToolNames, PromptNames: allPromptNames, ResourceNames: allResourceNames, ResourceTemplateNames: allResourceTemplateNames}
 
 	groupsMap := make(map[string]group.Group)
 	for name, gc := range groupConfigs {
@@ -431,7 +444,7 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 				trace.WithAttributes(attribute.String("group.name", name)),
 			)
 			defer span.End()
-			g, err := gc.Initialize(toolsMap, promptsMap)
+			g, err := gc.Initialize(toolsMap, promptsMap, resourcesMap, resourceTemplatesMap)
 			if err != nil {
 				return group.Group{}, fmt.Errorf("unable to initialize group %q: %w", name, err)
 			}

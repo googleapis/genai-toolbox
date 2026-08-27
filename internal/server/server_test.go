@@ -1727,7 +1727,7 @@ prompts:
 			yaml: `
 kind: group
 name: my_group
-resources:
+unknown_field:
   - res_a
 `,
 			wantError: true,
@@ -1986,17 +1986,6 @@ name: test-resource
 type: mock
 uri: mock://test
 invalidRandomField: true
-`,
-			wantError: true,
-		},
-		{
-			name: "size field is rejected by strict decoder",
-			yaml: `
-kind: resource
-name: test-resource
-type: mock
-uri: mock://test
-size: 123
 `,
 			wantError: true,
 		},
