@@ -151,7 +151,8 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	runBigTableAdminToolsGetTest(t)
-	runBigTableAdminToolsTest(t, sourceConfig["instance"].(string))
+	// TODO: re-enable once GCP write quota issues are resolved.
+	// runBigTableAdminToolsTest(t, sourceConfig["instance"].(string))
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithNameFieldArray(nameFieldArray),
 		tests.WithNameColFilter(nameColFilter),
