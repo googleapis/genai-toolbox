@@ -29,6 +29,17 @@ steps:
     args:
       - -c
       - |
+        # Cloud Build has no label filter, so the opt-in gate lives here. It
+        # covers the maintainer pull requests that build without a /gcbrun too.
+        # Empty _PR_NUMBER is a scheduled build, which is ungated.
+        if [ -n "$_PR_NUMBER" ] &&
+           ! curl -sfL "https://api.github.com/repos/googleapis/mcp-toolbox/issues/$_PR_NUMBER/labels" |
+             grep -q '"name": *"evals: run"'; then
+          echo "pull request #$_PR_NUMBER is not labelled 'evals: run'; skipping"
+          touch /workspace/skip-evals
+          exit 0
+        fi
+
         # Blobless: --name-only needs tree entries, not file contents.
         git fetch --unshallow --filter=blob:none || true
         git fetch --filter=blob:none origin main > /dev/null 2>&1

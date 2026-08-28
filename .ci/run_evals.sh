@@ -23,11 +23,20 @@
 
 set -euo pipefail
 
+# Both early exits stay above the trap, which needs TOOLBOX_PREBUILT.
+
+# detect-changes writes this when the pull request lacks the 'evals: run' label.
+if [[ -f /workspace/skip-evals ]]; then
+  echo "no 'evals: run' label; skipping"
+  [[ "${1:-}" == "--check-any" ]] && exit 1
+  exit 0
+fi
+
 # Paths that put every step in scope.
 common_pattern='(^|/)evals/(run_configs|model_configs)/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
 
 # --check-any: true when any step's evals would run, so build-toolbox can skip
-# the compile. Must stay above the trap, which needs TOOLBOX_PREBUILT.
+# the compile.
 if [[ "${1:-}" == "--check-any" ]]; then
   [[ -s /workspace/changed_files.txt ]] || exit 0
   grep -qE "${common_pattern}" /workspace/changed_files.txt && exit 0
