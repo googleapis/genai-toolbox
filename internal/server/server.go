@@ -323,8 +323,25 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 		promptsMap[name] = p
 	}
 
+	// Resources and templates are initialized so group validation succeeds offline.
 	resourcesMap := make(map[string]resources.Resource)
+	for name, rc := range cfg.ResourceConfigs {
+		r, err := rc.Initialize(ctx)
+		if err != nil {
+			return nil, nil, fmt.Errorf("unable to initialize resource %q: %w", name, err)
+		}
+		resourcesMap[name] = r
+	}
+
 	resourceTemplatesMap := make(map[string]resources.ResourceTemplate)
+	for name, rtc := range cfg.ResourceTemplateConfigs {
+		rt, err := rtc.Initialize(ctx)
+		if err != nil {
+			return nil, nil, fmt.Errorf("unable to initialize resource template %q: %w", name, err)
+		}
+		resourceTemplatesMap[name] = rt
+	}
+
 	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, instrumentation, l)
 	if err != nil {
 		return nil, nil, err
