@@ -235,7 +235,7 @@ func RegisterMockResource() {
 // MockResourceConfig is a mock implementation of resources.ResourceConfig
 type MockResourceConfig struct {
 	resources.ResourceConfigBase `yaml:",inline"`
-	Size                         *int64
+	Size *int64 `yaml:"-"`
 }
 
 func (m *MockResourceConfig) ResourceConfigType() string {

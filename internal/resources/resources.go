@@ -18,10 +18,12 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 
 	"github.com/goccy/go-yaml"
+	"github.com/yosida95/uritemplate/v3"
 )
 
 type contextKey string
@@ -70,8 +72,8 @@ type ResourceAnnotations struct {
 
 // ConfigBase contains the common fields for all resource and template configurations.
 type ConfigBase struct {
-	Name        string               `yaml:"name"`
-	Type        string               `yaml:"type"`
+	Name        string               `yaml:"name" validate:"required"`
+	Type        string               `yaml:"type" validate:"required"`
 	Description string               `yaml:"description,omitempty"`
 	Title       string               `yaml:"title,omitempty"`
 	MimeType    string               `yaml:"mimeType,omitempty"`
@@ -87,7 +89,7 @@ func (c ConfigBase) GetAnnotations() *ResourceAnnotations { return c.Annotations
 // ResourceConfigBase contains the fields for a specific resource configuration.
 type ResourceConfigBase struct {
 	ConfigBase `yaml:",inline"`
-	URI        string `yaml:"uri,omitempty"`
+	URI        string `yaml:"uri,omitempty" validate:"required,uri"`
 }
 
 // GetURI returns the URI of the resource configuration.
@@ -258,10 +260,28 @@ func (c *ResourceTemplateConfigBase) Validate() error {
 	if c.URITemplate == "" {
 		return fmt.Errorf("missing required 'uriTemplate' field for resource template %q", c.Name)
 	}
-	parsed, err := url.Parse(strings.ReplaceAll(c.URITemplate, "{path}", "path"))
+
+	// Validate RFC 6570 compliance
+	tmpl, err := uritemplate.New(c.URITemplate)
+	if err != nil {
+		return fmt.Errorf("invalid RFC 6570 uriTemplate %q: %w", c.Name, err)
+	}
+
+	// Enforce only 'path' is allowed as a variable
+	for _, varName := range tmpl.Varnames() {
+		if varName != "path" {
+			return fmt.Errorf("invalid uriTemplate %q: only the 'path' variable is supported (found %q)", c.Name, varName)
+		}
+	}
+
+	// Strip all {variables} to validate the base URI structure natively
+	re := regexp.MustCompile(`\{[^}]+\}`)
+	parseableURI := re.ReplaceAllString(c.URITemplate, "dummy")
+	parsed, err := url.Parse(parseableURI)
 	if err != nil || parsed.Scheme == "" {
 		return fmt.Errorf("invalid 'uriTemplate' field for resource template %q: must be a valid RFC-compliant absolute URI with a scheme", c.Name)
 	}
+
 	return nil
 }
 

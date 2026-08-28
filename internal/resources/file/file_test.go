@@ -33,7 +33,6 @@ import (
 
 const defaultMaxFileSize = 5 * 1024 * 1024
 
-
 // TestFileResource_Validation verifies that the file resource correctly validates
 // configurations at boot and runtime, blocking invalid paths, missing fields,
 // negative size limits, directory evasions, and non-allowed file extensions.
@@ -74,6 +73,12 @@ func TestFileResource_Validation(t *testing.T) {
 			name:       "path traversal",
 			yamlStr:    fmt.Sprintf("type: file\npath: %s", "../secrets.txt"),
 			wantErrMsg: "relative path \"../secrets.txt\" is unsafe",
+		},
+		{
+			name:       "missing path",
+			yamlStr:    "type: file",
+			wantErrMsg: "'required' tag",
+			failDecode: true,
 		},
 		{
 			name:       "invalid extension",
@@ -340,46 +345,211 @@ func TestFileResource_TOCTOU(t *testing.T) {
 	}
 }
 
-// TestFileResource_Metadata verifies that dynamic resource metadata, such as
-// MimeType and LastModified timestamps, are correctly computed and populated
-// when retrieving resource configurations.
-func TestFileResource_Metadata(t *testing.T) {
-	tmpDir := t.TempDir()
-	filePath := filepath.Join(tmpDir, "notes.md")
-	if err := os.WriteFile(filePath, []byte("hello"), 0644); err != nil {
-		t.Fatal(err)
+// TestFileResource_EdgeCases consolidates time-based state changes and
+// lifecycle edge cases (like symlink evasion and dynamic metadata updates)
+func TestFileResource_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name         string
+		setup        func(t *testing.T, tmpDir string) (yamlStr string, ctx context.Context)
+		mutate       func(t *testing.T, tmpDir string)
+		wantErrInit  string
+		wantErrRead  string
+		validateRead func(t *testing.T, data any, res resources.Resource)
+	}{
+		{
+			name: "retrieval of basic metadata and properties",
+			setup: func(t *testing.T, tmpDir string) (string, context.Context) {
+				filePath := filepath.Join(tmpDir, "notes.md")
+				if err := os.WriteFile(filePath, []byte("hello"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				return fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath)), context.Background()
+			},
+			validateRead: func(t *testing.T, data any, res resources.Resource) {
+				mimeType := res.GetMimeType()
+				if !strings.HasPrefix(mimeType, "text/markdown") && !strings.HasPrefix(mimeType, "text/plain") && mimeType != "" {
+					t.Errorf("expected reasonable MimeType, got: %v", mimeType)
+				}
+				anns := res.GetAnnotations()
+				if anns == nil || anns.LastModified == "" {
+					t.Errorf("expected LastModified annotation to be set")
+				} else if _, err := time.Parse(time.RFC3339, anns.LastModified); err != nil {
+					t.Errorf("expected valid RFC3339 LastModified, got %q", anns.LastModified)
+				}
+			},
+		},
+		{
+			name: "dynamic metadata updates reflect underlying file changes",
+			setup: func(t *testing.T, tmpDir string) (string, context.Context) {
+				filePath := filepath.Join(tmpDir, "dynamic.txt")
+				if err := os.WriteFile(filePath, []byte("1234567890"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				return fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath)), context.Background()
+			},
+			mutate: func(t *testing.T, tmpDir string) {
+				filePath := filepath.Join(tmpDir, "dynamic.txt")
+				time.Sleep(10 * time.Millisecond)
+				f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if _, err := f.Write([]byte("12345")); err != nil {
+					t.Fatal(err)
+				}
+				f.Close()
+			},
+			validateRead: func(t *testing.T, data any, res resources.Resource) {
+				// Validate that metadata updated after mutate
+				updatedAnns := res.GetAnnotations()
+				if _, err := time.Parse(time.RFC3339, updatedAnns.LastModified); err != nil {
+					t.Errorf("Invalid RFC3339 LastModified: %q", updatedAnns.LastModified)
+				}
+			},
+		},
+		{
+			name: "symlinks escaping the implicit base directory are blocked",
+			setup: func(t *testing.T, tmpDir string) (string, context.Context) {
+				outsideTmp := t.TempDir()
+				secretFile := filepath.Join(outsideTmp, "secret.txt")
+				if err := os.WriteFile(secretFile, []byte("secret"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				symlinkPath := filepath.Join(tmpDir, "test_symlink_escape.txt")
+				if err := os.Symlink(secretFile, symlinkPath); err != nil {
+					t.Fatalf("failed to create symlink: %v", err)
+				}
+
+				// To test implicit base directory, we MUST change working directory during setup
+				oldWD, _ := os.Getwd()
+				t.Cleanup(func() { os.Chdir(oldWD) })
+				os.Chdir(tmpDir)
+
+				return "type: file\npath: test_symlink_escape.txt", context.Background()
+			},
+			wantErrInit: "escapes base directory",
+		},
+		{
+			name: "truncation respects utf-8 rune boundaries",
+			setup: func(t *testing.T, tmpDir string) (string, context.Context) {
+				filePath := filepath.Join(tmpDir, "utf8.txt")
+				if err := os.WriteFile(filePath, []byte("Hello 🚀🚀"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				return fmt.Sprintf("type: file\npath: %s\nmax_size: 8", filepath.ToSlash(filePath)), context.Background()
+			},
+			validateRead: func(t *testing.T, data any, res resources.Resource) {
+				strData := data.(string)
+				if !utf8.ValidString(strData) {
+					t.Errorf("Truncated string contains invalid UTF-8 sequences!")
+				}
+				expectedPrefix := "Hello "
+				if !strings.HasPrefix(strData, expectedPrefix) {
+					t.Errorf("Expected prefix %q, got %q", expectedPrefix, strData)
+				}
+				if strings.Contains(strData, "\ufffd") {
+					t.Errorf("String contains unicode replacement character, meaning it wasn't safely truncated.")
+				}
+			},
+		},
+		{
+			name: "read fails if safe file is replaced by symlink evasion",
+			setup: func(t *testing.T, tmpDir string) (string, context.Context) {
+				baseDir := filepath.Join(tmpDir, "workspace")
+				if err := os.MkdirAll(baseDir, 0755); err != nil {
+					t.Fatal(err)
+				}
+				ctx := context.WithValue(context.Background(), resources.BaseDirKey, baseDir)
+				return "type: file\npath: delayed.txt", ctx
+			},
+			mutate: func(t *testing.T, tmpDir string) {
+				secretFile := filepath.Join(tmpDir, "secret.txt")
+				if err := os.WriteFile(secretFile, []byte("super secret password"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				baseDir := filepath.Join(tmpDir, "workspace")
+				delayedPath := filepath.Join(baseDir, "delayed.txt")
+				if err := os.Symlink(secretFile, delayedPath); err != nil {
+					t.Fatalf("failed to create delayed symlink: %v", err)
+				}
+			},
+			wantErrRead: "security violation",
+		},
+		{
+			name:        "read fails if file changes to non-regular type (directory)",
+			wantErrRead: "security violation",
+			setup: func(t *testing.T, tmpDir string) (string, context.Context) {
+				filePath := filepath.Join(tmpDir, "test.txt")
+				if err := os.WriteFile(filePath, []byte("some content"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				return fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath)), context.Background()
+			},
+			mutate: func(t *testing.T, tmpDir string) {
+				filePath := filepath.Join(tmpDir, "test.txt")
+				os.Remove(filePath)
+				os.Mkdir(filePath, 0755)
+			},
+			validateRead: func(t *testing.T, data any, res resources.Resource) {
+				config := res.ToConfig().(*file.Config)
+				if config.Annotations != nil && config.Annotations.LastModified != "" {
+					t.Errorf("Expected LastModified to be empty for non-regular file, got %q", config.Annotations.LastModified)
+				}
+			},
+		},
 	}
 
-	yamlStr := fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath))
-	ctx := context.Background()
-	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
-	cfg, _ := resources.DecodeConfig(ctx, "file", "notes", decoder)
-	res, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("Initialize failed: %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			yamlStr, ctx := tt.setup(t, tmpDir)
 
-	mimeType := res.GetMimeType()
+			decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
+			cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
+			if err != nil {
+				t.Fatalf("DecodeConfig failed: %v", err)
+			}
 
-	if !strings.HasPrefix(mimeType, "text/markdown") && !strings.HasPrefix(mimeType, "text/plain") && mimeType != "" {
-		t.Errorf("expected reasonable MimeType, got: %v", mimeType)
-	}
+			res, err := cfg.Initialize(ctx)
+			if tt.wantErrInit != "" {
+				if err == nil {
+					t.Fatalf("expected Initialize error containing %q, but got nil", tt.wantErrInit)
+				}
+				if !strings.Contains(err.Error(), tt.wantErrInit) {
+					t.Errorf("expected Initialize error containing %q, got: %v", tt.wantErrInit, err)
+				}
+				return // Initialization failed as expected, we are done
+			}
+			if err != nil {
+				t.Fatalf("Initialize failed unexpectedly: %v", err)
+			}
 
-	anns := res.GetAnnotations()
-	if anns == nil || anns.LastModified == "" {
-		t.Errorf("expected LastModified annotation to be set")
-	} else {
-		_, err := time.Parse(time.RFC3339, anns.LastModified)
-		if err != nil {
-			t.Errorf("expected valid RFC3339 LastModified, got %q", anns.LastModified)
-		}
+			if tt.mutate != nil {
+				tt.mutate(t, tmpDir)
+			}
+
+			data, err := res.Read(ctx, nil)
+			if tt.wantErrRead != "" {
+				if err == nil {
+					t.Fatalf("expected Read error containing %q, but got nil", tt.wantErrRead)
+				}
+				if !strings.Contains(err.Error(), tt.wantErrRead) {
+					t.Errorf("expected Read error containing %q, got: %v", tt.wantErrRead, err)
+				}
+				return // Read failed as expected, we are done
+			}
+			if err != nil {
+				t.Fatalf("Read failed unexpectedly: %v", err)
+			}
+
+			if tt.validateRead != nil {
+				tt.validateRead(t, data, res)
+			}
+		})
 	}
 }
 
-// TestFileResource_NonExistentFileAtBoot ensures that if a resource file does
-// not yet exist during server boot (e.g., dynamically generated build outputs),
-// the resource cleanly initializes without crashing, and begins serving once created.
-func TestFileResource_NonExistentFileAtBoot(t *testing.T) {
+func TestFileResource_InitializationSucceedsForMissingFilesDelayedExistence(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "delayed.txt")
 
@@ -400,6 +570,9 @@ func TestFileResource_NonExistentFileAtBoot(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Expected Read to fail for non-existent file")
 	}
+	if !strings.Contains(err.Error(), "no such file or directory") {
+		t.Errorf("expected no such file or directory, got %v", err)
+	}
 
 	if err := os.WriteFile(filePath, []byte("it exists now"), 0644); err != nil {
 		t.Fatal(err)
@@ -413,233 +586,3 @@ func TestFileResource_NonExistentFileAtBoot(t *testing.T) {
 		t.Errorf("Expected 'it exists now', got %q", data)
 	}
 }
-
-// TestFileResource_DynamicMetadata ensures that the resource configuration
-// (specifically its size and modification timestamp) updates dynamically
-// at runtime upon subsequent MCP list or read requests.
-func TestFileResource_DynamicMetadata(t *testing.T) {
-	tmpDir := t.TempDir()
-	filePath := filepath.Join(tmpDir, "dynamic.txt")
-
-	if err := os.WriteFile(filePath, []byte("1234567890"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	yamlStr := fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath))
-	ctx := context.Background()
-	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
-	cfg, _ := resources.DecodeConfig(ctx, "file", "dynamic", decoder)
-	res, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("Initialize failed: %v", err)
-	}
-
-	fileCfg := res.ToConfig().(*file.Config)
-	initialTimestamp := fileCfg.Annotations.LastModified
-
-	time.Sleep(10 * time.Millisecond)
-
-	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := f.Write([]byte("12345")); err != nil {
-		t.Fatal(err)
-	}
-	f.Close()
-
-	updatedAnns := res.GetAnnotations()
-	if updatedAnns.LastModified == initialTimestamp {
-		_, err := time.Parse(time.RFC3339, updatedAnns.LastModified)
-		if err != nil {
-			t.Errorf("Invalid RFC3339 LastModified: %q", updatedAnns.LastModified)
-		}
-	}
-}
-
-// TestFileResource_NoBaseDirContext tests the fallback boundary enforcement.
-// If the server initializes a resource without an explicitly configured base
-// directory, it defaults to the current working directory and successfully
-// blocks any relative traversals or local symlink escapes.
-func TestFileResource_NoBaseDirContext(t *testing.T) {
-	baseDirTmp := t.TempDir()
-	outsideTmp := t.TempDir()
-
-	oldWD, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Chdir(baseDirTmp); err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err := os.Chdir(oldWD); err != nil {
-			t.Error(err)
-		}
-	}()
-
-	secretFile := filepath.Join(outsideTmp, "secret.txt")
-	if err := os.WriteFile(secretFile, []byte("secret"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	symlinkPath := "test_symlink_escape.txt"
-	os.Remove(symlinkPath)
-	if err := os.Symlink(secretFile, symlinkPath); err != nil {
-		t.Fatalf("failed to create symlink: %v", err)
-	}
-
-	yamlStr := fmt.Sprintf("type: file\npath: %s", symlinkPath)
-	ctx := context.Background()
-	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
-	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
-	if err != nil {
-		t.Fatalf("DecodeConfig failed: %v", err)
-	}
-
-	_, err = cfg.Initialize(ctx)
-	if err == nil {
-		t.Fatalf("expected Initialize to fail due to symlink base escape, but it succeeded")
-	}
-	if !strings.Contains(err.Error(), "escapes base directory") {
-		t.Errorf("expected escapes base directory error, got: %v", err)
-	}
-}
-
-// TestFileResource_UTF8Truncation verifies that when truncation occurs mid-byte
-// on a multi-byte UTF-8 character, the implementation securely steps back to a
-// valid rune boundary, preventing corrupted payloads from crashing decoders.
-func TestFileResource_UTF8Truncation(t *testing.T) {
-	tmpDir := t.TempDir()
-	filePath := filepath.Join(tmpDir, "utf8.txt")
-	content := []byte("Hello 🚀🚀")
-	if err := os.WriteFile(filePath, content, 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	yamlStr := fmt.Sprintf("type: file\npath: %s\nmax_size: 8", filepath.ToSlash(filePath))
-	ctx := context.Background()
-	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
-	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
-	if err != nil {
-		t.Fatalf("DecodeConfig failed: %v", err)
-	}
-
-	res, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("Initialize failed: %v", err)
-	}
-
-	data, err := res.Read(ctx, nil)
-	if err != nil {
-		t.Fatalf("Read failed: %v", err)
-	}
-
-	strData := data.(string)
-
-	if !utf8.ValidString(strData) {
-		t.Errorf("Truncated string contains invalid UTF-8 sequences!")
-	}
-
-	expectedPrefix := "Hello "
-	if !strings.HasPrefix(strData, expectedPrefix) {
-		t.Errorf("Expected prefix %q, got %q", expectedPrefix, strData)
-	}
-	if strings.Contains(strData, "\ufffd") {
-		t.Errorf("String contains unicode replacement character, meaning it wasn't safely truncated.")
-	}
-}
-
-// TestFileResource_DelayedSymlinkEscape verifies that an attacker cannot bypass
-// base directory sandboxing by intentionally delaying the creation of a target
-// file and subsequently linking it outside the workspace boundary.
-func TestFileResource_DelayedSymlinkEscape(t *testing.T) {
-	tmpDir := t.TempDir()
-	secretFile := filepath.Join(tmpDir, "secret.txt")
-	if err := os.WriteFile(secretFile, []byte("super secret password"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	baseDir := filepath.Join(tmpDir, "workspace")
-	if err := os.MkdirAll(baseDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	yamlStr := "type: file\npath: delayed.txt"
-	ctx := context.WithValue(context.Background(), resources.BaseDirKey, baseDir)
-	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
-	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
-	if err != nil {
-		t.Fatalf("DecodeConfig failed: %v", err)
-	}
-
-	res, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("Initialize failed: %v", err)
-	}
-
-	delayedPath := filepath.Join(baseDir, "delayed.txt")
-	if err := os.Symlink(secretFile, delayedPath); err != nil {
-		t.Fatalf("failed to create delayed symlink: %v", err)
-	}
-
-	_, err = res.Read(ctx, nil)
-	if err == nil {
-		t.Fatalf("expected Read to fail due to delayed symlink base escape, but it succeeded")
-	}
-	if !strings.Contains(err.Error(), "security violation") {
-		t.Errorf("expected security violation error, got: %v", err)
-	}
-}
-
-// TestFileResource_ToConfigNonRegularFile verifies that ToConfig does not
-// leak metadata (size and modification time) if the underlying target file
-// is swapped with a non-regular file (like a directory) post-initialization.
-func TestFileResource_ToConfigNonRegularFile(t *testing.T) {
-	tmpDir := t.TempDir()
-	filePath := filepath.Join(tmpDir, "test.txt")
-	if err := os.WriteFile(filePath, []byte("some content"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	yamlStr := fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath))
-	ctx := context.Background()
-	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
-	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
-	if err != nil {
-		t.Fatalf("DecodeConfig failed: %v", err)
-	}
-
-	res, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("Initialize failed: %v", err)
-	}
-
-	// Swap the valid file with a directory
-	if err := os.Remove(filePath); err != nil {
-		t.Fatalf("failed to remove file: %v", err)
-	}
-	if err := os.Mkdir(filePath, 0755); err != nil {
-		t.Fatalf("failed to create directory in place of file: %v", err)
-	}
-
-	config := res.ToConfig().(*file.Config)
-	if config.Annotations != nil && config.Annotations.LastModified != "" {
-		t.Errorf("Expected LastModified to be empty for non-regular file, got %q", config.Annotations.LastModified)
-	}
-}
-
-// TestFileResource_ToConfigAndType verifies that the file resource
-// and its config correctly return their type and can be converted back to config.
-func TestFileResource_ToConfigAndType(t *testing.T) {
-	cfg := file.Config{}
-	if cfg.ResourceConfigType() != "file" {
-		t.Errorf("expected ResourceConfigType to be 'file', got %q", cfg.ResourceConfigType())
-	}
-
-	res := file.FileResource{Config: cfg}
-	if res.ToConfig() == nil {
-		t.Errorf("expected ToConfig to return a valid config")
-	}
-}
-

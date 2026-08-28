@@ -16,10 +16,7 @@ package primitives
 
 import (
 	"cmp"
-	"fmt"
-	"regexp"
 	"slices"
-	"strings"
 	"sync"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -135,15 +132,6 @@ func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, a
 	r.groups = groupsMap
 }
 
-func (r *PrimitiveManager) GetSourcesMap() map[string]sources.Source {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copiedMap := make(map[string]sources.Source, len(r.sources))
-	for k, v := range r.sources {
-		copiedMap[k] = v
-	}
-	return copiedMap
-}
 
 func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
 	r.mu.RLock()
@@ -174,17 +162,6 @@ func (r *PrimitiveManager) GroupsList() []group.Group {
 	return groupsList
 }
 
-// GetResourceTemplatesMap returns a copy of the resource templates map.
-func (r *PrimitiveManager) GetResourceTemplatesMap() map[string]resources.ResourceTemplate {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	copied := make(map[string]resources.ResourceTemplate)
-	for name, rt := range r.resourceTemplates {
-		copied[name] = rt
-	}
-	return copied
-}
-
 // GetResourceTemplate returns a specific resource template by name.
 func (r *PrimitiveManager) GetResourceTemplate(name string) (resources.ResourceTemplate, bool) {
 	r.mu.RLock()
@@ -193,34 +170,3 @@ func (r *PrimitiveManager) GetResourceTemplate(name string) (resources.ResourceT
 	return rt, exists
 }
 
-// GetResourceOrTemplateByURI looks up a resource by exact URI match.
-// If not found, it attempts to match against resource templates (e.g. file://{path}).
-// Returns the matched resource OR template, plus extracted params if a template was matched.
-func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string) (resources.Resource, resources.ResourceTemplate, map[string]any, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	for _, res := range r.resources {
-		if res.GetURI() == uri {
-			return res, nil, nil, nil
-		}
-	}
-
-	// Template matching for {path} anywhere in the URI
-	for _, rt := range r.resourceTemplates {
-		tmpl := rt.GetURITemplate()
-		if strings.Contains(tmpl, "{path}") {
-			regexPattern := regexp.QuoteMeta(tmpl)
-			regexPattern = strings.ReplaceAll(regexPattern, "\\{path\\}", "(.*)")
-			re, err := regexp.Compile("^" + regexPattern + "$")
-			if err != nil {
-				continue
-			}
-			matches := re.FindStringSubmatch(uri)
-			if len(matches) == 2 {
-				return nil, rt, map[string]any{"path": matches[1]}, nil
-			}
-		}
-	}
-	return nil, nil, nil, fmt.Errorf("no resource or template found for URI: %s", uri)
-}

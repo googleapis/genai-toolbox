@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"regexp"
 	"strings"
 
@@ -37,7 +36,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
-	"github.com/yosida95/uritemplate/v3"
 )
 
 type ServerConfig struct {
@@ -632,14 +630,7 @@ func UnmarshalYAMLGroupConfig(ctx context.Context, name string, r map[string]any
 func UnmarshalYAMLPromptConfig(ctx context.Context, name string, r map[string]any) (prompts.PromptConfig, error) {
 	// Look for the 'type' field. If it's not present, typeStr will be an
 	// empty string, which prompts.DecodeConfig will correctly default to "custom".
-	var resourceType string
-	if typeVal, ok := r["type"]; ok {
-		var isString bool
-		resourceType, isString = typeVal.(string)
-		if !isString {
-			return nil, fmt.Errorf("invalid 'type' field for prompt %q (must be a string)", name)
-		}
-	}
+	resourceType, _ := r["type"].(string)
 	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %s", err)
@@ -654,16 +645,9 @@ func UnmarshalYAMLPromptConfig(ctx context.Context, name string, r map[string]an
 }
 
 func UnmarshalYAMLResourceConfig(ctx context.Context, name string, r map[string]any) (resources.ResourceConfig, error) {
-	var resourceType string
-	if typeVal, ok := r["type"]; ok {
-		var isString bool
-		resourceType, isString = typeVal.(string)
-		if !isString {
-			return nil, fmt.Errorf("invalid 'type' field for resource %q (must be a string)", name)
-		}
-
-	} else {
-		return nil, fmt.Errorf("missing required 'type' field for resource %q", name)
+	resourceType, ok := r["type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
 
 	dec, err := util.NewStrictDecoder(r)
@@ -736,47 +720,9 @@ func keyToken(body ast.Node, key string) *token.Token {
 }
 
 func UnmarshalYAMLResourceTemplateConfig(ctx context.Context, name string, r map[string]any) (resources.ResourceTemplateConfig, error) {
-	var resourceType string
-	if typeVal, ok := r["type"]; ok {
-		var isString bool
-		resourceType, isString = typeVal.(string)
-		if !isString {
-			return nil, fmt.Errorf("invalid 'type' field for resourceTemplate %q (must be a string)", name)
-		}
-	} else {
-		return nil, fmt.Errorf("missing required 'type' field for resourceTemplate %q", name)
-	}
-
-	if uriVal, ok := r["uriTemplate"]; ok {
-		if uriStr, isString := uriVal.(string); !isString {
-			return nil, fmt.Errorf("invalid 'uriTemplate' field for resourceTemplate %q (must be a string)", name)
-		} else {
-			// Validate RFC 6570 compliance
-			tmpl, err := uritemplate.New(uriStr)
-			if err != nil {
-				return nil, fmt.Errorf("invalid RFC 6570 uriTemplate %q: %w", name, err)
-			}
-
-			// Enforce only 'path' is allowed as a variable
-			for _, varName := range tmpl.Varnames() {
-				if varName != "path" {
-					return nil, fmt.Errorf("invalid uriTemplate %q: only the 'path' variable is supported (found %q)", name, varName)
-				}
-			}
-
-			// Strip all {variables} to validate the base URI structure natively
-			re := regexp.MustCompile(`\{[^}]+\}`)
-			parseableURI := re.ReplaceAllString(uriStr, "dummy")
-			parsed, err := url.Parse(parseableURI)
-			if err != nil || parsed.Scheme == "" {
-				return nil, fmt.Errorf("invalid 'uriTemplate' field for resourceTemplate %q: must be a valid RFC-compliant absolute URI with a scheme", name)
-			}
-
-			// Update the map with the normalized URI
-			r["uriTemplate"] = uriStr
-		}
-	} else {
-		return nil, fmt.Errorf("missing required 'uriTemplate' field for resourceTemplate %q", name)
+	resourceType, ok := r["type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
 
 	dec, err := util.NewStrictDecoder(r)
