@@ -2029,8 +2029,3 @@ func TestMcpPromptScopingByGroup(t *testing.T) {
 		})
 	}
 }
-
-// TestMcpResourceScopingByGroup is an end-to-end HTTP test that a `resources/list`
-// request sent to a group's MCP endpoint returns only the resources belonging to
-// that group. It stands up the real server with two groups (each scoped to a
-// different resource) and asserts each route surfaces just its own resource.

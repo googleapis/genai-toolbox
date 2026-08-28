@@ -2004,6 +2004,18 @@ invalidRandomField: true
 			wantError: true,
 		},
 		{
+			name: "size field is rejected by strict decoder",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: mock://test
+size: 100
+`,
+			wantError:   true,
+			errContains: "unknown field \"size\"",
+		},
+		{
 			name: "valid mock resource parses successfully",
 			yaml: `
 kind: resource
