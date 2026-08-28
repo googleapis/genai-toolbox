@@ -187,14 +187,13 @@ Evals are not part of the pull request gate — they call real models against li
 databases, so they run on a schedule and otherwise on request.
 
 Apply the `evals: run` label to a PR that changes a prebuilt config, its
-evalset, or the eval CI. Only the configs that PR touched are evaluated. The
-label is removed once the build starts, so apply it again to re-run after a new
-commit.
+evalset, or the eval CI, then comment `/gcbrun` to start a build. Only the
+configs that PR touched are evaluated. The label stays on, so later pushes
+re-run them; remove it when you are done.
 
 Unlike a docs preview, a run compiles and executes the PR's code against live
-test infrastructure — review the diff first on anything from a fork. Labelling
-works by commenting `/gcbrun`, which on a fork PR also releases the integration
-test triggers that were waiting on it.
+test infrastructure — review the diff first on anything from a fork. On a fork
+PR `/gcbrun` also releases the integration test triggers waiting on it.
 
 See [Adding Prebuilt Config Evals](./DEVELOPER.md#adding-prebuilt-config-evals)
 for what the evalsets cover.
