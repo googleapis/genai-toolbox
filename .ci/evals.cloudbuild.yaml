@@ -29,8 +29,9 @@ steps:
     args:
       - -c
       - |
-        git fetch --unshallow || true
-        git fetch origin main > /dev/null 2>&1
+        # Blobless: --name-only needs tree entries, not file contents.
+        git fetch --unshallow --filter=blob:none || true
+        git fetch --filter=blob:none origin main > /dev/null 2>&1
         git diff --name-only origin/main...HEAD > /workspace/changed_files.txt
         cat /workspace/changed_files.txt
 
@@ -56,6 +57,7 @@ steps:
     dir: /evalbench
     entrypoint: bash
     args: ["/workspace/.ci/run_evals.sh"]
+    allowFailure: true
     env:
       - "TOOLBOX_PREBUILT=cloud-sql-postgres"
       - "EVAL_DATASET=evals/evalsets/cloud-sql-postgres.json"
@@ -77,6 +79,7 @@ steps:
     dir: /evalbench
     entrypoint: bash
     args: ["/workspace/.ci/run_evals.sh"]
+    allowFailure: true
     env:
       - "TOOLBOX_PREBUILT=cloud-sql-mysql"
       - "EVAL_DATASET=evals/evalsets/cloud-sql-mysql.json"
@@ -90,6 +93,20 @@ steps:
     secretEnv:
       - "CLOUD_SQL_MYSQL_USER"
       - "CLOUD_SQL_MYSQL_PASSWORD"
+
+  # Turns the allowFailure steps back into a red build. No waitFor, which means
+  # every step above, so a new database needs no edit here.
+  - id: "report-failures"
+    name: "gcr.io/cloud-builders/git"
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        if ls /workspace/failed-* > /dev/null 2>&1; then
+          echo "evals failed:"
+          ls /workspace/failed-*
+          exit 1
+        fi
 
 availableSecrets:
   secretManager:

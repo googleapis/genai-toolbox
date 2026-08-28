@@ -23,6 +23,10 @@
 
 set -euo pipefail
 
+# The step is allowFailure, so a database that fails does not cancel the others
+# mid-run. This marker is what the build's last step fails on.
+trap '[ $? -eq 0 ] || touch "/workspace/failed-${TOOLBOX_PREBUILT}"' EXIT
+
 # Empty values fail quietly, which is why they are checked: ALLOW_LOOSE blanks
 # an undefined substitution, empty postgres credentials degrade to IAM auth so
 # every tool disappears, and an empty EVAL_REPORTING_PROJECT falls back to the
