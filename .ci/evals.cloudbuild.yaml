@@ -37,10 +37,11 @@ steps:
 
   - id: "build-toolbox"
     name: golang:1
-    waitFor: ["-"]
+    waitFor: ["detect-changes"]
     env:
       - "CGO_ENABLED=1"  # godror does not build without cgo
     script: |
+      bash /workspace/.ci/run_evals.sh --check-any || exit 0
       go build -o /workspace/toolbox .
       /workspace/toolbox --version
 
@@ -53,7 +54,7 @@ steps:
 
   - id: "evals-cloud-sql-postgres"
     name: "${_EVALBENCH_IMAGE}"
-    waitFor: ["build-toolbox", "pull-evalbench", "detect-changes"]
+    waitFor: ["build-toolbox", "pull-evalbench"]
     dir: /evalbench
     entrypoint: bash
     args: ["/workspace/.ci/run_evals.sh"]
@@ -75,7 +76,7 @@ steps:
 
   - id: "evals-cloud-sql-mysql"
     name: "${_EVALBENCH_IMAGE}"
-    waitFor: ["build-toolbox", "pull-evalbench", "detect-changes"]
+    waitFor: ["build-toolbox", "pull-evalbench"]
     dir: /evalbench
     entrypoint: bash
     args: ["/workspace/.ci/run_evals.sh"]

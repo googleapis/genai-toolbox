@@ -23,6 +23,22 @@
 
 set -euo pipefail
 
+# Paths that put every step in scope.
+common_pattern='(^|/)evals/(run_configs|model_configs)/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
+
+# --check-any: true when any step's evals would run, so build-toolbox can skip
+# the compile. Must stay above the trap, which needs TOOLBOX_PREBUILT.
+if [[ "${1:-}" == "--check-any" ]]; then
+  [[ -s /workspace/changed_files.txt ]] || exit 0
+  grep -qE "${common_pattern}" /workspace/changed_files.txt && exit 0
+  # Every step's evalset and prebuilt config, read back out of the build config.
+  targets=$(sed -n -e 's|.*EVAL_DATASET=\([^"]*\).*|\1|p' \
+                   -e 's|.*TOOLBOX_PREBUILT=\([^"]*\).*|internal/prebuiltconfigs/tools/\1.yaml|p' \
+                   /workspace/.ci/evals.cloudbuild.yaml)
+  grep -qxF "${targets}" /workspace/changed_files.txt && exit 0
+  exit 1
+fi
+
 # The step is allowFailure, so a database that fails does not cancel the others
 # mid-run. This marker is what the build's last step fails on.
 trap '[ $? -eq 0 ] || touch "/workspace/failed-${TOOLBOX_PREBUILT}"' EXIT
@@ -47,9 +63,6 @@ for var in "${required[@]}"; do
     exit 1
   fi
 done
-
-# Paths that put every step in scope.
-common_pattern='(^|/)evals/(run_configs|model_configs)/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
 
 # Exact-line matches, since git diff emits repo-relative paths. Only a non-empty
 # list can narrow the run: empty means a scheduled build, or a checkout the diff
