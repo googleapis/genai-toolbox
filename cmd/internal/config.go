@@ -418,7 +418,7 @@ func mergeConfigs(files ...Config) (Config, error) {
 				// Check for URI collisions with static resources
 				uriStr := rt.GetURITemplate()
 				if existingName, exists := seenResourceURIs[uriStr]; exists {
-					conflicts = append(conflicts, fmt.Sprintf("resourceTemplate '%s' (file #%d) URI %q collides with resource '%s'", name, fileIndex+1, uriStr, existingName))
+					conflicts = append(conflicts, fmt.Sprintf("resourceTemplate URI '%s' used by '%s' and '%s' (file #%d)", rt.GetURITemplate(), existingName, name, fileIndex+1))
 				} else {
 					seenResourceURIs[uriStr] = name
 					merged.ResourceTemplates[name] = rt

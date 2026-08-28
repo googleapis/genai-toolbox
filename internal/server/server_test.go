@@ -1331,9 +1331,10 @@ func TestGoogleAuthConfigValidation(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name      string
-		yaml      string
-		wantError bool
+		name        string
+		yaml        string
+		wantError   bool
+		errContains string
 	}{
 		{
 			name: "only clientId, mcpEnabled false",
@@ -1409,6 +1410,11 @@ mcpEnabled: true
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
+			if err != nil && tc.errContains != "" {
+				if !strings.Contains(err.Error(), tc.errContains) {
+					t.Fatalf("expected error to contain %q, got %q", tc.errContains, err.Error())
+				}
+			}
 		})
 	}
 }
@@ -1417,9 +1423,10 @@ func TestGenericAuthConfigValidation(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name      string
-		yaml      string
-		wantError bool
+		name        string
+		yaml        string
+		wantError   bool
+		errContains string
 	}{
 		{
 			name: "valid mcpEnabled false",
@@ -1500,6 +1507,11 @@ scopesRequired:
 			_, _, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+			if err != nil && tc.errContains != "" {
+				if !strings.Contains(err.Error(), tc.errContains) {
+					t.Fatalf("expected error to contain %q, got %q", tc.errContains, err.Error())
+				}
 			}
 		})
 	}
@@ -1631,10 +1643,11 @@ func TestGroupConfigParsing(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name      string
-		yaml      string
-		want      group.GroupConfig
-		wantError bool
+		name        string
+		yaml        string
+		want        group.GroupConfig
+		wantError   bool
+		errContains string
 	}{
 		{
 			name: "valid named group",
@@ -1965,9 +1978,10 @@ func TestResourceConfigValidation(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name      string
-		yaml      string
-		wantError bool
+		name        string
+		yaml        string
+		wantError   bool
+		errContains string
 	}{
 		{
 			name: "missing required text field for text resource triggers validation error",
@@ -2096,6 +2110,90 @@ uri: mock://test
 `,
 			wantError: true,
 		},
+		{
+			name: "valid resource template",
+			yaml: `
+kind: resourceTemplate
+type: file
+name: project_files
+uriTemplate: file://{path}
+description: Access files in the project directory.
+`,
+			wantError: false,
+		},
+		{
+			name: "missing name",
+			yaml: `
+kind: resourceTemplate
+type: file
+uriTemplate: file://{path}
+`,
+			wantError:   true,
+			errContains: "missing 'name' field",
+		},
+		{
+			name: "missing type throws error",
+			yaml: `
+kind: resourceTemplate
+name: test
+uriTemplate: file://{path}
+`,
+			wantError:   true,
+			errContains: "missing 'type' field or it is not a string",
+		},
+		{
+			name: "invalid scheme for file template",
+			yaml: `
+kind: resourceTemplate
+type: file
+name: test
+uriTemplate: http://example.com/{path}
+`,
+			wantError:   true,
+			errContains: "invalid scheme for file resource template",
+		},
+		{
+			name: "duplicate uri template",
+			yaml: `
+kind: resourceTemplate
+type: file
+name: t1
+uriTemplate: file://{path}
+---
+kind: resourceTemplate
+type: file
+name: t2
+uriTemplate: file://{path}
+`,
+			wantError:   true,
+			errContains: "duplicate resource URI",
+		},
+		{
+			name: "malformed template without URITemplate",
+			yaml: `
+kind: resourceTemplate
+name: test
+type: file
+`,
+			wantError:   true,
+			errContains: "validation for 'URITemplate' failed on the 'required' tag",
+		},
+		{
+			name: "duplicate name",
+			yaml: `
+kind: resourceTemplate
+type: file
+name: t1
+uriTemplate: file://{path}
+---
+kind: resourceTemplate
+type: file
+name: t1
+uriTemplate: file:///{path}
+`,
+			wantError:   true,
+			errContains: "duplicate resourceTemplate name",
+		},
 	}
 
 	// Register a mock factory for this test package to use
@@ -2109,11 +2207,26 @@ uri: mock://test
 	}
 	resources.Register("mock", mockFactory)
 
+	mockTemplateFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceTemplateConfig, error) {
+		var cfg testutils.MockResourceTemplateConfig
+		cfg.Name = name
+		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
+			return nil, err
+		}
+		return &cfg, nil
+	}
+	resources.RegisterTemplate("file", mockTemplateFactory)
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			_, _, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+			if err != nil && tc.errContains != "" {
+				if !strings.Contains(err.Error(), tc.errContains) {
+					t.Fatalf("expected error to contain %q, got %q", tc.errContains, err.Error())
+				}
 			}
 		})
 	}
@@ -2261,129 +2374,6 @@ annotations: {}`,
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			_, _, _, _, _, _, _, _, err = server.UnmarshalPrimitiveConfig(ctx, []byte(tt.yaml))
-			if tt.wantError {
-				if err == nil {
-					t.Errorf("expected error for %q, got nil", tt.name)
-				} else if !strings.Contains(err.Error(), tt.errContains) {
-					t.Errorf("expected error to contain %q, got: %v", tt.errContains, err)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error for %q: %v", tt.name, err)
-				}
-			}
-		})
-	}
-}
-
-func TestResourceTemplateConfigValidation(t *testing.T) {
-	ctx := context.Background()
-
-	mockTemplateFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceTemplateConfig, error) {
-		var cfg testutils.MockResourceTemplateConfig
-		cfg.Name = name
-		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
-			return nil, err
-		}
-		return &cfg, nil
-	}
-	resources.RegisterTemplate("file", mockTemplateFactory)
-
-	tests := []struct {
-		name        string
-		yaml        string
-		wantError   bool
-		errContains string
-	}{
-		{
-			name: "valid resource template",
-			yaml: `
-kind: resourceTemplate
-type: file
-name: project_files
-uriTemplate: file://{path}
-description: Access files in the project directory.
-`,
-			wantError: false,
-		},
-		{
-			name: "missing name",
-			yaml: `
-kind: resourceTemplate
-type: file
-uriTemplate: file://{path}
-`,
-			wantError:   true,
-			errContains: "missing 'name' field",
-		},
-		{
-			name: "missing type throws error",
-			yaml: `
-kind: resourceTemplate
-name: test
-uriTemplate: file://{path}
-`,
-			wantError: true,
-			errContains: "missing required 'type' field",
-		},
-		{
-			name: "invalid scheme for file template",
-			yaml: `
-kind: resourceTemplate
-type: file
-name: test
-uriTemplate: http://example.com/{path}
-`,
-			wantError:   true,
-			errContains: "invalid scheme for file resource template",
-		},
-		{
-			name: "duplicate uri template",
-			yaml: `
-kind: resourceTemplate
-type: file
-name: t1
-uriTemplate: file://{path}
----
-kind: resourceTemplate
-type: file
-name: t2
-uriTemplate: file://{path}
-`,
-			wantError:   true,
-			errContains: "duplicate resource URI",
-		},
-		{
-			name: "malformed template without URITemplate",
-			yaml: `
-kind: resourceTemplate
-name: test
-type: file
-`,
-			wantError:   true,
-			errContains: "missing required 'uriTemplate' field",
-		},
-		{
-			name: "duplicate name",
-			yaml: `
-kind: resourceTemplate
-type: file
-name: t1
-uriTemplate: file://{path}
----
-kind: resourceTemplate
-type: file
-name: t1
-uriTemplate: file:///{path}
-`,
-			wantError:   true,
-			errContains: "duplicate resourceTemplate name",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, _, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tt.yaml))
 			if tt.wantError {
 				if err == nil {
 					t.Errorf("expected error for %q, got nil", tt.name)
