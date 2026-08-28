@@ -84,6 +84,10 @@ type Source struct {
 	Client *mongo.Client
 }
 
+func (s *Source) IsReadOnly() bool {
+	return false
+}
+
 func (s *Source) SourceType() string {
 	return SourceType
 }
