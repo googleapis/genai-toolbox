@@ -118,11 +118,30 @@ func processComposition(items []any) []any {
 	}
 	result := make([]any, 0, len(items))
 	for _, item := range items {
-		if s, ok := item.(string); ok {
+		switch v := item.(type) {
+		case string:
 			result = append(result, map[string]any{
-				"required": []string{s},
+				"required": []string{v},
 			})
-		} else {
+		case []any:
+			var strList []string
+			isAllStr := true
+			for _, elem := range v {
+				if s, ok := elem.(string); ok {
+					strList = append(strList, s)
+				} else {
+					isAllStr = false
+					break
+				}
+			}
+			if isAllStr && len(strList) > 0 {
+				result = append(result, map[string]any{
+					"required": strList,
+				})
+			} else {
+				result = append(result, item)
+			}
+		default:
 			result = append(result, item)
 		}
 	}
