@@ -49,7 +49,7 @@ func TestCompactTableMetadataSchema(t *testing.T) {
 			t.Errorf("compacted metadata contains zero-valued field %s: %s", unwanted, got)
 		}
 	}
-	for _, wanted := range []string{`"Name":"id"`, `"Type":"INTEGER"`, `"Name":"nested"`, `"Repeated":true`, `"Description":"kept"`} {
+	for _, wanted := range []string{`"NumBytes":9007199254740993`, `"Name":"id"`, `"Type":"INTEGER"`, `"Name":"nested"`, `"Repeated":true`, `"Description":"kept"`} {
 		if !strings.Contains(got, wanted) {
 			t.Errorf("compacted metadata is missing %s: %s", wanted, got)
 		}
