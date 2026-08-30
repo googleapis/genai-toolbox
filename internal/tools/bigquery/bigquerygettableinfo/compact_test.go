@@ -43,29 +43,17 @@ func TestCompactTableMetadataSchema(t *testing.T) {
 	}
 	got := string(encoded)
 	for _, unwanted := range []string{`"Description":""`, `"Repeated":false`, `"Required":false`, `"Precision":0`, `"Schema":null`} {
-		if containsJSONFragment(got, unwanted) {
+		if strings.Contains(got, unwanted) {
 			t.Errorf("compacted metadata contains zero-valued field %s: %s", unwanted, got)
 		}
 	}
 	for _, wanted := range []string{`"Name":"id"`, `"Type":"INTEGER"`, `"Name":"nested"`, `"Repeated":true`, `"Description":"kept"`} {
-		if !containsJSONFragment(got, wanted) {
+		if !strings.Contains(got, wanted) {
 			t.Errorf("compacted metadata is missing %s: %s", wanted, got)
 		}
 	}
-	if !containsJSONFragment(got, `"Description":"table description"`) {
+	if !strings.Contains(got, `"Description":"table description"`) {
 		t.Errorf("compacted metadata dropped table-level metadata: %s", got)
 	}
 }
 
-func containsJSONFragment(value, fragment string) bool {
-	return len(value) >= len(fragment) && stringContains(value, fragment)
-}
-
-func stringContains(value, fragment string) bool {
-	for i := 0; i+len(fragment) <= len(value); i++ {
-		if value[i:i+len(fragment)] == fragment {
-			return true
-		}
-	}
-	return false
-}
