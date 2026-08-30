@@ -159,24 +159,31 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 
 // compactTableMetadata removes zero-valued fields from the schema while preserving
 // the rest of the table metadata returned by the BigQuery client.
-func compactTableMetadata(metadata *bigqueryapi.TableMetadata) (map[string]any, error) {
+func compactTableMetadata(metadata *bigqueryapi.TableMetadata) (map[string]json.RawMessage, error) {
 	encoded, err := json.Marshal(metadata)
 	if err != nil {
 		return nil, err
 	}
 
-	var compacted map[string]any
+	var compacted map[string]json.RawMessage
 	if err := json.Unmarshal(encoded, &compacted); err != nil {
 		return nil, err
 	}
 	for key, value := range compacted {
 		if strings.EqualFold(key, "schema") {
-			compacted[key] = removeJSONZeroValues(value)
+			var schema any
+			if err := json.Unmarshal(value, &schema); err != nil {
+				return nil, err
+			}
+			compactedSchema, err := json.Marshal(removeJSONZeroValues(schema))
+			if err != nil {
+				return nil, err
+			}
+			compacted[key] = compactedSchema
 		}
 	}
 	return compacted, nil
 }
-
 func removeJSONZeroValues(value any) any {
 	switch value := value.(type) {
 	case []any:
