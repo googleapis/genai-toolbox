@@ -74,8 +74,8 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	typeParameter := parameters.NewStringParameter("type", "Type of Looker content to embed (ie. dashboards, looks, query-visualization)", parameters.WithStringDefault(""))
-	idParameter := parameters.NewStringParameter("id", "The ID of the content to embed.", parameters.WithStringDefault(""))
+	typeParameter := parameters.NewStringParameter("type", "Type of Looker content to embed (e.g. dashboards, looks, query-visualizations, or explores).")
+	idParameter := parameters.NewStringParameter("id", "The ID of the content to embed.")
 	params := parameters.Parameters{
 		typeParameter,
 		idParameter,
