@@ -126,14 +126,12 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	}
 	paramsMap := params.AsMap()
 	embedType := paramsMap["type"].(string)
-	embedType_ptr := &embedType
-	if *embedType_ptr == "" {
-		embedType_ptr = nil
+	if embedType == "" {
+		return nil, util.NewClientServerError("parameter 'type' cannot be empty", http.StatusBadRequest, nil)
 	}
 	contentId := paramsMap["id"].(string)
-	contentId_ptr := &contentId
-	if *contentId_ptr == "" {
-		contentId_ptr = nil
+	if contentId == "" {
+		return nil, util.NewClientServerError("parameter 'id' cannot be empty", http.StatusBadRequest, nil)
 	}
 
 	sdk, err := source.GetLookerSDK(ctx, string(accessToken))
@@ -149,7 +147,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	forceLogoutLogin := true
 	sessionLength := source.LookerSessionLength()
 	req := v4.EmbedParams{
-		TargetUrl:        fmt.Sprintf("%s/embed/%s/%s", hostURL, *embedType_ptr, *contentId_ptr),
+		TargetUrl:        fmt.Sprintf("%s/embed/%s/%s", hostURL, embedType, contentId),
 		SessionLength:    &sessionLength,
 		ForceLogoutLogin: &forceLogoutLogin,
 	}
