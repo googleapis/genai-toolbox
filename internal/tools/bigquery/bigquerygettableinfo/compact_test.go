@@ -15,7 +15,8 @@
 package bigquerygettableinfo
 
 import (
-	"encoding/json"`r`n`t"strings"
+	"encoding/json"
+	"strings"
 	"testing"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
