@@ -163,18 +163,15 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		}
 	}
 
+	// Security check for extension on the requested path
+	if err := validateExtension(absPath); err != nil {
+		return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
+	}
+
 	resolvedPath, err := filepath.EvalSymlinks(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			if err := validateExtension(absPath); err != nil {
-				return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
-			}
-			return &FileResource{
-				Config:          *c,
-				absPath:         absPath,
-				resolvedBaseDir: resolvedBaseDir,
-				isRelative:      isRelative,
-			}, nil
+			return nil, fmt.Errorf("file not found: %q (files must exist at boot time to prevent dead URIs)", absPath)
 		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q: %w", c.Name, err)
 	}
@@ -198,6 +195,12 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 	if !info.Mode().IsRegular() {
 		return nil, fmt.Errorf("path %q for resource %q is not a regular file (devices, pipes, sockets are blocked)", absPath, c.Name)
 	}
+
+	f, err := os.Open(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file %q (missing read permissions?): %w", absPath, err)
+	}
+	f.Close()
 
 	size := info.Size()
 	if size > *c.MaxSize {
@@ -229,6 +232,11 @@ func (r *FileResource) GetSize() *int64 {
 
 // Read retrieves the file content.
 func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, error) {
+	// Security check for extension on the resolved target
+	if err := validateExtension(r.absPath); err != nil {
+		return nil, fmt.Errorf("security violation: configured file extension not allowed for resource %q: %w", r.Config.Name, err)
+	}
+
 	resolvedPath, err := filepath.EvalSymlinks(r.absPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Config.Name, err)

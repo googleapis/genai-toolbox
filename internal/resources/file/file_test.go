@@ -381,14 +381,13 @@ func TestFileResource_Metadata(t *testing.T) {
 	}
 }
 
-// TestFileResource_NonExistentFileAtBoot ensures that if a resource file does
-// not yet exist during server boot (e.g., dynamically generated build outputs),
-// the resource cleanly initializes without crashing, and begins serving once created.
-func TestFileResource_NonExistentFileAtBoot(t *testing.T) {
+// TestFileResource_NonExistentFileFailsAtBoot ensures that if a resource file does
+// not yet exist during server boot, the server halts.
+func TestFileResource_NonExistentFileFailsAtBoot(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "delayed.txt")
 
-	yamlStr := fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath))
+	yamlStr := "type: file\npath: " + filepath.ToSlash(filePath)
 	ctx := context.Background()
 	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
 	cfg, err := resources.DecodeConfig(ctx, "file", "delayed", decoder)
@@ -396,26 +395,12 @@ func TestFileResource_NonExistentFileAtBoot(t *testing.T) {
 		t.Fatalf("DecodeConfig failed: %v", err)
 	}
 
-	res, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("Initialize failed unexpectedly for non-existent file: %v", err)
-	}
-
-	_, err = res.Read(ctx, nil)
+	_, err = cfg.Initialize(ctx)
 	if err == nil {
-		t.Fatalf("Expected Read to fail for non-existent file")
+		t.Fatalf("Initialize succeeded unexpectedly for non-existent file")
 	}
-
-	if err := os.WriteFile(filePath, []byte("it exists now"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	data, err := res.Read(ctx, nil)
-	if err != nil {
-		t.Fatalf("Read failed after file creation: %v", err)
-	}
-	if data.(string) != "it exists now" {
-		t.Errorf("Expected 'it exists now', got %q", data)
+	if !strings.Contains(err.Error(), "files must exist at boot time to prevent dead URIs") {
+		t.Errorf("Expected boot-time existence error, got: %v", err)
 	}
 }
 
@@ -552,48 +537,6 @@ func TestFileResource_UTF8Truncation(t *testing.T) {
 	}
 	if strings.Contains(strData, "\ufffd") {
 		t.Errorf("String contains unicode replacement character, meaning it wasn't safely truncated.")
-	}
-}
-
-// TestFileResource_DelayedSymlinkEscape verifies that an attacker cannot bypass
-// base directory sandboxing by intentionally delaying the creation of a target
-// file and subsequently linking it outside the workspace boundary.
-func TestFileResource_DelayedSymlinkEscape(t *testing.T) {
-	tmpDir := t.TempDir()
-	secretFile := filepath.Join(tmpDir, "secret.txt")
-	if err := os.WriteFile(secretFile, []byte("super secret password"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	baseDir := filepath.Join(tmpDir, "workspace")
-	if err := os.MkdirAll(baseDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	yamlStr := "type: file\npath: delayed.txt"
-	ctx := context.WithValue(context.Background(), resources.BaseDirKey, baseDir)
-	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
-	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
-	if err != nil {
-		t.Fatalf("DecodeConfig failed: %v", err)
-	}
-
-	res, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("Initialize failed: %v", err)
-	}
-
-	delayedPath := filepath.Join(baseDir, "delayed.txt")
-	if err := os.Symlink(secretFile, delayedPath); err != nil {
-		t.Fatalf("failed to create delayed symlink: %v", err)
-	}
-
-	_, err = res.Read(ctx, nil)
-	if err == nil {
-		t.Fatalf("expected Read to fail due to delayed symlink base escape, but it succeeded")
-	}
-	if !strings.Contains(err.Error(), "security violation") {
-		t.Errorf("expected security violation error, got: %v", err)
 	}
 }
 
