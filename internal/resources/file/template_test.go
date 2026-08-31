@@ -27,6 +27,11 @@ import (
 func TestFileTemplate(t *testing.T) {
 	// Create a temporary directory structure for testing
 	tempDir := t.TempDir()
+	var err error
+	tempDir, err = filepath.EvalSymlinks(tempDir)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Allowed area
 	sandboxDir := filepath.Join(tempDir, "sandbox")

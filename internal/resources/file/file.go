@@ -16,8 +16,10 @@ package file
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"mime"
 	"net/url"
 	"os"
@@ -283,6 +285,9 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 
 	resolvedPath, err := filepath.EvalSymlinks(r.absPath)
 	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("file not found: %q: %w", r.absPath, fs.ErrNotExist)
+		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Config.Name, err)
 	}
 
@@ -569,8 +574,8 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 	resolvedPath, err := filepath.EvalSymlinks(absPath)
 	if err != nil {
 		// file does not exist
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("file not found: %q", pathStr)
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("file not found: %q: %w", pathStr, fs.ErrNotExist)
 		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for %q: %w", absPath, err)
 	}
