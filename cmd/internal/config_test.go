@@ -1062,6 +1062,7 @@ func TestParseConfigFailure(t *testing.T) {
 		})
 	}
 }
+
 func TestParseConfigWithAuth(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
