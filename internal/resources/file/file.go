@@ -419,6 +419,7 @@ func (r *FileResource) GetCurrentSize() (int64, error) {
 type TemplateConfig struct {
 	resources.ResourceTemplateConfigBase `yaml:",inline"`
 	AllowedPaths                         []string `yaml:"allowedPaths,omitempty"`
+	MaxSize                              *int64   `yaml:"max_size,omitempty"`
 }
 
 var _ resources.ResourceTemplateConfig = (*TemplateConfig)(nil)
@@ -443,6 +444,11 @@ func (c *TemplateConfig) Validate() error {
 
 // Initialize validates the configuration and initializes the file resource template.
 func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemplate, error) {
+	if c.MaxSize == nil {
+		limit := int64(defaultMaxFileSize)
+		c.MaxSize = &limit
+	}
+
 	// Validate and resolve allowed paths if specified
 	var unresolvedAllowedPaths []string
 	var resolvedAllowedPaths []string
@@ -621,7 +627,7 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("security violation: file %q was swapped with a non-regular file during read", resolvedPath)
 	}
 
-	limit := int64(defaultMaxFileSize) // Templates don't currently expose MaxSize
+	limit := *r.MaxSize
 	limitedReader := io.LimitReader(f, limit+1)
 	content, err := io.ReadAll(limitedReader)
 	if err != nil {
