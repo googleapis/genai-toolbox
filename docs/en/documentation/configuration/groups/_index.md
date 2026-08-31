@@ -8,7 +8,7 @@ description: >
 
 A Group is a single named collection that scopes MCP primitives together — currently **tools** and **prompts**, with more (such as resources) planned. Where a [Toolset](../toolsets/) groups only tools, a group bundles these primitives under one name and one MCP endpoint, and carries a `description` that describes the collection.
 
-Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list methods (such as `tools/list` and `prompts/list`) to that group. Groups are also introspectable over MCP through the [`groups/list` and `groups/get`](#introspecting-groups-over-mcp) methods.
+Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list methods (such as `tools/list` and `prompts/list`) to that group. Groups are also introspectable over MCP through the [`groups/list` and `groups/get`](#introspecting-groups-over-mcp) methods, which are available only on the latest MCP protocol version (`2026-07-28`) and only behind the `com.google.cloud/toolbox.v1` extension.
 
 ## Defining Groups
 
@@ -90,7 +90,19 @@ Use `--dry-run` to preview the changes without writing them.
 
 Two MCP methods let clients discover groups: `groups/list` and `groups/get`.
 
-Both are part of the experimental Toolbox extension, so they require MCP protocol version `2026-07-28` and the `com.google.cloud/toolbox.v1` extension. Earlier protocol versions do not implement them and respond with `METHOD_NOT_FOUND`; a `2026-07-28` client that has not declared the extension gets `MISSING_REQUIRED_CLIENT_CAPABILITY`. For more details on extension capabilities and client requirements, see the [Extension README](https://github.com/googleapis/mcp-toolbox/blob/main/extensions/2026-07-28/README.md).
+{{< notice warning >}}
+**Both methods are available only on MCP protocol version `2026-07-28` — the latest version — and only to clients that declare the `com.google.cloud/toolbox.v1` extension.** They belong to the experimental Toolbox extension, not to the base MCP specification, so a client on any earlier protocol version cannot reach them at all.
+{{< /notice >}}
+
+| Client's protocol version | Declares `com.google.cloud/toolbox.v1` | Result                                        |
+| ------------------------- | -------------------------------------- | --------------------------------------------- |
+| Earlier than `2026-07-28` | n/a                                    | `METHOD_NOT_FOUND` (-32601)                   |
+| `2026-07-28`              | No                                     | `MISSING_REQUIRED_CLIENT_CAPABILITY` (-32021) |
+| `2026-07-28`              | Yes                                    | Served                                        |
+
+A server operator can also close these methods off entirely by starting Toolbox with `--disable-ext com.google.cloud/toolbox.v1`, which makes even an extension-aware client fall into the second row.
+
+For more details on extension capabilities and client requirements, see the [Extension README](https://github.com/googleapis/mcp-toolbox/blob/main/extensions/2026-07-28/README.md).
 
 ### `groups/list`
 
