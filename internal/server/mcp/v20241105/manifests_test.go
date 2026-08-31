@@ -387,3 +387,44 @@ func TestGenerateListPromptsResult(t *testing.T) {
 		t.Fatalf("unexpected list tools result (-want +got):\n%s", diff)
 	}
 }
+
+func TestGenerateListToolsResultWithSecureParams(t *testing.T) {
+	paramsStandard := parameters.Parameters{
+		parameters.NewStringParameter("param1", "desc"),
+	}
+	paramsSecure := parameters.Parameters{
+		&parameters.StringParameter{
+			CommonParameter: parameters.CommonParameter{
+				Name:   "param2",
+				Type:   parameters.TypeString,
+				Desc:   "desc",
+				Secure: true,
+			},
+		},
+	}
+	toolStandard := testutils.NewMockTool("standard_tool", "", "", paramsStandard, false, false)
+	toolSecure := testutils.NewMockTool("secure_tool", "", "", paramsSecure, false, false)
+
+	toolsMap := map[string]tools.Tool{
+		"standard_tool": toolStandard,
+		"secure_tool":   toolSecure,
+	}
+
+	g := group.NewGroup(group.GroupConfig{
+		Name:      "test-toolset",
+		ToolNames: []string{"standard_tool", "secure_tool"},
+	})
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
+
+	got, err := GenerateListToolsResult(pMgr, g, nil)
+	if err != nil {
+		t.Fatalf("failed GenerateListToolsResult: %s", err)
+	}
+
+	if len(got.Tools) != 1 {
+		t.Fatalf("expected 1 tool, got %d: %+v", len(got.Tools), got.Tools)
+	}
+	if got.Tools[0].Name != "standard_tool" {
+		t.Errorf("expected standard_tool, got: %s", got.Tools[0].Name)
+	}
+}
