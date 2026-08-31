@@ -506,7 +506,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		}()
 	}
 
-	if isCustomConfigured && !opts.Cfg.DisableReload {
+	if isCustomConfigured && !opts.Cfg.DisableReload && opts.ConfigPMVersion == "" {
 		watchDirs, watchedFiles := resolveWatcherInputs(opts.Config, opts.Configs, opts.ConfigFolder)
 
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
