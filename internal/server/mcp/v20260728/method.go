@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"time"
 
@@ -196,6 +197,7 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 		},
 		SupportedVersions: mcputil.GetSupportedVersions(enableDraft),
 		Capabilities: ServerCapabilities{
+			Extensions: ServerExtensions,
 			Tools: &ListChanged{
 				ListChanged: &toolsListChanged,
 			},
@@ -228,7 +230,9 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams)
+	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
+	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
+	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams, hasSecureParamsSupport)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -247,7 +251,7 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 
 // toolsCallHandler generate a response for tools call.
 func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
-	authServices := primitiveMgr.GetAuthServiceMap()
+	authServices := primitiveMgr.AuthServices()
 
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
@@ -274,7 +278,6 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	}
 
 	toolName := req.Params.Name
-	toolArgument := req.Params.Arguments
 	logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
 
 	// Update span name and set gen_ai attributes
@@ -297,6 +300,13 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
+	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
+	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
+	if tool.HasSecureParams() && !hasSecureParamsSupport {
+		err = fmt.Errorf("missing required client capability: tool %q requires com.google.cloud/toolbox.v1 extension which is not supported by the client", toolName)
+		return jsonrpc.NewError(id, jsonrpc.MISSING_REQUIRED_CLIENT_CAPABILITY, err.Error(), nil), err
+	}
+
 	srcName := tool.GetSourceName()
 	var src sources.Source
 	if srcName != "" {
@@ -312,6 +322,35 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
+	toolParams, err := tool.GetParameters(src)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+
+	toolArguments, agentErr, protocolErr := validateAndMergeSecureParams(ctx, &req, toolParams)
+	if protocolErr != nil {
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, protocolErr.Error(), nil), protocolErr
+	}
+	if agentErr != nil {
+		text := TextContent{
+			Type: "text",
+			Text: agentErr.Error(),
+		}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result: CallToolResult{
+				Result: Result{
+					ResultType: resultTypeComplete,
+					Result: jsonrpc.Result{
+						Meta: meta,
+					},
+				},
+				Content: []TextContent{text},
+				IsError: true,
+			},
+		}, nil
+	}
 	// Populate gen_ai attributes for operation duration metric
 	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
 		genAIAttrs.OperationName = "execute_tool"
@@ -346,10 +385,9 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		}
 	}
 
-	// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
 	var data map[string]any
-	if toolArgument != nil {
-		aMarshal, err := json.Marshal(toolArgument)
+	if toolArguments != nil {
+		aMarshal, err := json.Marshal(toolArguments)
 		if err != nil {
 			err = fmt.Errorf("unable to marshal tools argument: %w", err)
 			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -416,27 +454,72 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	toolParams, err := tool.GetParameters(src)
-	if err != nil {
-		err = fmt.Errorf("error getting parameters for tool: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
-	}
-
 	// Auto-populate arguments from URL parameters
-	data = mcputil.PopulateUrlParams(ctx, data, toolParams)
+	data, err = mcputil.PopulateUrlParams(ctx, data, toolParams)
+	if err != nil {
+		text := TextContent{
+			Type: "text",
+			Text: err.Error(),
+		}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result: CallToolResult{
+				Result: Result{
+					ResultType: resultTypeComplete,
+					Result: jsonrpc.Result{
+						Meta: meta,
+					},
+				},
+				Content: []TextContent{text},
+				IsError: true,
+			},
+		}, nil
+	}
 
 	params, err := parameters.ParseParams(toolParams, data, claimsFromAuth)
 	if err != nil {
-		err = fmt.Errorf("provided parameters were invalid: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		text := TextContent{
+			Type: "text",
+			Text: fmt.Sprintf("provided parameters were invalid: %s", err),
+		}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result: CallToolResult{
+				Result: Result{
+					ResultType: resultTypeComplete,
+					Result: jsonrpc.Result{
+						Meta: meta,
+					},
+				},
+				Content: []TextContent{text},
+				IsError: true,
+			},
+		}, nil
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	embeddingModels := primitiveMgr.GetEmbeddingModelMap()
-	params, err = tool.EmbedParams(ctx, params, embeddingModels)
+	params, err = tool.EmbedParams(ctx, params, primitiveMgr)
 	if err != nil {
-		err = fmt.Errorf("error embedding parameters: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		text := TextContent{
+			Type: "text",
+			Text: fmt.Sprintf("error embedding parameters: %s", err),
+		}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result: CallToolResult{
+				Result: Result{
+					ResultType: resultTypeComplete,
+					Result: jsonrpc.Result{
+						Meta: meta,
+					},
+				},
+				Content: []TextContent{text},
+				IsError: true,
+			},
+		}, nil
 	}
 
 	// Get instrumentation for recording tool execution duration
@@ -719,12 +802,16 @@ func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *
 		return validateErr, err
 	}
 
-	result := GenerateListGroupsResult(primitiveMgr.GetGroupsMap())
-	logger.DebugContext(ctx, fmt.Sprintf("returning %d groups", len(result.Groups)))
+	groupsList := primitiveMgr.GroupsList()
+	groups := []Group{}
+	for _, v := range groupsList {
+		groups = append(groups, Group{Name: v.Name, Description: v.Description})
+	}
+	logger.DebugContext(ctx, fmt.Sprintf("returning %d groups", len(groups)))
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  result,
+		Result:  ListGroupsResult{Groups: groups},
 	}, nil
 }
 
@@ -773,7 +860,9 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams)
+	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
+	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
+	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams, hasSecureParamsSupport)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
@@ -783,4 +872,56 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 		Id:      id,
 		Result:  result,
 	}, nil
+}
+
+// validateAndMergeSecureParams validates and merges standard and secure arguments.
+func validateAndMergeSecureParams(ctx context.Context, req *CallToolRequest, paramDefs parameters.Parameters) (map[string]any, error, error) {
+	secureParamMap := make(map[string]bool)
+	urlParams, _ := util.UrlParamsFromContext(ctx)
+
+	for _, p := range paramDefs {
+		if p != nil && p.GetSecure() {
+			secureParamMap[p.GetName()] = true
+		}
+	}
+
+	// Validate that secure parameters are not passed in standard arguments (Agent error)
+	for argName := range req.Params.Arguments {
+		if secureParamMap[argName] {
+			return nil, fmt.Errorf("parameter %q is secure and must not be passed in standard arguments", argName), nil
+		}
+	}
+
+	// Validate that non-secure parameters are not passed in secureArguments (Protocol error)
+	for argName := range req.Params.SecureArguments {
+		if !secureParamMap[argName] {
+			return nil, nil, fmt.Errorf("parameter %q is not secure and must not be passed in secureArguments", argName)
+		}
+	}
+
+	// Validate that required secure parameters are present in secureArguments (Protocol error)
+	for _, p := range paramDefs {
+		if p != nil && p.GetSecure() {
+			name := p.GetName()
+			if p.GetValueFromParam() == "" {
+				if _, bound := urlParams[name]; !bound {
+					if parameters.CheckParamRequired(p.GetRequired(), p.GetDefault()) {
+						if req.Params.SecureArguments == nil {
+							return nil, nil, fmt.Errorf("missing required secure parameter %q in secureArguments", name)
+						}
+						if _, ok := req.Params.SecureArguments[name]; !ok {
+							return nil, nil, fmt.Errorf("missing required secure parameter %q in secureArguments", name)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Merge standard arguments and secure arguments.
+	toolArgument := make(map[string]any)
+	maps.Copy(toolArgument, req.Params.Arguments)
+	maps.Copy(toolArgument, req.Params.SecureArguments)
+
+	return toolArgument, nil, nil
 }

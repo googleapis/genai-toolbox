@@ -205,7 +205,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Tool authentication
 	// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
 	claimsFromAuth := make(map[string]map[string]any)
-	for _, aS := range s.PrimitiveMgr.GetAuthServiceMap() {
+	for _, aS := range s.PrimitiveMgr.AuthServices() {
 		var claims map[string]any
 		var err error
 
@@ -299,7 +299,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	params, err = tool.EmbedParams(ctx, params, s.PrimitiveMgr.GetEmbeddingModelMap())
+	params, err = tool.EmbedParams(ctx, params, s.PrimitiveMgr)
 	if err != nil {
 		err = fmt.Errorf("error embedding parameters: %w", err)
 		s.logger.DebugContext(ctx, err.Error())

@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	cla "github.com/googleapis/mcp-toolbox/internal/sources/cloudloggingadmin"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -201,6 +200,6 @@ func (t Tool) ValidateSource(source sources.Source) error {
 	return nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, pMgr tools.PrimitiveManagerI) (parameters.ParamValues, error) {
 	return paramValues, nil
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigtable_test
+package bigtablesql_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
-	"github.com/googleapis/mcp-toolbox/internal/tools/bigtable"
+	"github.com/googleapis/mcp-toolbox/internal/tools/bigtable/bigtablesql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -51,7 +51,7 @@ func TestParseFromYamlBigtable(t *testing.T) {
 				  description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": bigtable.Config{
+				"example_tool": bigtablesql.Config{
 					ConfigBase: tools.ConfigBase{
 						Name:         "example_tool",
 						Description:  "some description",
@@ -118,7 +118,7 @@ func TestParseFromYamlWithTemplateBigtable(t *testing.T) {
 						description: A column name that will be returned from the query.
 			`,
 			want: server.ToolConfigs{
-				"example_tool": bigtable.Config{
+				"example_tool": bigtablesql.Config{
 					ConfigBase: tools.ConfigBase{
 						Name:         "example_tool",
 						Description:  "some description",

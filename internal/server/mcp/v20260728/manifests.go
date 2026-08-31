@@ -16,7 +16,6 @@ package v20260728
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
@@ -28,7 +27,17 @@ import (
 
 // generateToolManifest generates Tool for list tools result
 func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations, urlParams map[string]string) Tool {
-	inputSchema, authParams := generateParamManifest(params, urlParams)
+	var standardParams parameters.Parameters
+	var secureParams parameters.Parameters
+	for _, p := range params {
+		if p.GetSecure() {
+			secureParams = append(secureParams, p)
+		} else {
+			standardParams = append(standardParams, p)
+		}
+	}
+
+	inputSchema, authParams := generateParamManifest(standardParams, urlParams)
 	var toolAnnotations *ToolAnnotations
 	if annotations != nil {
 		toolAnnotations = &ToolAnnotations{
@@ -45,6 +54,10 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 		Description:     desc,
 		ToolInputSchema: inputSchema,
 		Annotations:     toolAnnotations,
+	}
+	if len(secureParams) > 0 {
+		secureInputSchema, _ := generateParamManifest(secureParams, urlParams)
+		mcpManifest.SecureInputSchema = &secureInputSchema
 	}
 	metadata := make(map[string]any)
 	if len(authInvoke) > 0 {
@@ -101,7 +114,7 @@ func generateParamManifest(ps parameters.Parameters, urlParams map[string]string
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (ListToolsResult, error) {
+func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string, supportsSecureParams bool) (ListToolsResult, error) {
 	mcpManifest := make([]Tool, 0, len(g.ToolNames))
 	for _, toolName := range g.ToolNames {
 		tool, ok := pMgr.GetTool(toolName)
@@ -120,7 +133,12 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 		if err != nil {
 			return ListToolsResult{}, fmt.Errorf("error getting parameters for tool %q: %w", toolName, err)
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(), urlParams)
+
+		// Skip a Tool that requires secure params extension if the client doesn't support it.
+		if tool.HasSecureParams() && !supportsSecureParams {
+			continue
+		}
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(src), urlParams)
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	res := ListToolsResult{
@@ -129,8 +147,8 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 			ResultType: resultTypeComplete,
 		},
 		CacheableResult: CacheableResult{
-			TtlMs:      300000, // 5 minutes
-			CacheScope: cacheScopePublic,
+			TtlMs:      g.GetTTLMs(),
+			CacheScope: cacheScope(g.GetCacheScope()),
 		},
 	}
 	return res, nil
@@ -171,37 +189,17 @@ func GenerateListPromptsResult(pMgr *primitives.PrimitiveManager, g group.Group)
 			ResultType: resultTypeComplete,
 		},
 		CacheableResult: CacheableResult{
-			TtlMs:      300000, // 5 minutes
-			CacheScope: cacheScopePublic,
+			TtlMs:      g.GetTTLMs(),
+			CacheScope: cacheScope(g.GetCacheScope()),
 		},
 	}
 	return res, nil
 }
 
-// GenerateListGroupsResult generates the groups/list result. It omits the
-// default nameless group and returns the remaining groups sorted by name.
-func GenerateListGroupsResult(groupsMap map[string]group.Group) ListGroupsResult {
-	names := make([]string, 0, len(groupsMap))
-	for name := range groupsMap {
-		if name == "" {
-			continue
-		}
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
-	groupsList := make([]Group, 0, len(names))
-	for _, name := range names {
-		g := groupsMap[name]
-		groupsList = append(groupsList, Group{Name: g.Name, Description: g.Description})
-	}
-	return ListGroupsResult{Groups: groupsList}
-}
-
 // GenerateGetGroupResult generates the groups/get result for a single group's
 // tools and prompts.
-func GenerateGetGroupResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (GetGroupResult, error) {
-	listToolsResult, err := GenerateListToolsResult(pMgr, g, urlParams)
+func GenerateGetGroupResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string, supportsSecureParams bool) (GetGroupResult, error) {
+	listToolsResult, err := GenerateListToolsResult(pMgr, g, urlParams, supportsSecureParams)
 	if err != nil {
 		return GetGroupResult{}, fmt.Errorf("error generating tools manifest: %w", err)
 	}
