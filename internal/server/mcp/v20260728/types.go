@@ -369,7 +369,7 @@ type Annotated struct {
 		// @TJS-type number
 		// @minimum 0
 		// @maximum 1
-		Priority *float64 `json:"priority,omitempty"`
+		Priority float64 `json:"priority,omitempty"`
 	} `json:"annotations,omitempty"`
 }
 
