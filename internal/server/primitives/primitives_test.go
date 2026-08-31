@@ -48,7 +48,7 @@ func TestUpdateServer(t *testing.T) {
 	}
 	newResources := map[string]resources.Resource{"example-resource": nil}
 	newResourceTemplates := map[string]resources.ResourceTemplate{"example-template": nil}
-	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newResources,newResourceTemplates, newGroups)
+	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newResources, newResourceTemplates, newGroups)
 
 	gotSource, _ := primMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
@@ -98,84 +98,85 @@ func TestUpdateServer(t *testing.T) {
 		},
 	}
 
-	primMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newResources,newResourceTemplates, newGroups)
+	primMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newResources, newResourceTemplates, newGroups)
 	gotSource, _ = primMgr.GetSource("example-source2")
 	if diff := cmp.Diff(gotSource, updateSource["example-source2"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
 	}
 }
 
-// TestPrimitiveManager_GetResourceOrTemplateByURI verifies that the primitive
-// manager can correctly resolve exact URI matches for static resources, or
-// fallback to matching and extracting parameters for URI templates.
-func TestPrimitiveManager_GetResourceOrTemplateByURI(t *testing.T) {
-	primMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil, nil, nil)
-	
+func TestGetResourceOrTemplateByURI(t *testing.T) {
 	resourcesMap := map[string]resources.Resource{
-		"static-res": testutils.NewMockResource("static-res", "file:///mock/resource/1", "", "", "", nil, nil),
+		"res1": testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
+		"res2": testutils.NewMockResource("res2", "file:///res2", "", "", "", nil, nil),
 	}
 	templatesMap := map[string]resources.ResourceTemplate{
-		"test-tmpl": testutils.NewMockResourceTemplate("test-tmpl", "file:///logs/{path}", "", "", "", nil),
+		"tmpl1": testutils.NewMockResourceTemplate("tmpl1", "file:///tmpl/{path}", "", "", "", nil),
+		"tmpl2": testutils.NewMockResourceTemplate("tmpl2", "file:///other/{path}", "", "", "", nil),
 	}
 
-	
-	gConfig := group.GroupConfig{
-		Name: "",
-		ResourceNames: []string{"static-res"},
-		ResourceTemplateNames: []string{"test-tmpl"},
-	}
-	groups := map[string]group.Group{"": group.NewGroup(gConfig)}
-	
-	primMgr.SetPrimitives(nil, nil, nil, nil, nil, resourcesMap, templatesMap, groups)
-	g, _ := primMgr.GetGroup("")
-
-	// Test matching static resource
-	res, tmpl, params, err := primMgr.GetResourceOrTemplateByURI("file:///mock/resource/1", g)
+	// Create a group that only contains res1 and tmpl1
+	g, err := group.GroupConfig{
+		Name:                  "test_group",
+		ResourceNames:         []string{"res1"},
+		ResourceTemplateNames: []string{"tmpl1"},
+	}.Initialize(nil, nil, resourcesMap, templatesMap)
 	if err != nil {
-		t.Fatalf("GetResourceOrTemplateByURI failed for static resource: %v", err)
-	}
-	if res == nil {
-		t.Errorf("Expected to find static resource, got nil")
-	}
-	if tmpl != nil {
-		t.Errorf("Expected template to be nil for static resource, got %v", tmpl)
-	}
-	if params != nil {
-		t.Errorf("Expected params to be nil for static resource, got %v", params)
+		t.Fatalf("failed to init group: %v", err)
 	}
 
-	// Test matching template
-	res, tmpl, params, err = primMgr.GetResourceOrTemplateByURI("file:///logs/dynamic/dir/file.log", g)
-	if err != nil {
-		t.Fatalf("GetResourceOrTemplateByURI failed for template match: %v", err)
-	}
-	if res != nil {
-		t.Errorf("Expected resource to be nil for template match, got %v", res)
-	}
-	if tmpl == nil {
-		t.Errorf("Expected to find template, got nil")
-	}
-	if params == nil || params["path"] != "dynamic/dir/file.log" {
-		t.Errorf("Expected params to contain path=dynamic/dir/file.log, got %v", params)
-	}
+	primMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, resourcesMap, templatesMap, map[string]group.Group{"test_group": g})
 
-	// Test no match
-	_, _, _, err = primMgr.GetResourceOrTemplateByURI("http://example.com", g)
-	if err == nil {
-		t.Errorf("Expected error for unmatched URI, got nil")
-	}
+	t.Run("Exact Match Resource", func(t *testing.T) {
+		res, tmpl, params, err := primMgr.GetResourceOrTemplateByURI("file:///res1", g)
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		if res == nil || res.GetName() != "res1" {
+			t.Errorf("expected res1, got %v", res)
+		}
+		if tmpl != nil {
+			t.Errorf("expected nil template, got %v", tmpl)
+		}
+		if params != nil {
+			t.Errorf("expected nil params, got %v", params)
+		}
+	})
 
-	// Test cross-group boundary isolation
-	isolatedConfig := group.GroupConfig{
-		Name: "isolated",
-	}
-	isolatedGroup := group.NewGroup(isolatedConfig)
-	_, _, _, err = primMgr.GetResourceOrTemplateByURI("file:///mock/resource/1", isolatedGroup)
-	if err == nil {
-		t.Errorf("Expected error when requesting static resource outside of group boundary")
-	}
-	_, _, _, err = primMgr.GetResourceOrTemplateByURI("file:///logs/dynamic/dir/file.log", isolatedGroup)
-	if err == nil {
-		t.Errorf("Expected error when requesting template outside of group boundary")
-	}
+	t.Run("Excluded Resource (Not in Group)", func(t *testing.T) {
+		_, _, _, err := primMgr.GetResourceOrTemplateByURI("file:///res2", g)
+		if err == nil {
+			t.Fatal("expected error for resource not in group")
+		}
+	})
+
+	t.Run("Template Match", func(t *testing.T) {
+		res, tmpl, params, err := primMgr.GetResourceOrTemplateByURI("file:///tmpl/foo/bar.txt", g)
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		if res != nil {
+			t.Errorf("expected nil resource, got %v", res)
+		}
+		if tmpl == nil || tmpl.GetName() != "tmpl1" {
+			t.Errorf("expected tmpl1, got %v", tmpl)
+		}
+		if params["path"] != "foo/bar.txt" {
+			t.Errorf("expected path param 'foo/bar.txt', got %v", params["path"])
+		}
+	})
+
+	t.Run("Excluded Template (Not in Group)", func(t *testing.T) {
+		_, _, _, err := primMgr.GetResourceOrTemplateByURI("file:///other/baz.txt", g)
+		if err == nil {
+			t.Fatal("expected error for template not in group")
+		}
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		_, _, _, err := primMgr.GetResourceOrTemplateByURI("file:///unknown", g)
+		if err == nil {
+			t.Fatal("expected error for unknown URI")
+		}
+	})
 }

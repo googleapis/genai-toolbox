@@ -33,14 +33,14 @@ import (
 )
 
 type Config struct {
-	Sources         server.SourceConfigs         `yaml:"sources"`
-	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
-	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
-	Tools           server.ToolConfigs           `yaml:"tools"`
-	Prompts         server.PromptConfigs         `yaml:"prompts"`
-	Resources       server.ResourceConfigs       `yaml:"resources"`
+	Sources           server.SourceConfigs           `yaml:"sources"`
+	AuthServices      server.AuthServiceConfigs      `yaml:"authServices"`
+	EmbeddingModels   server.EmbeddingModelConfigs   `yaml:"embeddingModels"`
+	Tools             server.ToolConfigs             `yaml:"tools"`
+	Prompts           server.PromptConfigs           `yaml:"prompts"`
+	Resources         server.ResourceConfigs         `yaml:"resources"`
 	ResourceTemplates server.ResourceTemplateConfigs `yaml:"resourceTemplates"`
-	Groups          server.GroupConfigs          `yaml:"groups"`
+	Groups            server.GroupConfigs            `yaml:"groups"`
 }
 
 type ConfigParser struct {
@@ -329,14 +329,14 @@ func processValue(v any, isToolset bool) any {
 // All resource names (sources, authServices, tools, groups) must be unique across all files.
 func mergeConfigs(files ...Config) (Config, error) {
 	merged := Config{
-		Sources:         make(server.SourceConfigs),
-		AuthServices:    make(server.AuthServiceConfigs),
-		EmbeddingModels: make(server.EmbeddingModelConfigs),
-		Tools:           make(server.ToolConfigs),
-		Prompts:         make(server.PromptConfigs),
-		Resources:       make(server.ResourceConfigs),
+		Sources:           make(server.SourceConfigs),
+		AuthServices:      make(server.AuthServiceConfigs),
+		EmbeddingModels:   make(server.EmbeddingModelConfigs),
+		Tools:             make(server.ToolConfigs),
+		Prompts:           make(server.PromptConfigs),
+		Resources:         make(server.ResourceConfigs),
 		ResourceTemplates: make(server.ResourceTemplateConfigs),
-		Groups:          make(server.GroupConfigs),
+		Groups:            make(server.GroupConfigs),
 	}
 
 	var conflicts []string
@@ -418,7 +418,7 @@ func mergeConfigs(files ...Config) (Config, error) {
 				// Check for URI collisions with static resources
 				uriStr := rt.GetURITemplate()
 				if existingName, exists := seenResourceURIs[uriStr]; exists {
-					conflicts = append(conflicts, fmt.Sprintf("resourceTemplate '%s' (file #%d) URI %q collides with resource '%s'", name, fileIndex+1, uriStr, existingName))
+					conflicts = append(conflicts, fmt.Sprintf("resourceTemplate URI '%s' used by '%s' and '%s' (file #%d)", rt.GetURITemplate(), existingName, name, fileIndex+1))
 				} else {
 					seenResourceURIs[uriStr] = name
 					merged.ResourceTemplates[name] = rt

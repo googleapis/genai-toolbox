@@ -235,7 +235,7 @@ func RegisterMockResource() {
 // MockResourceConfig is a mock implementation of resources.ResourceConfig
 type MockResourceConfig struct {
 	resources.ResourceConfigBase `yaml:",inline"`
-	Size                         *int64
+	Size                         *int64 `yaml:"-"`
 }
 
 func (m *MockResourceConfig) ResourceConfigType() string {
@@ -295,7 +295,9 @@ func (m MockResourceTemplate) GetTitle() string       { return m.config.GetTitle
 func (m MockResourceTemplate) GetDescription() string { return m.config.GetDescription() }
 func (m MockResourceTemplate) GetMimeType() string    { return m.config.GetMimeType() }
 func (m MockResourceTemplate) GetURITemplate() string { return m.config.GetURITemplate() }
-func (m MockResourceTemplate) GetAnnotations() *resources.ResourceAnnotations { return m.config.Annotations }
+func (m MockResourceTemplate) GetAnnotations() *resources.ResourceAnnotations {
+	return m.config.Annotations
+}
 
 func (m MockResourceTemplate) Read(ctx context.Context, params map[string]any) (any, error) {
 	return "mock resource template data", nil
@@ -310,18 +312,12 @@ func (m MockResourceTemplate) GetName() string {
 }
 
 func NewMockResource(name, uri, title, description, mimeType string, size *int64, annotations *resources.ResourceAnnotations) MockResource {
-	cfgBase := resources.ConfigBase{Name: name}
-	if title != "" {
-		cfgBase.Title = title
-	}
-	if description != "" {
-		cfgBase.Description = description
-	}
-	if mimeType != "" {
-		cfgBase.MimeType = mimeType
-	}
-	if annotations != nil {
-		cfgBase.Annotations = annotations
+	cfgBase := resources.ConfigBase{
+		Name:        name,
+		Title:       title,
+		Description: description,
+		MimeType:    mimeType,
+		Annotations: annotations,
 	}
 
 	resCfg := resources.ResourceConfigBase{
@@ -338,18 +334,12 @@ func NewMockResource(name, uri, title, description, mimeType string, size *int64
 }
 
 func NewMockResourceTemplate(name, uriTemplate, title, description, mimeType string, annotations *resources.ResourceAnnotations) MockResourceTemplate {
-	cfgBase := resources.ConfigBase{Name: name}
-	if title != "" {
-		cfgBase.Title = title
-	}
-	if description != "" {
-		cfgBase.Description = description
-	}
-	if mimeType != "" {
-		cfgBase.MimeType = mimeType
-	}
-	if annotations != nil {
-		cfgBase.Annotations = annotations
+	cfgBase := resources.ConfigBase{
+		Name:        name,
+		Title:       title,
+		Description: description,
+		MimeType:    mimeType,
+		Annotations: annotations,
 	}
 
 	return MockResourceTemplate{

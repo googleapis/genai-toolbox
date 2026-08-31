@@ -16,8 +16,10 @@ package file
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"mime"
 	"net/url"
 	"os"
@@ -44,6 +46,7 @@ func init() {
 	}
 }
 
+// newConfig creates and decodes a new file resource config.
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
 	cfg := &Config{
 		ResourceConfigBase: resources.ResourceConfigBase{
@@ -60,6 +63,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 	return cfg, nil
 }
 
+// newTemplateConfig creates and decodes a new file template config.
 func newTemplateConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceTemplateConfig, error) {
 	cfg := &TemplateConfig{
 		ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{
@@ -78,8 +82,8 @@ func newTemplateConfig(ctx context.Context, name string, decoder *yaml.Decoder) 
 // Config represents the configuration for a file resource.
 type Config struct {
 	resources.ResourceConfigBase `yaml:",inline"`
-	Path                 string `yaml:"path" validate:"required"`
-	MaxSize              *int64 `yaml:"max_size,omitempty"`
+	Path                         string `yaml:"path" validate:"required"`
+	MaxSize                      *int64 `yaml:"max_size,omitempty"`
 }
 
 var _ resources.ResourceConfig = &Config{}
@@ -95,7 +99,7 @@ var allowedExts = map[string]bool{
 	".yaml": true, ".yml": true, ".xml": true, ".sql": true,
 }
 
-// validateExtension ensures the file has an allowed extension.
+// validateExtension checks if a file extension is allowed.
 func validateExtension(path string) error {
 	ext := strings.ToLower(filepath.Ext(path))
 	if !allowedExts[ext] {
@@ -125,8 +129,17 @@ func (c *Config) Validate() error {
 }
 
 // containsTraversal checks if any component of the path is a backward traversal
-func containsTraversal(path string) bool {
-	parts := strings.Split(filepath.ToSlash(path), "/")
+func containsTraversal(p string) bool {
+	// Check for URL-encoded traversal attempts to prevent evasion
+	decoded, err := url.PathUnescape(p)
+	if err == nil {
+		p = decoded
+	}
+
+	// Convert any backslashes to forward slashes for unified checking
+	p = strings.ReplaceAll(p, "\\", "/")
+
+	parts := strings.Split(p, "/")
 	for _, part := range parts {
 		if part == ".." {
 			return true
@@ -196,18 +209,15 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		}
 	}
 
+	// Security check for extension on the requested path
+	if err := validateExtension(absPath); err != nil {
+		return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
+	}
+
 	resolvedPath, err := filepath.EvalSymlinks(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			if err := validateExtension(absPath); err != nil {
-				return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
-			}
-			return &FileResource{
-				Config:          *c,
-				absPath:         absPath,
-				resolvedBaseDir: resolvedBaseDir,
-				isRelative:      isRelative,
-			}, nil
+			return nil, fmt.Errorf("file not found: %q (files must exist at boot time to prevent dead URIs)", absPath)
 		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q: %w", c.Name, err)
 	}
@@ -232,6 +242,12 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		return nil, fmt.Errorf("path %q for resource %q is not a regular file (devices, pipes, sockets are blocked)", absPath, c.Name)
 	}
 
+	f, err := os.Open(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file %q (missing read permissions?): %w", absPath, err)
+	}
+	f.Close()
+
 	size := info.Size()
 	if size > *c.MaxSize {
 		size = *c.MaxSize
@@ -255,7 +271,7 @@ type FileResource struct {
 	isRelative      bool
 }
 
-// GetSize returns the dynamically evaluated size of the file.
+// GetSize returns the configured maximum size of the file.
 func (r *FileResource) GetSize() *int64 {
 	if size, err := r.GetCurrentSize(); err == nil {
 		return &size
@@ -265,8 +281,16 @@ func (r *FileResource) GetSize() *int64 {
 
 // Read retrieves the file content.
 func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, error) {
+	// Security check for extension on the resolved target
+	if err := validateExtension(r.absPath); err != nil {
+		return nil, fmt.Errorf("security violation: configured file extension not allowed for resource %q: %w", r.Config.Name, err)
+	}
+
 	resolvedPath, err := filepath.EvalSymlinks(r.absPath)
 	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("file not found: %q: %w", r.absPath, fs.ErrNotExist)
+		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Config.Name, err)
 	}
 
@@ -337,7 +361,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	return string(content), nil
 }
 
-// GetAnnotations returns the resource annotations, dynamically computing the LastModified timestamp.
+// GetAnnotations returns the resource annotations.
 func (r *FileResource) GetAnnotations() *resources.ResourceAnnotations {
 	var ret resources.ResourceAnnotations
 	if r.Config.Annotations != nil {
@@ -367,12 +391,12 @@ func (r *FileResource) GetAnnotations() *resources.ResourceAnnotations {
 	return &ret
 }
 
-// ToConfig returns the underlying configuration.
+// ToConfig returns the original configuration for this resource.
 func (r *FileResource) ToConfig() resources.ResourceConfig {
 	return &r.Config
 }
 
-// Size dynamically retrieves the current size of the file on disk.
+// GetCurrentSize returns the actual size of the file on disk.
 func (r *FileResource) GetCurrentSize() (int64, error) {
 	resolvedPath := r.absPath
 	if resolved, err := filepath.EvalSymlinks(r.absPath); err == nil {
@@ -398,11 +422,15 @@ func (r *FileResource) GetCurrentSize() (int64, error) {
 type TemplateConfig struct {
 	resources.ResourceTemplateConfigBase `yaml:",inline"`
 	AllowedPaths                         []string `yaml:"allowedPaths,omitempty"`
+	MaxSize                              *int64   `yaml:"max_size,omitempty"`
 }
 
+var _ resources.ResourceTemplateConfig = (*TemplateConfig)(nil)
+
 // ResourceTemplateConfigType returns the resource template type identifier.
+
 func (c *TemplateConfig) ResourceTemplateConfigType() string {
-	return "file"
+	return resourceType
 }
 
 // Validate performs template-specific validation including URI scheme checks.
@@ -419,6 +447,11 @@ func (c *TemplateConfig) Validate() error {
 
 // Initialize validates the configuration and initializes the file resource template.
 func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemplate, error) {
+	if c.MaxSize == nil {
+		limit := int64(defaultMaxFileSize)
+		c.MaxSize = &limit
+	}
+
 	// Validate and resolve allowed paths if specified
 	var unresolvedAllowedPaths []string
 	var resolvedAllowedPaths []string
@@ -454,7 +487,7 @@ func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemp
 	}
 
 	return &FileTemplate{
-		config:                 c,
+		TemplateConfig:         *c,
 		unresolvedAllowedPaths: unresolvedAllowedPaths,
 		resolvedAllowedPaths:   resolvedAllowedPaths,
 	}, nil
@@ -462,23 +495,12 @@ func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemp
 
 // FileTemplate handles reading content from a file template URI.
 type FileTemplate struct {
-	config                 *TemplateConfig
+	TemplateConfig
 	unresolvedAllowedPaths []string
 	resolvedAllowedPaths   []string
 }
 
-// GetName returns the resource template name.
-func (r *FileTemplate) GetName() string        { return r.config.GetName() }
-// GetTitle returns the resource template title.
-func (r *FileTemplate) GetTitle() string       { return r.config.GetTitle() }
-// GetDescription returns the resource template description.
-func (r *FileTemplate) GetDescription() string { return r.config.GetDescription() }
-// GetMimeType returns the MIME type of the resource template.
-func (r *FileTemplate) GetMimeType() string    { return r.config.GetMimeType() }
-// GetURITemplate returns the URI template string.
-func (r *FileTemplate) GetURITemplate() string { return r.config.GetURITemplate() }
-// GetAnnotations returns the resource annotations.
-func (r *FileTemplate) GetAnnotations() *resources.ResourceAnnotations { return r.config.GetAnnotations() }
+var _ resources.ResourceTemplate = (*FileTemplate)(nil)
 
 // Read retrieves the file content using template parameters.
 func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, error) {
@@ -499,7 +521,7 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 
 	// If the path is relative, reconstruct the full path from the URI template
 	if !filepath.IsAbs(pathStr) {
-		uriTemplate := r.config.URITemplate
+		uriTemplate := r.URITemplate
 		if strings.Contains(uriTemplate, "{path}") {
 			// Interpolate {path} back into the template to capture prefix AND suffix
 			escapedPath := url.PathEscape(pathStr)
@@ -561,8 +583,8 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 	resolvedPath, err := filepath.EvalSymlinks(absPath)
 	if err != nil {
 		// file does not exist
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("file not found: %q", pathStr)
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("file not found: %q: %w", pathStr, fs.ErrNotExist)
 		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for %q: %w", absPath, err)
 	}
@@ -572,7 +594,10 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, err
 	}
 
-	// Security check for extension
+	// Security check for extension on BOTH the requested path and resolved target
+	if err := validateExtension(pathStr); err != nil {
+		return nil, fmt.Errorf("security violation: requested file extension not allowed: %w", err)
+	}
 	if err := validateExtension(resolvedPath); err != nil {
 		return nil, fmt.Errorf("security violation: file extension not allowed: %w", err)
 	}
@@ -605,7 +630,7 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("security violation: file %q was swapped with a non-regular file during read", resolvedPath)
 	}
 
-	limit := int64(defaultMaxFileSize) // Templates don't currently expose MaxSize
+	limit := *r.MaxSize
 	limitedReader := io.LimitReader(f, limit+1)
 	content, err := io.ReadAll(limitedReader)
 	if err != nil {
@@ -615,8 +640,8 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 	if int64(len(content)) > limit {
 		truncated := content[:limit]
 		for len(truncated) > 0 {
-			runeVal, size := utf8.DecodeLastRune(truncated)
-			if runeVal == utf8.RuneError && size == 1 {
+			r, size := utf8.DecodeLastRune(truncated)
+			if r == utf8.RuneError && size == 1 {
 				truncated = truncated[:len(truncated)-1]
 			} else {
 				break
@@ -629,7 +654,7 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 	return string(content), nil
 }
 
-// ToConfig returns the runtime config struct back to the caller.
+// ToConfig returns the original configuration for this template.
 func (r *FileTemplate) ToConfig() resources.ResourceTemplateConfig {
-	return r.config
+	return &r.TemplateConfig
 }

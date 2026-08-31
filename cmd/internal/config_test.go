@@ -15,7 +15,6 @@
 package internal
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -38,7 +37,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools/http"
 	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgressql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
-	"github.com/goccy/go-yaml"
 )
 
 func TestParseEnv(t *testing.T) {
@@ -626,23 +624,8 @@ tools:
 
 func float64Ptr(f float64) *float64 { return &f }
 
-
-
-
 func TestParseConfig(t *testing.T) {
 	testutils.RegisterMockResource()
-
-	resources.RegisterTemplate("mock", func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceTemplateConfig, error) {
-		var cfg testutils.MockResourceTemplateConfig
-		cfg.Name = name
-		cfg.Type = "mock"
-		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
-			return nil, err
-		}
-		return &cfg, nil
-	})
-
-
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -862,9 +845,9 @@ func TestParseConfig(t *testing.T) {
 					"my-resource": &testutils.MockResourceConfig{
 						ResourceConfigBase: resources.ResourceConfigBase{
 							ConfigBase: resources.ConfigBase{
-								Name: "my-resource",
-								Type: "mock",
-								Annotations: &resources.ResourceAnnotations{Priority: float64Ptr(1.0)},},
+								Name:        "my-resource",
+								Type:        "mock",
+								Annotations: &resources.ResourceAnnotations{Priority: float64Ptr(1.0)}},
 							URI: "mock://test",
 						},
 					},
@@ -1079,6 +1062,7 @@ func TestParseConfigFailure(t *testing.T) {
 		})
 	}
 }
+
 func TestParseConfigWithAuth(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -2560,7 +2544,7 @@ func TestMergeConfigs(t *testing.T) {
 			name:      "merge with template URI conflicts",
 			files:     []Config{file1, fileWithTemplateURIConflict},
 			wantErr:   true,
-			errString: "resourceTemplate 'tmpl3' (file #2) URI \"file:///{path}\" collides with resource 'tmpl1'",
+			errString: "resourceTemplate URI 'file:///{path}' used by 'tmpl1' and 'tmpl3' (file #2)",
 		},
 		{
 			name:      "merge multiple mcp enabled generic",
