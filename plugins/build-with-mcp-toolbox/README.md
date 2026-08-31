@@ -40,6 +40,7 @@ files rather than a checkout of the whole repository.
 ## Skills
 
 - [`getting-started`](skills/getting-started/SKILL.md)
+- [`answer-questions`](skills/answer-questions/SKILL.md)
 
 Each skill's `description` frontmatter is the authoritative statement of what it
 covers and when it triggers.
@@ -56,8 +57,11 @@ rather than symlinking into the repo, so this directory stands alone.
 Skills live in `skills/<skill-name>/SKILL.md`. When adding one:
 
 - Link to the versioned docsite, never to `/dev/` or a moving branch path.
-- Wrap any version-bearing string in
-  `<!-- {x-release-please-start-version} -->` / `<!-- {x-release-please-end} -->`
-  and add the file to `extraFiles` in `.github/release-please.yml`.
+- Wrap version strings the reader acts on — docsite links, install URLs, `curl`
+  commands — in `<!-- {x-release-please-start-version} -->` /
+  `<!-- {x-release-please-end} -->`, and add the file to `extraFiles` in
+  `.github/release-please.yml`. Leave versions inside worked examples unwrapped:
+  the updater replaces the whole semver match, so a wrapped
+  `1.9.0+binary.darwin.arm64` would lose its build metadata.
 - Add a link to it under [Skills](#skills).
 - Validate before pushing: `claude plugin validate . --strict`

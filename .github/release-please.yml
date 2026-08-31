@@ -42,6 +42,7 @@ extraFiles:
     "gemini-extension.json",
     "pypi/src/toolbox_server/__init__.py",
     "plugins/build-with-mcp-toolbox/skills/getting-started/SKILL.md",
+    "plugins/build-with-mcp-toolbox/skills/answer-questions/SKILL.md",
     {
       "type": "json",
       "path": "plugins/build-with-mcp-toolbox/.claude-plugin/plugin.json",
