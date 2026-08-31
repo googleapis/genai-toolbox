@@ -129,6 +129,9 @@ Skip a dimension when it doesn't apply: say so, don't invent a finding.
   documentation: could an agent pick this tool and fill its parameters from that text alone, at a
   token cost worth paying? Flag ones that restate the field name, omit units/format/allowed
   values, or run long without adding information.
+  - *Evals measure exactly this.* For a PR editing `internal/prebuiltconfigs/tools/<config>.yaml`,
+    note that the next step is a maintainer applying the `evals: run` label, which scopes the run
+    to the configs that PR touched. Like integration tests, un-run evals aren't a blocker.
 - **Tests.** New logic or a bug fix needs tests; missing them is usually request-changes.
   - *Coverage:* happy path, edge cases, and for a fix, a test that fails without it. A new
     source/tool follows the unit + integration pattern and is wired into

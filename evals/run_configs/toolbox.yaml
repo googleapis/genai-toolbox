@@ -20,7 +20,7 @@ dataset_config: !ENV ${EVAL_DATASET}
 dataset_format: gemini-cli-format
 
 # Viewer labels only; nothing reads them for scoring.
-eval_group: mcp-toolbox
+eval_group: !ENV ${EVAL_GROUP}
 product_name: !ENV ${TOOLBOX_PREBUILT}
 
 # Orchestrator Configs
