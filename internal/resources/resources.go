@@ -15,6 +15,9 @@
 package resources
 
 import (
+	"mime"
+	"time"
+
 	"context"
 	"fmt"
 	"net/url"
@@ -131,13 +134,26 @@ func (c *ConfigBase) SetDefaults() {
 
 // Validate performs base configuration validation, such as checking for duplicate audiences.
 func (c *ConfigBase) Validate() error {
-	if c.Annotations != nil && len(c.Annotations.Audience) > 0 {
-		seen := make(map[AudienceRole]bool)
-		for _, aud := range c.Annotations.Audience {
-			if seen[aud] {
-				return fmt.Errorf("duplicate audience %q is not allowed", aud)
+	if c.MimeType != "" {
+		mt, _, err := mime.ParseMediaType(c.MimeType)
+		if err != nil || !strings.Contains(mt, "/") {
+			return fmt.Errorf("invalid mimeType %q: must be a valid media type (e.g. text/plain)", c.MimeType)
+		}
+	}
+	if c.Annotations != nil {
+		if len(c.Annotations.Audience) > 0 {
+			seen := make(map[AudienceRole]bool)
+			for _, aud := range c.Annotations.Audience {
+				if seen[aud] {
+					return fmt.Errorf("duplicate audience %q is not allowed", aud)
+				}
+				seen[aud] = true
 			}
-			seen[aud] = true
+		}
+		if c.Annotations.LastModified != "" {
+			if _, err := time.Parse(time.RFC3339, c.Annotations.LastModified); err != nil {
+				return fmt.Errorf("lastModified %q is not a valid ISO 8601 string: %v", c.Annotations.LastModified, err)
+			}
 		}
 	}
 	return nil

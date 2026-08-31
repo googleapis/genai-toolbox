@@ -33,14 +33,14 @@ import (
 )
 
 type Config struct {
-	Sources         server.SourceConfigs         `yaml:"sources"`
-	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
-	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
-	Tools           server.ToolConfigs           `yaml:"tools"`
-	Prompts         server.PromptConfigs         `yaml:"prompts"`
-	Resources       server.ResourceConfigs       `yaml:"resources"`
+	Sources           server.SourceConfigs           `yaml:"sources"`
+	AuthServices      server.AuthServiceConfigs      `yaml:"authServices"`
+	EmbeddingModels   server.EmbeddingModelConfigs   `yaml:"embeddingModels"`
+	Tools             server.ToolConfigs             `yaml:"tools"`
+	Prompts           server.PromptConfigs           `yaml:"prompts"`
+	Resources         server.ResourceConfigs         `yaml:"resources"`
 	ResourceTemplates server.ResourceTemplateConfigs `yaml:"resourceTemplates"`
-	Groups          server.GroupConfigs          `yaml:"groups"`
+	Groups            server.GroupConfigs            `yaml:"groups"`
 }
 
 type ConfigParser struct {
@@ -329,14 +329,14 @@ func processValue(v any, isToolset bool) any {
 // All resource names (sources, authServices, tools, groups) must be unique across all files.
 func mergeConfigs(files ...Config) (Config, error) {
 	merged := Config{
-		Sources:         make(server.SourceConfigs),
-		AuthServices:    make(server.AuthServiceConfigs),
-		EmbeddingModels: make(server.EmbeddingModelConfigs),
-		Tools:           make(server.ToolConfigs),
-		Prompts:         make(server.PromptConfigs),
-		Resources:       make(server.ResourceConfigs),
+		Sources:           make(server.SourceConfigs),
+		AuthServices:      make(server.AuthServiceConfigs),
+		EmbeddingModels:   make(server.EmbeddingModelConfigs),
+		Tools:             make(server.ToolConfigs),
+		Prompts:           make(server.PromptConfigs),
+		Resources:         make(server.ResourceConfigs),
 		ResourceTemplates: make(server.ResourceTemplateConfigs),
-		Groups:          make(server.GroupConfigs),
+		Groups:            make(server.GroupConfigs),
 	}
 
 	var conflicts []string

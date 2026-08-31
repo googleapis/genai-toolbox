@@ -624,9 +624,6 @@ tools:
 
 func float64Ptr(f float64) *float64 { return &f }
 
-
-
-
 func TestParseConfig(t *testing.T) {
 	testutils.RegisterMockResource()
 

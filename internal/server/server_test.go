@@ -2198,7 +2198,70 @@ name: test
 type: file
 `,
 			wantError:   true,
-			errContains: "validation for 'URITemplate' failed on the 'required' tag",
+			errContains: "missing required 'uriTemplate' field",
+		},
+
+		{
+			name: "duplicate audience triggers validation error",
+			yaml: `
+kind: resource
+name: test-audience
+type: mock
+uri: mock://test
+annotations:
+  audience:
+    - user
+    - user
+`,
+			wantError:   true,
+			errContains: "duplicate audience",
+		},
+		{
+			name: "invalid mimeType triggers validation error",
+			yaml: `
+kind: resource
+name: test-mime
+type: mock
+uri: mock://test
+mimeType: invalid_mime
+`,
+			wantError:   true,
+			errContains: "invalid mimeType",
+		},
+		{
+			name: "invalid lastModified triggers validation error",
+			yaml: `
+kind: resource
+name: test-lastmod
+type: mock
+uri: mock://test
+annotations:
+  lastModified: "2025-01-12"
+`,
+			wantError:   true,
+			errContains: "not a valid ISO 8601 string",
+		},
+		{
+			name: "invalid RFC 6570 uriTemplate triggers validation error",
+			yaml: `
+kind: resourceTemplate
+name: test-template
+type: file
+uriTemplate: file:///{path
+`,
+			wantError:   true,
+			errContains: "invalid RFC 6570 uriTemplate",
+		},
+		{
+			name: "invalid variable name in uriTemplate triggers validation error",
+			yaml: `
+kind: resourceTemplate
+name: test-template2
+type: file
+uriTemplate: file:///{foo}
+`,
+			wantError:   true,
+			errContains: "only the 'path' variable is supported",
 		},
 		{
 			name: "duplicate name",

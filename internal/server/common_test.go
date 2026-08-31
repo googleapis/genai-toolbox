@@ -36,8 +36,10 @@ import (
 )
 
 var (
-	_ tools.Tool              = testutils.MockTool{}
-	_ prompts.Prompt          = testutils.MockPrompt{}
+	_ tools.Tool                 = testutils.MockTool{}
+	_ prompts.Prompt             = testutils.MockPrompt{}
+	_ resources.Resource         = testutils.MockResource{}
+	_ resources.ResourceTemplate = testutils.MockResourceTemplate{}
 )
 
 // setUpServer create a new server with tools, prompts, resources, resourceTemplates and groups.

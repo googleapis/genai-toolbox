@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"time"
 
@@ -208,7 +209,10 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 			Prompts: &ListChanged{
 				ListChanged: &promptsListChanged,
 			},
-			Resources: &ResourceCapabilities{},
+			Resources: &struct {
+				Subscribe   *bool `json:"subscribe,omitempty"`
+				ListChanged *bool `json:"listChanged,omitempty"`
+			}{},
 		},
 	}
 	res := jsonrpc.JSONRPCResponse{
@@ -823,7 +827,7 @@ func resourcesListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("returning %d resources", len(result.Resources)))
-	
+
 	meta, err := getResultMetadata(ctx, result.Meta)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -934,6 +938,9 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 
 	if err != nil {
 		err = fmt.Errorf("failed to read resource: %w", err)
+		if errors.Is(err, fs.ErrNotExist) {
+			return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		}
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
@@ -944,7 +951,7 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, "read resource successfully")
-	
+
 	meta, err := getResultMetadata(ctx, nil)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -958,7 +965,7 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 			TtlMs:      300000, // 5 minutes
 			CacheScope: cacheScopePublic,
 		},
-		Contents: []TextResourceContent{
+		Contents: []TextResourceContents{
 			{
 				Uri:      uri,
 				MimeType: mimeType,

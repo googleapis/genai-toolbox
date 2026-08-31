@@ -16,7 +16,10 @@ package primitives
 
 import (
 	"cmp"
+	"fmt"
+	"regexp"
 	"slices"
+	"strings"
 	"sync"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -132,7 +135,6 @@ func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, a
 	r.groups = groupsMap
 }
 
-
 func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -168,4 +170,42 @@ func (r *PrimitiveManager) GetResourceTemplate(name string) (resources.ResourceT
 	defer r.mu.RUnlock()
 	rt, exists := r.resourceTemplates[name]
 	return rt, exists
+}
+
+// GetResourceOrTemplateByURI looks up a resource by exact URI match within a group.
+// If not found, it attempts to match against resource templates (e.g. file://{path}).
+// Returns the matched resource OR template, plus extracted params if a template was matched.
+func (r *PrimitiveManager) GetResourceOrTemplateByURI(uri string, g group.Group) (resources.Resource, resources.ResourceTemplate, map[string]any, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for name, res := range r.resources {
+		if !g.ContainsResource(name) {
+			continue
+		}
+		if res.GetURI() == uri {
+			return res, nil, nil, nil
+		}
+	}
+
+	// Template matching for {path} anywhere in the URI
+	for name, rt := range r.resourceTemplates {
+		if !g.ContainsResourceTemplate(name) {
+			continue
+		}
+		tmpl := rt.GetURITemplate()
+		if strings.Contains(tmpl, "{path}") {
+			regexPattern := regexp.QuoteMeta(tmpl)
+			regexPattern = strings.ReplaceAll(regexPattern, "\\{path\\}", "(.*)")
+			re, err := regexp.Compile("^" + regexPattern + "$")
+			if err != nil {
+				continue
+			}
+			matches := re.FindStringSubmatch(uri)
+			if len(matches) == 2 {
+				return nil, rt, map[string]any{"path": matches[1]}, nil
+			}
+		}
+	}
+	return nil, nil, nil, fmt.Errorf("no resource or template found for URI: %s", uri)
 }

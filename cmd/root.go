@@ -172,16 +172,16 @@ func validateReloadEdits(
 	defer span.End()
 
 	reloadedConfig := server.ServerConfig{
-		Version:               versionString,
-		SourceConfigs:         toolsFile.Sources,
-		AuthServiceConfigs:    toolsFile.AuthServices,
-		EmbeddingModelConfigs: toolsFile.EmbeddingModels,
-		ToolConfigs:           toolsFile.Tools,
-		PromptConfigs:         toolsFile.Prompts,
-		ResourceConfigs:       toolsFile.Resources,
-		GroupConfigs:          toolsFile.Groups,
+		Version:                 versionString,
+		SourceConfigs:           toolsFile.Sources,
+		AuthServiceConfigs:      toolsFile.AuthServices,
+		EmbeddingModelConfigs:   toolsFile.EmbeddingModels,
+		ToolConfigs:             toolsFile.Tools,
+		PromptConfigs:           toolsFile.Prompts,
+		ResourceConfigs:         toolsFile.Resources,
+		GroupConfigs:            toolsFile.Groups,
 		ResourceTemplateConfigs: toolsFile.ResourceTemplates,
-		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
+		IgnoreUnknownTools:      util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
 	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groupsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
