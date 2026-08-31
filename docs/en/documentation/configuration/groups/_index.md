@@ -8,7 +8,7 @@ description: >
 
 A Group is a single named collection that scopes MCP primitives together — currently **tools** and **prompts**, with more (such as resources) planned. Where a [Toolset](../toolsets/) groups only tools, a group bundles these primitives under one name and one MCP endpoint, and carries a `description` that describes the collection.
 
-Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list methods (such as `tools/list` and `prompts/list`) to that group.
+Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list methods (such as `tools/list` and `prompts/list`) to that group. Groups are also introspectable over MCP through the [`groups/list` and `groups/get`](#introspecting-groups-over-mcp) methods.
 
 ## Defining Groups
 
@@ -17,7 +17,7 @@ Declare a group as a `kind: group` document in your configuration file. A group 
 | Field         | Required | Description                                                                                    |
 | ------------- | -------- | -----------------------------------------------------------------------------------------------|
 | `name`        | Yes\*    | Unique name for the group. Used as the endpoint path (`/mcp/{name}`).                          |
-| `description` | No       | Human-readable description of the group.                                                       |
+| `description` | No       | Human-readable description of the group, surfaced via `groups/list`.                           |
 | `tools`       | No       | List of tool names to include in the group.                                                    |
 | `prompts`     | No       | List of prompt names to include in the group.                                                  |
 | `ttlMs`       | No       | Time-to-live in milliseconds for cached group list responses. ([MCP TTL Spec](https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/caching#time-to-live-ttl-field )). Defaults to `300000` (5 minutes).|
@@ -85,3 +85,51 @@ toolbox migrate --config tools.yaml
 ```
 
 Use `--dry-run` to preview the changes without writing them.
+
+## Introspecting groups over MCP
+
+Two MCP methods let clients discover groups: `groups/list` and `groups/get`.
+
+Both are part of the experimental Toolbox extension, so they require MCP protocol version `2026-07-28` and the `com.google.cloud/toolbox.v1` extension. Earlier protocol versions do not implement them and respond with `METHOD_NOT_FOUND`; a `2026-07-28` client that has not declared the extension gets `MISSING_REQUIRED_CLIENT_CAPABILITY`. For more details on extension capabilities and client requirements, see the [Extension README](https://github.com/googleapis/mcp-toolbox/blob/main/extensions/2026-07-28/README.md).
+
+### `groups/list`
+
+Returns every named group with its `name` and `description`. The default (nameless) group is omitted:
+
+```json
+{
+  "groups": [
+    { "name": "data_analyst", "description": "Tools and prompts for exploratory data analysis." },
+    { "name": "admin", "description": "Administrative operations." }
+  ]
+}
+```
+
+### `groups/get`
+
+Takes a group `name` and returns that group's tools and prompts together:
+
+```json
+{
+  "name": "data_analyst",
+  "tools": [
+    {
+      "name": "list_tables",
+      "description": "List tables in the database.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "execute_sql",
+      "description": "Run a SQL query.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "sql": { "type": "string" } },
+        "required": ["sql"]
+      }
+    }
+  ],
+  "prompts": [
+    { "name": "summarize_results", "description": "Summarize query results." }
+  ]
+}
+```

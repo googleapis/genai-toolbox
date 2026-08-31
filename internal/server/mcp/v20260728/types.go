@@ -522,7 +522,7 @@ type Group struct {
 
 // ListGroupsResult is the server's response to a groups/list request.
 type ListGroupsResult struct {
-	jsonrpc.Result
+	Result
 	Groups []Group `json:"groups"`
 }
 
@@ -542,7 +542,7 @@ type GetGroupRequestParams struct {
 // tools and prompts. The description is intentionally omitted; it is exposed only
 // through groups/list.
 type GetGroupResult struct {
-	jsonrpc.Result
+	Result
 	Name    string   `json:"name"`
 	Tools   []Tool   `json:"tools"`
 	Prompts []Prompt `json:"prompts"`

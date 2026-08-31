@@ -1079,11 +1079,23 @@ func TestGroupsListHandler(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 	ctx = util.WithLogger(ctx, testLogger)
+	ctx = util.WithToolboxVersionKey(ctx, fakeVersionString)
+	Initialize(nil)
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	validMeta := &RequestMetaObject{
+		ProtocolVersion: PROTOCOL_VERSION,
+		ClientInfo: Implementation{
+			BaseMetadata: BaseMetadata{Name: "TestClient"},
+			Version:      "1.0",
+		},
+		MetaClientCapabilities: &ClientCapabilities{
+			Extensions: map[string]any{"com.google.cloud/toolbox.v1": map[string]any{}},
+		},
+	}
+	noExtensionMeta := &RequestMetaObject{
 		ProtocolVersion: PROTOCOL_VERSION,
 		ClientInfo: Implementation{
 			BaseMetadata: BaseMetadata{Name: "TestClient"},
@@ -1106,6 +1118,20 @@ func TestGroupsListHandler(t *testing.T) {
 			rawBody:     []byte(`{invalid json}`),
 			wantErr:     true,
 			errContains: "invalid mcp groups list request",
+		},
+		{
+			name: "client did not declare the toolbox extension",
+			body: ListGroupsRequest{
+				PaginatedRequest: PaginatedRequest{
+					Request: jsonrpc.Request{Method: GROUPS_LIST},
+					Params: PaginatedRequestParams{
+						RequestParams: RequestParams{Meta: noExtensionMeta},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{GROUPS_LIST}},
+			wantErr:     true,
+			errContains: `missing required client capability: method "groups/list" requires com.google.cloud/toolbox.v1 extension which is not supported by the client`,
 		},
 		{
 			name: "success excludes default group and sorts",
@@ -1155,6 +1181,12 @@ func TestGroupsListHandler(t *testing.T) {
 			if !ok {
 				t.Fatalf("expected ListGroupsResult, got %T", res.Result)
 			}
+			if result.ResultType != resultTypeComplete {
+				t.Errorf("result.ResultType = %q, want %q", result.ResultType, resultTypeComplete)
+			}
+			if result.Meta == nil {
+				t.Error("result.Meta = nil, want server info metadata")
+			}
 			gotNames := make([]string, 0, len(result.Groups))
 			for _, g := range result.Groups {
 				gotNames = append(gotNames, g.Name)
@@ -1179,11 +1211,23 @@ func TestGroupsGetHandler(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 	ctx = util.WithLogger(ctx, testLogger)
+	ctx = util.WithToolboxVersionKey(ctx, fakeVersionString)
+	Initialize(nil)
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	validMeta := &RequestMetaObject{
+		ProtocolVersion: PROTOCOL_VERSION,
+		ClientInfo: Implementation{
+			BaseMetadata: BaseMetadata{Name: "TestClient"},
+			Version:      "1.0",
+		},
+		MetaClientCapabilities: &ClientCapabilities{
+			Extensions: map[string]any{"com.google.cloud/toolbox.v1": map[string]any{}},
+		},
+	}
+	noExtensionMeta := &RequestMetaObject{
 		ProtocolVersion: PROTOCOL_VERSION,
 		ClientInfo: Implementation{
 			BaseMetadata: BaseMetadata{Name: "TestClient"},
@@ -1206,6 +1250,19 @@ func TestGroupsGetHandler(t *testing.T) {
 			rawBody:     []byte(`{invalid json}`),
 			wantErr:     true,
 			errContains: "invalid mcp groups/get request",
+		},
+		{
+			name: "client did not declare the toolbox extension",
+			body: GetGroupRequest{
+				Request: jsonrpc.Request{Method: GROUPS_GET},
+				Params: GetGroupRequestParams{
+					RequestParams: RequestParams{Meta: noExtensionMeta},
+					Name:          "tool1_only",
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{GROUPS_GET}, "Mcp-Name": []string{"tool1_only"}},
+			wantErr:     true,
+			errContains: `missing required client capability: method "groups/get" requires com.google.cloud/toolbox.v1 extension which is not supported by the client`,
 		},
 		{
 			name: "group does not exist",
@@ -1269,6 +1326,12 @@ func TestGroupsGetHandler(t *testing.T) {
 			}
 			if result.Name != tt.wantName {
 				t.Errorf("result.Name = %q, want %q", result.Name, tt.wantName)
+			}
+			if result.ResultType != resultTypeComplete {
+				t.Errorf("result.ResultType = %q, want %q", result.ResultType, resultTypeComplete)
+			}
+			if result.Meta == nil {
+				t.Error("result.Meta = nil, want server info metadata")
 			}
 		})
 	}
