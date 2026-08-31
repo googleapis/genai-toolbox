@@ -543,6 +543,7 @@ type GetGroupRequestParams struct {
 // through groups/list.
 type GetGroupResult struct {
 	Result
+	CacheableResult
 	Name    string   `json:"name"`
 	Tools   []Tool   `json:"tools"`
 	Prompts []Prompt `json:"prompts"`

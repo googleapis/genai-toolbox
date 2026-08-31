@@ -211,6 +211,10 @@ func GenerateGetGroupResult(pMgr *primitives.PrimitiveManager, g group.Group, ur
 		Result: Result{
 			ResultType: resultTypeComplete,
 		},
+		CacheableResult: CacheableResult{
+			TtlMs:      g.GetTTLMs(),
+			CacheScope: cacheScope(g.GetCacheScope()),
+		},
 		Name:    g.Name,
 		Tools:   listToolsResult.Tools,
 		Prompts: listPromptsResult.Prompts,

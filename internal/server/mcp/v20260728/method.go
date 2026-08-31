@@ -129,8 +129,8 @@ func validateHeader(id jsonrpc.RequestId, header http.Header, method, name strin
 // clients that did not declare it.
 func validateToolboxExtension(id jsonrpc.RequestId, params RequestParams, method string) (any, error) {
 	supportedExts := ParseSupportedExtensions(params.Meta.MetaClientCapabilities.Extensions)
-	if _, ok := supportedExts["com.google.cloud/toolbox.v1"]; !ok {
-		err := fmt.Errorf("missing required client capability: method %q requires com.google.cloud/toolbox.v1 extension which is not supported by the client", method)
+	if _, ok := supportedExts[ToolboxExtensionURI]; !ok {
+		err := fmt.Errorf("missing required client capability: method %q requires %s extension which is not supported by the client", method, ToolboxExtensionURI)
 		return jsonrpc.NewError(id, jsonrpc.MISSING_REQUIRED_CLIENT_CAPABILITY, err.Error(), nil), err
 	}
 	return nil, nil
@@ -247,7 +247,7 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
 	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
-	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
+	_, hasSecureParamsSupport := supportedExts[ToolboxExtensionURI]
 	listToolsResult, err := GenerateListToolsResult(primitiveMgr, g, urlParams, hasSecureParamsSupport)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
@@ -317,9 +317,9 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	}
 
 	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
-	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
+	_, hasSecureParamsSupport := supportedExts[ToolboxExtensionURI]
 	if tool.HasSecureParams() && !hasSecureParamsSupport {
-		err = fmt.Errorf("missing required client capability: tool %q requires com.google.cloud/toolbox.v1 extension which is not supported by the client", toolName)
+		err = fmt.Errorf("missing required client capability: tool %q requires %s extension which is not supported by the client", toolName, ToolboxExtensionURI)
 		return jsonrpc.NewError(id, jsonrpc.MISSING_REQUIRED_CLIENT_CAPABILITY, err.Error(), nil), err
 	}
 
@@ -896,9 +896,9 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	supportedExts := ParseSupportedExtensions(req.Params.Meta.MetaClientCapabilities.Extensions)
-	_, hasSecureParamsSupport := supportedExts["com.google.cloud/toolbox.v1"]
-	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams, hasSecureParamsSupport)
+	// validateToolboxExtension above already established that the client
+	// declared the extension, so secure params are always supported here.
+	result, err := GenerateGetGroupResult(primitiveMgr, g, urlParams, true)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}

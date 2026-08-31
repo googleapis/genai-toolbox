@@ -1333,6 +1333,12 @@ func TestGroupsGetHandler(t *testing.T) {
 			if result.Meta == nil {
 				t.Error("result.Meta = nil, want server info metadata")
 			}
+			if result.TtlMs != group.DefaultTTLMs {
+				t.Errorf("result.TtlMs = %d, want %d", result.TtlMs, group.DefaultTTLMs)
+			}
+			if string(result.CacheScope) != group.DefaultCacheScope {
+				t.Errorf("result.CacheScope = %q, want %q", result.CacheScope, group.DefaultCacheScope)
+			}
 		})
 	}
 }

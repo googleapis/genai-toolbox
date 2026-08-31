@@ -1555,8 +1555,10 @@ func TestMcpGroupsMethods(t *testing.T) {
 					"tools": []any{
 						map[string]any{"name": "no_params", "inputSchema": basicInputSchema},
 					},
-					"prompts": []any{},
-					"_meta":   serverInfoMeta,
+					"prompts":    []any{},
+					"ttlMs":      300000.0,
+					"cacheScope": "public",
+					"_meta":      serverInfoMeta,
 				},
 			},
 		},
