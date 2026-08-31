@@ -16,8 +16,10 @@ package file
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"mime"
 	"net/url"
 	"os"
@@ -206,18 +208,15 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		}
 	}
 
+	// Security check for extension on the requested path
+	if err := validateExtension(absPath); err != nil {
+		return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
+	}
+
 	resolvedPath, err := filepath.EvalSymlinks(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			if err := validateExtension(absPath); err != nil {
-				return nil, fmt.Errorf("invalid extension for resource %q: %w", c.Name, err)
-			}
-			return &FileResource{
-				Config:          *c,
-				absPath:         absPath,
-				resolvedBaseDir: resolvedBaseDir,
-				isRelative:      isRelative,
-			}, nil
+			return nil, fmt.Errorf("file not found: %q (files must exist at boot time to prevent dead URIs)", absPath)
 		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q: %w", c.Name, err)
 	}
@@ -241,6 +240,12 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 	if !info.Mode().IsRegular() {
 		return nil, fmt.Errorf("path %q for resource %q is not a regular file (devices, pipes, sockets are blocked)", absPath, c.Name)
 	}
+
+	f, err := os.Open(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file %q (missing read permissions?): %w", absPath, err)
+	}
+	f.Close()
 
 	size := info.Size()
 	if size > *c.MaxSize {
@@ -273,8 +278,16 @@ func (r *FileResource) GetSize() *int64 {
 
 // Read retrieves the file content.
 func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, error) {
+	// Security check for extension on the resolved target
+	if err := validateExtension(r.absPath); err != nil {
+		return nil, fmt.Errorf("security violation: configured file extension not allowed for resource %q: %w", r.Config.Name, err)
+	}
+
 	resolvedPath, err := filepath.EvalSymlinks(r.absPath)
 	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("file not found: %q: %w", r.absPath, fs.ErrNotExist)
+		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Config.Name, err)
 	}
 
@@ -406,6 +419,7 @@ func (r *FileResource) GetCurrentSize() (int64, error) {
 type TemplateConfig struct {
 	resources.ResourceTemplateConfigBase `yaml:",inline"`
 	AllowedPaths                         []string `yaml:"allowedPaths,omitempty"`
+	MaxSize                              *int64   `yaml:"max_size,omitempty"`
 }
 
 var _ resources.ResourceTemplateConfig = (*TemplateConfig)(nil)
@@ -430,6 +444,11 @@ func (c *TemplateConfig) Validate() error {
 
 // Initialize validates the configuration and initializes the file resource template.
 func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemplate, error) {
+	if c.MaxSize == nil {
+		limit := int64(defaultMaxFileSize)
+		c.MaxSize = &limit
+	}
+
 	// Validate and resolve allowed paths if specified
 	var unresolvedAllowedPaths []string
 	var resolvedAllowedPaths []string
@@ -561,8 +580,8 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 	resolvedPath, err := filepath.EvalSymlinks(absPath)
 	if err != nil {
 		// file does not exist
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("file not found: %q", pathStr)
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("file not found: %q: %w", pathStr, fs.ErrNotExist)
 		}
 		return nil, fmt.Errorf("failed to evaluate symlinks for %q: %w", absPath, err)
 	}
@@ -608,7 +627,7 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("security violation: file %q was swapped with a non-regular file during read", resolvedPath)
 	}
 
-	limit := int64(defaultMaxFileSize) // Templates don't currently expose MaxSize
+	limit := *r.MaxSize
 	limitedReader := io.LimitReader(f, limit+1)
 	content, err := io.ReadAll(limitedReader)
 	if err != nil {

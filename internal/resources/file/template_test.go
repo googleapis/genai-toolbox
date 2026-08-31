@@ -27,6 +27,11 @@ import (
 func TestFileTemplate(t *testing.T) {
 	// Create a temporary directory structure for testing
 	tempDir := t.TempDir()
+	var err error
+	tempDir, err = filepath.EvalSymlinks(tempDir)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Allowed area
 	sandboxDir := filepath.Join(tempDir, "sandbox")
@@ -92,6 +97,7 @@ func TestFileTemplate(t *testing.T) {
 		allowedPaths []string
 		requestPath  string
 		uriTemplate  string
+		maxSize      *int64
 		wantErr      bool
 		errContains  string
 	}{
@@ -124,6 +130,14 @@ func TestFileTemplate(t *testing.T) {
 			requestPath:  largeFile,
 			uriTemplate:  "file://{path}",
 			wantErr:      false, // just truncates, no error
+		},
+		{
+			name:         "custom file size limit exceeded",
+			allowedPaths: []string{sandboxDir},
+			requestPath:  largeFile,
+			uriTemplate:  "file://{path}",
+			maxSize:      func() *int64 { i := int64(10); return &i }(),
+			wantErr:      false,
 		},
 		{
 			name:         "hidden file without allowed paths",
@@ -254,7 +268,7 @@ func TestFileTemplate(t *testing.T) {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
-				if tc.name == "file size limit exceeded" {
+				if tc.name == "file size limit exceeded" || tc.name == "custom file size limit exceeded" {
 					contentStr := content.(string)
 					if !strings.Contains(contentStr, "[TRUNCATED BY SERVER") {
 						t.Errorf("expected truncation warning, got %q", contentStr[len(contentStr)-200:])
