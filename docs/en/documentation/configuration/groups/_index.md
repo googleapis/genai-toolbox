@@ -110,20 +110,29 @@ Returns every named group with its `name` and `description`. The default (namele
 
 ```json
 {
+  "resultType": "complete",
   "groups": [
     { "name": "data_analyst", "description": "Tools and prompts for exploratory data analysis." },
     { "name": "admin", "description": "Administrative operations." }
-  ]
+  ],
+  "_meta": {
+    "io.modelcontextprotocol/serverInfo": { "name": "Toolbox", "version": "1.10.0" }
+  }
 }
 ```
 
+Because a `groups/list` response spans groups that may each set a different `ttlMs`, it carries no cache hint of its own. The response is not paginated — a server configures a bounded set of groups, so all of them come back in one response.
+
 ### `groups/get`
 
-Takes a group `name` and returns that group's tools and prompts together:
+Takes a group `name` and returns that group's tools and prompts together, along with the group's `ttlMs` and `cacheScope` cache hints — the same ones `tools/list` and `prompts/list` return for that group:
 
 ```json
 {
+  "resultType": "complete",
   "name": "data_analyst",
+  "ttlMs": 300000,
+  "cacheScope": "public",
   "tools": [
     {
       "name": "list_tables",
@@ -142,6 +151,13 @@ Takes a group `name` and returns that group's tools and prompts together:
   ],
   "prompts": [
     { "name": "summarize_results", "description": "Summarize query results." }
-  ]
+  ],
+  "_meta": {
+    "io.modelcontextprotocol/serverInfo": { "name": "Toolbox", "version": "1.10.0" }
+  }
 }
 ```
+
+An unrecognized `name` returns `INVALID_PARAMS` (-32602). An omitted or empty `name` resolves to the default (nameless) group, which holds every tool and prompt on the server — the same rule the `/api/toolset` REST endpoint follows when called without a toolset name. Since `groups/list` omits the default group, this is the only way to reach it over MCP.
+
+Both methods are scoped to the server, not to the endpoint they are called on. Calling `groups/get` on `/mcp/data_analyst` can return the contents of the `admin` group.
