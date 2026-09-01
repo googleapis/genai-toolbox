@@ -160,16 +160,16 @@ func GenerateListPromptsResult(pMgr *primitives.PrimitiveManager, g group.Group)
 
 // generateResourceManifest generates a version-specific Resource manifest for list/resources
 func generateResourceManifest(name, title, desc, uri, mimeType string, size *int64, internalAnns *resources.ResourceAnnotations) Resource {
-	var annotations *ResourceAnnotations
+	var annotations *Annotations
 	if internalAnns != nil && (internalAnns.LastModified != "" || len(internalAnns.Audience) > 0 || internalAnns.Priority != nil) {
-		annotations = &ResourceAnnotations{
+		annotations = &Annotations{
 			LastModified: internalAnns.LastModified,
 		}
 		for _, aud := range internalAnns.Audience {
 			annotations.Audience = append(annotations.Audience, Role(aud))
 		}
 		if internalAnns.Priority != nil {
-			annotations.Priority = *internalAnns.Priority
+			annotations.Priority = internalAnns.Priority
 		}
 	}
 	return Resource{
@@ -197,16 +197,16 @@ func GenerateListResourcesResult(pMgr *primitives.PrimitiveManager, g group.Grou
 
 // generateResourceTemplateManifest generates a version-specific ResourceTemplate manifest
 func generateResourceTemplateManifest(name, title, desc, uriTemplate, mimeType string, internalAnns *resources.ResourceAnnotations) ResourceTemplate {
-	var annotations *ResourceAnnotations
+	var annotations *Annotations
 	if internalAnns != nil && (internalAnns.LastModified != "" || len(internalAnns.Audience) > 0 || internalAnns.Priority != nil) {
-		annotations = &ResourceAnnotations{
+		annotations = &Annotations{
 			LastModified: internalAnns.LastModified,
 		}
 		for _, aud := range internalAnns.Audience {
 			annotations.Audience = append(annotations.Audience, Role(aud))
 		}
 		if internalAnns.Priority != nil {
-			annotations.Priority = *internalAnns.Priority
+			annotations.Priority = internalAnns.Priority
 		}
 	}
 	return ResourceTemplate{
