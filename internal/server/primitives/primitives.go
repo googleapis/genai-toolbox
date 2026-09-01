@@ -157,4 +157,3 @@ func (r *PrimitiveManager) GroupsList() []group.Group {
 
 	return groupsList
 }
-
