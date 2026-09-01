@@ -594,7 +594,7 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 	// BigQuery attaches SQLCommenter attributes as native job labels rather
 	// than SQL-text comments, so they surface in INFORMATION_SCHEMA.JOBS and
 	// billing exports without query text parsing.
-	labels = mergeJobLabels(labels, sqlcommenter.Labels(ctx, SourceType, s.SQLCommenter))
+	labels = sqlcommenter.AppendLabels(ctx, labels, SourceType, s.SQLCommenter)
 	if labels != nil {
 		query.Labels = labels
 	}
@@ -646,25 +646,6 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 	// However, it is also possible that this was a query that was expected to return rows
 	// but returned none, a case that we cannot distinguish here.
 	return "Query executed successfully and returned no content.", nil
-}
-
-// mergeJobLabels combines explicit job labels with SQLCommenter-derived
-// labels. Explicit labels win on key collisions so tool-supplied labels are
-// never overwritten. Returns the explicit map unchanged (including nil) when
-// there are no commenter labels, so callers can skip setting job labels
-// entirely.
-func mergeJobLabels(explicit, commenter map[string]string) map[string]string {
-	if len(commenter) == 0 {
-		return explicit
-	}
-	merged := make(map[string]string, len(explicit)+len(commenter))
-	for k, v := range commenter {
-		merged[k] = v
-	}
-	for k, v := range explicit {
-		merged[k] = v
-	}
-	return merged
 }
 
 // NormalizeValue converts BigQuery specific types to standard JSON-compatible types.

@@ -126,44 +126,55 @@ func collectAttributes(ctx context.Context, dbSystemName string) map[string]stri
 	return attrs
 }
 
-// Labels returns the SQLCommenter attributes formatted as job labels for
-// sources that attach metadata to jobs natively instead of embedding SQL
-// comments (e.g. BigQuery). Labels surface in the source's own job metadata
-// (for BigQuery: INFORMATION_SCHEMA.JOBS and billing exports), so no query
-// text parsing is needed to recover them.
+// AppendLabels is the job-label counterpart to PrependComment for sources
+// that attach metadata to jobs natively instead of embedding SQL comments
+// (e.g. BigQuery). It merges the SQLCommenter attributes into the given job
+// labels and returns the result; labels already present always win on key
+// collisions, so tool-supplied labels are never overwritten. Labels surface
+// in the source's own job metadata (for BigQuery: INFORMATION_SCHEMA.JOBS
+// and billing exports), so no query text parsing is needed to recover them.
 //
-// The attribute set matches PrependComment exactly. Keys and values are
-// sanitized to satisfy BigQuery label constraints: only lowercase letters,
-// digits, underscores, and dashes, at most 63 characters each, and keys must
-// begin with a letter. Attribute names map punctuation to underscores, e.g.
-// tool.name becomes tool_name.
+// The attribute set matches PrependComment exactly. Attribute keys and
+// values are machine-derived (e.g. client "name/version", model
+// "gemini-2.5-flash") and routinely contain characters BigQuery rejects
+// with an invalid-label error, so both are sanitized to the label
+// constraints: only lowercase letters, digits, underscores, and dashes, at
+// most 63 characters each, and keys must begin with a letter. Attribute
+// names map punctuation to underscores, e.g. tool.name becomes tool_name.
+// The 64-labels-per-job limit is deliberately left to the API, which
+// rejects excess labels with a clear error rather than silently dropping
+// telemetry.
 //
-// sourceOverride behaves as in PrependComment: when non-nil it takes priority
-// over the global sql-commenter flag from the context. Returns nil when the
-// commenter is disabled or no attributes are available.
-func Labels(ctx context.Context, dbSystemName string, sourceOverride *bool) map[string]string {
+// sourceOverride behaves as in PrependComment: when non-nil it takes
+// priority over the global sql-commenter flag from the context. Returns the
+// input labels unchanged (including nil) when the commenter is disabled or
+// no attributes are available.
+func AppendLabels(ctx context.Context, labels map[string]string, dbSystemName string, sourceOverride *bool) map[string]string {
 	enabled := util.SQLCommenterEnabledFromContext(ctx)
 	if sourceOverride != nil {
 		enabled = *sourceOverride
 	}
 	if !enabled {
-		return nil
+		return labels
 	}
 
 	pairs := collectAttributes(ctx, dbSystemName)
 	if len(pairs) == 0 {
-		return nil
+		return labels
 	}
 
-	labels := make(map[string]string, len(pairs))
+	merged := make(map[string]string, len(labels)+len(pairs))
 	for k, v := range pairs {
 		key := sanitizeLabelKey(k)
 		if key == "" {
 			continue
 		}
-		labels[key] = sanitizeLabelValue(v)
+		merged[key] = sanitizeLabelPart(v)
 	}
-	return labels
+	for k, v := range labels {
+		merged[k] = v
+	}
+	return merged
 }
 
 // maxLabelLength is the maximum length of a BigQuery label key or value.
@@ -172,7 +183,10 @@ const maxLabelLength = 63
 // sanitizeLabelPart lowercases s, replaces every character outside
 // [a-z0-9_-] with an underscore, and truncates the result to
 // maxLabelLength. The output is always plain ASCII, so byte-wise
-// truncation cannot split a character.
+// truncation cannot split a character. This is the full rule for label
+// values, which may be empty and have no leading-character requirement
+// (BigQuery accepts values beginning with an underscore, dash, or digit);
+// keys need sanitizeLabelKey on top.
 func sanitizeLabelPart(s string) string {
 	s = strings.ToLower(s)
 	var b strings.Builder
@@ -208,12 +222,4 @@ func sanitizeLabelKey(s string) string {
 		}
 	}
 	return out
-}
-
-// sanitizeLabelValue sanitizes s for use as a BigQuery label value. Values
-// share the key character set but may be empty, and unlike keys they have no
-// leading-character requirement: BigQuery accepts values beginning with an
-// underscore, dash, or digit.
-func sanitizeLabelValue(s string) string {
-	return sanitizeLabelPart(s)
 }

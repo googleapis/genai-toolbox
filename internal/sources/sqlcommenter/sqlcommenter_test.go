@@ -245,7 +245,7 @@ func TestPrependComment_EmptyTelemetryAttributes(t *testing.T) {
 	}
 }
 
-func TestLabels_Disabled(t *testing.T) {
+func TestAppendLabels_Disabled(t *testing.T) {
 	// SQL commenter not enabled in context — no labels should be produced
 	ctx := context.Background()
 	ctx = util.WithUserAgent(ctx, "1.1.0")
@@ -253,7 +253,7 @@ func TestLabels_Disabled(t *testing.T) {
 		ToolName: "search_hotels",
 	})
 
-	if labels := Labels(ctx, "bigquery", nil); labels != nil {
+	if labels := AppendLabels(ctx, nil, "bigquery", nil); labels != nil {
 		t.Errorf("expected nil labels when sql-commenter disabled, got: %v", labels)
 	}
 }
@@ -261,7 +261,7 @@ func TestLabels_Disabled(t *testing.T) {
 // TestLabels_SourceOverride verifies the priority between the global
 // sql-commenter flag (from context) and the per-source `sqlCommenter`
 // setting, mirroring the PrependComment behavior.
-func TestLabels_SourceOverride(t *testing.T) {
+func TestAppendLabels_SourceOverride(t *testing.T) {
 	boolPtr := func(b bool) *bool { return &b }
 
 	cases := []struct {
@@ -281,7 +281,7 @@ func TestLabels_SourceOverride(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := util.WithSQLCommenterEnabled(context.Background(), tc.global)
-			labels := Labels(ctx, "bigquery", tc.sourceOverride)
+			labels := AppendLabels(ctx, nil, "bigquery", tc.sourceOverride)
 
 			gotLabels := len(labels) > 0
 			if gotLabels != tc.wantLabels {
@@ -291,16 +291,16 @@ func TestLabels_SourceOverride(t *testing.T) {
 	}
 }
 
-func TestLabels_EmptyContext(t *testing.T) {
+func TestAppendLabels_EmptyContext(t *testing.T) {
 	ctx := sqlCommenterCtx()
 
 	// No attributes available at all — nil map, not an empty one
-	if labels := Labels(ctx, "", nil); labels != nil {
+	if labels := AppendLabels(ctx, nil, "", nil); labels != nil {
 		t.Errorf("expected nil labels for empty context, got: %v", labels)
 	}
 }
 
-func TestLabels_FullAttributes(t *testing.T) {
+func TestAppendLabels_FullAttributes(t *testing.T) {
 	ctx := sqlCommenterCtx()
 	ctx = util.WithUserAgent(ctx, "1.1.0")
 	ctx = util.WithGenAIMetricAttrs(ctx, &util.GenAIMetricAttrs{
@@ -314,7 +314,7 @@ func TestLabels_FullAttributes(t *testing.T) {
 		ClientAgentID: "agent-456",
 	})
 
-	labels := Labels(ctx, "bigquery", nil)
+	labels := AppendLabels(ctx, nil, "bigquery", nil)
 
 	// Attribute names map dots to underscores; values have characters
 	// outside [a-z0-9_-] replaced with underscores.
@@ -359,7 +359,7 @@ func TestSanitizeLabelKey(t *testing.T) {
 	}
 }
 
-func TestSanitizeLabelValue(t *testing.T) {
+func TestSanitizeLabelPart(t *testing.T) {
 	cases := []struct {
 		name string
 		in   string
@@ -381,9 +381,35 @@ func TestSanitizeLabelValue(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := sanitizeLabelValue(tc.in); got != tc.want {
-				t.Errorf("sanitizeLabelValue(%q) = %q, want %q", tc.in, got, tc.want)
+			if got := sanitizeLabelPart(tc.in); got != tc.want {
+				t.Errorf("sanitizeLabelPart(%q) = %q, want %q", tc.in, got, tc.want)
 			}
 		})
+	}
+}
+
+// TestAppendLabels_MergePrecedence verifies that labels already present on
+// the job are returned unchanged when the commenter is disabled and always
+// win over commenter attributes on key collisions.
+func TestAppendLabels_MergePrecedence(t *testing.T) {
+	explicit := map[string]string{"mcp-toolbox-tool": "bigquery-execute-sql", "tool_name": "explicit-value"}
+
+	// Disabled: input map returned unchanged.
+	if got := AppendLabels(context.Background(), explicit, "bigquery", nil); !reflect.DeepEqual(got, explicit) {
+		t.Errorf("expected input labels unchanged when disabled, got: %v", got)
+	}
+
+	// Enabled: commenter attributes merged in, explicit labels win.
+	ctx := sqlCommenterCtx()
+	ctx = util.WithGenAIMetricAttrs(ctx, &util.GenAIMetricAttrs{ToolName: "execute_sql"})
+	got := AppendLabels(ctx, explicit, "bigquery", nil)
+	if got["tool_name"] != "explicit-value" {
+		t.Errorf("expected explicit label to win on collision, got: %q", got["tool_name"])
+	}
+	if got["mcp-toolbox-tool"] != "bigquery-execute-sql" {
+		t.Errorf("expected existing label preserved, got: %q", got["mcp-toolbox-tool"])
+	}
+	if got["db_system_name"] != "bigquery" {
+		t.Errorf("expected commenter attribute merged, got: %v", got)
 	}
 }
