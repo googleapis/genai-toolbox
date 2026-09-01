@@ -15,8 +15,11 @@
 package databaseinsights
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -78,6 +81,10 @@ type Source struct {
 	Config
 	httpClient *http.Client
 	endpoint   string
+}
+
+func (s *Source) IsReadOnly() bool {
+	return false
 }
 
 func (s *Source) SourceType() string {
@@ -183,4 +190,341 @@ func extractProjectFromPath(path string) string {
 		}
 	}
 	return ""
+}
+
+func extractLocationFromParent(parent string) string {
+	parts := strings.Split(strings.TrimPrefix(parent, "/"), "/")
+	for i := 0; i < len(parts)-1; i++ {
+		if parts[i] == "locations" {
+			return parts[i+1]
+		}
+	}
+	return ""
+}
+
+func (s *Source) getEndpointForParent(parent string) string {
+	if s.endpoint != "" && s.endpoint != "https://databaseinsights.googleapis.com" {
+		return s.endpoint
+	}
+	location := extractLocationFromParent(parent)
+	if location != "" && location != "global" {
+		return fmt.Sprintf("https://%s-databaseinsights.googleapis.com", location)
+	}
+	return "https://databaseinsights.googleapis.com"
+}
+
+// FetchQueryStatsRequest is the payload for fetching query execution stats.
+type FetchQueryStatsRequest struct {
+	Parent           string `json:"parent"`
+	FullResourceName string `json:"fullResourceName"`
+	StartTime        string `json:"startTime,omitempty"`
+	EndTime          string `json:"endTime,omitempty"`
+	Database         string `json:"database,omitempty"`
+	Username         string `json:"username,omitempty"`
+	QueryID          string `json:"queryId,omitempty"`
+	PageSize         int32  `json:"pageSize,omitempty"`
+	PageToken        string `json:"pageToken,omitempty"`
+}
+
+// Field represents a column schema in a result set metadata.
+type Field struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+// ResultSetMetadata contains column definitions.
+type ResultSetMetadata struct {
+	Fields []Field `json:"fields"`
+}
+
+// FetchQueryStatsResponse contains the results.
+type FetchQueryStatsResponse struct {
+	Results   [][]any           `json:"results,omitempty"`
+	Metadata  ResultSetMetadata `json:"metadata,omitempty"`
+	PageToken string            `json:"nextPageToken,omitempty"`
+}
+
+// FetchWaitEventStatsRequest is the payload for wait event stats.
+type FetchWaitEventStatsRequest struct {
+	Parent           string `json:"parent"`
+	FullResourceName string `json:"fullResourceName"`
+	StartTime        string `json:"startTime,omitempty"`
+	EndTime          string `json:"endTime,omitempty"`
+	Database         string `json:"database,omitempty"`
+	Username         string `json:"username,omitempty"`
+	QueryID          string `json:"queryId,omitempty"`
+	PageSize         int32  `json:"pageSize,omitempty"`
+	PageToken        string `json:"pageToken,omitempty"`
+	View             string `json:"view,omitempty"`
+}
+
+// FetchWaitEventStatsResponse contains wait event stats results.
+type FetchWaitEventStatsResponse struct {
+	Results   [][]any           `json:"results,omitempty"`
+	Metadata  ResultSetMetadata `json:"metadata,omitempty"`
+	PageToken string            `json:"nextPageToken,omitempty"`
+}
+
+// FetchQueryTimeSeriesRequest payload.
+type FetchQueryTimeSeriesRequest struct {
+	Parent           string `json:"parent"`
+	FullResourceName string `json:"fullResourceName"`
+	StartTime        string `json:"startTime,omitempty"`
+	EndTime          string `json:"endTime,omitempty"`
+	Database         string `json:"database,omitempty"`
+	Username         string `json:"username,omitempty"`
+	QueryID          string `json:"queryId,omitempty"`
+}
+
+// FetchQueryTimeSeriesResponse contains the time-series stats.
+type FetchQueryTimeSeriesResponse struct {
+	TimeSeries []TimeSeries      `json:"timeseries,omitempty"`
+	Metadata   ResultSetMetadata `json:"metadata,omitempty"`
+}
+
+type TimeSeries struct {
+	GroupbyFieldValues []string                 `json:"groupbyFieldValues,omitempty"`
+	Values             []TimeSeriesMetricValues `json:"values,omitempty"`
+}
+
+type TimeSeriesMetricValues struct {
+	Interval Interval       `json:"interval,omitempty"`
+	Value    any            `json:"value,omitempty"`
+	Metadata map[string]any `json:"metadata,omitempty"`
+}
+
+type Interval struct {
+	StartTime string `json:"startTime,omitempty"`
+	EndTime   string `json:"endTime,omitempty"`
+}
+
+// FetchWaitEventTimeSeriesRequest payload.
+type FetchWaitEventTimeSeriesRequest struct {
+	Parent           string `json:"parent"`
+	FullResourceName string `json:"fullResourceName"`
+	StartTime        string `json:"startTime,omitempty"`
+	EndTime          string `json:"endTime,omitempty"`
+	Database         string `json:"database,omitempty"`
+	Username         string `json:"username,omitempty"`
+	QueryID          string `json:"queryId,omitempty"`
+	View             string `json:"view,omitempty"`
+}
+
+// FetchWaitEventTimeSeriesResponse contains wait event time series.
+type FetchWaitEventTimeSeriesResponse struct {
+	TimeSeries []TimeSeries      `json:"timeseries,omitempty"`
+	Metadata   ResultSetMetadata `json:"metadata,omitempty"`
+}
+
+// DatabaseQueryIds represents a database name and a list of query IDs.
+type DatabaseQueryIds struct {
+	Database string   `json:"database"`
+	QueryIDs []string `json:"queryIds"`
+}
+
+// BatchQueryIndexRecommendationsRequest is the payload for fetching index recommendations.
+type BatchQueryIndexRecommendationsRequest struct {
+	Parent           string             `json:"parent"`
+	FullResourceName string             `json:"fullResourceName"`
+	DatabaseQueryIds []DatabaseQueryIds `json:"databaseQueryIds"`
+}
+
+// IndexRecommendation represents a single index suggestion.
+type IndexRecommendation struct {
+	SQLCommand                string   `json:"sqlCommand"`
+	Schema                    string   `json:"schema"`
+	Relation                  string   `json:"relation"`
+	Columns                   []string `json:"columns"`
+	EstimatedStorageSizeBytes int64    `json:"estimatedStorageSizeBytes,string"`
+	ImpactedQueryIds          []string `json:"impactedQueryIds"`
+}
+
+// QueryImprovement details performance gains.
+type QueryImprovement struct {
+	QueryID                            string   `json:"queryId"`
+	IndexRecommendationIds             []string `json:"indexRecommendationIds"`
+	CurrentTotalExecutionDuration      string   `json:"currentTotalExecutionDuration"`
+	EstimatedNewTotalExecutionDuration string   `json:"estimatedNewTotalExecutionDuration"`
+}
+
+// DatabaseIndexRecommendation represents recommendations for a specific database.
+type DatabaseIndexRecommendation struct {
+	Database             string                      `json:"database"`
+	IndexRecommendations []IndexRecommendation       `json:"indexRecommendations"`
+	QueryImprovements    map[string]QueryImprovement `json:"queryImprovements"`
+}
+
+// BatchQueryIndexRecommendationsResponse contains index recommendations.
+type BatchQueryIndexRecommendationsResponse struct {
+	DatabaseIndexRecommendations []DatabaseIndexRecommendation `json:"databaseIndexRecommendations"`
+}
+
+// FetchQueryStats executes the FetchQueryStats REST API method.
+func (s *Source) FetchQueryStats(ctx context.Context, req *FetchQueryStatsRequest) (*FetchQueryStatsResponse, error) {
+	url := fmt.Sprintf("%s/v1beta/%s/queryStats:fetch", s.getEndpointForParent(req.Parent), req.Parent)
+
+	bodyBytes, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed with status %s: %s", resp.Status, string(respBody))
+	}
+
+	var fetchResp FetchQueryStatsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&fetchResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &fetchResp, nil
+}
+
+// FetchWaitEventStats executes the FetchWaitEventStats REST API method.
+func (s *Source) FetchWaitEventStats(ctx context.Context, req *FetchWaitEventStatsRequest) (*FetchWaitEventStatsResponse, error) {
+	url := fmt.Sprintf("%s/v1beta/%s/waitEventStats:fetch", s.getEndpointForParent(req.Parent), req.Parent)
+
+	bodyBytes, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed with status %s: %s", resp.Status, string(respBody))
+	}
+
+	var fetchResp FetchWaitEventStatsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&fetchResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &fetchResp, nil
+}
+
+// FetchQueryTimeSeries executes the FetchQueryTimeSeries REST API method.
+func (s *Source) FetchQueryTimeSeries(ctx context.Context, req *FetchQueryTimeSeriesRequest) (*FetchQueryTimeSeriesResponse, error) {
+	url := fmt.Sprintf("%s/v1beta/%s/queryTimeSeries:fetch", s.getEndpointForParent(req.Parent), req.Parent)
+
+	bodyBytes, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed with status %s: %s", resp.Status, string(respBody))
+	}
+
+	var fetchResp FetchQueryTimeSeriesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&fetchResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &fetchResp, nil
+}
+
+// FetchWaitEventTimeSeries executes the FetchWaitEventTimeSeries REST API method.
+func (s *Source) FetchWaitEventTimeSeries(ctx context.Context, req *FetchWaitEventTimeSeriesRequest) (*FetchWaitEventTimeSeriesResponse, error) {
+	url := fmt.Sprintf("%s/v1beta/%s/waitEventTimeSeries:fetch", s.getEndpointForParent(req.Parent), req.Parent)
+
+	bodyBytes, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed with status %s: %s", resp.Status, string(respBody))
+	}
+
+	var fetchResp FetchWaitEventTimeSeriesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&fetchResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &fetchResp, nil
+}
+
+// BatchQueryIndexRecommendations executes the BatchQueryIndexRecommendations REST API method.
+func (s *Source) BatchQueryIndexRecommendations(ctx context.Context, req *BatchQueryIndexRecommendationsRequest) (*BatchQueryIndexRecommendationsResponse, error) {
+	url := fmt.Sprintf("%s/v1beta/%s/indexRecommendations:batchQuery", s.getEndpointForParent(req.Parent), req.Parent)
+
+	bodyBytes, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := s.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed with status %s: %s", resp.Status, string(respBody))
+	}
+
+	var fetchResp BatchQueryIndexRecommendationsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&fetchResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &fetchResp, nil
 }

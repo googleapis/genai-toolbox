@@ -11,6 +11,7 @@ description: >
 | Flag (Short) | Flag (Long)                | Description                                                                                                                                                               | Default     |
 |--------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
 | `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                       | `127.0.0.1` |
+|              | `--disable-ext`            | Specifies MCP extension URIs disabled on this server.                                                                                                                     |             |
 |              | `--disable-reload`         | Disables dynamic reloading config.                                                                                                                                        |             |
 | `-h`         | `--help`                   | help for toolbox                                                                                                                                                          |             |
 |              | `--http-max-request-bytes` | Maximum MCP HTTP request body size in bytes.                                                                                                                              | `10485760`  |
@@ -21,6 +22,7 @@ description: >
 | `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                           | `5000`      |
 |              | `--tls-cert`               | Path to the PEM-encoded TLS certificate file.                                                                                                                             |             |
 |              | `--tls-key`                | Path to the PEM-encoded TLS private key file.                                                                                                                             |             |
+|              | `--toolbox-url`            | Specifies the absolute Toolbox URL (e.g., `https://my-toolbox.example.com`). Used as the resource field in the MCP PRM file when MCP Auth is enabled. Falls back to `TOOLBOX_URL` environment variable. |             |
 |              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. Optionally specify a toolset suffix (e.g., `<source>/<toolset>`) to load only that toolset. These prebuilt configs are intended for 'build-time' use cases, where agents are helping trusted developers build things. They are not secure enough for 'run time' use cases, where the agent will be talking to potentially untrusted developers. See [Prebuilt Tools Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values. |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                          |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                     |             |
@@ -241,3 +243,15 @@ reloading, use the `--disable-reload` flag.
 To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test
 tools and toolsets with features such as authorized parameters. To learn more,
 visit [Toolbox UI](../documentation/configuration/toolbox-ui/index.md).
+
+### Disabling MCP Extensions
+
+By default, Toolbox advertises support for its own custom MCP extensions (e.g., `com.google.cloud/toolbox.v1`) during the client discovery phase. This extension signals to clients that they can leverage Toolbox-specific features that fall outside the official MCP specification (see the [Extension README](https://github.com/googleapis/mcp-toolbox/blob/main/extensions/2026-07-28/README.md) for a list of currently supported capabilities).
+
+Disabling an extension removes it from the server's advertised capabilities. To disable specific extensions on the server, pass their URIs via the `--disable-ext` flag:
+
+```bash
+# Disable the Toolbox v1 extension
+./toolbox --disable-ext com.google.cloud/toolbox.v1
+```
+
