@@ -18,10 +18,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"regexp"
 	"slices"
@@ -151,7 +149,8 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	runBigTableAdminToolsGetTest(t)
-	runBigTableAdminToolsTest(t, sourceConfig["instance"].(string))
+	// TODO: re-enable once GCP write quota issues are resolved.
+	// runBigTableAdminToolsTest(t, sourceConfig["instance"].(string))
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithNameFieldArray(nameFieldArray),
 		tests.WithNameColFilter(nameColFilter),
@@ -342,6 +341,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 	return config
 }
 
+/*
 // assertMCPSuccess invokes an MCP tool and strictly asserts that the HTTP status is 200,
 // no JSON-RPC error is returned, and Result.IsError is false.
 func assertMCPSuccess(t *testing.T, toolName string, args map[string]any) *tests.MCPCallToolResponse {
@@ -408,7 +408,6 @@ func runBigTableAdminToolsTest(t *testing.T, instanceId string) {
 		t.Fatalf("bigtable-get-cluster unexpected output: %v", getClusterResp.Result.Content)
 	}
 
-	/* TEMPORARILY DISABLED DUE TO GCP QUOTA LIMITS (project_number:107716898620)
 	// Create test instance for lifecycle tools (createinstance, updateinstance, updatecluster, createcluster, deletecluster, deleteinstance)
 	testInstId := "testi-" + uniqueID[:8]
 	testClusterId1 := "testc1-" + uniqueID[:8]
@@ -470,7 +469,6 @@ func runBigTableAdminToolsTest(t *testing.T, instanceId string) {
 	if len(deleteClusterResp.Result.Content) == 0 || !strings.Contains(deleteClusterResp.Result.Content[0].Text, "cluster deleted successfully") {
 		t.Fatalf("bigtable-delete-cluster unexpected output: %v", deleteClusterResp.Result.Content)
 	}
-	*/
 
 	// Create table
 	createTableResp := assertMCPSuccess(t, "bigtable-create-table", map[string]any{
@@ -658,6 +656,7 @@ func runBigTableAdminToolsTest(t *testing.T, instanceId string) {
 		t.Fatalf("bigtable-list-materialized-views returned nil content")
 	}
 }
+*/
 
 func addBigTableAdminToolsConfig(t *testing.T, config map[string]any) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
