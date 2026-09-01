@@ -158,20 +158,26 @@ func GenerateListPromptsResult(pMgr *primitives.PrimitiveManager, g group.Group)
 	return ListPromptsResult{Prompts: mcpManifest}, nil
 }
 
+// generateAnnotations converts internal resource annotations to versioned Annotations
+func generateAnnotations(internalAnns *resources.ResourceAnnotations) *Annotations {
+	if internalAnns == nil || (internalAnns.LastModified == "" && len(internalAnns.Audience) == 0 && internalAnns.Priority == nil) {
+		return nil
+	}
+	annotations := &Annotations{
+		LastModified: internalAnns.LastModified,
+	}
+	for _, aud := range internalAnns.Audience {
+		annotations.Audience = append(annotations.Audience, Role(aud))
+	}
+	if internalAnns.Priority != nil {
+		annotations.Priority = internalAnns.Priority
+	}
+	return annotations
+}
+
 // generateResourceManifest generates a version-specific Resource manifest for list/resources
 func generateResourceManifest(name, title, desc, uri, mimeType string, size *int64, internalAnns *resources.ResourceAnnotations) Resource {
-	var annotations *Annotations
-	if internalAnns != nil && (internalAnns.LastModified != "" || len(internalAnns.Audience) > 0 || internalAnns.Priority != nil) {
-		annotations = &Annotations{
-			LastModified: internalAnns.LastModified,
-		}
-		for _, aud := range internalAnns.Audience {
-			annotations.Audience = append(annotations.Audience, Role(aud))
-		}
-		if internalAnns.Priority != nil {
-			annotations.Priority = internalAnns.Priority
-		}
-	}
+	annotations := generateAnnotations(internalAnns)
 	return Resource{
 		BaseMetadata: BaseMetadata{Name: name, Title: title},
 		Uri:          uri,
@@ -197,18 +203,7 @@ func GenerateListResourcesResult(pMgr *primitives.PrimitiveManager, g group.Grou
 
 // generateResourceTemplateManifest generates a version-specific ResourceTemplate manifest
 func generateResourceTemplateManifest(name, title, desc, uriTemplate, mimeType string, internalAnns *resources.ResourceAnnotations) ResourceTemplate {
-	var annotations *Annotations
-	if internalAnns != nil && (internalAnns.LastModified != "" || len(internalAnns.Audience) > 0 || internalAnns.Priority != nil) {
-		annotations = &Annotations{
-			LastModified: internalAnns.LastModified,
-		}
-		for _, aud := range internalAnns.Audience {
-			annotations.Audience = append(annotations.Audience, Role(aud))
-		}
-		if internalAnns.Priority != nil {
-			annotations.Priority = internalAnns.Priority
-		}
-	}
+	annotations := generateAnnotations(internalAnns)
 	return ResourceTemplate{
 		BaseMetadata: BaseMetadata{Name: name, Title: title},
 		UriTemplate:  uriTemplate,

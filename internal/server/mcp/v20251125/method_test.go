@@ -777,9 +777,7 @@ func TestResourcesReadHandler(t *testing.T) {
 			name: "success",
 			body: ReadResourceRequest{
 				Request: jsonrpc.Request{Method: "resources/read"},
-				Params: struct {
-					Uri string `json:"uri"`
-				}{
+				Params: ReadResourceRequestParams{
 					Uri: "file:///res1",
 				},
 			},
@@ -789,9 +787,7 @@ func TestResourcesReadHandler(t *testing.T) {
 			name: "not found",
 			body: ReadResourceRequest{
 				Request: jsonrpc.Request{Method: "resources/read"},
-				Params: struct {
-					Uri string `json:"uri"`
-				}{
+				Params: ReadResourceRequestParams{
 					Uri: "file:///notfound",
 				},
 			},

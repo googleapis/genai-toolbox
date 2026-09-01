@@ -635,6 +635,15 @@ func TestResourcesListHandler(t *testing.T) {
 						// res2 should have LastModified set
 						for _, r := range resp.Resources {
 							if r.Name == "res2" {
+								if r.Title != "Title 2" {
+									t.Errorf("expected Title=Title 2, got %q", r.Title)
+								}
+								if r.MimeType != "application/json" {
+									t.Errorf("expected MimeType=application/json, got %q", r.MimeType)
+								}
+								if r.Size == nil || *r.Size != 2048 {
+									t.Errorf("expected Size=2048, got %v", r.Size)
+								}
 								if r.Annotations == nil || r.Annotations.LastModified != "2024-01-01T00:00:00Z" {
 									t.Errorf("expected LastModified=2024-01-01T00:00:00Z, got %+v", r.Annotations)
 								}
@@ -720,6 +729,12 @@ func TestResourceTemplatesListHandler(t *testing.T) {
 						// rt2 should have LastModified set
 						for _, rt := range resp.ResourceTemplates {
 							if rt.Name == "rt2" {
+								if rt.Title != "Title RT" {
+									t.Errorf("expected Title=Title RT, got %q", rt.Title)
+								}
+								if rt.MimeType != "text/plain" {
+									t.Errorf("expected MimeType=text/plain, got %q", rt.MimeType)
+								}
 								if rt.Annotations == nil || rt.Annotations.LastModified != "2024-01-01T00:00:00Z" {
 									t.Errorf("expected LastModified=2024-01-01T00:00:00Z, got %+v", rt.Annotations)
 								}
