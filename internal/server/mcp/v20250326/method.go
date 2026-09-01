@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"time"
 
@@ -640,6 +641,10 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 	}
 
 	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			err = fmt.Errorf("resource not found: %w", err)
+			return jsonrpc.NewError(id, jsonrpc.RESOURCE_NOT_FOUND, err.Error(), nil), err
+		}
 		err = fmt.Errorf("failed to read resource: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
@@ -653,7 +658,7 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 	logger.DebugContext(ctx, "read resource successfully")
 
 	result := &ReadResourceResult{
-		Contents: []TextResourceContent{
+		Contents: []TextResourceContents{
 			{
 				Uri:      uri,
 				MimeType: mimeType,

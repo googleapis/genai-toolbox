@@ -15,6 +15,7 @@
 package v20250326
 
 import (
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"fmt"
 
 	"github.com/googleapis/mcp-toolbox/internal/group"
@@ -156,13 +157,29 @@ func GenerateListPromptsResult(pMgr *primitives.PrimitiveManager, g group.Group)
 }
 
 // generateResourceManifest generates a version-specific Resource manifest for list/resources
-func generateResourceManifest(name, desc, uri, mimeType string, size *int64) Resource {
+
+func generateAnnotations(internalAnns *resources.ResourceAnnotations) *Annotations {
+	if internalAnns == nil || (len(internalAnns.Audience) == 0 && internalAnns.Priority == nil) {
+		return nil
+	}
+	annotations := &Annotations{}
+	if internalAnns.Priority != nil {
+		annotations.Priority = internalAnns.Priority
+	}
+	for _, aud := range internalAnns.Audience {
+		annotations.Audience = append(annotations.Audience, Role(aud))
+	}
+	return annotations
+}
+
+func generateResourceManifest(name, desc, uri, mimeType string, size *int64, internalAnns *resources.ResourceAnnotations) Resource {
 	return Resource{
 		Name:        name,
 		Uri:         uri,
 		Description: desc,
 		MimeType:    mimeType,
 		Size:        size,
+		Annotations: generateAnnotations(internalAnns),
 	}
 }
 
@@ -174,18 +191,19 @@ func GenerateListResourcesResult(pMgr *primitives.PrimitiveManager, g group.Grou
 		if !ok {
 			return ListResourcesResult{}, fmt.Errorf("resource does not exist: %s", name)
 		}
-		mcpManifest = append(mcpManifest, generateResourceManifest(name, res.GetDescription(), res.GetURI(), res.GetMimeType(), res.GetSize()))
+		mcpManifest = append(mcpManifest, generateResourceManifest(name, res.GetDescription(), res.GetURI(), res.GetMimeType(), res.GetSize(), res.GetAnnotations()))
 	}
 	return ListResourcesResult{Resources: mcpManifest}, nil
 }
 
 // generateResourceTemplateManifest generates a version-specific ResourceTemplate manifest
-func generateResourceTemplateManifest(name, desc, uriTemplate, mimeType string) ResourceTemplate {
+func generateResourceTemplateManifest(name, desc, uriTemplate, mimeType string, internalAnns *resources.ResourceAnnotations) ResourceTemplate {
 	return ResourceTemplate{
 		Name:        name,
 		UriTemplate: uriTemplate,
 		Description: desc,
 		MimeType:    mimeType,
+		Annotations: generateAnnotations(internalAnns),
 	}
 }
 
@@ -197,7 +215,7 @@ func GenerateListResourceTemplatesResult(pMgr *primitives.PrimitiveManager, g gr
 		if !ok {
 			return ListResourceTemplatesResult{}, fmt.Errorf("resource template does not exist: %s", name)
 		}
-		mcpManifest = append(mcpManifest, generateResourceTemplateManifest(name, tmpl.GetDescription(), tmpl.GetURITemplate(), tmpl.GetMimeType()))
+		mcpManifest = append(mcpManifest, generateResourceTemplateManifest(name, tmpl.GetDescription(), tmpl.GetURITemplate(), tmpl.GetMimeType(), tmpl.GetAnnotations()))
 	}
 	return ListResourceTemplatesResult{ResourceTemplates: mcpManifest}, nil
 }

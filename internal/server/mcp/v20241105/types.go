@@ -351,10 +351,15 @@ type ListResourcesRequest struct {
 	PaginatedRequest
 }
 
-// Resource represents a single resource that a client can read from a server.
+// A known resource that the server is capable of reading.
 type Resource struct {
+	// A human-readable name for this resource.
+	// 
+	// This can be used by clients to populate UI elements.
 	Name string `json:"name"`
-	// A description of the resource.
+	// A description of what this resource represents.
+  //
+  // This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
 	Description string `json:"description,omitempty"`
 	// The URI of this resource.
 	Uri string `json:"uri"`
@@ -362,7 +367,7 @@ type Resource struct {
 	MimeType string `json:"mimeType,omitempty"`
 }
 
-// ListResourcesResult represents the result of a list resources request.
+// The server's response to a resources/list request from the client.
 type ListResourcesResult struct {
 	PaginatedResult
 	Resources []Resource `json:"resources"`
@@ -373,24 +378,29 @@ type ListResourceTemplatesRequest struct {
 	PaginatedRequest
 }
 
-// ResourceTemplate represents a template for a resource that a client can resolve.
+// A template description for resources available on the server.
 type ResourceTemplate struct {
+	// A human-readable name for the type of resource this template refers to.
+  // 
+	// This can be used by clients to populate UI elements.
 	Name string `json:"name"`
 	// A description of what this template is for.
+   // 
+   // This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
 	Description string `json:"description,omitempty"`
 	// A URI template (according to RFC 6570) that can be used to construct resource URIs.
 	UriTemplate string `json:"uriTemplate"`
-	// The MIME type for all resources that match this template, if known.
+	// The MIME type for all resources that match this template. This should only be included if all resources matching this template have the same type.
 	MimeType string `json:"mimeType,omitempty"`
 }
 
-// ListResourceTemplatesResult represents the result of a list resource templates request.
+//The server's response to a resources/templates/list request from the client.
 type ListResourceTemplatesResult struct {
 	PaginatedResult
 	ResourceTemplates []ResourceTemplate `json:"resourceTemplates"`
 }
 
-// Sent from the client to read a specific resource URI.
+// Sent from the client to the server, to read a specific resource URI.
 type ReadResourceRequest struct {
 	jsonrpc.Request
 	Params struct {
@@ -398,15 +408,18 @@ type ReadResourceRequest struct {
 	} `json:"params"`
 }
 
-// ReadResourceResult represents the result of a read resource request.
+// The server's response to a resources/read request from the client.
 type ReadResourceResult struct {
 	jsonrpc.Result
-	Contents []TextResourceContent `json:"contents"`
+	Contents []TextResourceContents `json:"contents"`
 }
 
-// TextResourceContent represents text-based resource content.
-type TextResourceContent struct {
+// TextResourceContents represents text-based resource content.
+type TextResourceContents struct {
+	// The URI of this resource.
 	Uri      string `json:"uri"`
+	// The MIME type of this resource, if known.
 	MimeType string `json:"mimeType,omitempty"`
+	//The text of the item. This must only be set if the item can actually be represented as text (not binary data).
 	Text string `json:"text"`
 }
