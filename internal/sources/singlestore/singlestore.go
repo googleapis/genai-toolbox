@@ -94,6 +94,10 @@ type Source struct {
 }
 
 // SourceType returns the type of the source configuration.
+func (s *Source) IsReadOnly() bool {
+	return false
+}
+
 func (s *Source) SourceType() string {
 	return SourceType
 }

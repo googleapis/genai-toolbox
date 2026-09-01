@@ -1283,6 +1283,10 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 			}
 		})
 	}
+
+	t.Run("secure parameters", func(t *testing.T) {
+		RunMCPSecureToolInvokeTest(t, options...)
+	})
 }
 
 func setupPostgresSchemas(t *testing.T, ctx context.Context, pool *pgxpool.Pool, schemaName string) func() {
@@ -1294,7 +1298,7 @@ func setupPostgresSchemas(t *testing.T, ctx context.Context, pool *pgxpool.Pool,
 
 	return func() {
 		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA %s CASCADE", schemaName)
-		_, err := pool.Exec(ctx, dropSchemaStmt)
+		_, err := pool.Exec(context.WithoutCancel(ctx), dropSchemaStmt)
 		if err != nil {
 			t.Fatalf("failed to drop schema: %v", err)
 		}
@@ -1496,7 +1500,7 @@ func setUpPostgresViews(t *testing.T, ctx context.Context, pool *pgxpool.Pool, v
 	}
 	return func() {
 		dropView := fmt.Sprintf("DROP VIEW %s", viewName)
-		_, err := pool.Exec(ctx, dropView)
+		_, err := pool.Exec(context.WithoutCancel(ctx), dropView)
 		if err != nil {
 			t.Fatalf("failed to drop view: %v", err)
 		}
@@ -1783,7 +1787,7 @@ func setupPostgresTrigger(t *testing.T, ctx context.Context, pool *pgxpool.Pool,
 
 	return func() {
 		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA %s CASCADE", schemaName)
-		if _, err := pool.Exec(ctx, dropSchemaStmt); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), dropSchemaStmt); err != nil {
 			t.Fatalf("failed to drop schema %s: %v", schemaName, err)
 		}
 	}
@@ -1945,10 +1949,10 @@ func setupPostgresPublicationTable(t *testing.T, ctx context.Context, pool *pgxp
 
 	return func(t *testing.T) {
 		t.Helper()
-		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP PUBLICATION IF EXISTS %s;", pubName)); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP PUBLICATION IF EXISTS %s;", pubName)); err != nil {
 			t.Errorf("unable to drop publication %s: %v", pubName, err)
 		}
-		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)); err != nil {
 			t.Errorf("unable to drop table %s: %v", tableName, err)
 		}
 	}
@@ -2293,7 +2297,7 @@ func setupPostgresIndex(t *testing.T, ctx context.Context, pool *pgxpool.Pool, s
 
 	return func(t *testing.T) {
 		t.Helper()
-		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE;", schemaName)); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE;", schemaName)); err != nil {
 			t.Errorf("unable to drop schema: %v", err)
 		}
 	}
@@ -2773,8 +2777,8 @@ func setUpDatabase(t *testing.T, ctx context.Context, pool *pgxpool.Pool, dbName
 		t.Fatalf("failed to create %s: %v", dbName, err)
 	}
 	return func() {
-		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP DATABASE IF EXISTS %s;", dbName))
-		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", dbOwner))
+		_, _ = pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP DATABASE IF EXISTS %s;", dbName))
+		_, _ = pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP ROLE IF EXISTS %s;", dbOwner))
 	}
 }
 
@@ -2811,9 +2815,10 @@ func setupPostgresRoles(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (
 
 	return adminUser, superUser, normalUser, func(t *testing.T) {
 		t.Helper()
-		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", normalUser))
-		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", superUser))
-		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", adminUser))
+		cleanupCtx := context.WithoutCancel(ctx)
+		_, _ = pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", normalUser))
+		_, _ = pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", superUser))
+		_, _ = pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", adminUser))
 	}
 }
 
@@ -3513,7 +3518,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 		}
 
 		return func() {
-			if _, err := pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s", tableName)); err != nil {
+			if _, err := pool.ExecContext(context.WithoutCancel(ctx), fmt.Sprintf("DROP TABLE %s", tableName)); err != nil {
 				t.Errorf("failed to drop table %s: %v", tableName, err)
 			}
 		}
@@ -4518,10 +4523,10 @@ func CreateAndLockPostgresTable(t *testing.T, ctx context.Context, pool *pgxpool
 	}
 
 	return func() {
-		if err := tx.Rollback(ctx); err != nil {
+		if err := tx.Rollback(context.WithoutCancel(ctx)); err != nil {
 			t.Fatalf("unable to rollback transaction: %s", err)
 		}
-		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", pgx.Identifier{tableName}.Sanitize())); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP TABLE IF EXISTS %s", pgx.Identifier{tableName}.Sanitize())); err != nil {
 			t.Fatalf("unable to drop table: %s", err)
 		}
 	}
@@ -4887,7 +4892,7 @@ func createPostgresExtension(t *testing.T, ctx context.Context, pool *pgxpool.Po
 	}
 	return func() {
 		dropExtensionCmd := fmt.Sprintf("DROP EXTENSION IF EXISTS %s", extensionName)
-		_, err := pool.Exec(ctx, dropExtensionCmd)
+		_, err := pool.Exec(context.WithoutCancel(ctx), dropExtensionCmd)
 		if err != nil {
 			t.Fatalf("failed to drop extension: %v", err)
 		}
@@ -5307,7 +5312,7 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 	}
 	defer func() {
 		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", testSchemaName)
-		if _, err := pool.Exec(ctx, dropSchemaStmt); err != nil {
+		if _, err := pool.Exec(context.WithoutCancel(ctx), dropSchemaStmt); err != nil {
 			t.Logf("warning: unable to drop test schema: %v", err)
 		}
 	}()
