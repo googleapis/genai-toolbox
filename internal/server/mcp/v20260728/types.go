@@ -509,9 +509,11 @@ type PromptMessage struct {
 /* Groups */
 
 // ListGroupsRequest is sent from the client to request the list of groups the
-// server has.
+// server has. It is not paginated: a server configures a bounded set of groups,
+// so groups/list always returns all of them in one response.
 type ListGroupsRequest struct {
-	PaginatedRequest
+	jsonrpc.Request
+	Params RequestParams `json:"params,omitempty"`
 }
 
 // Group is a single entry in a groups/list response.

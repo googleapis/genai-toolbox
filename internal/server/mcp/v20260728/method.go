@@ -813,11 +813,11 @@ func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *
 	if err != nil {
 		return validateHeaderErr, err
 	}
-	validateErr, err := validateMetadata(id, req.Params.RequestParams, header == nil)
+	validateErr, err := validateMetadata(id, req.Params, header == nil)
 	if err != nil {
 		return validateErr, err
 	}
-	extErr, err := validateToolboxExtension(id, req.Params.RequestParams, GROUPS_LIST)
+	extErr, err := validateToolboxExtension(id, req.Params, GROUPS_LIST)
 	if err != nil {
 		return extErr, err
 	}

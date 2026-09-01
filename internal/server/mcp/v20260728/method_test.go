@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -1122,12 +1123,8 @@ func TestGroupsListHandler(t *testing.T) {
 		{
 			name: "client did not declare the toolbox extension",
 			body: ListGroupsRequest{
-				PaginatedRequest: PaginatedRequest{
-					Request: jsonrpc.Request{Method: GROUPS_LIST},
-					Params: PaginatedRequestParams{
-						RequestParams: RequestParams{Meta: noExtensionMeta},
-					},
-				},
+				Request: jsonrpc.Request{Method: GROUPS_LIST},
+				Params:  RequestParams{Meta: noExtensionMeta},
 			},
 			header:      http.Header{"Mcp-Method": []string{GROUPS_LIST}},
 			wantErr:     true,
@@ -1136,12 +1133,8 @@ func TestGroupsListHandler(t *testing.T) {
 		{
 			name: "success excludes default group and sorts",
 			body: ListGroupsRequest{
-				PaginatedRequest: PaginatedRequest{
-					Request: jsonrpc.Request{Method: GROUPS_LIST},
-					Params: PaginatedRequestParams{
-						RequestParams: RequestParams{Meta: validMeta},
-					},
-				},
+				Request: jsonrpc.Request{Method: GROUPS_LIST},
+				Params:  RequestParams{Meta: validMeta},
 			},
 			header:    http.Header{"Mcp-Method": []string{GROUPS_LIST}},
 			wantErr:   false,
@@ -1244,6 +1237,7 @@ func TestGroupsGetHandler(t *testing.T) {
 		wantErr     bool
 		errContains string
 		wantName    string
+		wantTools   []string
 	}{
 		{
 			name:        "invalid json body",
@@ -1286,9 +1280,26 @@ func TestGroupsGetHandler(t *testing.T) {
 					Name:          "tool1_only",
 				},
 			},
-			header:   http.Header{"Mcp-Method": []string{GROUPS_GET}, "Mcp-Name": []string{"tool1_only"}},
-			wantErr:  false,
-			wantName: "tool1_only",
+			header:    http.Header{"Mcp-Method": []string{GROUPS_GET}, "Mcp-Name": []string{"tool1_only"}},
+			wantErr:   false,
+			wantName:  "tool1_only",
+			wantTools: []string{"no_params"},
+		},
+		{
+			// An omitted name resolves to the default group, matching
+			// GET /api/toolset. groups/list hides the default group, so this is
+			// the only way to reach it.
+			name: "omitted name returns the default group",
+			body: GetGroupRequest{
+				Request: jsonrpc.Request{Method: GROUPS_GET},
+				Params: GetGroupRequestParams{
+					RequestParams: RequestParams{Meta: validMeta},
+				},
+			},
+			header:    http.Header{"Mcp-Method": []string{GROUPS_GET}},
+			wantErr:   false,
+			wantName:  "",
+			wantTools: []string{"no_params", "some_params"},
 		},
 	}
 
@@ -1326,6 +1337,14 @@ func TestGroupsGetHandler(t *testing.T) {
 			}
 			if result.Name != tt.wantName {
 				t.Errorf("result.Name = %q, want %q", result.Name, tt.wantName)
+			}
+			gotTools := make([]string, 0, len(result.Tools))
+			for _, tool := range result.Tools {
+				gotTools = append(gotTools, tool.Name)
+			}
+			slices.Sort(gotTools)
+			if !slices.Equal(gotTools, tt.wantTools) {
+				t.Errorf("result tools = %v, want %v", gotTools, tt.wantTools)
 			}
 			if result.ResultType != resultTypeComplete {
 				t.Errorf("result.ResultType = %q, want %q", result.ResultType, resultTypeComplete)
