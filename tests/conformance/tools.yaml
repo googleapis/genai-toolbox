@@ -51,8 +51,9 @@ arguments:
     description: "Second test argument"
 ---
 kind: resource
-name: test_text_resource
+name: test_static_text
 type: text
+uri: test://static-text
 text: "This is a simple text resource for testing."
 ---
 kind: resourceTemplate
