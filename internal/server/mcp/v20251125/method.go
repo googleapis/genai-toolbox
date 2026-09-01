@@ -139,7 +139,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		}
 	}
 
-	authServices := primitiveMgr.GetAuthServiceMap()
+	authServices := primitiveMgr.AuthServices()
 
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
@@ -173,6 +173,11 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 
 	tool, ok := primitiveMgr.GetTool(toolName)
 	if !ok {
+		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
+	if tool.HasSecureParams() {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
@@ -303,20 +308,44 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	}
 
 	// Auto-populate arguments from URL parameters
-	data = mcputil.PopulateUrlParams(ctx, data, toolParams)
+	data, err = mcputil.PopulateUrlParams(ctx, data, toolParams)
+	if err != nil {
+		text := TextContent{
+			Type: "text",
+			Text: err.Error(),
+		}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+		}, nil
+	}
 
 	params, err := parameters.ParseParams(toolParams, data, claimsFromAuth)
 	if err != nil {
-		err = fmt.Errorf("provided parameters were invalid: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		text := TextContent{
+			Type: "text",
+			Text: fmt.Sprintf("provided parameters were invalid: %s", err),
+		}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+		}, nil
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
-	embeddingModels := primitiveMgr.GetEmbeddingModelMap()
-	params, err = tool.EmbedParams(ctx, params, embeddingModels)
+	params, err = tool.EmbedParams(ctx, params, primitiveMgr)
 	if err != nil {
-		err = fmt.Errorf("error embedding parameters: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		text := TextContent{
+			Type: "text",
+			Text: fmt.Sprintf("error embedding parameters: %s", err),
+		}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+		}, nil
 	}
 
 	// Get instrumentation for recording tool execution duration

@@ -193,6 +193,14 @@ directly with the team.
 > However, any new database source should also include at least one new tool
 > type.
 
+> [!IMPORTANT]
+> A new source is not accepted when the database is wire-compatible with a
+> source Toolbox already supports, since every subsequent fix would have to be
+> re-applied to each copy. Where an existing source can be configured to connect
+> instead, do that; new packages for protocol-compatible databases have been
+> removed after merge on these grounds. Raise this in the issue above before
+> implementing.
+
 #### Adding a New Database Source
 
 We recommend looking at an [example source
@@ -357,6 +365,52 @@ and data.
   [internal/prebuiltconfigs/prebuiltconfigs_test.go](internal/prebuiltconfigs/prebuiltconfigs_test.go)
   and [cmd/root_test.go](cmd/root_test.go).
 
+#### Adding Prebuilt Config Evals
+
+Integration tests check that a tool works when called directly. Evals check
+something different: that an agent handed the prebuilt config can pick the right
+tools and complete a realistic task. Because the agent and model are pinned,
+what a run measures is the config — its tool set, and how well each tool and
+parameter description reads as a prompt.
+
+Runs are orchestrated by [EvalBench](https://github.com/googlecloudplatform/evalbench),
+which launches a coding agent that starts Toolbox as an MCP server over stdio.
+Contributions live under `evals/`:
+
+* `evalsets/<prebuilt>.json` — the scenarios for one prebuilt config: a prompt,
+  and the `expected_trajectory` of tool names it should produce. Multi-turn
+  scenarios are played out by a simulated user model. Trajectory names are
+  canonicalized as `toolbox__<tool_name>`, so one evalset serves every harness.
+* `model_configs/<harness>.yaml` — one per agent (e.g. `claude_cli`,
+  `gemini_cli`), describing how to launch it and how it starts Toolbox.
+  Credentials are read from the environment, never written into these files.
+
+To cover a new prebuilt config:
+
+* **Add an evalset** at `evals/evalsets/<prebuilt>.json`. Prefer tasks that need
+  more than one tool call, and check every name in `expected_trajectory` against
+  the prebuilt config in `internal/prebuiltconfigs/tools/`.
+* **Add a step** to [evals.cloudbuild.yaml](.ci/evals.cloudbuild.yaml) with the
+  config's `TOOLBOX_PREBUILT`, `EVAL_DATASET`, and connection settings.
+  `EVAL_ENV_PREFIX` names the prefix those settings share, which is how
+  [run_evals.sh](.ci/run_evals.sh) knows which ones to require. Set
+  `EVAL_HARNESSES` to run more than the default harness, and `allowFailure: true`
+  so the step's failure does not cancel the other databases. On a pull request the
+  step runs when its evalset or its prebuilt config changed; both paths are
+  derived from the settings above, so there is nothing else to configure.
+
+Evals call real models against live infrastructure, so they are neither free nor
+deterministic, and they are not part of the pull request gate. Like integration
+tests, they need credentials a contributor's pull request cannot supply, so a
+maintainer runs them by applying the `evals: run` label and commenting
+`/gcbrun`; an evalset that has not been run is not a blocker.
+
+To run them yourself, follow EvalBench's own setup, then copy `evals/` into your
+EvalBench checkout and start the run from there — it resolves the paths in
+`evals/run_configs/toolbox.yaml` against its own working directory. The
+environment that config expects is the one
+[evals.cloudbuild.yaml](.ci/evals.cloudbuild.yaml) builds for each step.
+
 ### Deprecating an Existing Primitive
 
 A primitive (e.g., sources, tools, auth services) will only be removed after it
@@ -376,6 +430,10 @@ deprecation timeframe requirements will be permanently removed.
 Toolbox uses both GitHub Actions and Cloud Build to run test workflows. Cloud
 Build is used when Google credentials are required. Cloud Build uses test
 project "toolbox-testing-438616".
+
+Evals for the prebuilt configs run separately from the test workflows, on their
+own Cloud Build config. See
+[Adding Prebuilt Config Evals](#adding-prebuilt-config-evals).
 
 ### Linting
 
