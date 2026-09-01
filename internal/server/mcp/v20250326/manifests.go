@@ -15,6 +15,7 @@
 package v20250326
 
 import (
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"fmt"
 
 	"github.com/googleapis/mcp-toolbox/internal/resources"

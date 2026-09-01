@@ -706,6 +706,10 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 	}
 
 	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			err = fmt.Errorf("resource not found: %w", err)
+			return jsonrpc.NewError(id, jsonrpc.RESOURCE_NOT_FOUND, err.Error(), nil), err
+		}
 		err = fmt.Errorf("failed to read resource: %w", err)
 		if errors.Is(err, fs.ErrNotExist) {
 			return jsonrpc.NewError(id, jsonrpc.RESOURCE_NOT_FOUND, err.Error(), nil), err

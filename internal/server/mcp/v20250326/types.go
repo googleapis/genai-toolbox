@@ -289,6 +289,7 @@ type ToolAnnotations struct {
 	OpenWorldHint *bool `json:"openWorldHint,omitempty"`
 }
 
+
 /* Prompts */
 
 // Sent from the client to request a list of prompts the server has.
