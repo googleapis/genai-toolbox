@@ -112,7 +112,7 @@ export enum SecureParamsErrorCode {
    * Returned when invoking a tool requiring secure parameters, but the client
    * did not declare support for `com.google.cloud/toolbox.v1` in client capabilities.
    */
-  MissingRequiredClientCapability = -32002,
+  MissingRequiredClientCapability = -32021,
 
   /**
    * Returned when parameter routing constraints are violated:

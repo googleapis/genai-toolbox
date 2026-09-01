@@ -20,9 +20,41 @@ Allowing the Large Language Model (LLM) to supply or view these sensitive parame
 
 ---
 
-## 2. Capability Negotiation
+## 2. Server Capability Discovery & Negotiation
 
-Clients indicate support for the `com.google.cloud/toolbox.v1` extension by advertising the extension capability within `_meta.clientCapabilities.extensions` during session initialization or within request metadata:
+### 2.1 Server Discovery (`server/discover`)
+
+The server advertises enabled MCP extensions in the `capabilities.extensions` object during discovery on protocol version `2026-07-28`:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "discover-1",
+  "result": {
+    "resultType": "complete",
+    "supportedVersions": ["2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"],
+    "capabilities": {
+      "extensions": {
+        "com.google.cloud/toolbox.v1": {}
+      },
+      "tools": { "listChanged": false },
+      "prompts": { "listChanged": false }
+    },
+    "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+        "name": "Toolbox",
+        "version": "1.0.0"
+      }
+    }
+  }
+}
+```
+
+Extensions can be disabled on the server using the `--disable-ext com.google.cloud/toolbox.v1` CLI flag.
+
+### 2.2 Client Capability Declaration
+
+Clients indicate support for the `com.google.cloud/toolbox.v1` extension by advertising the extension capability within `_meta["io.modelcontextprotocol/clientCapabilities"].extensions` in request metadata:
 
 ```json
 {
@@ -45,17 +77,17 @@ Clients indicate support for the `com.google.cloud/toolbox.v1` extension by adve
 
 ## 3. Protocol Methods & Behavior
 
-### 3.1 Tool Discovery (`tools/list`)
+### 3.1 Tool Discovery (`tools/list` and `groups/get`)
 
-When a client calls `tools/list`:
+When a client calls `tools/list` or `groups/get`:
 
 - **When Client Supports `com.google.cloud/toolbox.v1`:**
   - Tools defining secure parameters are included in the returned `tools` array.
   - Non-secure parameters are placed in standard `inputSchema`.
   - Secure parameters are separated and placed in `secureInputSchema`.
   - Parameters bound via URL parameters are omitted from both schemas.
-- **When Client Does NOT Support `com.google.cloud/toolbox.v1`:**
-  - Tools with secure parameters are **excluded (filtered out)** from the `tools` list to prevent unsupported invocations.
+- **When Client Does NOT Support `com.google.cloud/toolbox.v1` (or on Legacy Protocols `< 2026-07-28`):**
+  - Tools with secure parameters are **excluded (filtered out)** from the `tools` list in both `tools/list` and `groups/get` to prevent unsupported invocations.
 
 #### Example `tools/list` Response
 
@@ -64,6 +96,7 @@ When a client calls `tools/list`:
   "jsonrpc": "2.0",
   "id": "list-1",
   "result": {
+    "resultType": "complete",
     "tools": [
       {
         "name": "search_customer_records",
@@ -89,7 +122,15 @@ When a client calls `tools/list`:
           "required": ["customer_id"]
         }
       }
-    ]
+    ],
+    "ttlMs": 300000,
+    "cacheScope": "public",
+    "_meta": {
+      "io.modelcontextprotocol/serverInfo": {
+        "name": "Toolbox",
+        "version": "1.0.0"
+      }
+    }
   }
 }
 ```
@@ -100,12 +141,17 @@ When a client calls `tools/list`:
 
 When executing a tool that defines secure parameters:
 
-1. **Extension Check:** If the tool defines secure parameters and the client did not declare `com.google.cloud/toolbox.v1` in `_meta.clientCapabilities.extensions`, execution is rejected with JSON-RPC error `-32002` (`MISSING_REQUIRED_CLIENT_CAPABILITY`).
-2. **Argument Separation Validation:**
-   - Secure parameters MUST NOT be passed in `arguments`.
-   - Non-secure parameters MUST NOT be passed in `secureArguments`.
-   - Violations return JSON-RPC error `-32602` (`INVALID_PARAMS`).
-3. **Execution:** The server validates and merges `arguments` and `secureArguments` internally before invoking the underlying data source tool.
+1. **Extension Check (`2026-07-28`):** If the tool defines secure parameters and the client did not declare `com.google.cloud/toolbox.v1` in `_meta["io.modelcontextprotocol/clientCapabilities"].extensions`, execution is rejected with JSON-RPC error `-32021` (`MISSING_REQUIRED_CLIENT_CAPABILITY`).
+2. **Legacy Protocol Check (`< 2026-07-28`):** If a client invokes a tool defining secure parameters over a legacy MCP protocol version (`2024-11-05`, `2025-03-26`, `2025-06-18`, `2025-11-25`), execution is rejected with JSON-RPC error `-32602` (`INVALID_PARAMS`): `invalid tool name: tool with name "<name>" does not exist`.
+3. **Argument Routing Validation:**
+   - Secure parameters MUST NOT be passed in `arguments`. If present in `arguments`, returns JSON-RPC error `-32602` (`INVALID_PARAMS`).
+   - Non-secure parameters MUST NOT be passed in `secureArguments`. If present in `secureArguments`, returns JSON-RPC error `-32602` (`INVALID_PARAMS`).
+4. **URL Parameter Binding Interaction:**
+   - If a parameter is bound via URL query parameters, it is auto-populated by the server.
+   - If a client supplies an argument in either `arguments` or `secureArguments` that is also bound by URL parameters, execution returns a tool execution error (`IsError: true`): `parameter "<param_name>" is bound by URL and cannot be provided in client arguments`.
+5. **Execution & Required Parameter Validation:**
+   - The server validates and merges `arguments` and `secureArguments` internally.
+   - If a required secure parameter is missing (and not bound via URL), execution returns a tool execution error (`IsError: true`): `provided parameters were invalid: parameter "<param_name>" is required`.
 
 #### Example `tools/call` Request
 
@@ -124,6 +170,10 @@ When executing a tool that defines secure parameters:
     },
     "_meta": {
       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientInfo": {
+        "name": "MyApplicationClient",
+        "version": "1.0.0"
+      },
       "io.modelcontextprotocol/clientCapabilities": {
         "extensions": {
           "com.google.cloud/toolbox.v1": {}
@@ -136,11 +186,21 @@ When executing a tool that defines secure parameters:
 
 ---
 
-## 4. Error Handling Matrix
+## 4. Configuration Constraints
 
-| Error Code | Error Constant | Condition | Error Message |
-|---|---|---|---|
-| `-32002` | `MISSING_REQUIRED_CLIENT_CAPABILITY` | Calling a tool with secure parameters without declaring `com.google.cloud/toolbox.v1` support. | `missing required client capability: tool "<name>" requires com.google.cloud/toolbox.v1 extension which is not supported by the client` |
-| `-32602` | `INVALID_PARAMS` | A secure parameter is passed in standard `arguments`. | `parameter "<param_name>" is secure and must not be passed in standard arguments` |
-| `-32602` | `INVALID_PARAMS` | A non-secure parameter is passed in `secureArguments`. | `parameter "<param_name>" is not secure and must not be passed in secureArguments` |
-| `IsError: true` | Tool Execution Error | A required secure parameter was not provided. | `provided parameters were invalid: parameter "<param_name>" is required` |
+When configuring parameters in a tool definition YAML:
+- **Required by Default:** Secure parameters (`secure: true`) are always required and cannot be made optional.
+- **Mutual Exclusivity:** A parameter cannot specify `secure: true` alongside `authServices`, `default`, or `required: false`.
+
+---
+
+## 5. Error Handling Matrix
+
+| Error Type | Protocol Level / Result | Error Code | Error Message | Condition |
+|---|---|---|---|---|
+| Missing Client Capability | JSON-RPC Error | `-32021` (`MISSING_REQUIRED_CLIENT_CAPABILITY`) | `missing required client capability: tool "<name>" requires com.google.cloud/toolbox.v1 extension which is not supported by the client` | Invoking a tool requiring secure parameters on protocol `2026-07-28` without declaring `com.google.cloud/toolbox.v1` in client capabilities. |
+| Tool Not Found (Legacy Protocols) | JSON-RPC Error | `-32602` (`INVALID_PARAMS`) | `invalid tool name: tool with name "<name>" does not exist` | Invoking a tool requiring secure parameters on legacy protocol versions (`< 2026-07-28`). |
+| Secure Parameter in Standard Arguments | JSON-RPC Error | `-32602` (`INVALID_PARAMS`) | `parameter "<param_name>" is secure and must not be passed in standard arguments` | A parameter defined with `secure: true` was passed in `arguments`. |
+| Non-Secure Parameter in Secure Arguments | JSON-RPC Error | `-32602` (`INVALID_PARAMS`) | `parameter "<param_name>" is not secure and must not be passed in secureArguments` | A parameter NOT defined with `secure: true` was passed in `secureArguments`. |
+| Bound Parameter Override | Tool Execution Error (`IsError: true`) | N/A | `parameter "<param_name>" is bound by URL and cannot be provided in client arguments` | A parameter bound via URL query parameters was also passed in `arguments` or `secureArguments`. |
+| Missing Required Secure Parameter | Tool Execution Error (`IsError: true`) | N/A | `provided parameters were invalid: parameter "<param_name>" is required` | A required secure parameter was not provided in `secureArguments` (and not bound by URL). |
