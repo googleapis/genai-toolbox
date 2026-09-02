@@ -30,13 +30,17 @@ import (
 
 // MockSourceConfig is used to mock source config in tests
 type MockSourceConfig struct {
-	Name string `yaml:"name"`
-	Type string `yaml:"type"`
-	Foo  string `yaml:"foo"`
+	Name     string `yaml:"name"`
+	Type     string `yaml:"type"`
+	Foo      string `yaml:"foo"`
+	ReadOnly bool   `yaml:"readOnly"`
 }
 
 func (m MockSourceConfig) SourceConfigType() string {
-	return m.Type
+	if m.Type != "" {
+		return m.Type
+	}
+	return "mock-source"
 }
 
 func (m MockSourceConfig) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -48,8 +52,15 @@ type MockSource struct {
 	MockSourceConfig
 }
 
+func (s MockSource) IsReadOnly() bool {
+	return s.ReadOnly
+}
+
 func (s MockSource) SourceType() string {
-	return s.Type
+	if s.Type != "" {
+		return s.Type
+	}
+	return "mock-source"
 }
 
 func (s MockSource) ToConfig() sources.SourceConfig {
@@ -59,19 +70,23 @@ func (s MockSource) ToConfig() sources.SourceConfig {
 // MockToolConfig is used to mock tool config in tests
 type MockToolConfig struct {
 	tools.ConfigBase `yaml:",inline"`
-	Source           string                `yaml:"source"`
-	Parameters       parameters.Parameters `yaml:"parameters"`
-	Type             string                `yaml:"type"`
+	Source           string                 `yaml:"source"`
+	Parameters       parameters.Parameters  `yaml:"parameters"`
+	Type             string                 `yaml:"type"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 func (m MockToolConfig) ToolConfigType() string {
+	if m.Type != "" {
+		return m.Type
+	}
 	return "mock-tool"
 }
 
 func (m MockToolConfig) Initialize(context.Context) (tools.Tool, error) {
 	return MockTool{
 		BaseTool: tools.NewBaseTool(
-			m, tools.GetAnnotationsOrDefault(&tools.ToolAnnotations{}, nil),
+			m, m.Annotations,
 			tools.Manifest{Description: m.Description, Parameters: m.Parameters.Manifest(), AuthRequired: m.AuthRequired},
 			m.Parameters,
 		),
@@ -109,6 +124,14 @@ func NewMockTool(name, desc, source string, params []parameters.Parameter, unaut
 	return mt
 }
 
+func (t MockTool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
+func (t MockTool) ToConfig() tools.ToolConfig {
+	return t.Cfg
+}
+
 func (t MockTool) RequiresClientAuthorization(sources.Source) (bool, error) {
 	// defaulted to false
 	return t.requireClientAuthorization, nil
@@ -122,14 +145,6 @@ func (t MockTool) Invoke(ctx context.Context, s sources.Source, params parameter
 		}
 	}
 	return mock, nil
-}
-
-func (t MockTool) GetSourceName() string {
-	return t.Cfg.Source
-}
-
-func (t MockTool) ToConfig() tools.ToolConfig {
-	return t.Cfg
 }
 
 func (t MockTool) Authorized(verifiedAuthServices []string) bool {
@@ -149,8 +164,21 @@ func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[stri
 	return parameters.ParseParams(t.StaticParameters, data, claimsMap)
 }
 
-func (t MockTool) GetAnnotations() *tools.ToolAnnotations {
+func (t MockTool) GetAuthTokenHeaderName(sources.Source) (string, error) {
+	return "Authorization", nil
+}
+
+func (t MockTool) GetScopesRequired() []string {
 	return nil
+}
+
+func (t MockTool) HasSecureParams() bool {
+	for _, p := range t.StaticParameters {
+		if p != nil && p.GetSecure() {
+			return true
+		}
+	}
+	return false
 }
 
 // MockPrompt is used to mock prompts in tests
