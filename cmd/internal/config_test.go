@@ -893,7 +893,7 @@ func TestParseConfig(t *testing.T) {
 				Sources:      nil,
 				AuthServices: nil,
 				Tools:        nil,
-				Groups:     nil,
+				Groups:       nil,
 				Prompts:      nil,
 				Resources: server.ResourceConfigs{
 					"my-resource": &testutils.MockResourceConfig{
