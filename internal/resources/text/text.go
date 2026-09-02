@@ -66,7 +66,7 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 // Resource represents the initialized textual resource that returns plain text payloads.
 type Resource struct {
 	Config
-	Size   int64
+	Size int64
 }
 
 var _ resources.Resource = &Resource{}
