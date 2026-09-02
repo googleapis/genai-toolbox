@@ -18,7 +18,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -243,4 +245,52 @@ func NewMockPrompt(name, desc string, args prompts.Arguments) MockPrompt {
 		Args:        args,
 		manifest:    manifest,
 	}
+}
+
+// RegisterMockResource registers the mock resource type with the resources package.
+func RegisterMockResource() {
+	resources.Register("mock", func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
+		var cfg MockResourceConfig
+		cfg.Name = name
+		cfg.Type = "mock"
+		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
+			return nil, err
+		}
+		return &cfg, nil
+	})
+}
+
+// MockResourceConfig is a mock implementation of resources.ResourceConfig
+type MockResourceConfig struct {
+	resources.BaseConfig `yaml:",inline"`
+	Size                 *int64 `yaml:"-"`
+}
+
+func (m *MockResourceConfig) ResourceConfigType() string {
+	return "mock"
+}
+
+func (m *MockResourceConfig) Initialize(ctx context.Context) (resources.Resource, error) {
+	return MockResource{config: m}, nil
+}
+
+// MockResource is a mock implementation of resources.Resource
+type MockResource struct {
+	config *MockResourceConfig
+}
+
+func (m MockResource) GetName() string                                { return m.config.GetName() }
+func (m MockResource) GetTitle() string                               { return m.config.GetTitle() }
+func (m MockResource) GetDescription() string                         { return m.config.GetDescription() }
+func (m MockResource) GetMimeType() string                            { return m.config.GetMimeType() }
+func (m MockResource) GetURI() string                                 { return m.config.GetURI() }
+func (m MockResource) GetSize() *int64                                { return m.config.Size }
+func (m MockResource) GetAnnotations() *resources.ResourceAnnotations { return m.config.Annotations }
+
+func (m MockResource) Read(ctx context.Context, params map[string]any) (any, error) {
+	return "mock resource data", nil
+}
+
+func (m MockResource) ToConfig() resources.ResourceConfig {
+	return m.config
 }

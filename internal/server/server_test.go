@@ -37,6 +37,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
@@ -46,6 +47,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	v20260728 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20260728"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -426,7 +428,7 @@ func TestUpdateServer(t *testing.T) {
 	newGroups := map[string]group.Group{
 		"example-toolset": group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 	}
-	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
+	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, nil, newGroups)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
@@ -1441,7 +1443,7 @@ mcpEnabled: true
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
@@ -1533,7 +1535,7 @@ scopesRequired:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
@@ -1652,7 +1654,7 @@ messages:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if err == nil {
 				t.Fatalf("UnmarshalPrimitiveConfig() expected a duplicate error, got nil")
 			}
@@ -1800,7 +1802,7 @@ tools:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
@@ -1830,7 +1832,7 @@ tools:
 prompts:
   - prompt_a
 `
-	_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(yaml))
+	_, _, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(yaml))
 	if err != nil {
 		t.Fatalf("UnmarshalPrimitiveConfig() returned unexpected error: %v", err)
 	}
@@ -1875,7 +1877,7 @@ func TestInitializeConfigs(t *testing.T) {
 				"my-tool": tools1.ToConfig(),
 			},
 		}
-		sourcesMap, _, _, toolsMap, _, _, err := server.InitializeConfigs(ctx, validCfg)
+		sourcesMap, _, _, toolsMap, _, _, _, err := server.InitializeConfigs(ctx, validCfg)
 		if err != nil {
 			t.Fatalf("unexpected error during config initialization: %s", err)
 		}
@@ -1898,7 +1900,7 @@ func TestInitializeConfigs(t *testing.T) {
 				"my-invalid-tool": testutils.NewMockTool("my-tool", "mock tool for offline config", "my-source", nil, false, false).ToConfig(),
 			},
 		}
-		_, _, _, _, _, _, err := server.InitializeConfigs(ctx, invalidCfg)
+		_, _, _, _, _, _, _, err := server.InitializeConfigs(ctx, invalidCfg)
 		if err == nil {
 			t.Fatalf("expected error but got nil")
 		}
@@ -1994,6 +1996,304 @@ func TestMCPAuthEnableAPIClash(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "MCP Auth cannot be enabled together with the legacy HTTP API") {
 		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestResourceConfigValidation(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		yaml      string
+		wantError bool
+	}{
+		{
+			name: "unknown field triggers strict decoder error",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: mock://test
+invalidRandomField: true
+`,
+			wantError: true,
+		},
+		{
+			name: "size field is rejected by strict decoder",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: mock://test
+size: 123
+`,
+			wantError: true,
+		},
+		{
+			name: "valid mock resource parses successfully",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: mock://test
+`,
+			wantError: false,
+		},
+		{
+			name: "missing type field triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+uri: mock://test
+`,
+			wantError: true,
+		},
+		{
+			name: "invalid type field (not string) triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+type: 123
+uri: mock://test
+`,
+			wantError: true,
+		},
+		{
+			name: "missing uri field triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+`,
+			wantError: true,
+		},
+		{
+			name: "invalid uri field (not string) triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: 123
+`,
+			wantError: true,
+		},
+		{
+			name: "invalid RFC URI triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: ://missing.scheme
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate resource names triggers error",
+			yaml: `
+kind: resource
+name: duplicate-resource
+type: mock
+uri: mock://test1
+---
+kind: resource
+name: duplicate-resource
+type: mock
+uri: mock://test2
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate resource URIs triggers error",
+			yaml: `
+kind: resource
+name: resource1
+type: mock
+uri: mock://duplicate
+---
+kind: resource
+name: resource2
+type: mock
+uri: mock://duplicate
+`,
+			wantError: true,
+		},
+	}
+
+	// Register a mock factory for this test package to use
+	mockFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
+		var cfg testutils.MockResourceConfig
+		cfg.Name = name
+		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
+			return nil, err
+		}
+		return &cfg, nil
+	}
+	resources.Register("mock", mockFactory)
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+		})
+	}
+}
+
+func TestResourceAnnotationsParsing(t *testing.T) {
+	ctx := context.Background()
+
+	mockFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
+		var cfg testutils.MockResourceConfig
+		cfg.Name = name
+		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
+			return nil, err
+		}
+		return &cfg, nil
+	}
+	resources.Register("mock", mockFactory)
+
+	// Scenario 1: Valid parsed config (checks case-insensitivity on 'Priority' and 'LastModified')
+	yamlBytes := []byte(`
+kind: resource
+name: test-annotations
+type: mock
+uri: mock://test
+annotations:
+  priority: 0.8
+  audience:
+    - user
+    - assistant
+  lastModified: 2024-01-01T00:00:00Z
+`)
+	_, _, _, _, _, resConfigs, _, err := server.UnmarshalPrimitiveConfig(ctx, yamlBytes)
+	if err != nil {
+		t.Fatalf("unexpected error parsing valid config: %v", err)
+	}
+
+	cfg, ok := resConfigs["test-annotations"]
+	if !ok {
+		t.Fatalf("missing parsed config")
+	}
+
+	mockCfg, ok := cfg.(*testutils.MockResourceConfig)
+	if !ok {
+		t.Fatalf("config is not a MockResourceConfig")
+	}
+	if mockCfg.Annotations == nil {
+		t.Fatalf("annotations map is nil")
+	}
+
+	if mockCfg.Annotations.Priority == nil || *mockCfg.Annotations.Priority != 0.8 {
+		t.Errorf("priority = %v, want 0.8", mockCfg.Annotations.Priority)
+	}
+
+	if len(mockCfg.Annotations.Audience) != 2 || mockCfg.Annotations.Audience[0] != resources.RoleUser {
+		t.Errorf("audience = %v, want [user, assistant]", mockCfg.Annotations.Audience)
+	}
+
+	// Verify the unquoted timestamp parsed correctly into the string field
+	if mockCfg.Annotations.LastModified != "2024-01-01T00:00:00Z" {
+		t.Errorf("lastModified = %v, want 2024-01-01T00:00:00Z", mockCfg.Annotations.LastModified)
+	}
+
+	// Edge Cases & Validation Testing
+	testCases := []struct {
+		name        string
+		yaml        string
+		wantError   bool
+		errContains string
+	}{
+		{
+			name: "unknown field strict error",
+			yaml: `
+kind: resource
+name: test-invalid
+type: mock
+uri: mock://test
+annotations:
+  unknownField: "should error"`,
+			wantError:   true,
+			errContains: "unknownField",
+		},
+		{
+			name: "invalid priority type",
+			yaml: `
+kind: resource
+name: test-invalid
+type: mock
+uri: mock://test
+annotations:
+  priority: "high"`,
+			wantError:   true,
+			errContains: "cannot unmarshal",
+		},
+		{
+			name: "invalid audience scalar",
+			yaml: `
+kind: resource
+name: test-invalid
+type: mock
+uri: mock://test
+annotations:
+  audience: user`,
+			wantError:   true,
+			errContains: "string was used where sequence is expected",
+		},
+		{
+			name: "invalid audience value",
+			yaml: `
+kind: resource
+name: test-invalid
+type: mock
+uri: mock://test
+annotations:
+  audience:
+    - admin`,
+			wantError:   true,
+			errContains: "invalid audience \"admin\"",
+		},
+		{
+			name: "duplicate audience value",
+			yaml: `
+kind: resource
+name: test-duplicate
+type: mock
+uri: mock://test
+annotations:
+  audience:
+    - user
+    - user`,
+			wantError:   true,
+			errContains: "duplicate audience \"user\"",
+		},
+		{
+			name: "empty block safety (no error expected)",
+			yaml: `
+kind: resource
+name: test-empty
+type: mock
+uri: mock://test
+annotations: {}`,
+			wantError: false,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, _, _, _, _, _, err = server.UnmarshalPrimitiveConfig(ctx, []byte(tt.yaml))
+			if tt.wantError {
+				if err == nil {
+					t.Errorf("expected error for %q, got nil", tt.name)
+				} else if !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("expected error to contain %q, got: %v", tt.errContains, err)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error for %q: %v", tt.name, err)
+				}
+			}
+		})
 	}
 }
 

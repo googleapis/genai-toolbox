@@ -27,6 +27,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -162,10 +163,10 @@ var MockPrompt2 = NewMockPrompt("prompt2", "", prompts.Arguments{
 	{Parameter: parameters.NewStringParameter("arg1", "This is the first argument.")},
 })
 
-// SetUpResources setups resources to test against. The returned groups map is the
+// SetUpPrimitives setups resources to test against. The returned groups map is the
 // source of truth used by PrimitiveManager; assert group membership via
 // groups[name].ContainsTool / ContainsPrompt.
-func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]prompts.Prompt, map[string]group.Group) {
+func SetUpPrimitives(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt, mockResources []MockResource) (map[string]tools.Tool, map[string]prompts.Prompt, map[string]resources.Resource, map[string]group.Group) {
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
 	for _, tool := range mockTools {
@@ -188,6 +189,14 @@ func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 		allPrompts = append(allPrompts, prompt.Name)
 	}
 
+	resourcesMap := make(map[string]resources.Resource)
+	// var allResources []string
+	for _, resource := range mockResources {
+		resName := resource.GetName()
+		resourcesMap[resName] = resource
+		// allResources = append(allResources, resName)
+	}
+
 	// Build the authoritative groups map directly. Each named collection
 	// contributes its tool names; all prompts belong to the default (nameless)
 	// group, matching the legacy default-toolset behavior.
@@ -207,5 +216,5 @@ func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 		groups[name] = group.NewGroup(gc)
 	}
 
-	return toolsMap, promptsMap, groups
+	return toolsMap, promptsMap, resourcesMap, groups
 }

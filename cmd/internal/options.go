@@ -300,6 +300,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 	opts.Cfg.EmbeddingModelConfigs = finalConfig.EmbeddingModels
 	opts.Cfg.ToolConfigs = finalConfig.Tools
 	opts.Cfg.PromptConfigs = finalConfig.Prompts
+	opts.Cfg.ResourceConfigs = finalConfig.Resources
 	opts.Cfg.GroupConfigs = finalConfig.Groups
 
 	return isCustomConfigured, nil

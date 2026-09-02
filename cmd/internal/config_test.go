@@ -28,6 +28,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/prompts/custom"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/mcp-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/mcp-toolbox/internal/sources/http"
@@ -769,6 +770,8 @@ name: example_toolset
 }
 
 func TestParseConfig(t *testing.T) {
+	testutils.RegisterMockResource()
+
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -904,6 +907,11 @@ func TestParseConfig(t *testing.T) {
       arguments:
       - name: code
         description: the code to review
+---
+      kind: resource
+      name: my-resource
+      type: mock
+      uri: mock://test
 			`,
 			wantConfig: Config{
 				Sources: server.SourceConfigs{
@@ -976,6 +984,18 @@ func TestParseConfig(t *testing.T) {
 						},
 					},
 				},
+				Resources: server.ResourceConfigs{
+					"my-resource": &testutils.MockResourceConfig{
+						BaseConfig: resources.BaseConfig{
+							Name: "my-resource",
+							Type: "mock",
+							URI:  "mock://test",
+							Annotations: &resources.ResourceAnnotations{
+								Priority: func() *float64 { p := 1.0; return &p }(),
+							},
+						},
+					},
+				},
 			},
 		},
 		{
@@ -1009,6 +1029,34 @@ func TestParseConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			description: "only resource",
+			in: `
+            kind: resource
+            name: my-resource
+            type: mock
+            uri: mock://test
+            `,
+			wantConfig: Config{
+				Sources:      nil,
+				AuthServices: nil,
+				Tools:        nil,
+				Groups:       nil,
+				Prompts:      nil,
+				Resources: server.ResourceConfigs{
+					"my-resource": &testutils.MockResourceConfig{
+						BaseConfig: resources.BaseConfig{
+							Name: "my-resource",
+							Type: "mock",
+							URI:  "mock://test",
+							Annotations: &resources.ResourceAnnotations{
+								Priority: func() *float64 { p := 1.0; return &p }(),
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
@@ -1031,6 +1079,9 @@ func TestParseConfig(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.wantConfig.Prompts, configFile.Prompts); diff != "" {
 				t.Fatalf("incorrect prompts parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantConfig.Resources, configFile.Resources); diff != "" {
+				t.Fatalf("incorrect resources parse: diff %v", diff)
 			}
 		})
 	}
@@ -2538,15 +2589,23 @@ func TestMergeConfigs(t *testing.T) {
 		Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}},
 		Groups:          server.GroupConfigs{"set1": group.GroupConfig{Name: "set1"}},
 		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
+		Resources:       server.ResourceConfigs{"res1": &testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1", URI: "mock://res1"}}},
 	}
 	file2 := Config{
 		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
 		Tools:        server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
+		Resources:    server.ResourceConfigs{"res2": &testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res2", URI: "mock://res2"}}},
 		Groups:       server.GroupConfigs{"set2": group.GroupConfig{Name: "set2"}},
 	}
 	fileWithConflicts := Config{
 		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 		Tools:   server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
+	}
+	fileWithResourceNameConflict := Config{
+		Resources: server.ResourceConfigs{"res1": &testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1", URI: "mock://different"}}},
+	}
+	fileWithResourceURIConflict := Config{
+		Resources: server.ResourceConfigs{"res3": &testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res3", URI: "mock://res1"}}},
 	}
 	fileMcp1 := Config{
 		AuthServices: server.AuthServiceConfigs{"generic1": generic.Config{Name: "generic1", McpEnabled: true}},
@@ -2572,6 +2631,7 @@ func TestMergeConfigs(t *testing.T) {
 				Prompts:         server.PromptConfigs{},
 				Groups:          server.GroupConfigs{"set1": group.GroupConfig{Name: "set1"}, "set2": group.GroupConfig{Name: "set2"}},
 				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
+				Resources:       server.ResourceConfigs{"res1": &testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res1", URI: "mock://res1"}}, "res2": &testutils.MockResourceConfig{BaseConfig: resources.BaseConfig{Name: "res2", URI: "mock://res2"}}},
 			},
 			wantErr: false,
 		},
@@ -2579,6 +2639,18 @@ func TestMergeConfigs(t *testing.T) {
 			name:    "merge with conflicts",
 			files:   []Config{file1, file2, fileWithConflicts},
 			wantErr: true,
+		},
+		{
+			name:      "merge with resource name conflicts",
+			files:     []Config{file1, fileWithResourceNameConflict},
+			wantErr:   true,
+			errString: "resource 'res1' (file #2)",
+		},
+		{
+			name:      "merge with resource URI conflicts",
+			files:     []Config{file1, fileWithResourceURIConflict},
+			wantErr:   true,
+			errString: "resource URI 'mock://res1' used by 'res1' and 'res3'",
 		},
 		{
 			name:      "merge multiple mcp enabled generic",
@@ -2595,6 +2667,7 @@ func TestMergeConfigs(t *testing.T) {
 				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 				Tools:           file1.Tools,
 				Prompts:         server.PromptConfigs{},
+				Resources:       file1.Resources,
 				Groups:          file1.Groups,
 			},
 		},
@@ -2607,6 +2680,7 @@ func TestMergeConfigs(t *testing.T) {
 				EmbeddingModels: make(server.EmbeddingModelConfigs),
 				Tools:           make(server.ToolConfigs),
 				Prompts:         server.PromptConfigs{},
+				Resources:       make(server.ResourceConfigs),
 				Groups:          make(server.GroupConfigs),
 			},
 		},

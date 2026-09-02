@@ -42,6 +42,7 @@ type Config struct {
 	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
 	Tools           server.ToolConfigs           `yaml:"tools"`
 	Prompts         server.PromptConfigs         `yaml:"prompts"`
+	Resources       server.ResourceConfigs       `yaml:"resources"`
 	Groups          server.GroupConfigs          `yaml:"groups"`
 }
 
@@ -200,7 +201,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 
 	// Parse contents
-	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Prompts, config.Groups, err = server.UnmarshalPrimitiveConfig(ctx, raw)
+	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Prompts, config.Resources, config.Groups, err = server.UnmarshalPrimitiveConfig(ctx, raw)
 	if err != nil {
 		return config, err
 	}
@@ -418,10 +419,12 @@ func mergeConfigs(files ...Config) (Config, error) {
 		EmbeddingModels: make(server.EmbeddingModelConfigs),
 		Tools:           make(server.ToolConfigs),
 		Prompts:         make(server.PromptConfigs),
+		Resources:       make(server.ResourceConfigs),
 		Groups:          make(server.GroupConfigs),
 	}
 
 	var conflicts []string
+	seenResourceURIs := make(map[string]string)
 
 	for fileIndex, file := range files {
 		// Check for conflicts and merge sources
@@ -469,6 +472,26 @@ func mergeConfigs(files ...Config) (Config, error) {
 			} else {
 				merged.Prompts[name] = prompt
 			}
+		}
+
+		// Check for conflicts and merge resources (by Name AND URI)
+		for name, resource := range file.Resources {
+			// Check for Name collision
+			if _, exists := merged.Resources[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("resource '%s' (file #%d)", name, fileIndex+1))
+				continue
+			}
+
+			// Check for URI collision
+			if resource.GetURI() != "" {
+				if existingName, exists := seenResourceURIs[resource.GetURI()]; exists {
+					conflicts = append(conflicts, fmt.Sprintf("resource URI '%s' used by '%s' and '%s' (file #%d)", resource.GetURI(), existingName, name, fileIndex+1))
+					continue
+				}
+				seenResourceURIs[resource.GetURI()] = name
+			}
+
+			merged.Resources[name] = resource
 		}
 
 		// Check for conflicts and merge groups

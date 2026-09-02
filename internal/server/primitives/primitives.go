@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
@@ -37,6 +38,7 @@ type PrimitiveManager struct {
 	embeddingModels map[string]embeddingmodels.EmbeddingModel
 	tools           map[string]tools.Tool
 	prompts         map[string]prompts.Prompt
+	resources       map[string]resources.Resource
 	groups          map[string]group.Group
 }
 
@@ -46,6 +48,7 @@ func NewPrimitiveManager(
 	embeddingModelsMap map[string]embeddingmodels.EmbeddingModel,
 	toolsMap map[string]tools.Tool,
 	promptsMap map[string]prompts.Prompt,
+	resourcesMap map[string]resources.Resource,
 	groupsMap map[string]group.Group,
 
 ) *PrimitiveManager {
@@ -56,6 +59,7 @@ func NewPrimitiveManager(
 		embeddingModels: embeddingModelsMap,
 		tools:           toolsMap,
 		prompts:         promptsMap,
+		resources:       resourcesMap,
 		groups:          groupsMap,
 	}
 
@@ -97,6 +101,14 @@ func (r *PrimitiveManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	return prompt, ok
 }
 
+// GetResource returns a specific resource by name.
+func (r *PrimitiveManager) GetResource(name string) (resources.Resource, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	resource, ok := r.resources[name]
+	return resource, ok
+}
+
 // GetGroup returns the group of the given name.
 func (r *PrimitiveManager) GetGroup(groupName string) (group.Group, bool) {
 	r.mu.RLock()
@@ -105,7 +117,7 @@ func (r *PrimitiveManager) GetGroup(groupName string) (group.Group, bool) {
 	return g, ok
 }
 
-func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, groupsMap map[string]group.Group) {
+func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, resourcesMap map[string]resources.Resource, groupsMap map[string]group.Group) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sources = sourcesMap
@@ -113,6 +125,7 @@ func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, a
 	r.embeddingModels = embeddingModelsMap
 	r.tools = toolsMap
 	r.prompts = promptsMap
+	r.resources = resourcesMap
 	r.groups = groupsMap
 }
 
