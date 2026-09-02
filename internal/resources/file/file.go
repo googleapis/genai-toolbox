@@ -285,7 +285,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("security violation: file %q was swapped with a non-regular file during read", resolvedPath)
 	}
 
-	limit := *r.Config.MaxSize
+	limit := *r.MaxSize
 	limitedReader := io.LimitReader(f, limit+1)
 	content, err := io.ReadAll(limitedReader)
 	if err != nil {
@@ -312,8 +312,8 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 // GetAnnotations returns the resource annotations, dynamically computing the LastModified timestamp.
 func (r *FileResource) GetAnnotations() *resources.ResourceAnnotations {
 	var ret resources.ResourceAnnotations
-	if r.Config.Annotations != nil {
-		ret = *r.Config.Annotations
+	if r.Annotations != nil {
+		ret = *r.Annotations
 	}
 
 	resolvedPath := r.absPath
@@ -360,8 +360,8 @@ func (r *FileResource) GetCurrentSize() (int64, error) {
 	}
 
 	size := info.Size()
-	if size > *r.Config.MaxSize {
-		size = *r.Config.MaxSize
+	if size > *r.MaxSize {
+		size = *r.MaxSize
 	}
 	return size, nil
 }
