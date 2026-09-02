@@ -190,7 +190,7 @@ func TestRuntimeCollection(t *testing.T) {
 	}
 
 	// collection is optional now, so a config without it should still parse.
-	if _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(noCollectionConfig)); err != nil {
+	if _, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(noCollectionConfig)); err != nil {
 		t.Fatalf("expected config without collection to parse, got: %s", err)
 	}
 

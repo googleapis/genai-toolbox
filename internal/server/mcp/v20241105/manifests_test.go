@@ -414,7 +414,7 @@ func TestGenerateListToolsResultWithSecureParams(t *testing.T) {
 		Name:      "test-toolset",
 		ToolNames: []string{"standard_tool", "secure_tool"},
 	})
-	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil, nil)
 
 	got, err := GenerateListToolsResult(pMgr, g, nil)
 	if err != nil {

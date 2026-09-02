@@ -190,7 +190,7 @@ func SetUpPrimitives(t *testing.T, mockTools []MockTool, mockPrompts []MockPromp
 	}
 
 	resourcesMap := make(map[string]resources.Resource)
-	var allResources []string
+	// var allResources []string
 	for _, resource := range mockResources {
 		resName := resource.GetName()
 		resourcesMap[resName] = resource

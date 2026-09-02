@@ -1411,7 +1411,7 @@ func TestToolsCallHandlerWithSecureParams(t *testing.T) {
 		"":             g,
 		"test-toolset": g,
 	}
-	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, groups)
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil, groups)
 
 	tests := []struct {
 		desc            string

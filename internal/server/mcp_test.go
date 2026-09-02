@@ -1887,7 +1887,7 @@ func TestSseHandlerWriterWithoutFlusher(t *testing.T) {
 		logger:          testLogger,
 		instrumentation: instrumentation,
 		sseManager:      newSseManager(ctx),
-		PrimitiveMgr:    primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil),
+		PrimitiveMgr:    primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil, nil),
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/sse", nil).WithContext(ctx)
