@@ -139,7 +139,7 @@ func handleDynamicReload(ctx context.Context, cfg server.ServerConfig, s *server
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, err := validateReloadEdits(ctx, cfg)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, resourcesMap, groupsMap, err := validateReloadEdits(ctx, cfg)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
