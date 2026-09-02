@@ -97,24 +97,26 @@ func TestValidateMCPAuth_Opaque_Fallback(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockClient := &http.Client{
-				Transport: mockRoundTripper(func(req *http.Request) (*http.Response, error) {
-					if req.URL.String() != "https://oauth2.googleapis.com/tokeninfo" {
-						return nil, fmt.Errorf("unexpected URL: %s", req.URL.String())
-					}
-					respBody := fmt.Sprintf(`{"aud": %q, "azp": %q, "scope": "openid email"}`, tc.tokenInfoAud, tc.tokenInfoAzp)
-					return &http.Response{
-						StatusCode: http.StatusOK,
-						Body:       io.NopCloser(strings.NewReader(respBody)),
-						Header:     make(http.Header),
-					}, nil
-				}),
-			}
+			oldTransport := http.DefaultTransport
+			defer func() { http.DefaultTransport = oldTransport }()
+			http.DefaultTransport = mockRoundTripper(func(req *http.Request) (*http.Response, error) {
+				if req.URL.String() != "https://oauth2.googleapis.com/tokeninfo" {
+					return nil, fmt.Errorf("unexpected URL: %s", req.URL.String())
+				}
+				respBody := fmt.Sprintf(`{"aud": %q, "azp": %q, "scope": "openid email"}`, tc.tokenInfoAud, tc.tokenInfoAzp)
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(strings.NewReader(respBody)),
+					Header:     make(http.Header),
+				}, nil
+			})
 
-			a := google.NewAuthServiceForTest(google.Config{
-				Audience: tc.audience,
-				ClientID: tc.clientID,
-			}, mockClient)
+			a := google.AuthService{
+				Config: google.Config{
+					Audience: tc.audience,
+					ClientID: tc.clientID,
+				},
+			}
 
 			header := make(http.Header)
 			header.Set("Authorization", "Bearer some-opaque-token")

@@ -484,11 +484,6 @@ func TestValidateJwtToken(t *testing.T) {
 		t.Fatalf("failed to initialize auth service: %v", err)
 	}
 
-	genericAuth, ok := authService.(*generic.AuthService)
-	if !ok {
-		t.Fatalf("expected *AuthService, got %T", authService)
-	}
-
 	tests := []struct {
 		name        string
 		token       string
@@ -506,8 +501,13 @@ func TestValidateJwtToken(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name:        "invalid token (wrong signature)",
-			token:       "header.payload.signature",
+			name: "invalid token (wrong signature)",
+			token: generateValidToken(t, generateRSAPrivateKey(t), keyID, jwt.MapClaims{
+				"iss":   "https://example.com",
+				"aud":   "my-audience",
+				"scope": "read:files",
+				"exp":   time.Now().Add(time.Hour).Unix(),
+			}),
 			wantError:   true,
 			errContains: "invalid or expired token",
 		},
@@ -563,7 +563,13 @@ func TestValidateJwtToken(t *testing.T) {
 				t.Fatalf("failed to create logger: %v", err)
 			}
 			ctx := util.WithLogger(context.Background(), logger)
-			_, err = genericAuth.ValidateJwtTokenForTest(ctx, tc.token)
+			mcpAuth, ok := authService.(auth.MCPAuthService)
+			if !ok {
+				t.Fatalf("expected auth.MCPAuthService, got %T", authService)
+			}
+			header := make(http.Header)
+			header.Set("Authorization", "Bearer "+tc.token)
+			_, err = mcpAuth.ValidateMCPAuth(ctx, header)
 			if tc.wantError {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
@@ -744,6 +750,22 @@ func TestValidateOpaqueToken(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/.well-known/openid-configuration" {
+					w.Header().Set("Content-Type", "application/json")
+					config := map[string]any{
+						"issuer":   "https://example.com",
+						"jwks_uri": "http://" + r.Host + "/jwks",
+					}
+					_ = json.NewEncoder(w).Encode(config)
+					return
+				}
+				if r.URL.Path == "/jwks" {
+					w.Header().Set("Content-Type", "application/json")
+					_ = json.NewEncoder(w).Encode(map[string]any{
+						"keys": []any{},
+					})
+					return
+				}
 				if r.URL.Path == "/introspect" || r.URL.Path == "/custom-introspect" {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(tc.mockStatus)
@@ -755,11 +777,17 @@ func TestValidateOpaqueToken(t *testing.T) {
 			server := httptest.NewServer(handler)
 			defer server.Close()
 
-			genericAuth := generic.NewAuthServiceForTest(generic.Config{
+			cfg := generic.Config{
 				Audience:            tc.audience,
 				AuthorizationServer: server.URL,
 				ScopesRequired:      tc.scopesRequired,
-			}, generic.NewSecureHTTPClientForTest(), "https://example.com")
+				McpEnabled:          true,
+			}
+
+			authService, err := cfg.Initialize()
+			if err != nil {
+				t.Fatalf("failed to initialize auth service: %v", err)
+			}
 
 			logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
 			if err != nil {
@@ -767,7 +795,13 @@ func TestValidateOpaqueToken(t *testing.T) {
 			}
 			ctx := util.WithLogger(context.Background(), logger)
 
-			_, err = genericAuth.ValidateOpaqueTokenForTest(ctx, tc.token)
+			mcpAuth, ok := authService.(auth.MCPAuthService)
+			if !ok {
+				t.Fatalf("expected auth.MCPAuthService, got %T", authService)
+			}
+			header := make(http.Header)
+			header.Set("Authorization", "Bearer "+tc.token)
+			_, err = mcpAuth.ValidateMCPAuth(ctx, header)
 
 			if tc.wantError {
 				if err == nil {
@@ -835,7 +869,7 @@ func TestIsJWTFormat(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := generic.IsJWTFormatForTest(tc.token)
+			got := generic.IsJWTFormat(tc.token)
 			if got != tc.want {
 				t.Errorf("isJWTFormat(%q) = %v; want %v", tc.token, got, tc.want)
 			}
