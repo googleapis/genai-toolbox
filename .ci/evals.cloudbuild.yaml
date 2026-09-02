@@ -137,6 +137,9 @@ options:
   logging: CLOUD_LOGGING_ONLY
   substitutionOption: "ALLOW_LOOSE"
   dynamicSubstitutions: true
+  # Steps share one worker, so databases evaluated in parallel contend for the
+  # same CPU.
+  machineType: E2_HIGHCPU_32
   env:
     - "TOOLBOX_BIN=/workspace/toolbox"
     - "EVAL_HARNESSES=${_EVAL_HARNESSES}"
