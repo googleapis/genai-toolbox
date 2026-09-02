@@ -48,6 +48,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
+	_ "github.com/googleapis/mcp-toolbox/internal/resources/text"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	v20260728 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20260728"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -2007,6 +2008,15 @@ func TestResourceConfigValidation(t *testing.T) {
 		yaml      string
 		wantError bool
 	}{
+		{
+			name: "missing required text field for text resource triggers validation error",
+			yaml: `
+kind: resource
+name: test-resource
+type: text
+`,
+			wantError: true,
+		},
 		{
 			name: "unknown field triggers strict decoder error",
 			yaml: `
