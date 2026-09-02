@@ -113,7 +113,8 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
-			s, err := sc.Initialize(childCtx, instrumentation.Tracer)
+			// Always connects here; the flag that defers it lands separately.
+			s, err := sc.Initialize(childCtx, instrumentation.Tracer, false)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize source %q: %w", name, err)
 			}
