@@ -234,12 +234,12 @@ func (r *FileResource) GetSize() *int64 {
 func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, error) {
 	// Security check for extension on the resolved target
 	if err := validateExtension(r.absPath); err != nil {
-		return nil, fmt.Errorf("security violation: configured file extension not allowed for resource %q: %w", r.Config.Name, err)
+		return nil, fmt.Errorf("security violation: configured file extension not allowed for resource %q: %w", r.Name, err)
 	}
 
 	resolvedPath, err := filepath.EvalSymlinks(r.absPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Config.Name, err)
+		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Name, err)
 	}
 
 	if r.isRelative && r.resolvedBaseDir != "" {
@@ -254,7 +254,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	}
 
 	if err := validateExtension(resolvedPath); err != nil {
-		return nil, fmt.Errorf("security violation: file extension changed post-boot for resource %q: %w", r.Config.Name, err)
+		return nil, fmt.Errorf("security violation: file extension changed post-boot for resource %q: %w", r.Name, err)
 	}
 
 	statInfo, err := os.Lstat(resolvedPath)
