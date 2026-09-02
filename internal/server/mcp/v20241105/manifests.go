@@ -106,6 +106,10 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
+		// Skip a Tool that requires secure params as they are not supported in this protocol version.
+		if tool.HasSecureParams() {
+			continue
+		}
 		srcName := tool.GetSourceName()
 		var src sources.Source
 		if srcName != "" {
@@ -118,7 +122,7 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 		if err != nil {
 			return ListToolsResult{}, fmt.Errorf("error getting parameters for tool %q: %w", toolName, err)
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(), urlParams)
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(src), urlParams)
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	return ListToolsResult{Tools: mcpManifest}, nil
