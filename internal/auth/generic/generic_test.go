@@ -93,7 +93,6 @@ func generateValidToken(t *testing.T, key *rsa.PrivateKey, keyID string, claims 
 	return signedString
 }
 
-
 func TestGetClaimsFromHeader(t *testing.T) {
 	privateKey := generateRSAPrivateKey(t)
 	keyID := "test-key-id"

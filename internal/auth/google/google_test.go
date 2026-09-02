@@ -29,7 +29,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
-
 type mockRoundTripper func(req *http.Request) (*http.Response, error)
 
 func (f mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
