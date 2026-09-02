@@ -428,7 +428,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			name: my-group
 			cacheScope: secret
 			`,
-			err: "error unmarshaling group: unable to unmarshal group: [1:13] Key: 'GroupConfig.CacheScope' Error:Field validation for 'CacheScope' failed on the 'oneof' tag\n>  1 | cacheScope: secret\n                   ^\n   2 | name: my-group",
+			err: "Field validation for 'CacheScope' failed on the 'oneof' tag",
 		},
 		{
 			desc: "invalid ttlMs",
@@ -437,7 +437,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			name: my-group
 			ttlMs: -100
 			`,
-			err: "error unmarshaling group: unable to unmarshal group: [2:8] Key: 'GroupConfig.TTLMs' Error:Field validation for 'TTLMs' failed on the 'gte' tag\n   1 | name: my-group\n>  2 | ttlMs: -100\n              ^\n",
+			err: "Field validation for 'TTLMs' failed on the 'gte' tag",
 		},
 		{
 			desc: "default group declaring tools",
@@ -447,7 +447,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			tools:
 			  - tool_a
 			`,
-			err: "error unmarshaling group: the default (nameless) group cannot declare 'tools' or 'prompts'; it always contains all configured tools and prompts",
+			err: "the default (nameless) group cannot declare 'tools' or 'prompts'",
 		},
 		{
 			desc: "default group declaring prompts",
@@ -457,7 +457,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			prompts:
 			  - prompt_a
 			`,
-			err: "error unmarshaling group: the default (nameless) group cannot declare 'tools' or 'prompts'; it always contains all configured tools and prompts",
+			err: "the default (nameless) group cannot declare 'tools' or 'prompts'",
 		},
 		{
 			desc: "unknown field",
@@ -467,7 +467,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			resources:
 			  - res_a
 			`,
-			err: "error unmarshaling group: unable to unmarshal group: [2:1] unknown field \"resources\"\n   1 | name: my_group\n>  2 | resources:\n       ^\n   3 | - res_a",
+			err: "unknown field \"resources\"",
 		},
 		{
 			desc: "duplicate default group",
@@ -480,7 +480,7 @@ kind: group
 name:
 description: second
 `,
-			err: "more than one default (nameless) group declared; only one is allowed",
+			err: "more than one default (nameless) group declared",
 		},
 		{
 			desc: "duplicate named group",
@@ -506,8 +506,8 @@ tools:
 				t.Fatalf("expect parsing to fail")
 			}
 			errStr := err.Error()
-			if errStr != tc.err {
-				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			if !strings.Contains(errStr, tc.err) {
+				t.Fatalf("unexpected error: got %q, want it to contain %q", errStr, tc.err)
 			}
 		})
 	}

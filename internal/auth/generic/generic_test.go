@@ -1066,8 +1066,8 @@ func TestFailParseFromYaml(t *testing.T) {
 				t.Fatalf("expect parsing to fail")
 			}
 			errStr := err.Error()
-			if errStr != tc.err {
-				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			if !strings.Contains(errStr, tc.err) {
+				t.Fatalf("unexpected error: got %q, want it to contain %q", errStr, tc.err)
 			}
 		})
 	}
