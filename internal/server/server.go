@@ -23,10 +23,12 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"slices"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -40,6 +42,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -55,6 +58,7 @@ type Server struct {
 	version             string
 	sqlCommenterEnabled bool
 	toolboxUrl          string
+	prmURL              string
 	srv                 *http.Server
 	listener            net.Listener
 	root                chi.Router
@@ -302,6 +306,7 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[string]sources.Source, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
+		var src sources.Source
 		t, err := func() (tools.Tool, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
@@ -314,16 +319,16 @@ func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[strin
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
 			}
-			if !cfg.SkipSourceValidation {
-				srcName := t.GetSourceName()
-				var src sources.Source
+
+			if srcName := t.GetSourceName(); srcName != "" && sourcesMap != nil {
 				var ok bool
-				if srcName != "" {
-					src, ok = sourcesMap[srcName]
-					if !ok {
-						return nil, fmt.Errorf("unable to retrieve source %s for tool %s", srcName, name)
-					}
+				src, ok = sourcesMap[srcName]
+				if !ok && !cfg.SkipSourceValidation {
+					return nil, fmt.Errorf("unable to retrieve source %q for tool %q", srcName, name)
 				}
+			}
+
+			if !cfg.SkipSourceValidation {
 				err = t.ValidateSource(src)
 				if err != nil {
 					return nil, err
@@ -334,6 +339,11 @@ func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[strin
 		if err != nil {
 			return nil, err
 		}
+
+		if tools.ShouldSuppress(ctx, t, src) {
+			continue
+		}
+
 		toolsMap[name] = t
 	}
 	toolNames := make([]string, 0, len(toolsMap))
@@ -379,17 +389,20 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 
 	groupsMap := make(map[string]group.Group)
 	for name, gc := range groupConfigs {
-		if cfg.IgnoreUnknownTools {
-			filteredToolNames := make([]string, 0, len(gc.ToolNames))
-			for _, tn := range gc.ToolNames {
-				if _, ok := toolsMap[tn]; ok {
-					filteredToolNames = append(filteredToolNames, tn)
-				} else {
-					l.WarnContext(ctx, fmt.Sprintf("Skipping missing tool %q in group %q", tn, name))
-				}
+		filteredToolNames := make([]string, 0, len(gc.ToolNames))
+		for _, tn := range gc.ToolNames {
+			if _, ok := toolsMap[tn]; ok {
+				filteredToolNames = append(filteredToolNames, tn)
+			} else if _, isTool := cfg.ToolConfigs[tn]; isTool {
+				l.InfoContext(ctx, fmt.Sprintf("Removing suppressed tool %q from group %q", tn, name))
+			} else if cfg.IgnoreUnknownTools {
+				l.WarnContext(ctx, fmt.Sprintf("Skipping missing tool %q in group %q", tn, name))
+			} else {
+				// Keep it so that Initialize returns the expected error
+				filteredToolNames = append(filteredToolNames, tn)
 			}
-			gc.ToolNames = filteredToolNames
 		}
+		gc.ToolNames = filteredToolNames
 
 		g, err := func() (group.Group, error) {
 			_, span := instrumentation.Tracer.Start(
@@ -501,6 +514,19 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		limit = DefaultHTTPMaxRequestBytes
 	}
 
+	mcp.InitializeProtocols(mcp.ProtocolOptions{
+		DisableExt: cfg.DisableExt,
+	})
+
+	prmURLStr, err := parsePRMURL(cfg.ToolboxUrl)
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize server: %w", err)
+	}
+	prmURL, err := url.Parse(prmURLStr)
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize server: %w", err)
+	}
+
 	s := &Server{
 		version:             cfg.Version,
 		sqlCommenterEnabled: cfg.SQLCommenter,
@@ -511,6 +537,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		sseManager:          sseManager,
 		PrimitiveMgr:        primitiveManager,
 		toolboxUrl:          cfg.ToolboxUrl,
+		prmURL:              prmURLStr,
 		mcpPrmFile:          cfg.McpPrmFile,
 		httpMaxRequestBytes: limit,
 		enableDraftSpecs:    cfg.EnableDraftSpecs,
@@ -549,7 +576,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// Host OAuth Protected Resource Metadata endpoint
 	mcpAuthEnabled := false
-	for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
+	for _, authSvc := range s.PrimitiveMgr.AuthServices() {
 		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 			mcpAuthEnabled = true
 			break
@@ -573,7 +600,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// Register route if auth is enabled or a manual file is provided
 	if mcpAuthEnabled || s.mcpPrmFile != "" {
-		r.Get("/.well-known/oauth-protected-resource", func(w http.ResponseWriter, req *http.Request) {
+		r.Get(prmURL.Path, func(w http.ResponseWriter, req *http.Request) {
 			// Serve from memory if file was loaded
 			if s.mcpPrmFile != "" {
 				w.Header().Set("Content-Type", "application/json")
@@ -635,7 +662,7 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Find McpEnabled auth service
 			var mcpSvc auth.MCPAuthService
-			for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
+			for _, authSvc := range s.PrimitiveMgr.AuthServices() {
 				if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 					mcpSvc = mSvc
 					break
@@ -658,12 +685,12 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 						if len(mcpErr.ScopesRequired) > 0 {
 							scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
 						}
-						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.getPRMURL(), scopesArg))
 						render.Status(r, http.StatusUnauthorized)
 						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.UNAUTHORIZED, mcpErr.Message, nil))
 						return
 					case http.StatusForbidden:
-						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.getPRMURL(), mcpErr.Message))
 						render.Status(r, http.StatusForbidden)
 						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.FORBIDDEN, mcpErr.Message, nil))
 						return
@@ -695,6 +722,9 @@ func (s *Server) Listen(ctx context.Context, certFile, keyFile string) error {
 	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
 	ln, err := lc.Listen(ctx, "tcp", s.srv.Addr)
 	if err != nil {
+		if errors.Is(err, syscall.EADDRINUSE) {
+			return fmt.Errorf("failed to open listener for %q. Use `--port=<number>` to specify a different port: %w", s.srv.Addr, err)
+		}
 		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
 	}
 
