@@ -89,63 +89,10 @@ UPDATE eval_fixtures.orders
 SET status = status
 WHERE id % 2 = 0;
 
--- One object per kind the evalset asks about, so list_views, list_sequences,
--- list_triggers and list_stored_procedure each return something. The bigserial
--- columns above already supply sequences; this one is named for legibility.
-CREATE OR REPLACE VIEW eval_fixtures.recent_orders AS
-SELECT o.id, c.email, o.status, o.total_cents, o.placed_at
-FROM eval_fixtures.orders o
-JOIN eval_fixtures.customers c ON c.id = o.customer_id
-WHERE o.placed_at > now() - interval '30 days';
-
-CREATE SEQUENCE IF NOT EXISTS eval_fixtures.invoice_number_seq;
-
-CREATE OR REPLACE FUNCTION eval_fixtures.stamp_placed_at()
-RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  NEW.placed_at := coalesce(NEW.placed_at, now());
-  RETURN NEW;
-END;
-$$;
-
-DROP TRIGGER IF EXISTS orders_stamp_placed_at ON eval_fixtures.orders;
-CREATE TRIGGER orders_stamp_placed_at
-  BEFORE INSERT ON eval_fixtures.orders
-  FOR EACH ROW EXECUTE FUNCTION eval_fixtures.stamp_placed_at();
-
-CREATE OR REPLACE PROCEDURE eval_fixtures.archive_refunded()
-LANGUAGE plpgsql AS $$
-BEGIN
-  DELETE FROM eval_fixtures.orders WHERE status = 'refunded' AND false;
-END;
-$$;
-
--- A publication, so list_publication_tables is not empty. Publications alone
--- retain no WAL; only replication slots do, which is why none is created.
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'eval_orders_pub') THEN
-    CREATE PUBLICATION eval_orders_pub FOR TABLE eval_fixtures.orders;
-  END IF;
-END;
-$$;
-
 -- list_table_stats and the bloat estimate both read planner statistics, which
 -- are otherwise whatever autovacuum last happened to collect.
 ANALYZE eval_fixtures.customers;
 ANALYZE eval_fixtures.orders;
 SQL
-
-# Separate call, and deliberately without ON_ERROR_STOP: pg_stat_statements has
-# to be in shared_preload_libraries, so CREATE EXTENSION can fail for reasons
-# the seed cannot fix. list_query_stats reads it, and its scenario accepts an
-# unavailable extension as an answer.
-PGPASSWORD="${ALLOYDB_POSTGRES_PASSWORD}" psql \
-  --host="${host}" \
-  --username="${ALLOYDB_POSTGRES_USER}" \
-  --dbname="${ALLOYDB_POSTGRES_DATABASE}" \
-  --quiet \
-  --command="CREATE EXTENSION IF NOT EXISTS pg_stat_statements;" ||
-  echo "pg_stat_statements unavailable; list_query_stats will return nothing"
 
 echo "seed complete"
