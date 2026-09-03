@@ -32,8 +32,11 @@ if [[ -f /workspace/skip-evals ]]; then
   exit 0
 fi
 
-# Paths that put every step in scope.
-common_pattern='(^|/)evals/(run_configs|model_configs)/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
+# Paths that put every step in scope. internal/tools/ is here because most tool
+# descriptions default in Go rather than in the prebuilt config, so the change an
+# eval is meant to measure often touches no path this script can attribute to a
+# single database.
+common_pattern='(^|/)evals/(run_configs|model_configs|setup|teardown)/|(^|/)internal/tools/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
 
 # --check-any: true when any step's evals would run, so build-toolbox can skip
 # the compile.
@@ -104,6 +107,10 @@ for harness in "${harnesses[@]}"; do
 done
 
 ulimit -n 4096
+
+# Lower bound for teardown, so it cannot reach resources that predate this build.
+# Its absence is also how teardown knows the evals never ran.
+date -u +%Y-%m-%dT%H:%M:%SZ > "/workspace/eval-start-${TOOLBOX_PREBUILT}"
 
 # One process per harness: pyaml_env resolves !ENV at load time, so a single
 # process could not vary EVAL_MODEL_CONFIG between runs.
