@@ -19,7 +19,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -68,6 +70,14 @@ func TestFileResource_Validation(t *testing.T) {
 	noPermPath := filepath.Join(tmpDir, "noperm.txt")
 	if err := os.WriteFile(noPermPath, []byte("noperm"), 0000); err != nil {
 		t.Fatal(err)
+	}
+	if runtime.GOOS == "windows" {
+		if err := exec.Command("icacls", noPermPath, "/deny", "*S-1-1-0:(R)").Run(); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			_ = exec.Command("icacls", noPermPath, "/remove:d", "*S-1-1-0").Run()
+		})
 	}
 
 	tests := []struct {
