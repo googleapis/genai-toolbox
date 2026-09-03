@@ -21,10 +21,6 @@
 **/spanner/ @googleapis/toolbox-spanner-team @googleapis/senseai-eco-team
 **/cloudhealthcare/ @googleapis/toolbox-cloud-healthcare-team @googleapis/senseai-eco-team
 **/cloud-healthcare/ @googleapis/toolbox-cloud-healthcare-team @googleapis/senseai-eco-team
-**/cloudlogging*/ @googleapis/toolbox-cloud-logging-team @googleapis/senseai-eco-team
-**/cloud-logging*/ @googleapis/toolbox-cloud-logging-team @googleapis/senseai-eco-team
-**/cloudmonitoring/ @googleapis/toolbox-cloud-monitoring-team @googleapis/senseai-eco-team
-**/cloud-monitoring/ @googleapis/toolbox-cloud-monitoring-team @googleapis/senseai-eco-team
 **/cloudstorage/ @googleapis/toolbox-cloud-storage-team @googleapis/senseai-eco-team
 **/cloud-storage/ @googleapis/toolbox-cloud-storage-team @googleapis/senseai-eco-team
 **/databaseinsights/ @googleapis/toolbox-database-insights-team @googleapis/senseai-eco-team

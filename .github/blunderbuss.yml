@@ -66,11 +66,11 @@ assign_issues_by:
   - labels:
     - 'product: cloudlogging'
     to:
-    - 'googleapis/toolbox-cloud-logging-team'
+    - 'googleapis/senseai-eco-team'
   - labels:
     - 'product: cloudmonitoring'
     to:
-    - 'googleapis/toolbox-cloud-monitoring-team'
+    - 'googleapis/senseai-eco-team'
   - labels:
     - 'product: cloudstorage'
     to:
@@ -158,11 +158,11 @@ assign_prs_by:
   - labels:
     - 'product: cloudlogging'
     to:
-    - 'googleapis/toolbox-cloud-logging-team'
+    - 'googleapis/senseai-eco-team'
   - labels:
     - 'product: cloudmonitoring'
     to:
-    - 'googleapis/toolbox-cloud-monitoring-team'
+    - 'googleapis/senseai-eco-team'
   - labels:
     - 'product: cloudstorage'
     to:
