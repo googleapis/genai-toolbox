@@ -106,6 +106,32 @@ steps:
       - "CLOUD_SQL_MYSQL_USER"
       - "CLOUD_SQL_MYSQL_PASSWORD"
 
+  # These evals create real backups and the toolbox has no delete tool, so the
+  # TEARDOWN_ variables drive evals/teardown/, which EvalBench runs after each
+  # harness.
+  #
+  # No secretEnv: the cloud-sql-admin source authenticates through ADC. Only
+  # three CLOUD_SQL_POSTGRES_ variables are set, so run_evals.sh's prefix check
+  # does not see an empty user or password.
+  - id: "evals-cloud-sql-postgres-admin"
+    name: "${_EVALBENCH_IMAGE}"
+    waitFor: ["build-toolbox", "pull-evalbench"]
+    dir: /evalbench
+    entrypoint: bash
+    args: ["/workspace/.ci/run_evals.sh"]
+    allowFailure: true
+    env:
+      - "TOOLBOX_PREBUILT=cloud-sql-postgres-admin"
+      - "EVAL_DATASET=evals/evalsets/cloud-sql-postgres-admin.json"
+      - "EVAL_ENV_PREFIX=CLOUD_SQL_POSTGRES"
+
+      - "TEARDOWN_PROJECT=$PROJECT_ID"
+      - "TEARDOWN_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
+
+      - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
+      - "CLOUD_SQL_POSTGRES_REGION=${_REGION}"
+      - "CLOUD_SQL_POSTGRES_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
+
   # Turns the allowFailure steps back into a red build. No waitFor, which means
   # every step above, so a new database needs no edit here.
   - id: "report-failures"
@@ -137,6 +163,9 @@ options:
   logging: CLOUD_LOGGING_ONLY
   substitutionOption: "ALLOW_LOOSE"
   dynamicSubstitutions: true
+  # Steps share one worker, so databases evaluated in parallel contend for the
+  # same CPU.
+  machineType: E2_HIGHCPU_32
   env:
     - "TOOLBOX_BIN=/workspace/toolbox"
     - "EVAL_HARNESSES=${_EVAL_HARNESSES}"
