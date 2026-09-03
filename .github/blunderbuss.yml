@@ -92,6 +92,14 @@ assign_issues_by:
     to:
     - 'googleapis/toolbox-memorystore-team'
   - labels:
+    - 'product: redis'
+    to:
+    - 'googleapis/toolbox-memorystore-team'
+  - labels:
+    - 'product: valkey'
+    to:
+    - 'googleapis/toolbox-memorystore-team'
+  - labels:
     - 'product: oracle'
     to:
     - 'googleapis/toolbox-oracle-team'
@@ -173,6 +181,14 @@ assign_prs_by:
     - 'googleapis/toolbox-dataproc-team'
   - labels:
     - 'product: memorystore'
+    to:
+    - 'googleapis/toolbox-memorystore-team'
+  - labels:
+    - 'product: redis'
+    to:
+    - 'googleapis/toolbox-memorystore-team'
+  - labels:
+    - 'product: valkey'
     to:
     - 'googleapis/toolbox-memorystore-team'
   - labels:
