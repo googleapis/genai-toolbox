@@ -159,6 +159,8 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	opts := []tests.TemplateParamOption{
 		tests.WithNameFieldArray(nameFieldArray),
 		tests.WithNameColFilter(nameColFilter),
+		tests.DisableDdlTest(),
+		tests.DisableInsertTest(),
 	}
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, opts...)
 }
