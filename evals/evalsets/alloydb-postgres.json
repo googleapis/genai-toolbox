@@ -14,13 +14,91 @@
     {
       "id": "alloydbpg-data-02",
       "starting_prompt": "I am reviewing storage on this AlloyDB instance. Which tables are the largest, and is any of them badly bloated?",
-      "conversation_plan": "The user wants table sizes first, then a bloat assessment. Accept a ranked list plus a bloat verdict and end the conversation.",
+      "conversation_plan": "Turn 2: ask which tablespaces exist on the instance. Then end the conversation.",
       "expected_trajectory": [
         "toolbox__list_table_stats",
-        "toolbox__list_top_bloated_tables"
+        "toolbox__list_top_bloated_tables",
+        "toolbox__list_tablespaces"
       ],
       "kind": "tools",
       "max_turns": 2
+    },
+    {
+      "id": "alloydbpg-data-03",
+      "starting_prompt": "Besides plain tables, what else is defined in the eval_fixtures schema? I want to know about views, sequences, triggers, and stored procedures.",
+      "conversation_plan": "The user wants a rundown of the non-table objects. Accept a short summary covering all four kinds and end the conversation.",
+      "expected_trajectory": [
+        "toolbox__list_views",
+        "toolbox__list_sequences",
+        "toolbox__list_triggers",
+        "toolbox__list_stored_procedure"
+      ],
+      "kind": "tools",
+      "max_turns": 1
+    },
+    {
+      "id": "alloydbpg-data-04",
+      "starting_prompt": "I am reviewing the indexing on eval_fixtures.orders. What indexes does it have, and are any of them invalid?",
+      "conversation_plan": "Turn 2: ask how selective the status column is, to judge whether indexing it would be worthwhile. Then end the conversation.",
+      "expected_trajectory": [
+        "toolbox__list_indexes",
+        "toolbox__list_invalid_indexes",
+        "toolbox__get_column_cardinality"
+      ],
+      "kind": "tools",
+      "max_turns": 2
+    },
+    {
+      "id": "alloydbpg-data-05",
+      "starting_prompt": "What Postgres version is this server actually running? Run a SQL query to find out rather than guessing from the instance metadata.",
+      "conversation_plan": "The user wants the version read from the server itself. Accept the answer and end the conversation.",
+      "expected_trajectory": [
+        "toolbox__execute_sql"
+      ],
+      "kind": "tools",
+      "max_turns": 1
+    },
+    {
+      "id": "alloydbpg-data-06",
+      "starting_prompt": "Give me a high-level picture of the ${ALLOYDB_POSTGRES_DATABASE} database, then its connection and transaction statistics.",
+      "conversation_plan": "The user wants an overview followed by database-level activity statistics. Accept a short summary and end the conversation.",
+      "expected_trajectory": [
+        "toolbox__database_overview",
+        "toolbox__list_database_stats"
+      ],
+      "kind": "tools",
+      "max_turns": 1
+    },
+    {
+      "id": "alloydbpg-data-07",
+      "starting_prompt": "Which Postgres extensions are currently installed on this instance?",
+      "conversation_plan": "Turn 2: ask whether pgvector is available to install on this server. Then end the conversation.",
+      "expected_trajectory": [
+        "toolbox__list_installed_extensions",
+        "toolbox__list_available_extensions"
+      ],
+      "kind": "tools",
+      "max_turns": 2
+    },
+    {
+      "id": "alloydbpg-data-08",
+      "starting_prompt": "We are setting up logical replication. Which tables are already included in a publication on this database?",
+      "conversation_plan": "The user wants the tables covered by existing publications. Accept the list and end the conversation.",
+      "expected_trajectory": [
+        "toolbox__list_publication_tables"
+      ],
+      "kind": "tools",
+      "max_turns": 1
+    },
+    {
+      "id": "alloydbpg-data-09",
+      "starting_prompt": "I am running an access audit. Which roles exist on this instance, and what privileges do they carry?",
+      "conversation_plan": "The user wants a role listing with privileges. The instance carries a lot of leftover test roles, so accept a summary that groups or truncates them rather than requiring every name. Then end the conversation.",
+      "expected_trajectory": [
+        "toolbox__list_roles"
+      ],
+      "kind": "tools",
+      "max_turns": 1
     },
     {
       "id": "alloydbpg-monitor-01",
@@ -43,6 +121,28 @@
       ],
       "kind": "tools",
       "max_turns": 1
+    },
+    {
+      "id": "alloydbpg-monitor-03",
+      "starting_prompt": "Across everything this server has executed, which statements have consumed the most total time?",
+      "conversation_plan": "The user wants cumulative query statistics, not what is running right now. If the statistics extension is unavailable, accept that answer and end the conversation.",
+      "expected_trajectory": [
+        "toolbox__list_query_stats"
+      ],
+      "kind": "tools",
+      "max_turns": 1
+    },
+    {
+      "id": "alloydbpg-config-01",
+      "starting_prompt": "I am tuning this instance. Show me how memory is currently configured.",
+      "conversation_plan": "Turn 2: ask how autovacuum is configured. Turn 3: ask for the current value of the work_mem parameter specifically. Then end the conversation.",
+      "expected_trajectory": [
+        "toolbox__list_memory_configurations",
+        "toolbox__list_autovacuum_configurations",
+        "toolbox__list_pg_settings"
+      ],
+      "kind": "tools",
+      "max_turns": 3
     }
   ]
 }
