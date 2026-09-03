@@ -32,8 +32,11 @@ if [[ -f /workspace/skip-evals ]]; then
   exit 0
 fi
 
-# Paths that put every step in scope.
-common_pattern='(^|/)evals/(run_configs|model_configs)/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
+# Paths that put every step in scope. internal/tools/ is here because most tool
+# descriptions default in Go rather than in the prebuilt config, so the change an
+# eval is meant to measure often touches no path this script can attribute to a
+# single database.
+common_pattern='(^|/)evals/(run_configs|model_configs)/|(^|/)internal/tools/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
 
 # --check-any: true when any step's evals would run, so build-toolbox can skip
 # the compile.
