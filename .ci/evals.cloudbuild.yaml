@@ -126,12 +126,14 @@ steps:
       - "CLOUD_SQL_POSTGRES_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
 
   # These evals create real backups and the toolbox has no delete tool, so
-  # cleanup runs out of band. Not allowFailure: a leak should fail the build.
+  # cleanup runs out of band. allowFailure because a leak must not cancel the
+  # databases still evaluating; the scheduled sweep is what catches one.
   - id: "teardown-cloud-sql-postgres-admin"
     name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     waitFor: ["evals-cloud-sql-postgres-admin"]
     entrypoint: bash
-    args: ["/workspace/.ci/teardown_evals.sh"]
+    args: ["/workspace/evals/teardown/cloud-sql-postgres-admin.sh"]
+    allowFailure: true
     env:
       - "TOOLBOX_PREBUILT=cloud-sql-postgres-admin"
       - "TEARDOWN_PROJECT=$PROJECT_ID"
