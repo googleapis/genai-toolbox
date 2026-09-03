@@ -21,7 +21,7 @@
 
 set -euo pipefail
 
-: "${TEARDOWN_PROJECT:?}" "${TEARDOWN_REGION:?}" "${TEARDOWN_CLUSTER:?}" "${TEARDOWN_USER:?}"
+: "${TEARDOWN_PROJECT:?}" "${TEARDOWN_REGION:?}" "${TEARDOWN_CLUSTER:?}" "${TEARDOWN_USER:?}" "${TEARDOWN_INSTANCE:?}"
 
 if [[ -n "${TEARDOWN_SWEEP:-}" ]]; then
   echo "sweeping eval resources in project ${TEARDOWN_PROJECT}, region ${TEARDOWN_REGION}, cluster ${TEARDOWN_CLUSTER}, user ${TEARDOWN_USER}"
@@ -41,12 +41,13 @@ err=0
 
 # 1. Delete test user
 delete_user() {
-  if gcloud alloydb users describe "${TEARDOWN_USER}" \
+  local user="$1"
+  if gcloud alloydb users describe "${user}" \
     --project="${TEARDOWN_PROJECT}" \
     --region="${TEARDOWN_REGION}" \
     --cluster="${TEARDOWN_CLUSTER}" > /dev/null 2>&1; then
-    echo "deleting test user ${TEARDOWN_USER}"
-    gcloud alloydb users delete "${TEARDOWN_USER}" \
+    echo "deleting test user ${user}"
+    gcloud alloydb users delete "${user}" \
       --project="${TEARDOWN_PROJECT}" \
       --region="${TEARDOWN_REGION}" \
       --cluster="${TEARDOWN_CLUSTER}" \
@@ -126,8 +127,8 @@ delete_cluster() {
     --quiet
 }
 
-delete_user "eval-test-user" || { echo "could not delete test user eval-test-user"; err=1; }
-delete_instance "eval-test-replica" || { echo "could not delete test instance eval-test-replica"; err=1; }
-delete_cluster "eval-test-cluster" || { echo "could not delete test cluster eval-test-cluster"; err=1; }
+delete_user "${TEARDOWN_USER}" || { echo "could not delete test user ${TEARDOWN_USER}"; err=1; }
+delete_instance "${TEARDOWN_INSTANCE}" || { echo "could not delete test instance ${TEARDOWN_INSTANCE}"; err=1; }
+delete_cluster "${TEARDOWN_CLUSTER}" || { echo "could not delete test cluster ${TEARDOWN_CLUSTER}"; err=1; }
 
 exit "${err}"
