@@ -439,6 +439,14 @@ func (c *TemplateConfig) Validate() error {
 	if parsed.Scheme != "file" {
 		return fmt.Errorf("invalid scheme for file resource template %q: must be 'file'", c.Name)
 	}
+
+	if c.MaxSize != nil {
+		if *c.MaxSize <= 0 {
+			return fmt.Errorf("file resource template %q max_size must be greater than 0", c.Name)
+		} else if *c.MaxSize > 1024*1024*1024 {
+			return fmt.Errorf("file resource template %q max_size cannot exceed 1GB", c.Name)
+		}
+	}
 	return nil
 }
 
