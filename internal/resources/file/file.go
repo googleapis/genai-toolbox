@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -549,9 +550,15 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 
 			base := parsed.Path
 
-			// Handle Windows drive letter quirks (e.g., /C:/...)
-			if len(base) > 2 && base[0] == '/' && base[2] == ':' {
-				base = base[1:]
+			// Handle Windows drive letter quirks exclusively on Windows:
+			// If 2 slashes were used (e.g., file://C:/...), parsed.Host contains "C:".
+			// If 3 slashes were used (e.g., file:///C:/...), parsed.Path contains "/C:/...".
+			if runtime.GOOS == "windows" {
+				if len(parsed.Host) == 2 && parsed.Host[1] == ':' && ((parsed.Host[0] >= 'a' && parsed.Host[0] <= 'z') || (parsed.Host[0] >= 'A' && parsed.Host[0] <= 'Z')) {
+					base = parsed.Host + base
+				} else if len(base) > 2 && base[0] == '/' && base[2] == ':' && ((base[1] >= 'a' && base[1] <= 'z') || (base[1] >= 'A' && base[1] <= 'Z')) {
+					base = base[1:]
+				}
 			}
 			pathStr = filepath.FromSlash(base)
 		}

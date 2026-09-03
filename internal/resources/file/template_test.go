@@ -17,7 +17,9 @@ package file_test
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -99,6 +101,14 @@ func TestFileTemplate(t *testing.T) {
 	noPermFile := filepath.Join(sandboxDir, "noperm.txt")
 	if err := os.WriteFile(noPermFile, []byte("no permission"), 0000); err != nil {
 		t.Fatal(err)
+	}
+	if runtime.GOOS == "windows" {
+		if err := exec.Command("icacls", noPermFile, "/deny", "*S-1-1-0:(R)").Run(); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			_ = exec.Command("icacls", noPermFile, "/remove:d", "*S-1-1-0").Run()
+		})
 	}
 
 	subDir := filepath.Join(sandboxDir, "subdir.txt")
