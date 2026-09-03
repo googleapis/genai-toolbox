@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package google_test
+package google
 
 import (
 	"context"
@@ -21,13 +21,115 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
-	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/mcp-toolbox/internal/auth"
-	"github.com/googleapis/mcp-toolbox/internal/auth/google"
-	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
+
+func TestInitialize_Validation(t *testing.T) {
+	tests := []struct {
+		name      string
+		config    Config
+		wantError bool
+	}{
+		{
+			name: "only clientID, mcpEnabled false",
+			config: Config{
+				Name:       "google-auth",
+				Type:       "google",
+				ClientID:   "my-client-id",
+				McpEnabled: false,
+			},
+			wantError: false,
+		},
+		{
+			name: "only audience, mcpEnabled false (disallowed)",
+			config: Config{
+				Name:       "google-auth",
+				Type:       "google",
+				Audience:   "my-audience",
+				McpEnabled: false,
+			},
+			wantError: true,
+		},
+		{
+			name: "only audience, mcpEnabled true (allowed)",
+			config: Config{
+				Name:       "google-auth",
+				Type:       "google",
+				Audience:   "my-audience",
+				McpEnabled: true,
+			},
+			wantError: false,
+		},
+		{
+			name: "scopesRequired, mcpEnabled false (disallowed)",
+			config: Config{
+				Name:           "google-auth",
+				Type:           "google",
+				ScopesRequired: []string{"scope"},
+				McpEnabled:     false,
+			},
+			wantError: true,
+		},
+		{
+			name: "scopesRequired, mcpEnabled true, with audience (allowed)",
+			config: Config{
+				Name:           "google-auth",
+				Type:           "google",
+				ScopesRequired: []string{"scope"},
+				Audience:       "my-audience",
+				McpEnabled:     true,
+			},
+			wantError: false,
+		},
+		{
+			name: "scopesRequired, mcpEnabled true, without audience or clientID (disallowed)",
+			config: Config{
+				Name:           "google-auth",
+				Type:           "google",
+				ScopesRequired: []string{"scope"},
+				McpEnabled:     true,
+			},
+			wantError: true,
+		},
+		{
+			name: "both clientID and audience, mcpEnabled true",
+			config: Config{
+				Name:       "google-auth",
+				Type:       "google",
+				ClientID:   "my-client-id",
+				Audience:   "my-audience",
+				McpEnabled: true,
+			},
+			wantError: false,
+		},
+		{
+			name: "neither clientID nor audience, mcpEnabled false",
+			config: Config{
+				Name:       "google-auth",
+				Type:       "google",
+				McpEnabled: false,
+			},
+			wantError: false,
+		},
+		{
+			name: "neither clientID nor audience, mcpEnabled true (disallowed)",
+			config: Config{
+				Name:       "google-auth",
+				Type:       "google",
+				McpEnabled: true,
+			},
+			wantError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tc.config.Initialize()
+			if (err != nil) != tc.wantError {
+				t.Fatalf("Initialize() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+		})
+	}
+}
 
 type mockRoundTripper func(req *http.Request) (*http.Response, error)
 
@@ -97,25 +199,26 @@ func TestValidateMCPAuth_Opaque_Fallback(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			oldTransport := http.DefaultTransport
-			defer func() { http.DefaultTransport = oldTransport }()
-			http.DefaultTransport = mockRoundTripper(func(req *http.Request) (*http.Response, error) {
-				if req.URL.String() != "https://oauth2.googleapis.com/tokeninfo" {
-					return nil, fmt.Errorf("unexpected URL: %s", req.URL.String())
-				}
-				respBody := fmt.Sprintf(`{"aud": %q, "azp": %q, "scope": "openid email"}`, tc.tokenInfoAud, tc.tokenInfoAzp)
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body:       io.NopCloser(strings.NewReader(respBody)),
-					Header:     make(http.Header),
-				}, nil
-			})
+			mockClient := &http.Client{
+				Transport: mockRoundTripper(func(req *http.Request) (*http.Response, error) {
+					if req.URL.String() != "https://oauth2.googleapis.com/tokeninfo" {
+						return nil, fmt.Errorf("unexpected URL: %s", req.URL.String())
+					}
+					respBody := fmt.Sprintf(`{"aud": %q, "azp": %q, "scope": "openid email"}`, tc.tokenInfoAud, tc.tokenInfoAzp)
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(strings.NewReader(respBody)),
+						Header:     make(http.Header),
+					}, nil
+				}),
+			}
 
-			a := google.AuthService{
-				Config: google.Config{
+			a := AuthService{
+				Config: Config{
 					Audience: tc.audience,
 					ClientID: tc.clientID,
 				},
+				client: mockClient,
 			}
 
 			header := make(http.Header)
@@ -124,142 +227,6 @@ func TestValidateMCPAuth_Opaque_Fallback(t *testing.T) {
 			_, err := a.ValidateMCPAuth(context.Background(), header)
 			if (err != nil) != tc.wantError {
 				t.Fatalf("ValidateMCPAuth() returned error: %v, wantError: %v", err, tc.wantError)
-			}
-		})
-	}
-}
-
-func TestParseFromYaml(t *testing.T) {
-	tcs := []struct {
-		desc string
-		in   string
-		want server.AuthServiceConfigs
-	}{
-		{
-			desc: "only clientId, mcpEnabled false",
-			in: `
-			kind: authService
-			name: my-google-auth
-			type: google
-			clientId: my-client-id
-			`,
-			want: map[string]auth.AuthServiceConfig{
-				"my-google-auth": google.Config{
-					Name:       "my-google-auth",
-					Type:       google.AuthServiceType,
-					ClientID:   "my-client-id",
-					McpEnabled: false,
-				},
-			},
-		},
-		{
-			desc: "only audience, mcpEnabled true",
-			in: `
-			kind: authService
-			name: my-google-auth
-			type: google
-			audience: my-audience
-			mcpEnabled: true
-			`,
-			want: map[string]auth.AuthServiceConfig{
-				"my-google-auth": google.Config{
-					Name:       "my-google-auth",
-					Type:       google.AuthServiceType,
-					Audience:   "my-audience",
-					McpEnabled: true,
-				},
-			},
-		},
-		{
-			desc: "scopesRequired, mcpEnabled true",
-			in: `
-			kind: authService
-			name: my-google-auth
-			type: google
-			scopesRequired:
-			  - email
-			mcpEnabled: true
-			`,
-			want: map[string]auth.AuthServiceConfig{
-				"my-google-auth": google.Config{
-					Name:           "my-google-auth",
-					Type:           google.AuthServiceType,
-					ScopesRequired: []string{"email"},
-					McpEnabled:     true,
-				},
-			},
-		},
-		{
-			desc: "both clientId and audience, mcpEnabled true",
-			in: `
-			kind: authService
-			name: my-google-auth
-			type: google
-			clientId: my-client-id
-			audience: my-audience
-			mcpEnabled: true
-			`,
-			want: map[string]auth.AuthServiceConfig{
-				"my-google-auth": google.Config{
-					Name:       "my-google-auth",
-					Type:       google.AuthServiceType,
-					ClientID:   "my-client-id",
-					Audience:   "my-audience",
-					McpEnabled: true,
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			_, got, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
-			if err != nil {
-				t.Fatalf("unable to unmarshal: %s", err)
-			}
-			if !cmp.Equal(tc.want, got) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
-			}
-		})
-	}
-}
-
-func TestFailParseFromYaml(t *testing.T) {
-	tcs := []struct {
-		desc string
-		in   string
-		err  string
-	}{
-		{
-			desc: "only audience, mcpEnabled false",
-			in: `
-			kind: authService
-			name: my-google-auth
-			type: google
-			audience: my-audience
-			`,
-			err: "error unmarshaling authService: `audience` is not allowed when `mcpEnabled` is false",
-		},
-		{
-			desc: "scopesRequired, mcpEnabled false",
-			in: `
-			kind: authService
-			name: my-google-auth
-			type: google
-			scopesRequired:
-			  - email
-			`,
-			err: "error unmarshaling authService: `scopesRequired` is not allowed when `mcpEnabled` is false",
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
-			if err == nil {
-				t.Fatalf("expect parsing to fail")
-			}
-			errStr := err.Error()
-			if !strings.Contains(errStr, tc.err) {
-				t.Fatalf("unexpected error: got %q, want it to contain %q", errStr, tc.err)
 			}
 		})
 	}

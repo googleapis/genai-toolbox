@@ -280,13 +280,13 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[st
 
 	tokenStr := headerParts[1]
 
-	if IsJWTFormat(tokenStr) {
+	if isJWTFormat(tokenStr) {
 		return a.validateJwtToken(ctx, tokenStr)
 	}
 	return a.validateOpaqueToken(ctx, tokenStr)
 }
 
-func IsJWTFormat(token string) bool {
+func isJWTFormat(token string) bool {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
 		return false

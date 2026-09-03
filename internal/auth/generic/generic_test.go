@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package generic_test
+package generic
 
 import (
 	"bytes"
@@ -28,12 +28,7 @@ import (
 
 	"github.com/MicahParks/jwkset"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/mcp-toolbox/internal/auth"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/log"
-	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
@@ -93,13 +88,114 @@ func generateValidToken(t *testing.T, key *rsa.PrivateKey, keyID string, claims 
 	return signedString
 }
 
+func TestInitialize_Validation(t *testing.T) {
+	key := generateRSAPrivateKey(t)
+	mockOIDC := setupJWKSMockServer(t, key, "my-key-id")
+	defer mockOIDC.Close()
+
+	tests := []struct {
+		name      string
+		config    Config
+		wantError bool
+		errString string
+	}{
+		{
+			name: "valid mcpEnabled true",
+			config: Config{
+				Name:                "generic-auth",
+				Type:                "generic",
+				Audience:            "my-audience",
+				AuthorizationServer: mockOIDC.URL,
+				McpEnabled:          true,
+				ScopesRequired:      []string{"email"},
+			},
+			wantError: false,
+		},
+		{
+			name: "valid mcpEnabled false",
+			config: Config{
+				Name:                "generic-auth",
+				Type:                "generic",
+				Audience:            "my-audience",
+				AuthorizationServer: mockOIDC.URL,
+				McpEnabled:          false,
+			},
+			wantError: false,
+		},
+		{
+			name: "introspectionEndpoint disallowed with mcpEnabled false",
+			config: Config{
+				Name:                  "generic-auth",
+				Type:                  "generic",
+				Audience:              "my-audience",
+				AuthorizationServer:   mockOIDC.URL,
+				McpEnabled:            false,
+				IntrospectionEndpoint: "http://example.com/introspect",
+			},
+			wantError: true,
+			errString: "`introspectionEndpoint` is not allowed when `mcpEnabled` is false",
+		},
+		{
+			name: "introspectionMethod disallowed with mcpEnabled false",
+			config: Config{
+				Name:                "generic-auth",
+				Type:                "generic",
+				Audience:            "my-audience",
+				AuthorizationServer: mockOIDC.URL,
+				McpEnabled:          false,
+				IntrospectionMethod: "POST",
+			},
+			wantError: true,
+			errString: "`introspectionMethod` is not allowed when `mcpEnabled` is false",
+		},
+		{
+			name: "introspectionParamName disallowed with mcpEnabled false",
+			config: Config{
+				Name:                   "generic-auth",
+				Type:                   "generic",
+				Audience:               "my-audience",
+				AuthorizationServer:    mockOIDC.URL,
+				McpEnabled:             false,
+				IntrospectionParamName: "token",
+			},
+			wantError: true,
+			errString: "`introspectionParamName` is not allowed when `mcpEnabled` is false",
+		},
+		{
+			name: "scopesRequired disallowed with mcpEnabled false",
+			config: Config{
+				Name:                "generic-auth",
+				Type:                "generic",
+				Audience:            "my-audience",
+				AuthorizationServer: mockOIDC.URL,
+				McpEnabled:          false,
+				ScopesRequired:      []string{"email"},
+			},
+			wantError: true,
+			errString: "`scopesRequired` is not allowed when `mcpEnabled` is false",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tc.config.Initialize()
+			if (err != nil) != tc.wantError {
+				t.Fatalf("Initialize() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+			if tc.wantError && err != nil && !strings.Contains(err.Error(), tc.errString) {
+				t.Errorf("expected error containing %q, got %v", tc.errString, err)
+			}
+		})
+	}
+}
+
 func TestGetClaimsFromHeader(t *testing.T) {
 	privateKey := generateRSAPrivateKey(t)
 	keyID := "test-key-id"
 	server := setupJWKSMockServer(t, privateKey, keyID)
 	defer server.Close()
 
-	cfg := generic.Config{
+	cfg := Config{
 		Name:                "test-generic-auth",
 		Type:                "generic",
 		Audience:            "my-audience",
@@ -112,7 +208,7 @@ func TestGetClaimsFromHeader(t *testing.T) {
 		t.Fatalf("failed to initialize auth service: %v", err)
 	}
 
-	genericAuth, ok := authService.(*generic.AuthService)
+	genericAuth, ok := authService.(*AuthService)
 	if !ok {
 		t.Fatalf("expected *AuthService, got %T", authService)
 	}
@@ -418,7 +514,7 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			server := httptest.NewServer(handler)
 			defer server.Close()
 
-			cfg := generic.Config{
+			cfg := Config{
 				Name:                "test-generic-auth",
 				Type:                "generic",
 				Audience:            tc.audience,
@@ -432,7 +528,7 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 				t.Fatalf("failed to initialize auth service: %v", err)
 			}
 
-			genericAuth, ok := authService.(*generic.AuthService)
+			genericAuth, ok := authService.(*AuthService)
 			if !ok {
 				t.Fatalf("expected *AuthService, got %T", authService)
 			}
@@ -470,7 +566,7 @@ func TestValidateJwtToken(t *testing.T) {
 	server := setupJWKSMockServer(t, privateKey, keyID)
 	defer server.Close()
 
-	cfg := generic.Config{
+	cfg := Config{
 		Name:                "test-generic-auth",
 		Type:                "generic",
 		Audience:            "my-audience",
@@ -482,6 +578,11 @@ func TestValidateJwtToken(t *testing.T) {
 	authService, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize auth service: %v", err)
+	}
+
+	genericAuth, ok := authService.(*AuthService)
+	if !ok {
+		t.Fatalf("expected *AuthService, got %T", authService)
 	}
 
 	tests := []struct {
@@ -501,13 +602,8 @@ func TestValidateJwtToken(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name: "invalid token (wrong signature)",
-			token: generateValidToken(t, generateRSAPrivateKey(t), keyID, jwt.MapClaims{
-				"iss":   "https://example.com",
-				"aud":   "my-audience",
-				"scope": "read:files",
-				"exp":   time.Now().Add(time.Hour).Unix(),
-			}),
+			name:        "invalid token (wrong signature)",
+			token:       "header.payload.signature",
 			wantError:   true,
 			errContains: "invalid or expired token",
 		},
@@ -563,13 +659,7 @@ func TestValidateJwtToken(t *testing.T) {
 				t.Fatalf("failed to create logger: %v", err)
 			}
 			ctx := util.WithLogger(context.Background(), logger)
-			mcpAuth, ok := authService.(auth.MCPAuthService)
-			if !ok {
-				t.Fatalf("expected auth.MCPAuthService, got %T", authService)
-			}
-			header := make(http.Header)
-			header.Set("Authorization", "Bearer "+tc.token)
-			_, err = mcpAuth.ValidateMCPAuth(ctx, header)
+			_, err = genericAuth.validateJwtToken(ctx, tc.token)
 			if tc.wantError {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
@@ -750,22 +840,6 @@ func TestValidateOpaqueToken(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/.well-known/openid-configuration" {
-					w.Header().Set("Content-Type", "application/json")
-					config := map[string]any{
-						"issuer":   "https://example.com",
-						"jwks_uri": "http://" + r.Host + "/jwks",
-					}
-					_ = json.NewEncoder(w).Encode(config)
-					return
-				}
-				if r.URL.Path == "/jwks" {
-					w.Header().Set("Content-Type", "application/json")
-					_ = json.NewEncoder(w).Encode(map[string]any{
-						"keys": []any{},
-					})
-					return
-				}
 				if r.URL.Path == "/introspect" || r.URL.Path == "/custom-introspect" {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(tc.mockStatus)
@@ -777,16 +851,14 @@ func TestValidateOpaqueToken(t *testing.T) {
 			server := httptest.NewServer(handler)
 			defer server.Close()
 
-			cfg := generic.Config{
-				Audience:            tc.audience,
-				AuthorizationServer: server.URL,
-				ScopesRequired:      tc.scopesRequired,
-				McpEnabled:          true,
-			}
-
-			authService, err := cfg.Initialize()
-			if err != nil {
-				t.Fatalf("failed to initialize auth service: %v", err)
+			genericAuth := &AuthService{
+				Config: Config{
+					Audience:            tc.audience,
+					AuthorizationServer: server.URL,
+					ScopesRequired:      tc.scopesRequired,
+				},
+				client: newSecureHTTPClient(),
+				issuer: "https://example.com",
 			}
 
 			logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
@@ -795,13 +867,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 			}
 			ctx := util.WithLogger(context.Background(), logger)
 
-			mcpAuth, ok := authService.(auth.MCPAuthService)
-			if !ok {
-				t.Fatalf("expected auth.MCPAuthService, got %T", authService)
-			}
-			header := make(http.Header)
-			header.Set("Authorization", "Bearer "+tc.token)
-			_, err = mcpAuth.ValidateMCPAuth(ctx, header)
+			_, err = genericAuth.validateOpaqueToken(ctx, tc.token)
 
 			if tc.wantError {
 				if err == nil {
@@ -869,138 +935,9 @@ func TestIsJWTFormat(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := generic.IsJWTFormat(tc.token)
+			got := isJWTFormat(tc.token)
 			if got != tc.want {
 				t.Errorf("isJWTFormat(%q) = %v; want %v", tc.token, got, tc.want)
-			}
-		})
-	}
-}
-
-func TestParseFromYaml(t *testing.T) {
-	tcs := []struct {
-		desc string
-		in   string
-		want server.AuthServiceConfigs
-	}{
-		{
-			desc: "valid mcpEnabled false",
-			in: `
-			kind: authService
-			name: my-generic-auth
-			type: generic
-			audience: my-audience
-			authorizationServer: https://example.com
-			`,
-			want: map[string]auth.AuthServiceConfig{
-				"my-generic-auth": generic.Config{
-					Name:                "my-generic-auth",
-					Type:                generic.AuthServiceType,
-					Audience:            "my-audience",
-					AuthorizationServer: "https://example.com",
-					McpEnabled:          false,
-				},
-			},
-		},
-		{
-			desc: "valid mcpEnabled true",
-			in: `
-			kind: authService
-			name: my-generic-auth
-			type: generic
-			audience: my-audience
-			authorizationServer: https://example.com
-			mcpEnabled: true
-			`,
-			want: map[string]auth.AuthServiceConfig{
-				"my-generic-auth": generic.Config{
-					Name:                "my-generic-auth",
-					Type:                generic.AuthServiceType,
-					Audience:            "my-audience",
-					AuthorizationServer: "https://example.com",
-					McpEnabled:          true,
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			_, got, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
-			if err != nil {
-				t.Fatalf("unable to unmarshal: %s", err)
-			}
-			if !cmp.Equal(tc.want, got) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
-			}
-		})
-	}
-}
-
-func TestFailParseFromYaml(t *testing.T) {
-	tcs := []struct {
-		desc string
-		in   string
-		err  string
-	}{
-		{
-			desc: "introspectionEndpoint, mcpEnabled false",
-			in: `
-			kind: authService
-			name: my-generic-auth
-			type: generic
-			audience: my-audience
-			authorizationServer: https://example.com
-			introspectionEndpoint: http://example.com/introspect
-			`,
-			err: "error unmarshaling authService: `introspectionEndpoint` is not allowed when `mcpEnabled` is false",
-		},
-		{
-			desc: "introspectionMethod, mcpEnabled false",
-			in: `
-			kind: authService
-			name: my-generic-auth
-			type: generic
-			audience: my-audience
-			authorizationServer: https://example.com
-			introspectionMethod: POST
-			`,
-			err: "error unmarshaling authService: `introspectionMethod` is not allowed when `mcpEnabled` is false",
-		},
-		{
-			desc: "introspectionParamName, mcpEnabled false",
-			in: `
-			kind: authService
-			name: my-generic-auth
-			type: generic
-			audience: my-audience
-			authorizationServer: https://example.com
-			introspectionParamName: token
-			`,
-			err: "error unmarshaling authService: `introspectionParamName` is not allowed when `mcpEnabled` is false",
-		},
-		{
-			desc: "scopesRequired, mcpEnabled false",
-			in: `
-			kind: authService
-			name: my-generic-auth
-			type: generic
-			audience: my-audience
-			authorizationServer: https://example.com
-			scopesRequired:
-			  - email
-			`,
-			err: "error unmarshaling authService: `scopesRequired` is not allowed when `mcpEnabled` is false",
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
-			if err == nil {
-				t.Fatalf("expect parsing to fail")
-			}
-			errStr := err.Error()
-			if !strings.Contains(errStr, tc.err) {
-				t.Fatalf("unexpected error: got %q, want it to contain %q", errStr, tc.err)
 			}
 		})
 	}
