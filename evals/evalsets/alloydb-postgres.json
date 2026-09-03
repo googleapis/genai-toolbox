@@ -2,8 +2,8 @@
   "scenarios": [
     {
       "id": "alloydbpg-data-01",
-      "starting_prompt": "Which schemas exist in the ${ALLOYDB_POSTGRES_DATABASE} database, and what tables live in the eval_fixtures schema?",
-      "conversation_plan": "The user wants a schema listing, then the tables in one named schema. Accept a short summary and end the conversation.",
+      "starting_prompt": "Give me an inventory of the ${ALLOYDB_POSTGRES_DATABASE} database: which schemas exist, and what user tables live in each one.",
+      "conversation_plan": "The user wants a schema-then-table inventory. The database holds a large number of generated test tables, so accept a grouped or truncated summary rather than requiring every name. Then end the conversation.",
       "expected_trajectory": [
         "toolbox__list_schemas",
         "toolbox__list_tables"
@@ -13,8 +13,8 @@
     },
     {
       "id": "alloydbpg-data-02",
-      "starting_prompt": "In the eval_fixtures schema, which table is the largest, and is any of them badly bloated?",
-      "conversation_plan": "The user wants table sizes and a bloat assessment. Accept a ranked list plus a bloat verdict and end the conversation.",
+      "starting_prompt": "I am reviewing storage on this AlloyDB instance. Which tables are the largest, and is any of them badly bloated?",
+      "conversation_plan": "The user wants table sizes and a bloat assessment. A report that nothing is significantly bloated is a valid answer. Accept a ranked list plus a bloat verdict and end the conversation.",
       "expected_trajectory": [
         "toolbox__list_table_stats",
         "toolbox__list_top_bloated_tables"
