@@ -16,11 +16,12 @@
 # Deletes the backups the cloud-sql-postgres-admin evalset creates. The toolbox
 # has no delete tool, so this cannot be a scenario.
 #
-# Two callers: EvalBench's tear_down_script hook, which does the deleting, and
-# a scheduled sweep for what a killed eval leaks before the hook can run.
+# Two entry points: EvalBench's tear_down_script hook, which normally does the
+# deleting, and TEARDOWN_SWEEP, an age-bounded pass over whatever a killed eval
+# left behind.
 #
-# Scope is deliberately narrow: one instance, on-demand backups only. Scheduled
-# backups are never matched.
+# Scope is deliberately narrow: one instance, ON_DEMAND only, so the automated
+# backups that carry recovery value are never matched.
 
 set -euo pipefail
 
@@ -42,8 +43,8 @@ else
   cutoff=$(cat "${marker}")
   filter="type=ON_DEMAND AND enqueuedTime>=${cutoff}"
   echo "deleting on-demand backups on ${TEARDOWN_INSTANCE} since ${cutoff}"
-  # Same marker the eval steps use. EvalBench discards this script's exit code,
-  # so under the hook the marker is the only thing that reddens the build.
+  # EvalBench discards this script's exit code, so the marker file is the only
+  # way a leak reaches the build's report-failures step.
   trap '[ $? -eq 0 ] || touch "/workspace/failed-teardown-${TOOLBOX_PREBUILT}"' EXIT
 fi
 
@@ -58,7 +59,30 @@ if [[ -z "${ids}" ]]; then
   exit 0
 fi
 
+# An unfinished backup cannot be deleted -- the API returns 400
+# ERROR_INVALID_BACKUP_RUN_STATUS -- and an agent that starts one without
+# waiting leaves exactly that. Observed runtime is about a minute.
 for id in ${ids}; do
+  for _ in $(seq 30); do
+    status=$(gcloud sql backups describe "${id}" \
+      --project="${TEARDOWN_PROJECT}" \
+      --instance="${TEARDOWN_INSTANCE}" \
+      --format='value(status)')
+    case "${status}" in
+      ENQUEUED | OVERDUE | RUNNING) sleep 10 ;;
+      *) break ;;
+    esac
+  done
+
+  # Not a failure, just early: the backup is still deletable, so leave it for a
+  # later sweep rather than failing a build over it.
+  case "${status}" in
+    ENQUEUED | OVERDUE | RUNNING)
+      echo "backup ${id} still ${status}; leaving it for the sweep"
+      continue
+      ;;
+  esac
+
   echo "deleting backup ${id}"
   gcloud sql backups delete "${id}" \
     --project="${TEARDOWN_PROJECT}" \

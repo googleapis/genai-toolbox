@@ -107,12 +107,12 @@ steps:
       - "CLOUD_SQL_MYSQL_PASSWORD"
 
   # These evals create real backups and the toolbox has no delete tool, so the
-  # TEARDOWN_ pair configures evals/teardown/, which EvalBench runs in-container
-  # after each harness.
+  # TEARDOWN_ variables drive evals/teardown/, which EvalBench runs after each
+  # harness.
   #
   # No secretEnv: the cloud-sql-admin source authenticates through ADC. Only
-  # three CLOUD_SQL_POSTGRES_ variables are set, so the prefix check does not see
-  # an empty user or password.
+  # three CLOUD_SQL_POSTGRES_ variables are set, so run_evals.sh's prefix check
+  # does not see an empty user or password.
   - id: "evals-cloud-sql-postgres-admin"
     name: "${_EVALBENCH_IMAGE}"
     waitFor: ["build-toolbox", "pull-evalbench"]
