@@ -36,7 +36,7 @@ fi
 # descriptions default in Go rather than in the prebuilt config, so the change an
 # eval is meant to measure often touches no path this script can attribute to a
 # single database.
-common_pattern='(^|/)evals/(run_configs|model_configs|teardown)/|(^|/)internal/tools/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
+common_pattern='(^|/)evals/(run_configs|model_configs|setup|teardown)/|(^|/)internal/tools/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
 
 # --check-any: true when any step's evals would run, so build-toolbox can skip
 # the compile.
