@@ -106,6 +106,37 @@ steps:
       - "CLOUD_SQL_MYSQL_USER"
       - "CLOUD_SQL_MYSQL_PASSWORD"
 
+  # No secretEnv: the cloud-sql-admin source authenticates through ADC. Only
+  # these three variables are set, so the prefix check does not see an empty user
+  # or password.
+  - id: "evals-cloud-sql-postgres-admin"
+    name: "${_EVALBENCH_IMAGE}"
+    waitFor: ["build-toolbox", "pull-evalbench"]
+    dir: /evalbench
+    entrypoint: bash
+    args: ["/workspace/.ci/run_evals.sh"]
+    allowFailure: true
+    env:
+      - "TOOLBOX_PREBUILT=cloud-sql-postgres-admin"
+      - "EVAL_DATASET=evals/evalsets/cloud-sql-postgres-admin.json"
+      - "EVAL_ENV_PREFIX=CLOUD_SQL_POSTGRES"
+
+      - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
+      - "CLOUD_SQL_POSTGRES_REGION=${_REGION}"
+      - "CLOUD_SQL_POSTGRES_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
+
+  # These evals create real backups and the toolbox has no delete tool, so
+  # cleanup runs out of band. Not allowFailure: a leak should fail the build.
+  - id: "teardown-cloud-sql-postgres-admin"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    waitFor: ["evals-cloud-sql-postgres-admin"]
+    entrypoint: bash
+    args: ["/workspace/.ci/teardown_evals.sh"]
+    env:
+      - "TOOLBOX_PREBUILT=cloud-sql-postgres-admin"
+      - "TEARDOWN_PROJECT=$PROJECT_ID"
+      - "TEARDOWN_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
+
   # Turns the allowFailure steps back into a red build. No waitFor, which means
   # every step above, so a new database needs no edit here.
   - id: "report-failures"

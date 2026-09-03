@@ -108,6 +108,10 @@ done
 
 ulimit -n 4096
 
+# Lower bound for teardown, so it cannot reach resources that predate this build.
+# Its absence is also how teardown knows the evals never ran.
+date -u +%Y-%m-%dT%H:%M:%SZ > "/workspace/eval-start-${TOOLBOX_PREBUILT}"
+
 # One process per harness: pyaml_env resolves !ENV at load time, so a single
 # process could not vary EVAL_MODEL_CONFIG between runs.
 overall_exit=0
