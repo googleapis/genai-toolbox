@@ -280,7 +280,7 @@ func (r *FileResource) GetSize() *int64 {
 func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, error) {
 	// Security check for extension on the resolved target
 	if err := validateExtension(r.absPath); err != nil {
-		return nil, fmt.Errorf("security violation: configured file extension not allowed for resource %q: %w", r.Config.Name, err)
+		return nil, fmt.Errorf("security violation: configured file extension not allowed for resource %q: %w", r.Name, err)
 	}
 
 	resolvedPath, err := filepath.EvalSymlinks(r.absPath)
@@ -288,7 +288,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil, fmt.Errorf("file not found: %q: %w", r.absPath, fs.ErrNotExist)
 		}
-		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Config.Name, err)
+		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Name, err)
 	}
 
 	if r.isRelative && r.resolvedBaseDir != "" {
@@ -303,7 +303,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	}
 
 	if err := validateExtension(resolvedPath); err != nil {
-		return nil, fmt.Errorf("security violation: file extension changed post-boot for resource %q: %w", r.Config.Name, err)
+		return nil, fmt.Errorf("security violation: file extension changed post-boot for resource %q: %w", r.Name, err)
 	}
 
 	statInfo, err := os.Lstat(resolvedPath)
@@ -358,11 +358,11 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	return string(content), nil
 }
 
-// GetAnnotations returns the resource annotations.
+// GetAnnotations returns the resource annotations, dynamically computing the LastModified timestamp.
 func (r *FileResource) GetAnnotations() *resources.ResourceAnnotations {
 	var ret resources.ResourceAnnotations
-	if r.Config.Annotations != nil {
-		ret = *r.Config.Annotations
+	if r.Annotations != nil {
+		ret = *r.Annotations
 	}
 
 	resolvedPath := r.absPath
@@ -655,3 +655,4 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 func (r *FileTemplate) ToConfig() resources.ResourceTemplateConfig {
 	return &r.TemplateConfig
 }
+

@@ -87,6 +87,10 @@ type Source struct {
 	Pool *pgxpool.Pool
 }
 
+func (s *Source) IsReadOnly() bool {
+	return false
+}
+
 func (s *Source) SourceType() string {
 	return SourceType
 }
@@ -115,7 +119,8 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 		}
 		vMap := make(map[string]any)
 		for i, f := range fields {
-			vMap[f.Name] = v[i]
+			val := sources.NormalizeValue(v[i], f.DataTypeOID)
+			vMap[f.Name] = val
 		}
 		out = append(out, vMap)
 	}

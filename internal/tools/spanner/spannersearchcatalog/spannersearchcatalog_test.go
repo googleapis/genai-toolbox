@@ -90,6 +90,7 @@ func (m mockSpannerSource) GetCatalogClient(ctx context.Context, tokenString str
 func (m mockSpannerSource) InvokeSearchCatalog(ctx context.Context, params map[string]any, tokenStr string) ([]searchcatalog.DataplexSearchResponse, error) {
 	return m.searchResponse, m.err
 }
+func (m mockSpannerSource) IsReadOnly() bool               { return false }
 func (m mockSpannerSource) SourceType() string             { return "spanner" }
 func (m mockSpannerSource) ToConfig() sources.SourceConfig { return nil }
 

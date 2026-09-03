@@ -195,19 +195,19 @@ func SetUpPrimitives(t *testing.T, mockTools []MockTool, mockPrompts []MockPromp
 	}
 
 	resourcesMap := make(map[string]resources.Resource)
-	var allResources []string
+	// var allResources []string
 	for _, resource := range mockResources {
 		resName := resource.GetName()
 		resourcesMap[resName] = resource
-		allResources = append(allResources, resName)
+		// allResources = append(allResources, resName)
 	}
 
 	resourceTemplatesMap := make(map[string]resources.ResourceTemplate)
-	var allResourceTemplates []string
+	// var allResourceTemplates []string
 	for _, resourceTemplate := range mockResourceTemplates {
 		resTemplateName := resourceTemplate.GetName()
 		resourceTemplatesMap[resTemplateName] = resourceTemplate
-		allResourceTemplates = append(allResourceTemplates, resTemplateName)
+		// allResourceTemplates = append(allResourceTemplates, resTemplateName)
 	}
 
 	// Build the authoritative groups map directly. Each named collection

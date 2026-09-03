@@ -108,6 +108,8 @@ type ServerConfig struct {
 	EnableDraftSpecs bool
 	// SkipSourceValidation skips source validation during server startup
 	SkipSourceValidation bool
+	// DisableExt specifies MCP extension URIs disabled on this server.
+	DisableExt []string
 }
 
 type logFormat string

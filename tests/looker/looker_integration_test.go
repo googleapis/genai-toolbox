@@ -2381,17 +2381,16 @@ func TestLooker(t *testing.T) {
 	wantResult = `{"suggestions":`
 	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source"}`), wantResult)
 
-	// Verify that the suggestions list contains the expected value
-	wantResult = "{\"suggestions\":[\"api4\",\"dashboard\",\"explore\",\"merge_query\",\"regenerator\",\"sqlrunner\",\"suggest\"]}"
-	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source"}`), wantResult)
+	// Verify that the suggestions list contains the expected values
+	wantSuggestions := []string{"api4", "dashboard", "explore", "merge_query", "regenerator", "sqlrunner", "suggest"}
+	testFieldValueSuggestions(t, "basic", []byte("{\"model\": \"system__activity\", \"explore\": \"history\", \"field\": \"history.source\"}"), wantSuggestions)
 
 	// Verify that search term filtering works
 	wantResult = "{\"suggestions\":[\"api4\"]}"
 	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "term": "ap"}`), wantResult)
 
 	// Verify that conditional filtering based on other fields works
-	wantResult = "{\"suggestions\":[\"api4\",\"dashboard\",\"explore\",\"merge_query\",\"regenerator\",\"sqlrunner\",\"suggest\"]}"
-	tests.RunToolInvokeParametersTest(t, "get_field_value_suggestions", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "filters": {"history.status": "complete"}}`), wantResult)
+	testFieldValueSuggestions(t, "with_filtering", []byte(`{"model": "system__activity", "explore": "history", "field": "history.source", "filters": {"history.status": "complete"}}`), wantSuggestions)
 
 	wantResult = "{\"description\":\"\",\"label\":\"API Usage\",\"label_short\":\"API Usage\",\"name\":\"turtle::api_usage\",\"suggestable\":false,\"type\":\"turtle_look\"}"
 	tests.RunToolInvokeParametersTest(t, "get_measures", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
@@ -2548,6 +2547,50 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "\"Model\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
+}
+
+// testFieldValueSuggestions asserts that get_field_value_suggestions returns at
+// least the wanted values. Suggestions are drawn from live System Activity data,
+// which only accumulates — running the LookML tests in this suite, for instance,
+// adds "__lookml_test__" as a history source — so the exact list cannot be pinned.
+func testFieldValueSuggestions(t *testing.T, name string, params []byte, want []string) {
+	t.Helper()
+	t.Run("invoke get_field_value_suggestions/"+name, func(t *testing.T) {
+		t.Helper()
+		url := "http://127.0.0.1:5000/api/tool/get_field_value_suggestions/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(params), nil)
+
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, http.StatusOK, string(bodyBytes))
+		}
+
+		var respBody map[string]any
+		if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
+			t.Fatalf("error parsing response body: %v", err)
+		}
+
+		result, ok := respBody["result"].(string)
+		if !ok {
+			t.Fatalf("unable to find result in response body: %s", string(bodyBytes))
+		}
+
+		var got struct {
+			Suggestions []string `json:"suggestions"`
+		}
+		if err := json.Unmarshal([]byte(result), &got); err != nil {
+			t.Fatalf("error parsing result body: %v", err)
+		}
+
+		gotSuggestions := make(map[string]bool, len(got.Suggestions))
+		for _, s := range got.Suggestions {
+			gotSuggestions[s] = true
+		}
+		for _, w := range want {
+			if !gotSuggestions[w] {
+				t.Errorf("missing suggestion %q: got %v", w, got.Suggestions)
+			}
+		}
+	})
 }
 
 func findTestAgentId(t *testing.T, name string) (string, error) {

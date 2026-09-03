@@ -111,6 +111,14 @@ func (r *PrimitiveManager) GetResource(name string) (resources.Resource, bool) {
 	return resource, ok
 }
 
+// GetResourceTemplate returns a specific resource template by name.
+func (r *PrimitiveManager) GetResourceTemplate(name string) (resources.ResourceTemplate, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	rt, exists := r.resourceTemplates[name]
+	return rt, exists
+}
+
 // GetGroup returns the group of the given name.
 func (r *PrimitiveManager) GetGroup(groupName string) (group.Group, bool) {
 	r.mu.RLock()
@@ -133,7 +141,8 @@ func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, a
 }
 
 
-func (r *PrimitiveManager) GetAuthServiceMap() map[string]auth.AuthService {
+// AuthServices returns a copy of the auth services map
+func (r *PrimitiveManager) AuthServices() map[string]auth.AuthService {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]auth.AuthService, len(r.authServices))
@@ -161,12 +170,3 @@ func (r *PrimitiveManager) GroupsList() []group.Group {
 
 	return groupsList
 }
-
-// GetResourceTemplate returns a specific resource template by name.
-func (r *PrimitiveManager) GetResourceTemplate(name string) (resources.ResourceTemplate, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	rt, exists := r.resourceTemplates[name]
-	return rt, exists
-}
-
