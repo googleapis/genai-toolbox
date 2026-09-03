@@ -220,6 +220,3 @@ substitutions:
   _GEMINI_MODEL: "gemini-3.7-flash"
   _CLAUDE_MODEL: "claude-opus-4-8"
   _EVALBENCH_IMAGE: "us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server:latest"
-  _SPANNER_INSTANCE: "spanner-testing"
-  _SPANNER_DATABASE: "test_database"
-  _SPANNER_PG_DATABASE: "pg_test_database"
