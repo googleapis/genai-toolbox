@@ -19,6 +19,12 @@
 dataset_config: !ENV ${EVAL_DATASET}
 dataset_format: gemini-cli-format
 
+# Runs in EvalBench's finally block, so it covers a failed or crashed eval, and
+# once per harness rather than once per build. Indirected through run.sh because
+# this config is shared: EvalBench logs an error when the path does not exist,
+# and no !ENV form resolves to something falsy.
+tear_down_script: evals/teardown/run.sh
+
 # Viewer labels only; nothing reads them for scoring.
 eval_group: !ENV ${EVAL_GROUP}
 product_name: !ENV ${TOOLBOX_PREBUILT}

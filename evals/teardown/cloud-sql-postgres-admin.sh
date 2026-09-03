@@ -16,6 +16,9 @@
 # Deletes the backups the cloud-sql-postgres-admin evalset creates. The toolbox
 # has no delete tool, so this cannot be a scenario.
 #
+# Two callers: EvalBench's tear_down_script hook, which does the deleting, and
+# a scheduled sweep for what a killed eval leaks before the hook can run.
+#
 # Scope is deliberately narrow: one instance, on-demand backups only. Scheduled
 # backups are never matched.
 
@@ -23,10 +26,8 @@ set -euo pipefail
 
 : "${TEARDOWN_PROJECT:?}" "${TEARDOWN_INSTANCE:?}"
 
-# Two callers. In a build the step is allowFailure, so a leak does not cancel the
-# databases still evaluating -- which leaves the scheduled sweep as the thing
-# that actually catches one.
-if [[ "${1:-}" == "--sweep" ]]; then
+# A flag rather than $1, because EvalBench passes the session directory there.
+if [[ -n "${TEARDOWN_SWEEP:-}" ]]; then
   # No marker to bound against, so spare anything recent enough to belong to a
   # build still in flight.
   cutoff=$(date -u -d "-${TEARDOWN_SWEEP_AGE_HOURS:-6} hours" +%Y-%m-%dT%H:%M:%SZ)
@@ -41,8 +42,8 @@ else
   cutoff=$(cat "${marker}")
   filter="type=ON_DEMAND AND enqueuedTime>=${cutoff}"
   echo "deleting on-demand backups on ${TEARDOWN_INSTANCE} since ${cutoff}"
-  # Same marker the eval steps use, so a leak still reddens the build at the end
-  # rather than only surfacing on the next sweep.
+  # Same marker the eval steps use. EvalBench discards this script's exit code,
+  # so under the hook the marker is the only thing that reddens the build.
   trap '[ $? -eq 0 ] || touch "/workspace/failed-teardown-${TOOLBOX_PREBUILT}"' EXIT
 fi
 

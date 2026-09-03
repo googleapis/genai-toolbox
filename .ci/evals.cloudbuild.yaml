@@ -106,9 +106,13 @@ steps:
       - "CLOUD_SQL_MYSQL_USER"
       - "CLOUD_SQL_MYSQL_PASSWORD"
 
+  # These evals create real backups and the toolbox has no delete tool, so the
+  # TEARDOWN_ pair configures evals/teardown/, which EvalBench runs in-container
+  # after each harness.
+  #
   # No secretEnv: the cloud-sql-admin source authenticates through ADC. Only
-  # these three variables are set, so the prefix check does not see an empty user
-  # or password.
+  # three CLOUD_SQL_POSTGRES_ variables are set, so the prefix check does not see
+  # an empty user or password.
   - id: "evals-cloud-sql-postgres-admin"
     name: "${_EVALBENCH_IMAGE}"
     waitFor: ["build-toolbox", "pull-evalbench"]
@@ -121,23 +125,12 @@ steps:
       - "EVAL_DATASET=evals/evalsets/cloud-sql-postgres-admin.json"
       - "EVAL_ENV_PREFIX=CLOUD_SQL_POSTGRES"
 
+      - "TEARDOWN_PROJECT=$PROJECT_ID"
+      - "TEARDOWN_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
+
       - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
       - "CLOUD_SQL_POSTGRES_REGION=${_REGION}"
       - "CLOUD_SQL_POSTGRES_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
-
-  # These evals create real backups and the toolbox has no delete tool, so
-  # cleanup runs out of band. allowFailure because a leak must not cancel the
-  # databases still evaluating; the scheduled sweep is what catches one.
-  - id: "teardown-cloud-sql-postgres-admin"
-    name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
-    waitFor: ["evals-cloud-sql-postgres-admin"]
-    entrypoint: bash
-    args: ["/workspace/evals/teardown/cloud-sql-postgres-admin.sh"]
-    allowFailure: true
-    env:
-      - "TOOLBOX_PREBUILT=cloud-sql-postgres-admin"
-      - "TEARDOWN_PROJECT=$PROJECT_ID"
-      - "TEARDOWN_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
 
   # Turns the allowFailure steps back into a red build. No waitFor, which means
   # every step above, so a new database needs no edit here.
