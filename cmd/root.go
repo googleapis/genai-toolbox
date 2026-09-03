@@ -547,7 +547,7 @@ func pmWatchChanges(ctx context.Context, s *server.Server, opts *internal.Toolbo
 		panic(err)
 	}
 
-	pmTicker := time.NewTicker(3 * time.Minute)
+	pmTicker := time.NewTicker(1 * time.Minute)
 	defer pmTicker.Stop()
 
 	logger.DebugContext(ctx, "Parameter Manager polling enabled every 3 minutes")
