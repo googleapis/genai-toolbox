@@ -90,6 +90,76 @@ parameters:
 | minValue       |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the minimum value allowed.                                                                                                                                                     |
 | maxValue       |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the maximum value allowed.                                                                                                                                                     |
 
+### Optional Parameters
+
+Parameters are **required by default**. Omitting `required` is the same as
+writing `required: true`, so an agent that calls the tool without the argument
+gets `parameter "airline" is required` back.
+
+There are two ways to make a parameter optional, and they behave differently:
+
+```yaml
+parameters:
+  # Optional with a fallback: omitted calls use "AA".
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
+    default: AA
+
+  # Optional with no fallback: omitted calls pass no value for the parameter,
+  # which a SQL statement binds as NULL.
+  - name: seat_class
+    type: string
+    description: Seat class to filter by
+    required: false
+```
+
+Providing a `default` also makes the parameter optional — it overrides
+`required: true` rather than conflicting with it. The full matrix:
+
+| `required` | `default`             | Effective behavior                                              |
+|:-----------|:----------------------|:----------------------------------------------------------------|
+| omitted    | omitted               | **Required.** Calls that omit the argument are rejected.         |
+| `true`     | omitted               | **Required.** Same as above.                                     |
+| `false`    | omitted               | Optional; omitted calls pass no value (`NULL` in SQL).           |
+| `true`     | a value               | **Optional**;  the `default` wins over `required: true`.         |
+| omitted    | a value               | Optional; omitted calls use the default.                         |
+| `false`    | a value               | Optional; omitted calls use the default.                         |
+
+This distinction also reaches the agent: a parameter that is effectively
+optional is advertised as not required in the tool manifest, so the model knows
+it may omit the argument.
+
+{{< notice warning >}}
+**`default: null` does not make a parameter optional.** In YAML, `default:
+null` (and the equivalent `default: ~`, or a `default:` key with nothing after
+it) parses to a null value, which Toolbox cannot distinguish from the field
+being absent altogether. The parameter therefore stays **required**, and calls
+that omit the argument fail at invocation time with `parameter "..." is
+required`.
+
+If you want "optional, with no value when the caller omits it", write
+`required: false` instead:
+
+```yaml
+# Does NOT work — the parameter is still required.
+- name: seat_class
+  type: string
+  description: Seat class to filter by
+  default: null
+
+# Works.
+- name: seat_class
+  type: string
+  description: Seat class to filter by
+  required: false
+```
+
+Note that an explicit empty value *is* a real default: `default: ""` makes a
+string parameter optional and substitutes the empty string. Only `null` is
+ignored.
+{{< /notice >}}
+
 ### Array Parameters
 
 The `array` type is a list of items passed in as a single parameter.
@@ -159,6 +229,45 @@ parameters:
     description: A map of user IDs to their scores. All scores must be integers.
     valueType: integer # This enforces the value type for all entries.
 ```
+
+### Secure Parameters
+
+Secure parameters are designed for sensitive runtime context (such as an end-user `customer_id`, tenant identifier, or session token) that **AI agents (LLMs) should not control or see** and that should not be transmitted in plain text through prompt completion requests, model context windows, or standard server logs.
+
+> **Note:** Secure parameters should be used for client-supplied runtime values (such as `customer_id` or end-user context). Database credentials (such as service account passwords or API keys) should be configured directly in the Data Source configuration rather than passed as per-request tool parameters.
+
+To configure a parameter as secure, set the `secure` field to `true` in your tool's parameter definition:
+
+```yaml
+kind: tool
+name: search_secure_data
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM sessions WHERE customer_id = $1
+parameters:
+  - name: customer_id
+    type: string
+    description: Sensitive customer identifier supplied out-of-band by the calling application
+    secure: true
+```
+
+When a parameter is marked as `secure: true`, it will not be presented to the agent as a configurable parameter. Instead, it relies on the application to set the parameter. If an application fails to set the parameter before the tool is called, execution returns a tool error indicating that the required parameter was not provided.
+
+> **Note:** Secure parameters are always required and cannot be optional. A parameter cannot have `secure: true` alongside `authServices`, `default`, or `required: false`.
+
+Here is how you set a secure parameter with the Toolbox Python SDK:
+
+```python
+# Pass secure_params when loading or calling a tool via the Python SDK
+auth_tool = await toolbox.load_tool(
+    "search_secure_data",
+    secure_params={"customer_id": "cust_12345"}
+)
+result = await auth_tool()
+```
+
+> **Note:** Secure parameters require MCP protocol version `2026-07-28` and the `com.google.cloud/toolbox.v1` extension. For more details on extension capabilities and client requirements, see the [Extension README](https://github.com/googleapis/mcp-toolbox/blob/main/extensions/2026-07-28/README.md).
 
 ### Authenticated Parameters
 

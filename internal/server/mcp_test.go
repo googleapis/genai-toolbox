@@ -471,20 +471,22 @@ func TestMcpEndpoint(t *testing.T) {
 	defer ts.Close()
 
 	versTestCases := []struct {
-		name                      string
-		protocol                  string
-		idHeader                  bool
-		reqHeader                 []string
-		initWant                  map[string]any
-		invalidMethods            []string
-		meta                      map[string]any
-		wantToolsList             map[string]any
-		wantPromptsList           map[string]any
-		wantPromptsGet            map[string]any
-		wantToolsListOnTool1      map[string]any
-		wantToolsCallOnTool1      map[string]any
-		wantToolsListWithURLParam map[string]any
-		wantToolsCallWithURLParam map[string]any
+		name                                   string
+		protocol                               string
+		idHeader                               bool
+		reqHeader                              []string
+		initWant                               map[string]any
+		invalidMethods                         []string
+		meta                                   map[string]any
+		wantToolsList                          map[string]any
+		wantPromptsList                        map[string]any
+		wantPromptsGet                         map[string]any
+		wantToolsListOnTool1                   map[string]any
+		wantToolsCallOnTool1                   map[string]any
+		wantToolsListWithURLParam              map[string]any
+		wantToolsCallWithURLParam              map[string]any
+		wantToolsCallWithURLParamOverrideError map[string]any
+		wantToolsCallWithParamError            map[string]any
 	}{
 		{
 			name:     "version 2024-11-05",
@@ -779,6 +781,40 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 				},
 			},
+			wantToolsCallWithURLParamOverrideError: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-url-binding-override",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `parameter "param1" is bound by URL and cannot be provided in client arguments`,
+						},
+					},
+					"isError": true,
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantToolsCallWithParamError: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-param-error",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `provided parameters were invalid: parameter "param1" is required`,
+						},
+					},
+					"isError": true,
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
 		},
 	}
 	for _, vtc := range versTestCases {
@@ -847,6 +883,9 @@ func TestMcpEndpoint(t *testing.T) {
 							"resultType":        "complete",
 							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 							"capabilities": map[string]any{
+								"extensions": map[string]any{
+									"com.google.cloud/toolbox.v1": map[string]any{},
+								},
 								"tools":   map[string]any{"listChanged": false},
 								"prompts": map[string]any{"listChanged": false},
 							},
@@ -1301,6 +1340,71 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					wantOverwrite: vtc.wantToolsCallWithURLParam,
 				},
+				{
+					name: "tools/call with URL param override returns error",
+					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14&param6=%5B%22a%22%2C%22b%22%5D&param7=%7B%22k%22%3A%22v%22%7D",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-url-binding-override",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "url_binding_tool",
+							"arguments": map[string]any{
+								"param1": "client-override",
+								"param5": "unbound-value",
+							},
+						},
+					},
+					methodName:     "tools/call",
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-url-binding-override",
+						"result": map[string]any{
+							"content": []any{
+								map[string]any{
+									"type": "text",
+									"text": `parameter "param1" is bound by URL and cannot be provided in client arguments`,
+								},
+							},
+							"isError": true,
+						},
+					},
+					wantOverwrite: vtc.wantToolsCallWithURLParamOverrideError,
+				},
+				{
+					name: "tools/call with insufficient parameters returns tool error",
+					url:  "/",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-param-error",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "some_params",
+							"arguments": map[string]any{},
+						},
+					},
+					methodName:     "tools/call",
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-param-error",
+						"result": map[string]any{
+							"content": []any{
+								map[string]any{
+									"type": "text",
+									"text": `provided parameters were invalid: parameter "param1" is required`,
+								},
+							},
+							"isError": true,
+						},
+					},
+					wantOverwrite: vtc.wantToolsCallWithParamError,
+				},
 			}
 			for i := range testCases {
 				tc := *testCases[i]
@@ -1730,6 +1834,70 @@ func runSseRequest(ts *httptest.Server, path string, proto string) (*http.Respon
 		return nil, fmt.Errorf("unable to send request: %w", err)
 	}
 	return resp, nil
+}
+
+// nonFlusherResponseWriter is an http.ResponseWriter that deliberately does not
+// implement http.Flusher, used to exercise sseHandler's missing-flusher path.
+type nonFlusherResponseWriter struct {
+	header http.Header
+	status int
+	body   bytes.Buffer
+}
+
+func (w *nonFlusherResponseWriter) Header() http.Header {
+	if w.header == nil {
+		w.header = make(http.Header)
+	}
+	return w.header
+}
+
+func (w *nonFlusherResponseWriter) Write(b []byte) (int, error) { return w.body.Write(b) }
+
+func (w *nonFlusherResponseWriter) WriteHeader(status int) { w.status = status }
+
+// TestSseHandlerWriterWithoutFlusher checks that when the ResponseWriter does
+// not implement http.Flusher, sseHandler reports a clean 500 instead of falling
+// through and dereferencing a nil flusher.
+func TestSseHandlerWriterWithoutFlusher(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	testLogger, err := log.NewStdLogger(os.Stderr, os.Stderr, "warn")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, testutils.MockVersionString, "", false, "", "toolbox")
+	if err != nil {
+		t.Fatalf("unable to setup otel: %s", err)
+	}
+	defer func() {
+		if err := otelShutdown(ctx); err != nil {
+			t.Fatalf("error shutting down OpenTelemetry: %s", err)
+		}
+	}()
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(testutils.MockVersionString)
+	if err != nil {
+		t.Fatalf("unable to create custom metrics: %s", err)
+	}
+
+	server := &Server{
+		version:         testutils.MockVersionString,
+		logger:          testLogger,
+		instrumentation: instrumentation,
+		sseManager:      newSseManager(ctx),
+		PrimitiveMgr:    primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil, nil, nil),
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/sse", nil).WithContext(ctx)
+	w := &nonFlusherResponseWriter{}
+
+	sseHandler(server, w, req)
+
+	if w.status != http.StatusInternalServerError {
+		t.Fatalf("expected status %d for a writer without a flusher, got %d", http.StatusInternalServerError, w.status)
+	}
 }
 
 func TestStdioSession(t *testing.T) {

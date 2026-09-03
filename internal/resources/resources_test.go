@@ -159,7 +159,7 @@ func TestGetBaseDirFromContext(t *testing.T) {
 	})
 }
 
-func TestBaseConfig_YAML(t *testing.T) {
+func TestResourceConfigBase_YAML(t *testing.T) {
 	yamlStr := `
 name: testName
 type: testType

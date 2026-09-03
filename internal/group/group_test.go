@@ -15,13 +15,16 @@
 package group_test
 
 import (
+	"context"
 	"slices"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -48,18 +51,24 @@ func testFixtures() (map[string]tools.Tool, map[string]prompts.Prompt, map[strin
 	return toolsMap, promptsMap, resourcesMap, resourceTemplatesMap
 }
 
+func intPtr(v int) *int {
+	return &v
+}
+
 func TestGroupConfig_Initialize(t *testing.T) {
 	t.Parallel()
 	toolsMap, promptsMap, resourcesMap, resourceTemplatesMap := testFixtures()
 
 	testCases := []struct {
-		name        string
-		config      group.GroupConfig
-		wantTools   []string
-		wantPrompts []string
-		wantRes     []string
-		wantResTmpl []string
-		wantErr     string
+		name           string
+		config         group.GroupConfig
+		wantTools      []string
+		wantPrompts    []string
+		wantRes        []string
+		wantResTmpl    []string
+		wantErr        string
+		wantTTLMs      *int
+		wantCacheScope string
 	}{
 		{
 			name: "all primitives",
@@ -161,6 +170,44 @@ func TestGroupConfig_Initialize(t *testing.T) {
 			},
 			wantErr: "prompt does not exist: \"nope\"",
 		},
+		{
+			name: "valid ttlMs",
+			config: group.GroupConfig{
+				Name:  "g",
+				TTLMs: intPtr(10000),
+			},
+			wantTTLMs: intPtr(10000),
+		},
+		{
+			name: "empty ttlMs",
+			config: group.GroupConfig{
+				Name: "g",
+			},
+			wantTTLMs: intPtr(300000),
+		},
+		{
+			name: "public cacheScope",
+			config: group.GroupConfig{
+				Name:       "g",
+				CacheScope: "public",
+			},
+			wantCacheScope: "public",
+		},
+		{
+			name: "private cacheScope",
+			config: group.GroupConfig{
+				Name:       "g",
+				CacheScope: "private",
+			},
+			wantCacheScope: "private",
+		},
+		{
+			name: "empty cacheScope",
+			config: group.GroupConfig{
+				Name: "g",
+			},
+			wantCacheScope: "public",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -208,8 +255,24 @@ func TestGroupConfig_Initialize(t *testing.T) {
 			}
 			for _, name := range tc.wantResTmpl {
 				if !g.ContainsResourceTemplate(name) {
-					t.Errorf("group missing template %q", name)
+					t.Errorf("group missing resource template %q", name)
 				}
+			}
+
+			expectedScope := tc.wantCacheScope
+			if expectedScope == "" {
+				expectedScope = group.DefaultCacheScope
+			}
+			if g.GetCacheScope() != expectedScope {
+				t.Errorf("CacheScope = %q, want %q", g.GetCacheScope(), expectedScope)
+			}
+
+			expectedTTL := group.DefaultTTLMs
+			if tc.wantTTLMs != nil {
+				expectedTTL = *tc.wantTTLMs
+			}
+			if g.GetTTLMs() != expectedTTL {
+				t.Errorf("TTLMs = %d, want %d", g.GetTTLMs(), expectedTTL)
 			}
 		})
 	}
@@ -293,5 +356,82 @@ func TestGroup_Contains(t *testing.T) {
 	}
 	if g.ContainsResourceTemplate("tmpl3") {
 		t.Errorf("group reports an absent resource template")
+	}
+}
+
+func TestParseFromYamlGroup(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		want server.GroupConfigs
+	}{
+		{
+			desc: "basic group",
+			in: `
+			kind: group
+			name: my-group
+			ttlMs: 60000
+			cacheScope: private
+			`,
+			want: map[string]group.GroupConfig{
+				"my-group": {
+					Name:       "my-group",
+					TTLMs:      intPtr(60000),
+					CacheScope: "private",
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Parse contents
+			_, _, _, _, _, _, _, got, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestFailParseFromYaml(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "invalid cacheScope",
+			in: `
+			kind: group
+			name: my-group
+			cacheScope: secret
+			`,
+			err: "Field validation for 'CacheScope' failed on the 'oneof' tag",
+		},
+		{
+			desc: "invalid ttlMs",
+			in: `
+			kind: group
+			name: my-group
+			ttlMs: -100
+			`,
+			err: "Field validation for 'TTLMs' failed on the 'gte' tag",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Parse contents
+			_, _, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if !strings.Contains(errStr, tc.err) {
+				t.Fatalf("unexpected error: got %q, want it to contain %q", errStr, tc.err)
+			}
+		})
 	}
 }

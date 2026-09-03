@@ -38,7 +38,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 				Type:     resourceType,
 				MimeType: "text/plain",
 			},
-			URI:      fmt.Sprintf("text://%s", name),
+			URI: fmt.Sprintf("text://%s", name),
 		},
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
@@ -50,7 +50,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 // Config represents the uninitialized textual resource configuration from YAML.
 type Config struct {
 	resources.ResourceConfigBase `yaml:",inline"`
-	Text                 string `yaml:"text" validate:"required"`
+	Text                         string `yaml:"text" validate:"required"`
 }
 
 var _ resources.ResourceConfig = &Config{}
@@ -68,7 +68,7 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 // Resource represents the initialized textual resource that returns plain text payloads.
 type Resource struct {
 	Config
-	Size   int64
+	Size int64
 }
 
 var _ resources.Resource = &Resource{}
