@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -56,6 +57,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 			},
 			URI: fmt.Sprintf("file://%s", url.PathEscape(name)),
 		},
+		baseDir: resources.GetBaseDirFromContext(ctx),
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
 		return nil, err
@@ -72,6 +74,7 @@ func newTemplateConfig(ctx context.Context, name string, decoder *yaml.Decoder) 
 				Type: resourceType,
 			},
 		},
+		baseDir: resources.GetBaseDirFromContext(ctx),
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
 		return nil, err
@@ -84,6 +87,7 @@ type Config struct {
 	resources.ResourceConfigBase `yaml:",inline"`
 	Path                         string `yaml:"path" validate:"required"`
 	MaxSize                      *int64 `yaml:"max_size,omitempty"`
+	baseDir                      string
 }
 
 var _ resources.ResourceConfig = &Config{}
@@ -167,7 +171,10 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 			return nil, fmt.Errorf("relative path %q is unsafe", c.Path)
 		}
 		isRelative = true
-		baseDir := resources.GetBaseDirFromContext(ctx)
+		baseDir := c.baseDir
+		if baseDir == "" {
+			baseDir = resources.GetBaseDirFromContext(ctx)
+		}
 		if baseDir == "" {
 			baseDir = "."
 		}
@@ -283,7 +290,7 @@ func (r *FileResource) GetSize() *int64 {
 func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, error) {
 	// Security check for extension on the resolved target
 	if err := validateExtension(r.absPath); err != nil {
-		return nil, fmt.Errorf("security violation: configured file extension not allowed for resource %q: %w", r.Config.Name, err)
+		return nil, fmt.Errorf("security violation: configured file extension not allowed for resource %q: %w", r.Name, err)
 	}
 
 	resolvedPath, err := filepath.EvalSymlinks(r.absPath)
@@ -291,7 +298,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil, fmt.Errorf("file not found: %q: %w", r.absPath, fs.ErrNotExist)
 		}
-		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Config.Name, err)
+		return nil, fmt.Errorf("failed to evaluate symlinks for resource %q at runtime: %w", r.Name, err)
 	}
 
 	if r.isRelative && r.resolvedBaseDir != "" {
@@ -306,7 +313,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	}
 
 	if err := validateExtension(resolvedPath); err != nil {
-		return nil, fmt.Errorf("security violation: file extension changed post-boot for resource %q: %w", r.Config.Name, err)
+		return nil, fmt.Errorf("security violation: file extension changed post-boot for resource %q: %w", r.Name, err)
 	}
 
 	statInfo, err := os.Lstat(resolvedPath)
@@ -337,7 +344,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("security violation: file %q was swapped with a non-regular file during read", resolvedPath)
 	}
 
-	limit := *r.Config.MaxSize
+	limit := *r.MaxSize
 	limitedReader := io.LimitReader(f, limit+1)
 	content, err := io.ReadAll(limitedReader)
 	if err != nil {
@@ -361,11 +368,11 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 	return string(content), nil
 }
 
-// GetAnnotations returns the resource annotations.
+// GetAnnotations returns the resource annotations, dynamically computing the LastModified timestamp.
 func (r *FileResource) GetAnnotations() *resources.ResourceAnnotations {
 	var ret resources.ResourceAnnotations
-	if r.Config.Annotations != nil {
-		ret = *r.Config.Annotations
+	if r.Annotations != nil {
+		ret = *r.Annotations
 	}
 
 	resolvedPath := r.absPath
@@ -412,8 +419,8 @@ func (r *FileResource) GetCurrentSize() (int64, error) {
 	}
 
 	size := info.Size()
-	if size > *r.Config.MaxSize {
-		size = *r.Config.MaxSize
+	if size > *r.MaxSize {
+		size = *r.MaxSize
 	}
 	return size, nil
 }
@@ -423,6 +430,7 @@ type TemplateConfig struct {
 	resources.ResourceTemplateConfigBase `yaml:",inline"`
 	AllowedPaths                         []string `yaml:"allowedPaths,omitempty"`
 	MaxSize                              *int64   `yaml:"max_size,omitempty"`
+	baseDir                              string
 }
 
 var _ resources.ResourceTemplateConfig = (*TemplateConfig)(nil)
@@ -442,6 +450,14 @@ func (c *TemplateConfig) Validate() error {
 	if parsed.Scheme != "file" {
 		return fmt.Errorf("invalid scheme for file resource template %q: must be 'file'", c.Name)
 	}
+
+	if c.MaxSize != nil {
+		if *c.MaxSize <= 0 {
+			return fmt.Errorf("file resource template %q max_size must be greater than 0", c.Name)
+		} else if *c.MaxSize > 1024*1024*1024 {
+			return fmt.Errorf("file resource template %q max_size cannot exceed 1GB", c.Name)
+		}
+	}
 	return nil
 }
 
@@ -455,7 +471,10 @@ func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemp
 	// Validate and resolve allowed paths if specified
 	var unresolvedAllowedPaths []string
 	var resolvedAllowedPaths []string
-	baseDir := resources.GetBaseDirFromContext(ctx)
+	baseDir := c.baseDir
+	if baseDir == "" {
+		baseDir = resources.GetBaseDirFromContext(ctx)
+	}
 	if baseDir == "" {
 		baseDir = "."
 	}
@@ -534,9 +553,15 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 
 			base := parsed.Path
 
-			// Handle Windows drive letter quirks (e.g., /C:/...)
-			if len(base) > 2 && base[0] == '/' && base[2] == ':' {
-				base = base[1:]
+			// Handle Windows drive letter quirks exclusively on Windows:
+			// If 2 slashes were used (e.g., file://C:/...), parsed.Host contains "C:".
+			// If 3 slashes were used (e.g., file:///C:/...), parsed.Path contains "/C:/...".
+			if runtime.GOOS == "windows" {
+				if len(parsed.Host) == 2 && parsed.Host[1] == ':' && ((parsed.Host[0] >= 'a' && parsed.Host[0] <= 'z') || (parsed.Host[0] >= 'A' && parsed.Host[0] <= 'Z')) {
+					base = parsed.Host + base
+				} else if len(base) > 2 && base[0] == '/' && base[2] == ':' && ((base[1] >= 'a' && base[1] <= 'z') || (base[1] >= 'A' && base[1] <= 'Z')) {
+					base = base[1:]
+				}
 			}
 			pathStr = filepath.FromSlash(base)
 		}

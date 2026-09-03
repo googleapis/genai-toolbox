@@ -28,6 +28,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -64,6 +65,8 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, promp
 	sseManager := newSseManager(ctx)
 
 	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, tools, prompts, resourcesMap, resourceTemplatesMap, groups)
+
+	mcp.InitializeProtocols(mcp.ProtocolOptions{})
 
 	server := Server{
 		version:         testutils.MockVersionString,

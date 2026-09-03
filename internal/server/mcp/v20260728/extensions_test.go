@@ -1,0 +1,165 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package v20260728
+
+import (
+	"testing"
+)
+
+const testExtURI = "com.google.cloud/test-extension"
+
+func TestParseSupportedExtensions(t *testing.T) {
+	orig := ServerExtensions
+	t.Cleanup(func() {
+		ServerExtensions = orig
+	})
+	tests := []struct {
+		name        string
+		extensions  map[string]any
+		serverExts  map[string]any
+		expectedUri string
+		expectedVal bool
+	}{
+		{
+			name:        "nil map",
+			extensions:  nil,
+			serverExts:  nil,
+			expectedUri: testExtURI,
+			expectedVal: false,
+		},
+		{
+			name: "enabled extension via empty settings object in extensions",
+			extensions: map[string]any{
+				testExtURI: map[string]any{},
+			},
+			serverExts:  nil,
+			expectedUri: testExtURI,
+			expectedVal: true,
+		},
+		{
+			name: "enabled extension via settings object with values in extensions",
+			extensions: map[string]any{
+				testExtURI: map[string]any{"setting": "val"},
+			},
+			serverExts:  map[string]any{testExtURI: map[string]any{}},
+			expectedUri: testExtURI,
+			expectedVal: true,
+		},
+		{
+			name: "server does not support extension",
+			extensions: map[string]any{
+				testExtURI: map[string]any{},
+			},
+			serverExts:  map[string]any{"other-extension": map[string]any{}},
+			expectedUri: testExtURI,
+			expectedVal: false,
+		},
+		{
+			name: "nil value in client extensions",
+			extensions: map[string]any{
+				testExtURI: nil,
+			},
+			serverExts:  nil,
+			expectedUri: testExtURI,
+			expectedVal: true,
+		},
+		{
+			name: "server extensions empty",
+			extensions: map[string]any{
+				testExtURI: map[string]any{},
+			},
+			serverExts:  map[string]any{},
+			expectedUri: testExtURI,
+			expectedVal: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			origSupported := SupportedExtensions
+			t.Cleanup(func() {
+				SupportedExtensions = origSupported
+			})
+			if tc.serverExts != nil {
+				SupportedExtensions = tc.serverExts
+			} else {
+				SupportedExtensions = map[string]any{testExtURI: map[string]any{}}
+			}
+			Initialize(nil)
+			exts := ParseSupportedExtensions(tc.extensions)
+			_, ok := exts[tc.expectedUri]
+			if ok != tc.expectedVal {
+				t.Errorf("ParseSupportedExtensions() value for %s = %v, want %v", tc.expectedUri, ok, tc.expectedVal)
+			}
+		})
+	}
+}
+
+func TestServerExtensions(t *testing.T) {
+	origServer := ServerExtensions
+	t.Cleanup(func() {
+		ServerExtensions = origServer
+	})
+
+	tests := []struct {
+		name        string
+		setup       func()
+		expectedUri string
+		expectedVal bool
+	}{
+		{
+			name: "unregistered / nil server extensions",
+			setup: func() {
+				ServerExtensions = nil
+			},
+			expectedUri: testExtURI,
+			expectedVal: false,
+		},
+		{
+			name: "manually registered server extension",
+			setup: func() {
+				ServerExtensions = map[string]any{testExtURI: map[string]any{}}
+			},
+			expectedUri: testExtURI,
+			expectedVal: true,
+		},
+		{
+			name: "default supported extension registered after Initialize",
+			setup: func() {
+				Initialize(nil)
+			},
+			expectedUri: "com.google.cloud/toolbox.v1",
+			expectedVal: true,
+		},
+		{
+			name: "extension disabled after Initialize",
+			setup: func() {
+				Initialize([]string{"com.google.cloud/toolbox.v1"})
+			},
+			expectedUri: "com.google.cloud/toolbox.v1",
+			expectedVal: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup()
+			_, ok := ServerExtensions[tc.expectedUri]
+			if ok != tc.expectedVal {
+				t.Errorf("ServerExtensions[%q] presence = %v, want %v", tc.expectedUri, ok, tc.expectedVal)
+			}
+		})
+	}
+}

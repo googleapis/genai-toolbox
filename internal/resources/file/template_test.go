@@ -17,11 +17,15 @@ package file_test
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/googleapis/mcp-toolbox/internal/resources/file"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 func TestFileTemplate(t *testing.T) {
@@ -89,6 +93,26 @@ func TestFileTemplate(t *testing.T) {
 
 	hiddenFile := filepath.Join(sandboxDir, ".hidden.txt")
 	if err := os.WriteFile(hiddenFile, []byte("hidden"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	nonExistentFile := filepath.Join(sandboxDir, "nonexistent.txt")
+
+	noPermFile := filepath.Join(sandboxDir, "noperm.txt")
+	if err := os.WriteFile(noPermFile, []byte("no permission"), 0000); err != nil {
+		t.Fatal(err)
+	}
+	if runtime.GOOS == "windows" {
+		if err := exec.Command("icacls", noPermFile, "/deny", "*S-1-1-0:(R)").Run(); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			_ = exec.Command("icacls", noPermFile, "/remove:d", "*S-1-1-0").Run()
+		})
+	}
+
+	subDir := filepath.Join(sandboxDir, "subdir.txt")
+	if err := os.Mkdir(subDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -235,12 +259,47 @@ func TestFileTemplate(t *testing.T) {
 			wantErr:      false,
 		},
 		{
+			name:         "non-existent file returns error",
+			allowedPaths: []string{sandboxDir},
+			requestPath:  nonExistentFile,
+			uriTemplate:  "file://{path}",
+			wantErr:      true,
+			errContains:  "file not found",
+		},
+		{
+			name:         "directory target rejected",
+			allowedPaths: []string{sandboxDir},
+			requestPath:  subDir,
+			uriTemplate:  "file://{path}",
+			wantErr:      true,
+			errContains:  "non-regular file",
+		},
+		{
 			name:         "relative path middle uri template",
 			allowedPaths: []string{sandboxDir},
 			requestPath:  "valid.txt",
 			uriTemplate:  "file://" + filepath.ToSlash(sandboxDir) + "/{path}",
 			wantErr:      false,
 		},
+	}
+
+	if os.Geteuid() != 0 {
+		tests = append(tests, struct {
+			name         string
+			allowedPaths []string
+			requestPath  string
+			uriTemplate  string
+			maxSize      *int64
+			wantErr      bool
+			errContains  string
+		}{
+			name:         "missing read permissions returns error",
+			allowedPaths: []string{sandboxDir},
+			requestPath:  noPermFile,
+			uriTemplate:  "file://{path}",
+			wantErr:      true,
+			errContains:  "failed to open file",
+		})
 	}
 
 	for _, tc := range tests {
@@ -274,6 +333,66 @@ func TestFileTemplate(t *testing.T) {
 						t.Errorf("expected truncation warning, got %q", contentStr[len(contentStr)-200:])
 					}
 				}
+			}
+		})
+	}
+}
+
+func TestFileTemplate_Validation(t *testing.T) {
+	tests := []struct {
+		name       string
+		yamlStr    string
+		wantErrMsg string
+	}{
+		{
+			name: "missing uriTemplate",
+			yamlStr: `
+			kind: resourceTemplate
+			name: my-template
+			type: file
+			`,
+			wantErrMsg: "missing required 'uriTemplate' field",
+		},
+		{
+			name: "invalid max_size negative",
+			yamlStr: `
+			kind: resourceTemplate
+			name: my-template
+			type: file
+			uriTemplate: "file://{path}"
+			max_size: -50
+			`,
+			wantErrMsg: "must be greater than 0",
+		},
+		{
+			name: "invalid max_size zero",
+			yamlStr: `
+			kind: resourceTemplate
+			name: my-template
+			type: file
+			uriTemplate: "file://{path}"
+			max_size: 0
+			`,
+			wantErrMsg: "must be greater than 0",
+		},
+		{
+			name: "max_size too large",
+			yamlStr: `
+			kind: resourceTemplate
+			name: my-template
+			type: file
+			uriTemplate: "file://{path}"
+			max_size: 2000000000
+			`,
+			wantErrMsg: "cannot exceed 1GB",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tt.yamlStr))
+			if err == nil || !strings.Contains(err.Error(), tt.wantErrMsg) {
+				t.Fatalf("expected UnmarshalPrimitiveConfig to fail with %q, got err: %v", tt.wantErrMsg, err)
 			}
 		})
 	}

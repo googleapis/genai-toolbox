@@ -23,6 +23,11 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
+const (
+	DefaultTTLMs      = 300000   // default TTL for groups in milliseconds (5 minutes)
+	DefaultCacheScope = "public" // default cache scope for groups
+)
+
 // GroupConfig is the parsed configuration for a group: a single named collection
 // that holds tools, prompts, resources, and resource templates. Its description
 // doubles as the MCP server instructions for clients connected to the group.
@@ -33,6 +38,8 @@ type GroupConfig struct {
 	PromptNames           []string `yaml:"prompts"`
 	ResourceNames         []string `yaml:"resources"`
 	ResourceTemplateNames []string `yaml:"resourceTemplates"`
+	CacheScope            string   `yaml:"cacheScope" validate:"omitempty,oneof=public private"`
+	TTLMs                 *int     `yaml:"ttlMs" validate:"omitempty,gte=0"`
 }
 
 // Group is an initialized group: the source of truth for a named collection of
@@ -133,6 +140,22 @@ func NewGroup(config GroupConfig) Group {
 		resourceNameSet:         resourceNameSet,
 		resourceTemplateNameSet: templateNameSet,
 	}
+}
+
+// GetTTLMs returns the time to live for the group
+func (g Group) GetTTLMs() int {
+	if g.TTLMs == nil {
+		return DefaultTTLMs
+	}
+	return *g.TTLMs
+}
+
+// GetCacheScope returns the cache scope for the group
+func (g Group) GetCacheScope() string {
+	if g.CacheScope == "" {
+		return DefaultCacheScope
+	}
+	return g.CacheScope
 }
 
 // ContainsTool reports whether the group includes a tool with the given name.
