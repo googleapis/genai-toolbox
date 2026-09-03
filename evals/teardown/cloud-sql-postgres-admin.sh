@@ -30,7 +30,7 @@ if [[ "${1:-}" == "--sweep" ]]; then
   # No marker to bound against, so spare anything recent enough to belong to a
   # build still in flight.
   cutoff=$(date -u -d "-${TEARDOWN_SWEEP_AGE_HOURS:-6} hours" +%Y-%m-%dT%H:%M:%SZ)
-  filter="type=ON_DEMAND AND windowStartTime<${cutoff}"
+  filter="type=ON_DEMAND AND enqueuedTime<${cutoff}"
   echo "sweeping on-demand backups on ${TEARDOWN_INSTANCE} older than ${cutoff}"
 else
   marker="/workspace/eval-start-${TOOLBOX_PREBUILT}"
@@ -39,7 +39,7 @@ else
     exit 0
   fi
   cutoff=$(cat "${marker}")
-  filter="type=ON_DEMAND AND windowStartTime>=${cutoff}"
+  filter="type=ON_DEMAND AND enqueuedTime>=${cutoff}"
   echo "deleting on-demand backups on ${TEARDOWN_INSTANCE} since ${cutoff}"
   # Same marker the eval steps use, so a leak still reddens the build at the end
   # rather than only surfacing on the next sweep.
