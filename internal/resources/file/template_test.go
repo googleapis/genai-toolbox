@@ -387,4 +387,3 @@ func TestFileTemplate_Validation(t *testing.T) {
 		})
 	}
 }
-

@@ -17,6 +17,8 @@ package internal
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -2991,5 +2993,73 @@ statement: SELECT 1
 				}
 			}
 		})
+	}
+}
+
+func TestLoadAndMergeConfigs_ResourceBaseDirAnchoring(t *testing.T) {
+	configDir := t.TempDir()
+	dataPath := filepath.Join(configDir, "data.txt")
+	if err := os.WriteFile(dataPath, []byte("anchored content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	yamlContent := `
+resources:
+  test-file:
+    type: file
+    path: data.txt
+resourceTemplates:
+  test-template:
+    type: file
+    uriTemplate: "file://{path}"
+    allowedPaths:
+      - "."
+`
+	toolsYaml := filepath.Join(configDir, "tools.yaml")
+	if err := os.WriteFile(toolsYaml, []byte(yamlContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	parser := &ConfigParser{}
+	cfg, err := parser.LoadAndMergeConfigs(context.Background(), []string{toolsYaml})
+	if err != nil {
+		t.Fatalf("LoadAndMergeConfigs failed: %v", err)
+	}
+
+	resCfg, ok := cfg.Resources["test-file"]
+	if !ok {
+		t.Fatal("resource 'test-file' not found in parsed configs")
+	}
+
+	// Initialize using an empty context without BaseDirKey to verify parse-time anchoring
+	res, err := resCfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("resCfg.Initialize failed: %v", err)
+	}
+
+	content, err := res.Read(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("res.Read failed: %v", err)
+	}
+	if content != "anchored content" {
+		t.Fatalf("expected 'anchored content', got %v", content)
+	}
+
+	tmplCfg, ok := cfg.ResourceTemplates["test-template"]
+	if !ok {
+		t.Fatal("resourceTemplate 'test-template' not found in parsed configs")
+	}
+
+	tmpl, err := tmplCfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("tmplCfg.Initialize failed: %v", err)
+	}
+
+	tmplContent, err := tmpl.Read(context.Background(), map[string]any{"path": dataPath})
+	if err != nil {
+		t.Fatalf("tmpl.Read failed: %v", err)
+	}
+	if tmplContent != "anchored content" {
+		t.Fatalf("expected 'anchored content', got %v", tmplContent)
 	}
 }

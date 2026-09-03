@@ -140,7 +140,6 @@ func (r *PrimitiveManager) SetPrimitives(sourcesMap map[string]sources.Source, a
 	r.groups = groupsMap
 }
 
-
 // AuthServices returns a copy of the auth services map
 func (r *PrimitiveManager) AuthServices() map[string]auth.AuthService {
 	r.mu.RLock()

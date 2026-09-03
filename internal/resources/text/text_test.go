@@ -44,7 +44,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			name: "success with defaults",
 			config: text.Config{
 				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test1"}, URI: "text://test1"},
-				Text:       "Hello, world!",
+				Text:               "Hello, world!",
 			},
 			wantError: false,
 			wantMime:  "text/plain",
@@ -55,9 +55,9 @@ func TestTextResourceInitialization(t *testing.T) {
 			config: text.Config{
 				ResourceConfigBase: resources.ResourceConfigBase{
 					ConfigBase: resources.ConfigBase{
-					Name:        "test2",
-					MimeType:    "application/json",
-					Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.5)},
+						Name:        "test2",
+						MimeType:    "application/json",
+						Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.5)},
 					},
 					URI: "text://test2",
 				},
@@ -73,8 +73,8 @@ func TestTextResourceInitialization(t *testing.T) {
 			config: text.Config{
 				ResourceConfigBase: resources.ResourceConfigBase{
 					ConfigBase: resources.ConfigBase{
-					Name:        "test-priority",
-					Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.0)},
+						Name:        "test-priority",
+						Annotations: &resources.ResourceAnnotations{Priority: floatPtr(0.0)},
 					},
 					URI: "text://test-priority",
 				},
@@ -88,7 +88,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			name: "multi-byte unicode size calculation",
 			config: text.Config{
 				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test-unicode"}, URI: "text://test-unicode"},
-				Text:       "Hello 🌍",
+				Text:               "Hello 🌍",
 			},
 			wantError: false,
 			wantMime:  "text/plain",
@@ -98,7 +98,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			name: "pure whitespace payload",
 			config: text.Config{
 				ResourceConfigBase: resources.ResourceConfigBase{ConfigBase: resources.ConfigBase{Name: "test-whitespace"}, URI: "text://test-whitespace"},
-				Text:       "   \n  ",
+				Text:               "   \n  ",
 			},
 			wantError: false,
 			wantMime:  "text/plain",
@@ -109,8 +109,8 @@ func TestTextResourceInitialization(t *testing.T) {
 			config: text.Config{
 				ResourceConfigBase: resources.ResourceConfigBase{
 					ConfigBase: resources.ConfigBase{
-					Name:     "test-empty-mime",
-					MimeType: "",
+						Name:     "test-empty-mime",
+						MimeType: "",
 					},
 					URI: "text://test-empty-mime",
 				},

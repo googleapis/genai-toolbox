@@ -32,19 +32,20 @@ import (
 	"github.com/goccy/go-yaml/token"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 type Config struct {
-	Sources         server.SourceConfigs         `yaml:"sources"`
-	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
-	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
-	Tools           server.ToolConfigs           `yaml:"tools"`
-	Prompts         server.PromptConfigs         `yaml:"prompts"`
-	Resources       server.ResourceConfigs       `yaml:"resources"`
+	Sources           server.SourceConfigs           `yaml:"sources"`
+	AuthServices      server.AuthServiceConfigs      `yaml:"authServices"`
+	EmbeddingModels   server.EmbeddingModelConfigs   `yaml:"embeddingModels"`
+	Tools             server.ToolConfigs             `yaml:"tools"`
+	Prompts           server.PromptConfigs           `yaml:"prompts"`
+	Resources         server.ResourceConfigs         `yaml:"resources"`
 	ResourceTemplates server.ResourceTemplateConfigs `yaml:"resourceTemplates"`
-	Groups          server.GroupConfigs          `yaml:"groups"`
+	Groups            server.GroupConfigs            `yaml:"groups"`
 }
 
 type ConfigParser struct {
@@ -419,14 +420,14 @@ func processValue(v any, isToolset bool) any {
 // All resource names (sources, authServices, tools, groups) must be unique across all files.
 func mergeConfigs(files ...Config) (Config, error) {
 	merged := Config{
-		Sources:         make(server.SourceConfigs),
-		AuthServices:    make(server.AuthServiceConfigs),
-		EmbeddingModels: make(server.EmbeddingModelConfigs),
-		Tools:           make(server.ToolConfigs),
-		Prompts:         make(server.PromptConfigs),
-		Resources:       make(server.ResourceConfigs),
+		Sources:           make(server.SourceConfigs),
+		AuthServices:      make(server.AuthServiceConfigs),
+		EmbeddingModels:   make(server.EmbeddingModelConfigs),
+		Tools:             make(server.ToolConfigs),
+		Prompts:           make(server.PromptConfigs),
+		Resources:         make(server.ResourceConfigs),
 		ResourceTemplates: make(server.ResourceTemplateConfigs),
-		Groups:          make(server.GroupConfigs),
+		Groups:            make(server.GroupConfigs),
 	}
 
 	var conflicts []string
@@ -556,7 +557,13 @@ func (p *ConfigParser) LoadAndMergeConfigs(ctx context.Context, filePaths []stri
 			return Config{}, fmt.Errorf("unable to read config file at %q: %w", filePath, err)
 		}
 
-		config, err := p.ParseConfig(ctx, buf)
+		absPath, err := filepath.Abs(filePath)
+		if err != nil {
+			absPath = filePath
+		}
+		fileCtx := context.WithValue(ctx, resources.BaseDirKey, filepath.Dir(absPath))
+
+		config, err := p.ParseConfig(fileCtx, buf)
 		if err != nil {
 			return Config{}, fmt.Errorf("unable to parse config file at %q: %w", filePath, err)
 		}

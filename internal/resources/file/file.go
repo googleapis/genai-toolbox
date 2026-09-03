@@ -56,6 +56,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 			},
 			URI: fmt.Sprintf("file://%s", name),
 		},
+		baseDir: resources.GetBaseDirFromContext(ctx),
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
 		return nil, err
@@ -72,6 +73,7 @@ func newTemplateConfig(ctx context.Context, name string, decoder *yaml.Decoder) 
 				Type: resourceType,
 			},
 		},
+		baseDir: resources.GetBaseDirFromContext(ctx),
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {
 		return nil, err
@@ -84,6 +86,7 @@ type Config struct {
 	resources.ResourceConfigBase `yaml:",inline"`
 	Path                         string `yaml:"path" validate:"required"`
 	MaxSize                      *int64 `yaml:"max_size,omitempty"`
+	baseDir                      string
 }
 
 var _ resources.ResourceConfig = &Config{}
@@ -166,7 +169,10 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 			return nil, fmt.Errorf("relative path %q is unsafe", c.Path)
 		}
 		isRelative = true
-		baseDir := resources.GetBaseDirFromContext(ctx)
+		baseDir := c.baseDir
+		if baseDir == "" {
+			baseDir = resources.GetBaseDirFromContext(ctx)
+		}
 		if baseDir == "" {
 			baseDir = "."
 		}
@@ -334,7 +340,7 @@ func (r *FileResource) Read(ctx context.Context, params map[string]any) (any, er
 		return nil, fmt.Errorf("security violation: file %q was swapped with a non-regular file during read", resolvedPath)
 	}
 
-	limit := *r.Config.MaxSize
+	limit := *r.MaxSize
 	limitedReader := io.LimitReader(f, limit+1)
 	content, err := io.ReadAll(limitedReader)
 	if err != nil {
@@ -409,8 +415,8 @@ func (r *FileResource) GetCurrentSize() (int64, error) {
 	}
 
 	size := info.Size()
-	if size > *r.Config.MaxSize {
-		size = *r.Config.MaxSize
+	if size > *r.MaxSize {
+		size = *r.MaxSize
 	}
 	return size, nil
 }
@@ -420,6 +426,7 @@ type TemplateConfig struct {
 	resources.ResourceTemplateConfigBase `yaml:",inline"`
 	AllowedPaths                         []string `yaml:"allowedPaths,omitempty"`
 	MaxSize                              *int64   `yaml:"max_size,omitempty"`
+	baseDir                              string
 }
 
 var _ resources.ResourceTemplateConfig = (*TemplateConfig)(nil)
@@ -460,7 +467,10 @@ func (c *TemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemp
 	// Validate and resolve allowed paths if specified
 	var unresolvedAllowedPaths []string
 	var resolvedAllowedPaths []string
-	baseDir := resources.GetBaseDirFromContext(ctx)
+	baseDir := c.baseDir
+	if baseDir == "" {
+		baseDir = resources.GetBaseDirFromContext(ctx)
+	}
 	if baseDir == "" {
 		baseDir = "."
 	}
@@ -663,4 +673,3 @@ func (r *FileTemplate) Read(ctx context.Context, params map[string]any) (any, er
 func (r *FileTemplate) ToConfig() resources.ResourceTemplateConfig {
 	return &r.TemplateConfig
 }
-
