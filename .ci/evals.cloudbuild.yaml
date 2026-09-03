@@ -116,7 +116,7 @@ steps:
     env:
       - "TOOLBOX_PREBUILT=alloydb-postgres-observability"
       - "EVAL_DATASET=evals/evalsets/alloydb-postgres-observability.json"
-      # - "EVAL_ENV_PREFIX=ALLOYDB_POSTGRES_OBSERVABILITY"
+      - "EVAL_ENV_PREFIX=''"
       - "EVAL_HARNESSES=claude_cli gemini_cli"
 
 
