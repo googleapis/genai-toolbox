@@ -15,8 +15,6 @@
 **/cloudsqlpg/ @googleapis/toolbox-cloud-sql-postgres-team @googleapis/senseai-eco-team
 **/cloud-sql-pg/ @googleapis/toolbox-cloud-sql-postgres-team @googleapis/senseai-eco-team
 **/cloudsqladmin/ @googleapis/toolbox-cloud-sql-postgres-team @googleapis/toolbox-cloud-sql-mysql-team @googleapis/toolbox-cloud-sql-mssql-team @googleapis/senseai-eco-team
-**/cloud-sql-admin/ @googleapis/toolbox-cloud-sql-postgres-team @googleapis/toolbox-cloud-sql-mysql-team @googleapis/toolbox-cloud-sql-mssql-team @googleapis/senseai-eco-team
-**/cloudsql/ @googleapis/toolbox-cloud-sql-postgres-team @googleapis/toolbox-cloud-sql-mysql-team @googleapis/toolbox-cloud-sql-mssql-team @googleapis/senseai-eco-team
 **/dataplex/ @googleapis/toolbox-dataplex-team @googleapis/senseai-eco-team
 **/firestore*/ @googleapis/toolbox-firestore-team @googleapis/senseai-eco-team
 **/looker/ @googleapis/toolbox-looker-team @googleapis/senseai-eco-team
@@ -34,6 +32,7 @@
 **/datalineage/ @googleapis/toolbox-data-lineage-team @googleapis/senseai-eco-team
 **/data-lineage/ @googleapis/toolbox-data-lineage-team @googleapis/senseai-eco-team
 **/dataproc/ @googleapis/toolbox-dataproc-team @googleapis/senseai-eco-team
-**/memorystore*/ @googleapis/toolbox-memorystore-team @googleapis/senseai-eco-team
+**/valkey/ @googleapis/toolbox-memorystore-team @googleapis/senseai-eco-team
+**/redis/ @googleapis/toolbox-memorystore-team @googleapis/senseai-eco-team
 **/oracle/ @googleapis/toolbox-oracle-team @googleapis/senseai-eco-team
 **/serverless*spark*/ @googleapis/toolbox-serverless-spark-team @googleapis/senseai-eco-team
