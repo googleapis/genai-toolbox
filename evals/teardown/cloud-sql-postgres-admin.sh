@@ -62,12 +62,13 @@ fi
 # An unfinished backup cannot be deleted -- the API returns 400
 # ERROR_INVALID_BACKUP_RUN_STATUS -- and an agent that starts one without
 # waiting leaves exactly that. Observed runtime is about a minute.
-for id in ${ids}; do
+delete_backup() {
+  local id="$1" status
   for _ in $(seq 30); do
     status=$(gcloud sql backups describe "${id}" \
       --project="${TEARDOWN_PROJECT}" \
       --instance="${TEARDOWN_INSTANCE}" \
-      --format='value(status)')
+      --format='value(status)') || return 1
     case "${status}" in
       ENQUEUED | OVERDUE | RUNNING) sleep 10 ;;
       *) break ;;
@@ -79,7 +80,7 @@ for id in ${ids}; do
   case "${status}" in
     ENQUEUED | OVERDUE | RUNNING)
       echo "backup ${id} still ${status}; leaving it for the sweep"
-      continue
+      return 0
       ;;
   esac
 
@@ -88,4 +89,15 @@ for id in ${ids}; do
     --project="${TEARDOWN_PROJECT}" \
     --instance="${TEARDOWN_INSTANCE}" \
     --quiet
+}
+
+# The work is a function so that one bad id -- a NOT_FOUND from a teardown
+# running concurrently, a backup wedged in an undeletable state -- does not take
+# set -e and the rest of the list with it. Otherwise a permanently undeletable
+# backup would block every id after it on every future sweep.
+err=0
+for id in ${ids}; do
+  delete_backup "${id}" || { echo "could not delete backup ${id}"; err=1; }
 done
+
+exit "${err}"
