@@ -2,10 +2,10 @@
   "scenarios": [
     {
       "id": "alloydbpg-admin-01",
-      "starting_prompt": "We need additional read capacity on AlloyDB cluster ${ALLOYDB_POSTGRES_CLUSTER} in ${ALLOYDB_POSTGRES_REGION}. Create a READ_POOL instance named ${ALLOYDB_POSTGRES_INSTANCE} with 1 node, and tell me once the operation has actually finished.",
-      "conversation_plan": "The user wants the instance creation confirmed as complete, not just started. If the assistant only reports that the instance was requested, ask it to confirm the operation finished. Then end the conversation.",
+      "starting_prompt": "We need an isolated AlloyDB cluster for testing. Create a cluster named ${ALLOYDB_POSTGRES_CLUSTER} in location ${ALLOYDB_POSTGRES_REGION} on the 'default' network with initial user 'postgres' and password 'EvalTestPass123!'. Tell me once the operation has actually finished.",
+      "conversation_plan": "The user wants the cluster creation confirmed as complete, not just started. If the assistant only reports that the cluster was requested, ask it to confirm the operation finished. Then end the conversation.",
       "expected_trajectory": [
-        "toolbox__create_instance",
+        "toolbox__create_cluster",
         "toolbox__wait_for_operation"
       ],
       "kind": "tools",
@@ -13,10 +13,10 @@
     },
     {
       "id": "alloydbpg-admin-02",
-      "starting_prompt": "We need an isolated AlloyDB cluster for testing. Create a cluster named ${ALLOYDB_POSTGRES_CLUSTER} in location ${ALLOYDB_POSTGRES_REGION} on the 'default' network with initial user 'postgres' and password 'EvalTestPass123!'. Tell me once the operation has actually finished.",
-      "conversation_plan": "The user wants the cluster creation confirmed as complete, not just started. If the assistant only reports that the cluster was requested, ask it to confirm the operation finished. Then end the conversation.",
+      "starting_prompt": "We need additional read capacity on AlloyDB cluster ${ALLOYDB_POSTGRES_CLUSTER} in ${ALLOYDB_POSTGRES_REGION}. Create a READ_POOL instance named ${ALLOYDB_POSTGRES_INSTANCE} with 1 node, and tell me once the operation has actually finished.",
+      "conversation_plan": "The user wants the instance creation confirmed as complete, not just started. If the assistant only reports that the instance was requested, ask it to confirm the operation finished. Then end the conversation.",
       "expected_trajectory": [
-        "toolbox__create_cluster",
+        "toolbox__create_instance",
         "toolbox__wait_for_operation"
       ],
       "kind": "tools",
