@@ -17,7 +17,6 @@ package text
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
@@ -39,7 +38,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 				Type:     resourceType,
 				MimeType: "text/plain",
 			},
-			URI: fmt.Sprintf("text://%s", url.PathEscape(name)),
+			URI: fmt.Sprintf("text://%s", name),
 		},
 	}
 	if err := decoder.DecodeContext(ctx, cfg); err != nil {

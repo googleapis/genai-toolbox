@@ -55,7 +55,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (resourc
 				Name: name,
 				Type: resourceType,
 			},
-			URI: fmt.Sprintf("file://%s", url.PathEscape(name)),
+			URI: fmt.Sprintf("file://%s", name),
 		},
 		baseDir: resources.GetBaseDirFromContext(ctx),
 	}

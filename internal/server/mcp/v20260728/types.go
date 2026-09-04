@@ -191,9 +191,9 @@ type Implementation struct {
 // server can define its own, additional capabilities.
 type ServerCapabilities struct {
 	Extensions map[string]any `json:"extensions,omitempty"`
-	Tools     *ListChanged `json:"tools,omitempty"`
-	Prompts   *ListChanged `json:"prompts,omitempty"`
-	Resources *struct {
+	Tools      *ListChanged   `json:"tools,omitempty"`
+	Prompts    *ListChanged   `json:"prompts,omitempty"`
+	Resources  *struct {
 		Subscribe   *bool `json:"subscribe,omitempty"`
 		ListChanged *bool `json:"listChanged,omitempty"`
 	} `json:"resources,omitempty"`
@@ -615,22 +615,28 @@ type ReadResourceRequestParams struct {
 
 // The result returned by the server for a {@link ReadResourceRequest | resources/read} request.
 type ReadResourceResult struct {
-	jsonrpc.Result
+	Result
 	CacheableResult
 	// Could be either TextResourceContents or BlobResourceContents.
 	// For Toolbox, we will only be sending TextResourceContents.
 	Contents []TextResourceContents `json:"contents"`
 }
 
-// Text file contents
-type TextResourceContents struct {
+// The contents of a specific resource or sub-resource.
+type ResourceContents struct {
 	// The URI of this resource.
 	Uri string `json:"uri"`
 	// The MIME type of this resource, if known.
 	MimeType string `json:"mimeType,omitempty"`
-	// The text of the item. This must only be set if the item can actually be represented as text (not binary data).
-	Text     string         `json:"text"`
+	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
 	Metadata map[string]any `json:"_meta,omitempty"`
+}
+
+// Text file contents
+type TextResourceContents struct {
+	ResourceContents
+	// The text of the item. This must only be set if the item can actually be represented as text (not binary data).
+	Text string `json:"text"`
 }
 
 /* Groups */

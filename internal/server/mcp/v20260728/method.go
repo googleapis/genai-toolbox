@@ -23,11 +23,14 @@ import (
 	"io/fs"
 	"maps"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
@@ -969,6 +972,38 @@ func resourceTemplatesListHandler(ctx context.Context, id jsonrpc.RequestId, pri
 	}, nil
 }
 
+// getResourceOrTemplateByURI looks up a resource by exact URI match within a group.
+// If not found, it attempts to match against resource templates (e.g. file://{path}).
+// Returns the matched resource OR template, plus extracted params if a template was matched.
+func getResourceOrTemplateByURI(uri string, g group.Group, primitiveMgr *primitives.PrimitiveManager) (resources.Resource, resources.ResourceTemplate, map[string]any, error) {
+	for _, name := range g.ResourceNames {
+		if res, ok := primitiveMgr.GetResource(name); ok {
+			if res.GetURI() == uri {
+				return res, nil, nil, nil
+			}
+		}
+	}
+
+	for _, name := range g.ResourceTemplateNames {
+		if rt, ok := primitiveMgr.GetResourceTemplate(name); ok {
+			tmpl := rt.GetURITemplate()
+			if strings.Contains(tmpl, "{path}") {
+				regexPattern := regexp.QuoteMeta(tmpl)
+				regexPattern = strings.ReplaceAll(regexPattern, "\\{path\\}", "(.*)")
+				re, err := regexp.Compile("^" + regexPattern + "$")
+				if err != nil {
+					continue
+				}
+				matches := re.FindStringSubmatch(uri)
+				if len(matches) == 2 {
+					return nil, rt, map[string]any{"path": matches[1]}, nil
+				}
+			}
+		}
+	}
+	return nil, nil, nil, fmt.Errorf("no resource or template found for URI: %s", uri)
+}
+
 // resourcesReadHandler generates a response for resources/read.
 func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *primitives.PrimitiveManager, g group.Group, body []byte, header http.Header) (any, error) {
 	// retrieve logger from context
@@ -1005,7 +1040,7 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 		genAIAttrs.OperationName = "read_resource"
 	}
 
-	res, resTmpl, params, err := primitiveMgr.GetResourceOrTemplateByURI(uri, g)
+	res, resTmpl, params, err := getResourceOrTemplateByURI(uri, g, primitiveMgr)
 	if err != nil {
 		err = fmt.Errorf("resource lookup failed: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
@@ -1044,18 +1079,23 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 	}
 
 	result := &ReadResourceResult{
-		Result: jsonrpc.Result{
-			Meta: meta,
+		Result: Result{
+			ResultType: resultTypeComplete,
+			Result: jsonrpc.Result{
+				Meta: meta,
+			},
 		},
 		CacheableResult: CacheableResult{
-			TtlMs:      300000, // 5 minutes
-			CacheScope: cacheScopePublic,
+			TtlMs:      g.GetTTLMs(),
+			CacheScope: cacheScope(g.GetCacheScope()),
 		},
 		Contents: []TextResourceContents{
 			{
-				Uri:      uri,
-				MimeType: mimeType,
-				Text:     textContent,
+				ResourceContents: ResourceContents{
+					Uri:      uri,
+					MimeType: mimeType,
+				},
+				Text: textContent,
 			},
 		},
 	}
@@ -1066,6 +1106,7 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 		Result:  result,
 	}, nil
 }
+
 // validateAndMergeSecureParams validates and merges standard and secure arguments.
 func validateAndMergeSecureParams(ctx context.Context, req *CallToolRequest, paramDefs parameters.Parameters) (map[string]any, error, error) {
 	secureParamMap := make(map[string]bool)

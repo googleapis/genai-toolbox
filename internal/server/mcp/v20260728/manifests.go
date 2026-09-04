@@ -242,9 +242,12 @@ func GenerateListResourcesResult(pMgr *primitives.PrimitiveManager, g group.Grou
 	}
 	return ListResourcesResult{
 		Resources: mcpManifest,
+		Result: Result{
+			ResultType: resultTypeComplete,
+		},
 		CacheableResult: CacheableResult{
-			TtlMs:      300000, // 5 minutes
-			CacheScope: cacheScopePublic,
+			TtlMs:      g.GetTTLMs(),
+			CacheScope: cacheScope(g.GetCacheScope()),
 		},
 	}, nil
 }
@@ -276,9 +279,12 @@ func GenerateListResourceTemplatesResult(pMgr *primitives.PrimitiveManager, g gr
 	}
 	return ListResourceTemplatesResult{
 		ResourceTemplates: mcpManifest,
+		Result: Result{
+			ResultType: resultTypeComplete,
+		},
 		CacheableResult: CacheableResult{
-			TtlMs:      300000, // 5 minutes
-			CacheScope: cacheScopePublic,
+			TtlMs:      g.GetTTLMs(),
+			CacheScope: cacheScope(g.GetCacheScope()),
 		},
 	}, nil
 }

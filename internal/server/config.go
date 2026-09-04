@@ -727,12 +727,7 @@ func UnmarshalYAMLResourceTemplateConfig(ctx context.Context, name string, r map
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
 
-	yamlBytes, err := yaml.Marshal(r)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling resource config for %q: %s", name, err)
-	}
-
-	dec := yaml.NewDecoder(bytes.NewReader(yamlBytes), yaml.UseOrderedMap(), yaml.Strict())
+	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %s", err)
 	}
