@@ -98,19 +98,16 @@ type ClientCapabilities struct {
 	Sampling struct{} `json:"sampling,omitempty"`
 }
 
-// ResourceCapabilities represents the capabilities of the server for resources.
-type ResourceCapabilities struct {
-	Subscribe   bool `json:"subscribe,omitempty"`
-	ListChanged bool `json:"listChanged,omitempty"`
-}
-
 // ServerCapabilities represents capabilities that a server may support. Known
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // server can define its own, additional capabilities.
 type ServerCapabilities struct {
-	Tools     *ListChanged          `json:"tools,omitempty"`
-	Prompts   *ListChanged          `json:"prompts,omitempty"`
-	Resources *ResourceCapabilities `json:"resources,omitempty"`
+	Tools     *ListChanged `json:"tools,omitempty"`
+	Prompts   *ListChanged `json:"prompts,omitempty"`
+	Resources *struct {
+		Subscribe   *bool `json:"subscribe,omitempty"`
+		ListChanged *bool `json:"listChanged,omitempty"`
+	} `json:"resources,omitempty"`
 }
 
 // Base interface for metadata with name (identifier) and title (display name) properties.
@@ -365,33 +362,49 @@ type ListResourcesRequest struct {
 	PaginatedRequest
 }
 
-// Resource represents a single resource that a client can read from a server.
+// A known resource that the server is capable of reading.
 type Resource struct {
 	BaseMetadata
-	// A description of the resource.
+	// A description of what this resource represents.
+	//
+	// This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
 	Description string `json:"description,omitempty"`
 	// The URI of this resource.
 	Uri string `json:"uri"`
 	// The MIME type of this resource, if known.
 	MimeType string `json:"mimeType,omitempty"`
-	// The size of the resource in bytes.
+	// The size of the raw resource content, in bytes (i.e., before base64 encoding or any tokenization), if known.
+	//
+	// This can be used by Hosts to display file sizes and estimate context window usage.
 	Size *int64 `json:"size,omitempty"`
-	// Optional additional resource information.
-	Annotations *ResourceAnnotations `json:"annotations,omitempty"`
+	// Optional annotations for the client.
+	Annotations *Annotations `json:"annotations,omitempty"`
 	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
 	Metadata map[string]any `json:"_meta,omitempty"`
 }
 
-// ResourceAnnotations represents the annotations for a resource.
-type ResourceAnnotations struct {
-	// Describes who the intended customer of this object or data is.
+// Optional annotations for the client. The client can use annotations to inform how objects are used or displayed
+type Annotations struct {
+	// Describes who the intended audience of this object or data is.
+	//
+	// It can include multiple entries to indicate content useful for multiple audiences (e.g., `["user", "assistant"]`).
 	Audience []Role `json:"audience,omitempty"`
 	// Describes how important this data is for operating the server.
-	Priority     float64 `json:"priority,omitempty"`
-	LastModified string  `json:"lastModified,omitempty"`
+	//
+	// A value of 1 means "most important," and indicates that the data is
+	// effectively required, while 0 means "least important," and indicates that
+	// the data is entirely optional.
+	Priority *float64 `json:"priority,omitempty"`
+	// The moment the resource was last modified, as an ISO 8601 formatted string.
+	//
+	// Should be an ISO 8601 formatted string (e.g., "2025-01-12T15:00:58Z").
+	//
+	// Examples: last activity timestamp in an open file, timestamp when the resource
+	// was attached, etc.
+	LastModified string `json:"lastModified,omitempty"`
 }
 
-// ListResourcesResult represents the result of a list resources request.
+// The server's response to a resources/list request from the client.
 type ListResourcesResult struct {
 	PaginatedResult
 	Resources []Resource `json:"resources"`
@@ -402,48 +415,64 @@ type ListResourceTemplatesRequest struct {
 	PaginatedRequest
 }
 
-// ResourceTemplate represents a template for a resource that a client can resolve.
+// A template description for resources available on the server.
 type ResourceTemplate struct {
 	BaseMetadata
-	// A description of what this template is for.
-	Description string `json:"description,omitempty"`
 	// A URI template (according to RFC 6570) that can be used to construct resource URIs.
 	UriTemplate string `json:"uriTemplate"`
-	// The MIME type for all resources that match this template, if known.
+	// A description of what this template is for.
+	//
+	// This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
+	Description string `json:"description,omitempty"`
+	// The MIME type for all resources that match this template. This should only be included if all resources matching this template have the same type.
 	MimeType string `json:"mimeType,omitempty"`
-	// Optional additional resource information.
-	Annotations *ResourceAnnotations `json:"annotations,omitempty"`
+	// Optional annotations for the client.
+	Annotations *Annotations `json:"annotations,omitempty"`
 	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
 	Metadata map[string]any `json:"_meta,omitempty"`
 }
 
-// ListResourceTemplatesResult represents the result of a list resource templates request.
+// The server's response to a resources/templates/list request from the client.
 type ListResourceTemplatesResult struct {
 	PaginatedResult
 	ResourceTemplates []ResourceTemplate `json:"resourceTemplates"`
 }
 
-// Sent from the client to read a specific resource URI.
+// Sent from the client to the server, to read a specific resource URI.
 type ReadResourceRequest struct {
 	jsonrpc.Request
-	Params struct {
-		// The URI of the resource to read.
-		Uri string `json:"uri"`
-	} `json:"params"`
+	Params ReadResourceRequestParams `json:"params"`
 }
 
-// ReadResourceResult represents the result of a read resource request.
+// Parameters for a `resources/read` request.
+type ReadResourceRequestParams struct {
+	// The URI of the resource to read.
+	Uri string `json:"uri"`
+	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
+	Metadata map[string]any `json:"_meta,omitempty"`
+}
+
+// The server's response to a resources/read request from the client.
 type ReadResourceResult struct {
 	jsonrpc.Result
-	Contents []TextResourceContent `json:"contents"`
+	// Could be either TextResourceContents or BlobResourceContents.
+	// For Toolbox, we will only be sending TextResourceContents.
+	Contents []TextResourceContents `json:"contents"`
 }
 
-// TextResourceContent represents text-based resource content.
-type TextResourceContent struct {
-	// The URI of the resource.
+// The contents of a specific resource or sub-resource.
+type ResourceContents struct {
+	// The URI of this resource.
 	Uri string `json:"uri"`
 	// The MIME type of this resource, if known.
 	MimeType string `json:"mimeType,omitempty"`
-	// The text of the resource.
+	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
+	Metadata map[string]any `json:"_meta,omitempty"`
+}
+
+// TextResourceContents represents text-based resource content.
+type TextResourceContents struct {
+	ResourceContents
+	// The text of the item. This must only be set if the item can actually be represented as text (not binary data).
 	Text string `json:"text"`
 }

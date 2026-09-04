@@ -264,6 +264,7 @@ func TestToolsCallHandler(t *testing.T) {
 	// Setup tools including the auth/unauth ones
 	mockTools := []testutils.MockTool{
 		testutils.MockTool1,
+		testutils.MockTool2,
 		testutils.MockTool4,
 		testutils.MockTool5,
 	}
@@ -271,12 +272,14 @@ func TestToolsCallHandler(t *testing.T) {
 	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups)
 
 	tests := []struct {
-		name        string
-		body        CallToolRequest
-		rawBody     []byte
-		context     context.Context
-		wantErr     bool
-		errContains string
+		name            string
+		body            CallToolRequest
+		rawBody         []byte
+		context         context.Context
+		wantErr         bool
+		errContains     string
+		wantIsError     bool
+		wantContentText string
 	}{
 		{
 			name:        "invalid json body",
@@ -352,6 +355,67 @@ func TestToolsCallHandler(t *testing.T) {
 			context: ctxLogger,
 			wantErr: false,
 		},
+		{
+			name: "successful invocation - URL bound parameters auto-populated",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: struct {
+					Name      string         `json:"name"`
+					Arguments map[string]any `json:"arguments,omitempty"`
+				}{
+					Name: "some_params",
+					Arguments: map[string]any{
+						"param2": 20,
+					},
+				},
+			},
+			context:     util.WithUrlParams(ctxLogger, map[string]string{"param1": "10"}),
+			wantErr:     false,
+			wantIsError: false,
+		},
+		{
+			name: "parameter validation error - missing required param",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: struct {
+					Name      string         `json:"name"`
+					Arguments map[string]any `json:"arguments,omitempty"`
+				}{
+					Name:      "some_params",
+					Arguments: map[string]any{},
+				},
+			},
+			context:         ctxLogger,
+			wantErr:         false,
+			wantIsError:     true,
+			wantContentText: `provided parameters were invalid: parameter "param1" is required`,
+		},
+		{
+			name: "URL bound parameter override by client returns error",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: struct {
+					Name      string         `json:"name"`
+					Arguments map[string]any `json:"arguments,omitempty"`
+				}{
+					Name: "some_params",
+					Arguments: map[string]any{
+						"param1": 10,
+						"param2": 20,
+					},
+				},
+			},
+			context:         util.WithUrlParams(ctxLogger, map[string]string{"param1": "10"}),
+			wantErr:         false,
+			wantIsError:     true,
+			wantContentText: `parameter "param1" is bound by URL and cannot be provided in client arguments`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -379,6 +443,25 @@ func TestToolsCallHandler(t *testing.T) {
 				}
 				if got == nil {
 					t.Errorf("expected valid response, got nil")
+				}
+				res, ok := got.(jsonrpc.JSONRPCResponse)
+				if !ok {
+					t.Fatalf("expected jsonrpc.JSONRPCResponse, got %T", got)
+				}
+				callResult, ok := res.Result.(CallToolResult)
+				if !ok {
+					t.Fatalf("expected CallToolResult, got %T", res.Result)
+				}
+				if callResult.IsError != tt.wantIsError {
+					t.Errorf("callResult.IsError = %v, want %v", callResult.IsError, tt.wantIsError)
+				}
+				if tt.wantContentText != "" {
+					if len(callResult.Content) == 0 {
+						t.Fatalf("expected content in result, got empty")
+					}
+					if !strings.Contains(callResult.Content[0].Text, tt.wantContentText) {
+						t.Errorf("callResult.Content[0].Text = %q, want string containing %q", callResult.Content[0].Text, tt.wantContentText)
+					}
 				}
 			}
 		})
@@ -777,9 +860,7 @@ func TestResourcesReadHandler(t *testing.T) {
 			name: "success",
 			body: ReadResourceRequest{
 				Request: jsonrpc.Request{Method: "resources/read"},
-				Params: struct {
-					Uri string `json:"uri"`
-				}{
+				Params: ReadResourceRequestParams{
 					Uri: "file:///res1",
 				},
 			},
@@ -789,9 +870,7 @@ func TestResourcesReadHandler(t *testing.T) {
 			name: "not found",
 			body: ReadResourceRequest{
 				Request: jsonrpc.Request{Method: "resources/read"},
-				Params: struct {
-					Uri string `json:"uri"`
-				}{
+				Params: ReadResourceRequestParams{
 					Uri: "file:///notfound",
 				},
 			},
@@ -829,4 +908,80 @@ func TestResourcesReadHandler(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetResourceOrTemplateByURI(t *testing.T) {
+	resourcesMap := map[string]resources.Resource{
+		"res1": testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
+		"res2": testutils.NewMockResource("res2", "file:///res2", "", "", "", nil, nil),
+	}
+	templatesMap := map[string]resources.ResourceTemplate{
+		"tmpl1": testutils.NewMockResourceTemplate("tmpl1", "file:///tmpl/{path}", "", "", "", nil),
+		"tmpl2": testutils.NewMockResourceTemplate("tmpl2", "file:///other/{path}", "", "", "", nil),
+	}
+
+	// Create a group that only contains res1 and tmpl1
+	g, err := group.GroupConfig{
+		Name:                  "test_group",
+		ResourceNames:         []string{"res1"},
+		ResourceTemplateNames: []string{"tmpl1"},
+	}.Initialize(nil, nil, resourcesMap, templatesMap)
+	if err != nil {
+		t.Fatalf("failed to init group: %v", err)
+	}
+
+	primMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, resourcesMap, templatesMap, map[string]group.Group{"test_group": g})
+
+	t.Run("Exact Match Resource", func(t *testing.T) {
+		res, tmpl, params, err := getResourceOrTemplateByURI("file:///res1", g, primMgr)
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		if res == nil || res.GetName() != "res1" {
+			t.Errorf("expected res1, got %v", res)
+		}
+		if tmpl != nil {
+			t.Errorf("expected nil template, got %v", tmpl)
+		}
+		if params != nil {
+			t.Errorf("expected nil params, got %v", params)
+		}
+	})
+
+	t.Run("Excluded Resource (Not in Group)", func(t *testing.T) {
+		_, _, _, err := getResourceOrTemplateByURI("file:///res2", g, primMgr)
+		if err == nil {
+			t.Fatal("expected error for resource not in group")
+		}
+	})
+
+	t.Run("Template Match", func(t *testing.T) {
+		res, tmpl, params, err := getResourceOrTemplateByURI("file:///tmpl/foo/bar.txt", g, primMgr)
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		if res != nil {
+			t.Errorf("expected nil resource, got %v", res)
+		}
+		if tmpl == nil || tmpl.GetName() != "tmpl1" {
+			t.Errorf("expected tmpl1, got %v", tmpl)
+		}
+		if params["path"] != "foo/bar.txt" {
+			t.Errorf("expected path param 'foo/bar.txt', got %v", params["path"])
+		}
+	})
+
+	t.Run("Excluded Template (Not in Group)", func(t *testing.T) {
+		_, _, _, err := getResourceOrTemplateByURI("file:///other/baz.txt", g, primMgr)
+		if err == nil {
+			t.Fatal("expected error for template not in group")
+		}
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		_, _, _, err := getResourceOrTemplateByURI("file:///unknown", g, primMgr)
+		if err == nil {
+			t.Fatal("expected error for unknown URI")
+		}
+	})
 }

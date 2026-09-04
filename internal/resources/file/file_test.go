@@ -19,7 +19,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -27,16 +29,191 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/goccy/go-yaml"
+	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/resources/file"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 const defaultMaxFileSize = 5 * 1024 * 1024
 
+func TestParseFromYamlFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	validPath := filepath.Join(tmpDir, "valid.txt")
+	if err := os.WriteFile(validPath, []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ResourceConfigs
+	}{
+		{
+			desc: "basic example",
+			in: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			`, filepath.ToSlash(validPath)),
+			want: server.ResourceConfigs{
+				"my-file": &file.Config{
+					ResourceConfigBase: resources.ResourceConfigBase{
+						ConfigBase: resources.ConfigBase{
+							Name:        "my-file",
+							Type:        "file",
+							Annotations: &resources.ResourceAnnotations{Priority: func(f float64) *float64 { return &f }(1.0)},
+						},
+						URI: "file://my-file",
+					},
+					Path: filepath.ToSlash(validPath),
+				},
+			},
+		},
+		{
+			desc: "with max_size and annotations",
+			in: fmt.Sprintf(`
+			kind: resource
+			name: my-file-annotated
+			type: file
+			path: %s
+			max_size: 1024
+			annotations:
+				priority: 0.5
+				audience:
+					- user
+				lastModified: 2024-01-01T00:00:00Z
+			`, filepath.ToSlash(validPath)),
+			want: server.ResourceConfigs{
+				"my-file-annotated": &file.Config{
+					ResourceConfigBase: resources.ResourceConfigBase{
+						ConfigBase: resources.ConfigBase{
+							Name: "my-file-annotated",
+							Type: "file",
+							Annotations: &resources.ResourceAnnotations{
+								Priority:     func(f float64) *float64 { return &f }(0.5),
+								Audience:     []resources.AudienceRole{resources.RoleUser},
+								LastModified: "2024-01-01T00:00:00Z",
+							},
+						},
+						URI: "file://my-file-annotated",
+					},
+					Path:    filepath.ToSlash(validPath),
+					MaxSize: func(i int64) *int64 { return &i }(1024),
+				},
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, _, _, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(file.Config{})); diff != "" {
+				t.Fatalf("incorrect parse (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestFailParseFromYaml(t *testing.T) {
+	tmpDir := t.TempDir()
+	validPath := filepath.Join(tmpDir, "valid.txt")
+	if err := os.WriteFile(validPath, []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "extra field",
+			in: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			foo: bar
+			`, filepath.ToSlash(validPath)),
+			err: "unknown field \"foo\"",
+		},
+		{
+			desc: "missing required path field",
+			in: `
+			kind: resource
+			name: my-file
+			type: file
+			`,
+			err: "Field validation for 'Path' failed on the 'required' tag",
+		},
+		{
+			desc: "max_size zero",
+			in: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			max_size: 0
+			`, filepath.ToSlash(validPath)),
+			err: "must be greater than 0",
+		},
+		{
+			desc: "max_size negative",
+			in: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			max_size: -50
+			`, filepath.ToSlash(validPath)),
+			err: "must be greater than 0",
+		},
+		{
+			desc: "max_size too large",
+			in: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			max_size: 2000000000
+			`, filepath.ToSlash(validPath)),
+			err: "cannot exceed 1GB",
+		},
+		{
+			desc: "max_size type string",
+			in: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			max_size: 50MB
+			`, filepath.ToSlash(validPath)),
+			err: "cannot unmarshal",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, _, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			if !strings.Contains(err.Error(), tc.err) {
+				t.Fatalf("unexpected error: got %q, want %q", err.Error(), tc.err)
+			}
+		})
+	}
+}
 
 // TestFileResource_Validation verifies that the file resource correctly validates
-// configurations at boot and runtime, blocking invalid paths, missing fields,
-// negative size limits, directory evasions, and non-allowed file extensions.
+// configurations at boot runtime, blocking invalid paths, directory evasions,
+// non-regular files, and non-allowed file extensions.
 func TestFileResource_Validation(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -59,79 +236,103 @@ func TestFileResource_Validation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	validPath := filepath.Join(tmpDir, "valid.txt")
-	if err := os.WriteFile(validPath, []byte("content"), 0644); err != nil {
+	nonExistentPath := filepath.Join(tmpDir, "nonexistent.txt")
+
+	noPermPath := filepath.Join(tmpDir, "noperm.txt")
+	if err := os.WriteFile(noPermPath, []byte("noperm"), 0000); err != nil {
 		t.Fatal(err)
+	}
+	if runtime.GOOS == "windows" {
+		if err := exec.Command("icacls", noPermPath, "/deny", "*S-1-1-0:(R)").Run(); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			_ = exec.Command("icacls", noPermPath, "/remove:d", "*S-1-1-0").Run()
+		})
 	}
 
 	tests := []struct {
 		name       string
 		yamlStr    string
 		wantErrMsg string
-		failDecode bool
 	}{
 		{
-			name:       "path traversal",
-			yamlStr:    fmt.Sprintf("type: file\npath: %s", "../secrets.txt"),
+			name: "path traversal",
+			yamlStr: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			`, "../secrets.txt"),
 			wantErrMsg: "relative path \"../secrets.txt\" is unsafe",
 		},
 		{
-			name:       "invalid extension",
-			yamlStr:    fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(exePath)),
+			name: "invalid extension",
+			yamlStr: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			`, filepath.ToSlash(exePath)),
 			wantErrMsg: "invalid extension",
 		},
 		{
-			name:       "non-regular file directory",
-			yamlStr:    fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(dirPath)),
+			name: "non-regular file directory",
+			yamlStr: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			`, filepath.ToSlash(dirPath)),
 			wantErrMsg: "not a regular file",
 		},
 		{
-			name:       "symlink evasion",
-			yamlStr:    fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(symlinkPath)),
+			name: "symlink evasion",
+			yamlStr: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			`, filepath.ToSlash(symlinkPath)),
 			wantErrMsg: "invalid extension",
 		},
 		{
-			name:       "max_size zero",
-			yamlStr:    fmt.Sprintf("type: file\npath: %s\nmax_size: 0", filepath.ToSlash(validPath)),
-			wantErrMsg: "must be greater than 0",
-			failDecode: true,
+			name: "non-existent file",
+			yamlStr: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			`, filepath.ToSlash(nonExistentPath)),
+			wantErrMsg: "file not found",
 		},
-		{
-			name:       "max_size negative",
-			yamlStr:    fmt.Sprintf("type: file\npath: %s\nmax_size: -50", filepath.ToSlash(validPath)),
-			wantErrMsg: "must be greater than 0",
-			failDecode: true,
-		},
-		{
-			name:       "max_size too large",
-			yamlStr:    fmt.Sprintf("type: file\npath: %s\nmax_size: 2000000000", filepath.ToSlash(validPath)),
-			wantErrMsg: "cannot exceed 1GB",
-			failDecode: true,
-		},
-		{
-			name:       "max_size type string",
-			yamlStr:    fmt.Sprintf("type: file\npath: %s\nmax_size: 50MB", filepath.ToSlash(validPath)),
-			wantErrMsg: "cannot unmarshal",
-			failDecode: true,
-		},
+	}
+
+	if os.Geteuid() != 0 {
+		tests = append(tests, struct {
+			name       string
+			yamlStr    string
+			wantErrMsg string
+		}{
+			name: "missing read permissions",
+			yamlStr: fmt.Sprintf(`
+			kind: resource
+			name: my-file
+			type: file
+			path: %s
+			`, filepath.ToSlash(noPermPath)),
+			wantErrMsg: "missing read permissions",
+		})
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			decoder := yaml.NewDecoder(bytes.NewReader([]byte(tt.yamlStr)), yaml.Strict(), yaml.Validator(validator.New()))
-			cfg, err := resources.DecodeConfig(ctx, "file", "my-file", decoder)
-
-			if tt.failDecode {
-				if err == nil || !strings.Contains(err.Error(), tt.wantErrMsg) {
-					t.Fatalf("expected DecodeConfig to fail with %q, got err: %v", tt.wantErrMsg, err)
-				}
-				return
-			}
+			_, _, _, _, _, resConfigs, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tt.yamlStr))
 			if err != nil {
-				t.Fatalf("DecodeConfig failed unexpectedly: %v", err)
+				t.Fatalf("UnmarshalPrimitiveConfig failed unexpectedly: %v", err)
 			}
-
+			cfg := resConfigs["my-file"]
 			_, err = cfg.Initialize(ctx)
 			if err == nil || !strings.Contains(err.Error(), tt.wantErrMsg) {
 				t.Fatalf("expected Initialize to fail with %q, got err: %v", tt.wantErrMsg, err)
@@ -230,7 +431,7 @@ func TestFileResource_Truncation(t *testing.T) {
 		{
 			name:      "default truncation 5MB",
 			yamlStr:   fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(largePath)),
-			wantSize:  defaultMaxFileSize,
+			wantSize:  int64(defaultMaxFileSize),
 			wantTrunc: true,
 		},
 		{
@@ -376,14 +577,13 @@ func TestFileResource_Metadata(t *testing.T) {
 	}
 }
 
-// TestFileResource_NonExistentFileAtBoot ensures that if a resource file does
-// not yet exist during server boot (e.g., dynamically generated build outputs),
-// the resource cleanly initializes without crashing, and begins serving once created.
-func TestFileResource_NonExistentFileAtBoot(t *testing.T) {
+// TestFileResource_NonExistentFileFailsAtBoot ensures that if a resource file does
+// not yet exist during server boot, the server halts.
+func TestFileResource_NonExistentFileFailsAtBoot(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "delayed.txt")
 
-	yamlStr := fmt.Sprintf("type: file\npath: %s", filepath.ToSlash(filePath))
+	yamlStr := "type: file\npath: " + filepath.ToSlash(filePath)
 	ctx := context.Background()
 	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
 	cfg, err := resources.DecodeConfig(ctx, "file", "delayed", decoder)
@@ -391,26 +591,12 @@ func TestFileResource_NonExistentFileAtBoot(t *testing.T) {
 		t.Fatalf("DecodeConfig failed: %v", err)
 	}
 
-	res, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("Initialize failed unexpectedly for non-existent file: %v", err)
-	}
-
-	_, err = res.Read(ctx, nil)
+	_, err = cfg.Initialize(ctx)
 	if err == nil {
-		t.Fatalf("Expected Read to fail for non-existent file")
+		t.Fatalf("Initialize succeeded unexpectedly for non-existent file")
 	}
-
-	if err := os.WriteFile(filePath, []byte("it exists now"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	data, err := res.Read(ctx, nil)
-	if err != nil {
-		t.Fatalf("Read failed after file creation: %v", err)
-	}
-	if data.(string) != "it exists now" {
-		t.Errorf("Expected 'it exists now', got %q", data)
+	if !strings.Contains(err.Error(), "files must exist at boot time to prevent dead URIs") {
+		t.Errorf("Expected boot-time existence error, got: %v", err)
 	}
 }
 
@@ -550,48 +736,6 @@ func TestFileResource_UTF8Truncation(t *testing.T) {
 	}
 }
 
-// TestFileResource_DelayedSymlinkEscape verifies that an attacker cannot bypass
-// base directory sandboxing by intentionally delaying the creation of a target
-// file and subsequently linking it outside the workspace boundary.
-func TestFileResource_DelayedSymlinkEscape(t *testing.T) {
-	tmpDir := t.TempDir()
-	secretFile := filepath.Join(tmpDir, "secret.txt")
-	if err := os.WriteFile(secretFile, []byte("super secret password"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	baseDir := filepath.Join(tmpDir, "workspace")
-	if err := os.MkdirAll(baseDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	yamlStr := "type: file\npath: delayed.txt"
-	ctx := context.WithValue(context.Background(), resources.BaseDirKey, baseDir)
-	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
-	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
-	if err != nil {
-		t.Fatalf("DecodeConfig failed: %v", err)
-	}
-
-	res, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("Initialize failed: %v", err)
-	}
-
-	delayedPath := filepath.Join(baseDir, "delayed.txt")
-	if err := os.Symlink(secretFile, delayedPath); err != nil {
-		t.Fatalf("failed to create delayed symlink: %v", err)
-	}
-
-	_, err = res.Read(ctx, nil)
-	if err == nil {
-		t.Fatalf("expected Read to fail due to delayed symlink base escape, but it succeeded")
-	}
-	if !strings.Contains(err.Error(), "security violation") {
-		t.Errorf("expected security violation error, got: %v", err)
-	}
-}
-
 // TestFileResource_ToConfigNonRegularFile verifies that ToConfig does not
 // leak metadata (size and modification time) if the underlying target file
 // is swapped with a non-regular file (like a directory) post-initialization.
@@ -628,18 +772,3 @@ func TestFileResource_ToConfigNonRegularFile(t *testing.T) {
 		t.Errorf("Expected LastModified to be empty for non-regular file, got %q", config.Annotations.LastModified)
 	}
 }
-
-// TestFileResource_ToConfigAndType verifies that the file resource
-// and its config correctly return their type and can be converted back to config.
-func TestFileResource_ToConfigAndType(t *testing.T) {
-	cfg := file.Config{}
-	if cfg.ResourceConfigType() != "file" {
-		t.Errorf("expected ResourceConfigType to be 'file', got %q", cfg.ResourceConfigType())
-	}
-
-	res := file.FileResource{Config: cfg}
-	if res.ToConfig() == nil {
-		t.Errorf("expected ToConfig to return a valid config")
-	}
-}
-

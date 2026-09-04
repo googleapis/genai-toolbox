@@ -120,8 +120,12 @@ var prompt2Args = []any{
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	mockResources := []testutils.MockResource{testutils.MockResource1}
-	mockTemplates := []testutils.MockResourceTemplate{testutils.MockTemplate1}
+	mockResources := []testutils.MockResource{
+		testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
+	}
+	mockTemplates := []testutils.MockResourceTemplate{
+		testutils.NewMockResourceTemplate("tmpl1", "file:///tmpl/{path}", "", "", "", nil),
+	}
 	toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups := testutils.SetUpPrimitives(t, mockTools, mockPrompts, mockResources, mockTemplates)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups)
 	defer shutdown()
@@ -377,6 +381,62 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 				},
 			},
 		},
+		// TODO: Revisit these method not found exceptions in upcoming JSON-RPC PRs
+		{
+			name:  "resources/list invalid method",
+			url:   "/",
+			isErr: true,
+			body: jsonrpc.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "resources-list",
+				Request: jsonrpc.Request{Method: "resources/list"},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "resources-list",
+				"error": map[string]any{
+					"code":    -32601.0,
+					"message": `invalid method resources/list`,
+				},
+			},
+		},
+		{
+			name:  "resources/templates/list invalid method",
+			url:   "/",
+			isErr: true,
+			body: jsonrpc.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "templates-list",
+				Request: jsonrpc.Request{Method: "resources/templates/list"},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "templates-list",
+				"error": map[string]any{
+					"code":    -32601.0,
+					"message": `invalid method resources/templates/list`,
+				},
+			},
+		},
+		{
+			name:  "resources/read invalid method",
+			url:   "/",
+			isErr: true,
+			body: jsonrpc.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "resources-read",
+				Request: jsonrpc.Request{Method: "resources/read"},
+				Params:  map[string]any{"uri": "file:///res1"},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "resources-read",
+				"error": map[string]any{
+					"code":    -32601.0,
+					"message": `invalid method resources/read`,
+				},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -467,29 +527,39 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5, testutils.MockToolUrlBinding}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	mockResources := []testutils.MockResource{testutils.MockResource1}
-	mockTemplates := []testutils.MockResourceTemplate{testutils.MockTemplate1}
+	mockResources := []testutils.MockResource{
+		testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
+	}
+	mockTemplates := []testutils.MockResourceTemplate{
+		testutils.NewMockResourceTemplate("tmpl1", "file:///tmpl/{path}", "", "", "", nil),
+	}
 	toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups := testutils.SetUpPrimitives(t, mockTools, mockPrompts, mockResources, mockTemplates)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups, withEnableDraftSpecs())
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
 
+	// TODO: Revisit the invalid method exemptions (Method Not Found exceptions) in upcoming JSON-RPC PRs
 	versTestCases := []struct {
-		name                      string
-		protocol                  string
-		idHeader                  bool
-		reqHeader                 []string
-		initWant                  map[string]any
-		invalidMethods            []string
-		meta                      map[string]any
-		wantToolsList             map[string]any
-		wantPromptsList           map[string]any
-		wantPromptsGet            map[string]any
-		wantToolsListOnTool1      map[string]any
-		wantToolsCallOnTool1      map[string]any
-		wantToolsListWithURLParam map[string]any
-		wantToolsCallWithURLParam map[string]any
+		name                                   string
+		protocol                               string
+		idHeader                               bool
+		reqHeader                              []string
+		initWant                               map[string]any
+		invalidMethods                         []string
+		meta                                   map[string]any
+		wantToolsList                          map[string]any
+		wantPromptsList                        map[string]any
+		wantPromptsGet                         map[string]any
+		wantToolsListOnTool1                   map[string]any
+		wantToolsCallOnTool1                   map[string]any
+		wantToolsListWithURLParam              map[string]any
+		wantToolsCallWithURLParam              map[string]any
+		wantToolsCallWithURLParamOverrideError map[string]any
+		wantToolsCallWithParamError            map[string]any
+		wantResourcesList                      map[string]any
+		wantTemplatesList                      map[string]any
+		wantResourcesRead                      map[string]any
 	}{
 		{
 			name:     "version 2024-11-05",
@@ -501,15 +571,14 @@ func TestMcpEndpoint(t *testing.T) {
 				"result": map[string]any{
 					"protocolVersion": "2024-11-05",
 					"capabilities": map[string]any{
-						"tools":     map[string]any{"listChanged": false},
-						"prompts":   map[string]any{"listChanged": false},
-						"resources": map[string]any{},
+						"tools":   map[string]any{"listChanged": false},
+						"prompts": map[string]any{"listChanged": false},
 					},
 					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
 
-			invalidMethods: []string{"server/discover"},
+			invalidMethods: []string{"server/discover", "resources/list", "resources/templates/list", "resources/read"},
 		},
 		{
 			name:     "version 2025-03-26",
@@ -521,14 +590,13 @@ func TestMcpEndpoint(t *testing.T) {
 				"result": map[string]any{
 					"protocolVersion": "2025-03-26",
 					"capabilities": map[string]any{
-						"tools":     map[string]any{"listChanged": false},
-						"prompts":   map[string]any{"listChanged": false},
-						"resources": map[string]any{},
+						"tools":   map[string]any{"listChanged": false},
+						"prompts": map[string]any{"listChanged": false},
 					},
 					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
-			invalidMethods: []string{"server/discover"},
+			invalidMethods: []string{"server/discover", "resources/list", "resources/templates/list", "resources/read"},
 		},
 		{
 			name:      "version 2025-06-18",
@@ -621,6 +689,60 @@ func TestMcpEndpoint(t *testing.T) {
 					"cacheScope": "public",
 					"_meta": map[string]any{
 						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantResourcesList: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "resources-list",
+				"result": map[string]any{
+					"resultType": "complete",
+					"resources": []any{
+						map[string]any{
+							"name": "res1",
+							"uri":  "file:///res1",
+						},
+					},
+					"ttlMs":      float64(300000),
+					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantTemplatesList: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "templates-list",
+				"result": map[string]any{
+					"resultType": "complete",
+					"resourceTemplates": []any{
+						map[string]any{
+							"name":        "tmpl1",
+							"uriTemplate": "file:///tmpl/{path}",
+						},
+					},
+					"ttlMs":      float64(300000),
+					"cacheScope": "public",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantResourcesRead: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "resources-read",
+				"result": map[string]any{
+					"resultType": "complete",
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+					"cacheScope": "public",
+					"ttlMs":      float64(300000),
+					"contents": []any{
+						map[string]any{
+							"uri":  "file:///res1",
+							"text": "mock resource data",
+						},
 					},
 				},
 			},
@@ -788,6 +910,40 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 				},
 			},
+			wantToolsCallWithURLParamOverrideError: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-url-binding-override",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `parameter "param1" is bound by URL and cannot be provided in client arguments`,
+						},
+					},
+					"isError": true,
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
+			wantToolsCallWithParamError: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-call-param-error",
+				"result": map[string]any{
+					"resultType": "complete",
+					"content": []any{
+						map[string]any{
+							"type": "text",
+							"text": `provided parameters were invalid: parameter "param1" is required`,
+						},
+					},
+					"isError": true,
+					"_meta": map[string]any{
+						"io.modelcontextprotocol/serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+					},
+				},
+			},
 		},
 	}
 	for _, vtc := range versTestCases {
@@ -856,6 +1012,9 @@ func TestMcpEndpoint(t *testing.T) {
 							"resultType":        "complete",
 							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 							"capabilities": map[string]any{
+								"extensions": map[string]any{
+									"com.google.cloud/toolbox.v1": map[string]any{},
+								},
 								"tools":     map[string]any{"listChanged": false},
 								"prompts":   map[string]any{"listChanged": false},
 								"resources": map[string]any{},
@@ -1095,14 +1254,14 @@ func TestMcpEndpoint(t *testing.T) {
 					url:   "/",
 					isErr: true,
 					batchBody: []jsonrpc.JSONRPCRequest{
-						jsonrpc.JSONRPCRequest{
+						{
 							Jsonrpc: "1.0",
 							Id:      "batch-requests1",
 							Request: jsonrpc.Request{
 								Method: "foo",
 							},
 						},
-						jsonrpc.JSONRPCRequest{
+						{
 							Jsonrpc: jsonrpcVersion,
 							Id:      "batch-requests2",
 							Request: jsonrpc.Request{
@@ -1311,6 +1470,144 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 					wantOverwrite: vtc.wantToolsCallWithURLParam,
 				},
+				{
+					name:       "resources/list",
+					url:        "/",
+					methodName: "resources/list",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "resources-list",
+						Request: jsonrpc.Request{Method: "resources/list"},
+					},
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "resources-list",
+						"result": map[string]any{
+							"resources": []any{
+								map[string]any{
+									"name": "res1",
+									"uri":  "file:///res1",
+								},
+							},
+						},
+					},
+					wantOverwrite: vtc.wantResourcesList,
+				},
+				{
+					name:       "resources/templates/list",
+					url:        "/",
+					methodName: "resources/templates/list",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "templates-list",
+						Request: jsonrpc.Request{Method: "resources/templates/list"},
+					},
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "templates-list",
+						"result": map[string]any{
+							"resourceTemplates": []any{
+								map[string]any{
+									"name":        "tmpl1",
+									"uriTemplate": "file:///tmpl/{path}",
+								},
+							},
+						},
+					},
+					wantOverwrite: vtc.wantTemplatesList,
+				},
+				{
+					name:       "resources/read",
+					url:        "/",
+					methodName: "resources/read",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "resources-read",
+						Request: jsonrpc.Request{Method: "resources/read"},
+						Params:  map[string]any{"uri": "file:///res1"},
+					},
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "resources-read",
+						"result": map[string]any{
+							"contents": []any{
+								map[string]any{
+									"uri":  "file:///res1",
+									"text": "mock resource data",
+								},
+							},
+						},
+					},
+					wantOverwrite: vtc.wantResourcesRead,
+				},
+				{
+					name: "tools/call with URL param override returns error",
+					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14&param6=%5B%22a%22%2C%22b%22%5D&param7=%7B%22k%22%3A%22v%22%7D",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-url-binding-override",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "url_binding_tool",
+							"arguments": map[string]any{
+								"param1": "client-override",
+								"param5": "unbound-value",
+							},
+						},
+					},
+					methodName:     "tools/call",
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-url-binding-override",
+						"result": map[string]any{
+							"content": []any{
+								map[string]any{
+									"type": "text",
+									"text": `parameter "param1" is bound by URL and cannot be provided in client arguments`,
+								},
+							},
+							"isError": true,
+						},
+					},
+					wantOverwrite: vtc.wantToolsCallWithURLParamOverrideError,
+				},
+				{
+					name: "tools/call with insufficient parameters returns tool error",
+					url:  "/",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-param-error",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name":      "some_params",
+							"arguments": map[string]any{},
+						},
+					},
+					methodName:     "tools/call",
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-param-error",
+						"result": map[string]any{
+							"content": []any{
+								map[string]any{
+									"type": "text",
+									"text": `provided parameters were invalid: parameter "param1" is required`,
+								},
+							},
+							"isError": true,
+						},
+					},
+					wantOverwrite: vtc.wantToolsCallWithParamError,
+				},
 			}
 			for i := range testCases {
 				tc := *testCases[i]
@@ -1400,8 +1697,12 @@ func TestMcpEndpoint(t *testing.T) {
 func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	mockResources := []testutils.MockResource{testutils.MockResource1}
-	mockTemplates := []testutils.MockResourceTemplate{testutils.MockTemplate1}
+	mockResources := []testutils.MockResource{
+		testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
+	}
+	mockTemplates := []testutils.MockResourceTemplate{
+		testutils.NewMockResourceTemplate("tmpl1", "file:///tmpl/{path}", "", "", "", nil),
+	}
 	toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups := testutils.SetUpPrimitives(t, mockTools, mockPrompts, mockResources, mockTemplates)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups)
 	defer shutdown()
@@ -1485,9 +1786,13 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 
 func TestInvalidProtocolVersionHeader(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
-	mockResources := []testutils.MockResource{testutils.MockResource1}
-	mockTemplates := []testutils.MockResourceTemplate{testutils.MockTemplate1}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1}
+	mockResources := []testutils.MockResource{
+		testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
+	}
+	mockTemplates := []testutils.MockResourceTemplate{
+		testutils.NewMockResourceTemplate("tmpl1", "file:///tmpl/{path}", "", "", "", nil),
+	}
 	toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups := testutils.SetUpPrimitives(t, mockTools, mockPrompts, mockResources, mockTemplates)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups)
 	defer shutdown()
@@ -1746,14 +2051,82 @@ func runSseRequest(ts *httptest.Server, path string, proto string) (*http.Respon
 	return resp, nil
 }
 
+// nonFlusherResponseWriter is an http.ResponseWriter that deliberately does not
+// implement http.Flusher, used to exercise sseHandler's missing-flusher path.
+type nonFlusherResponseWriter struct {
+	header http.Header
+	status int
+	body   bytes.Buffer
+}
+
+func (w *nonFlusherResponseWriter) Header() http.Header {
+	if w.header == nil {
+		w.header = make(http.Header)
+	}
+	return w.header
+}
+
+func (w *nonFlusherResponseWriter) Write(b []byte) (int, error) { return w.body.Write(b) }
+
+func (w *nonFlusherResponseWriter) WriteHeader(status int) { w.status = status }
+
+// TestSseHandlerWriterWithoutFlusher checks that when the ResponseWriter does
+// not implement http.Flusher, sseHandler reports a clean 500 instead of falling
+// through and dereferencing a nil flusher.
+func TestSseHandlerWriterWithoutFlusher(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	testLogger, err := log.NewStdLogger(os.Stderr, os.Stderr, "warn")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, testutils.MockVersionString, "", false, "", "toolbox")
+	if err != nil {
+		t.Fatalf("unable to setup otel: %s", err)
+	}
+	defer func() {
+		if err := otelShutdown(ctx); err != nil {
+			t.Fatalf("error shutting down OpenTelemetry: %s", err)
+		}
+	}()
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(testutils.MockVersionString)
+	if err != nil {
+		t.Fatalf("unable to create custom metrics: %s", err)
+	}
+
+	server := &Server{
+		version:         testutils.MockVersionString,
+		logger:          testLogger,
+		instrumentation: instrumentation,
+		sseManager:      newSseManager(ctx),
+		PrimitiveMgr:    primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil, nil, nil),
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/sse", nil).WithContext(ctx)
+	w := &nonFlusherResponseWriter{}
+
+	sseHandler(server, w, req)
+
+	if w.status != http.StatusInternalServerError {
+		t.Fatalf("expected status %d for a writer without a flusher, got %d", http.StatusInternalServerError, w.status)
+	}
+}
+
 func TestStdioSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	mockResources := []testutils.MockResource{testutils.MockResource1}
-	mockTemplates := []testutils.MockResourceTemplate{testutils.MockTemplate1}
+	mockResources := []testutils.MockResource{
+		testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
+	}
+	mockTemplates := []testutils.MockResourceTemplate{
+		testutils.NewMockResourceTemplate("tmpl1", "file:///tmpl/{path}", "", "", "", nil),
+	}
 	toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groups := testutils.SetUpPrimitives(t, mockTools, mockPrompts, mockResources, mockTemplates)
 
 	pr, pw, err := os.Pipe()
@@ -1980,44 +2353,59 @@ func TestExtractMeta(t *testing.T) {
 	}
 }
 
-// TestMcpPromptScopingByGroup is an end-to-end HTTP test that a `prompts/list`
-// request sent to a group's MCP endpoint returns only the prompts belonging to
+// TestMcpScopingByGroup is an end-to-end HTTP test that `prompts/list` and `resources/list`
+// requests sent to a group's MCP endpoint return only the prompts and resources belonging to
 // that group. It stands up the real server with two groups (each scoped to a
-// different prompt) and asserts each route surfaces just its own prompt.
-func TestMcpPromptScopingByGroup(t *testing.T) {
+// different prompt and resource) and asserts each route surfaces just its own primitives.
+func TestMcpScopingByGroup(t *testing.T) {
 	toolsMap := map[string]tools.Tool{}
 	promptsMap := map[string]prompts.Prompt{
 		testutils.MockPrompt1.Name: testutils.MockPrompt1,
 		testutils.MockPrompt2.Name: testutils.MockPrompt2,
 	}
-	groupA, err := group.GroupConfig{Name: "group_a", PromptNames: []string{testutils.MockPrompt1.Name}}.Initialize(toolsMap, promptsMap, nil, nil)
+	resourcesMap := map[string]resources.Resource{
+		"res1": testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
+		"res2": testutils.NewMockResource("res2", "file:///res2", "Title 2", "Title 2", "application/json", nil, nil),
+	}
+	groupA, err := group.GroupConfig{
+		Name:          "group_a",
+		PromptNames:   []string{testutils.MockPrompt1.Name},
+		ResourceNames: []string{"res1"},
+	}.Initialize(toolsMap, promptsMap, resourcesMap, nil)
 	if err != nil {
 		t.Fatalf("unable to initialize group_a: %s", err)
 	}
-	groupB, err := group.GroupConfig{Name: "group_b", PromptNames: []string{testutils.MockPrompt2.Name}}.Initialize(toolsMap, promptsMap, nil, nil)
+	groupB, err := group.GroupConfig{
+		Name:          "group_b",
+		PromptNames:   []string{testutils.MockPrompt2.Name},
+		ResourceNames: []string{"res2"},
+	}.Initialize(toolsMap, promptsMap, resourcesMap, nil)
 	if err != nil {
 		t.Fatalf("unable to initialize group_b: %s", err)
 	}
 	groups := map[string]group.Group{"group_a": groupA, "group_b": groupB}
-	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, nil, nil, groups)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, resourcesMap, nil, groups)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
 
 	testCases := []struct {
-		name        string
-		url         string
-		wantPrompts []any
+		name          string
+		url           string
+		wantPrompts   []any
+		wantResources []any
 	}{
 		{
-			name:        "group_a scopes to its own prompt",
-			url:         "/group_a",
-			wantPrompts: []any{map[string]any{"name": "prompt1"}},
+			name:          "group_a scopes to its own prompt and resource",
+			url:           "/group_a",
+			wantPrompts:   []any{map[string]any{"name": "prompt1"}},
+			wantResources: []any{map[string]any{"name": "res1", "uri": "file:///res1"}},
 		},
 		{
-			name:        "group_b scopes to its own prompt",
-			url:         "/group_b",
-			wantPrompts: []any{map[string]any{"name": "prompt2", "arguments": prompt2Args}},
+			name:          "group_b scopes to its own prompt and resource",
+			url:           "/group_b",
+			wantPrompts:   []any{map[string]any{"name": "prompt2", "arguments": prompt2Args}},
+			wantResources: []any{map[string]any{"name": "res2", "uri": "file:///res2", "title": "Title 2", "description": "Title 2", "mimeType": "application/json"}},
 		},
 	}
 	for _, tc := range testCases {
@@ -2034,80 +2422,34 @@ func TestMcpPromptScopingByGroup(t *testing.T) {
 			if resp.StatusCode != http.StatusOK {
 				t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, http.StatusOK)
 			}
-			var got map[string]any
-			if err := json.Unmarshal(body, &got); err != nil {
+			var gotPrompts map[string]any
+			if err := json.Unmarshal(body, &gotPrompts); err != nil {
 				t.Fatalf("unexpected error unmarshalling body: %s", err)
 			}
-			want := map[string]any{"jsonrpc": "2.0", "id": "prompts-list", "result": map[string]any{"prompts": tc.wantPrompts}}
-			if !reflect.DeepEqual(got, want) {
-				t.Fatalf("unexpected response: got %#v, want %#v", got, want)
+			wantPrompts := map[string]any{"jsonrpc": "2.0", "id": "prompts-list", "result": map[string]any{"prompts": tc.wantPrompts}}
+			if !reflect.DeepEqual(gotPrompts, wantPrompts) {
+				t.Fatalf("unexpected response: got %#v, want %#v", gotPrompts, wantPrompts)
 			}
-		})
-	}
-}
 
-// TestMcpResourceScopingByGroup is an end-to-end HTTP test that a `resources/list`
-// request sent to a group's MCP endpoint returns only the resources belonging to
-// that group. It stands up the real server with two groups (each scoped to a
-// different resource) and asserts each route surfaces just its own resource.
-func TestMcpResourceScopingByGroup(t *testing.T) {
-	toolsMap := map[string]tools.Tool{}
-	promptsMap := map[string]prompts.Prompt{}
-	resourcesMap := map[string]resources.Resource{
-		"res1": testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
-		"res2": testutils.NewMockResource("res2", "file:///res2", "Title 2", "Title 2", "application/json", nil, nil),
-	}
-	groupA, err := group.GroupConfig{Name: "group_a", ResourceNames: []string{"res1"}}.Initialize(toolsMap, promptsMap, resourcesMap, nil)
-	if err != nil {
-		t.Fatalf("unable to initialize group_a: %s", err)
-	}
-	groupB, err := group.GroupConfig{Name: "group_b", ResourceNames: []string{"res2"}}.Initialize(toolsMap, promptsMap, resourcesMap, nil)
-	if err != nil {
-		t.Fatalf("unable to initialize group_b: %s", err)
-	}
-	groups := map[string]group.Group{"group_a": groupA, "group_b": groupB}
-	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, resourcesMap, nil, groups)
-	defer shutdown()
-	ts := runServer(r, false)
-	defer ts.Close()
-
-	testCases := []struct {
-		name          string
-		url           string
-		wantResources []any
-	}{
-		{
-			name:          "group_a scopes to its own resource",
-			url:           "/group_a",
-			wantResources: []any{map[string]any{"name": "res1", "uri": "file:///res1"}},
-		},
-		{
-			name:          "group_b scopes to its own resource",
-			url:           "/group_b",
-			wantResources: []any{map[string]any{"name": "res2", "uri": "file:///res2", "description": "Title 2", "mimeType": "application/json"}},
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			reqBody := jsonrpc.JSONRPCRequest{Jsonrpc: jsonrpcVersion, Id: "resources-list", Request: jsonrpc.Request{Method: "resources/list"}}
-			reqMarshal, err := json.Marshal(reqBody)
+			resReqBody := jsonrpc.JSONRPCRequest{Jsonrpc: jsonrpcVersion, Id: "resources-list", Request: jsonrpc.Request{Method: "resources/list"}, Params: map[string]any{"_meta": map[string]any{"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": map[string]any{"name": "test-client", "version": "1.0.0"}, "io.modelcontextprotocol/clientCapabilities": map[string]any{}}}}
+			resMarshal, err := json.Marshal(resReqBody)
 			if err != nil {
 				t.Fatalf("unexpected error marshaling body: %s", err)
 			}
-			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), nil)
+			resResp, resBody, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(resMarshal), map[string]string{"MCP-Protocol-Version": "2026-07-28", "MCP-Method": "resources/list"})
 			if err != nil {
 				t.Fatalf("unexpected error during request: %s", err)
 			}
-			if resp.StatusCode != http.StatusOK {
-				t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, http.StatusOK)
+			if resResp.StatusCode != http.StatusOK {
+				t.Errorf("StatusCode mismatch: got %d, want %d", resResp.StatusCode, http.StatusOK)
 			}
-			var got map[string]any
-			if err := json.Unmarshal(body, &got); err != nil {
+			var gotResources map[string]any
+			if err := json.Unmarshal(resBody, &gotResources); err != nil {
 				t.Fatalf("unexpected error unmarshalling body: %s", err)
 			}
-			want := map[string]any{"jsonrpc": "2.0", "id": "resources-list", "result": map[string]any{"resources": tc.wantResources}}
-			if !reflect.DeepEqual(got, want) {
-				t.Fatalf("unexpected response: got %#v, want %#v", got, want)
+			wantResources := map[string]any{"jsonrpc": "2.0", "id": "resources-list", "result": map[string]any{"resources": tc.wantResources, "_meta": map[string]any{"io.modelcontextprotocol/serverInfo": map[string]any{"name": "Toolbox", "version": "0.0.0"}}, "cacheScope": "public", "resultType": "complete", "ttlMs": float64(300000)}}
+			if !reflect.DeepEqual(gotResources, wantResources) {
+				t.Fatalf("unexpected response: got %#v, want %#v", gotResources, wantResources)
 			}
 		})
 	}
