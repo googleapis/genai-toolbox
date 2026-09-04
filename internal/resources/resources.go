@@ -132,7 +132,8 @@ func (c *ConfigBase) SetDefaults() {
 	}
 }
 
-// Validate performs base configuration validation, such as checking for duplicate audiences.
+// Validate performs base configuration validation, including validating the MIME type,
+// checking for duplicate audiences, and validating the lastModified timestamp format.
 func (c *ConfigBase) Validate() error {
 	if c.MimeType != "" {
 		mt, _, err := mime.ParseMediaType(c.MimeType)

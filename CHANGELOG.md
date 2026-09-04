@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.10.0](https://github.com/googleapis/mcp-toolbox/compare/v1.9.0...v1.10.0) (2026-08-27)
+
+
+### Features
+
+* **falkordb:** Add FalkorDB source and tools ([#3692](https://github.com/googleapis/mcp-toolbox/issues/3692)) ([a94702c](https://github.com/googleapis/mcp-toolbox/commit/a94702c13121736e0ceb05425af43a0b953ac5b5))
+* **mcp:** Add Secure Parameters support as Toolbox experimental extension ([#3394](https://github.com/googleapis/mcp-toolbox/issues/3394)) ([9750d2d](https://github.com/googleapis/mcp-toolbox/commit/9750d2da4b1dc08761ab2b5510454e1a386ebce8))
+* **server/mcp:** Support com.google.cloud/toolbox.v1 extension in v20260728 ([#3801](https://github.com/googleapis/mcp-toolbox/issues/3801)) ([f4f7da6](https://github.com/googleapis/mcp-toolbox/commit/f4f7da605245ff9e8d491d0c55591ba3b400623b))
+* **skill:** Add fix-failing-tests skill for mcp-toolbox ([#3821](https://github.com/googleapis/mcp-toolbox/issues/3821)) ([168e69c](https://github.com/googleapis/mcp-toolbox/commit/168e69c048d65aa15b926f9dd7680245949cc57a))
+* **sources:** Support native read-only mode and dynamic tool annotations ([#3872](https://github.com/googleapis/mcp-toolbox/issues/3872)) ([c257022](https://github.com/googleapis/mcp-toolbox/commit/c257022fed2cc5e9a286bf9fd78e91d76f9ff3b8)), refs [#3615](https://github.com/googleapis/mcp-toolbox/issues/3615) [#3816](https://github.com/googleapis/mcp-toolbox/issues/3816) [#3618](https://github.com/googleapis/mcp-toolbox/issues/3618) [#3851](https://github.com/googleapis/mcp-toolbox/issues/3851) [#3619](https://github.com/googleapis/mcp-toolbox/issues/3619) [#3617](https://github.com/googleapis/mcp-toolbox/issues/3617)
+* **tools/firestore-mongodb:** Add tools for execute mql and get schema ([#3826](https://github.com/googleapis/mcp-toolbox/issues/3826)) ([4a85d75](https://github.com/googleapis/mcp-toolbox/commit/4a85d75a97f60eb601a42ceb29000e7d5d0ad8ae))
+* **tool/mongodb:** Allow collection to be specified at runtime ([#3715](https://github.com/googleapis/mcp-toolbox/issues/3715)) ([7626eaf](https://github.com/googleapis/mcp-toolbox/commit/7626eaf51e0c0a901110670e5bfb721942043480))
+
+
+### Bug Fixes
+
+* **cloud-storage:** Resolve symlinks when enforcing local path boundaries ([#3810](https://github.com/googleapis/mcp-toolbox/issues/3810)) ([c2ada64](https://github.com/googleapis/mcp-toolbox/commit/c2ada6421f718cb861c7ccd5f0e8cd7e841a407f))
+* **config:** Compare env var offsets in rune space when skipping comments ([#3856](https://github.com/googleapis/mcp-toolbox/issues/3856)) ([2e76934](https://github.com/googleapis/mcp-toolbox/commit/2e769343332cf84084a162e23f556490faa20d32))
+* Merge prebuilt tools when reloading custom config ([#3864](https://github.com/googleapis/mcp-toolbox/issues/3864)) ([5a6d865](https://github.com/googleapis/mcp-toolbox/commit/5a6d865eff939ace8c803d3ce8831aa83d00a750))
+* Normalize postgres UUIDs to strings ([#3806](https://github.com/googleapis/mcp-toolbox/issues/3806)) ([3b02f1d](https://github.com/googleapis/mcp-toolbox/commit/3b02f1d86ab774c1e0fb13d0de7b6b428da78b83))
+* **postgres:** Filter background processes in postgres-list-active-queries ([#3885](https://github.com/googleapis/mcp-toolbox/issues/3885)) ([3d9e62a](https://github.com/googleapis/mcp-toolbox/commit/3d9e62a979be951bb04aeaf31aa4505598031f4a))
+
+## [1.9.0](https://github.com/googleapis/mcp-toolbox/compare/v1.8.0...v1.9.0) (2026-08-14)
+
+
+### Features
+
+* **groups:** Add ttlMs and cacheScope customization to config ([#3805](https://github.com/googleapis/mcp-toolbox/issues/3805)) ([a5d4947](https://github.com/googleapis/mcp-toolbox/commit/a5d49472bad85e8955dc83852e65c5cd92f351a3))
+* **migrate:** Convert toolset to group kind during migration ([#3704](https://github.com/googleapis/mcp-toolbox/issues/3704)) ([0adeaa5](https://github.com/googleapis/mcp-toolbox/commit/0adeaa51c4e132fe36553b24f88e8f62df90bfaa))
+* **server/mcp:** Introduce generic client extension registry ([#3723](https://github.com/googleapis/mcp-toolbox/issues/3723)) ([016245c](https://github.com/googleapis/mcp-toolbox/commit/016245c21c254a05409a41845e0a8799518363a0))
+* **skill:** Add review-prs skill for mcp-toolbox ([#3743](https://github.com/googleapis/mcp-toolbox/issues/3743)) ([5b7bacc](https://github.com/googleapis/mcp-toolbox/commit/5b7bacc73b9284160b73c4c3f7a53214c653e64a))
+* **source/bigquery:** Add apiEndpoint field to override BigQuery API host ([#3437](https://github.com/googleapis/mcp-toolbox/issues/3437)) ([4da1600](https://github.com/googleapis/mcp-toolbox/commit/4da1600df9971789a0970d174be3c2ed1368f7c1))
+* **source/databaseinsights:** Add databaseinsights source ([#3461](https://github.com/googleapis/mcp-toolbox/issues/3461)) ([3b9615d](https://github.com/googleapis/mcp-toolbox/commit/3b9615d020f0f7ba1d971f8c94ea7d6bc79f8468))
+* **sources/spanner:** Rename execute_sql_dql to execute_sql_readonly ([#3776](https://github.com/googleapis/mcp-toolbox/issues/3776)) ([cf5a0c8](https://github.com/googleapis/mcp-toolbox/commit/cf5a0c8fbf52f1e09fc565109682cf52b6ebd553))
+* **tools/bigtable:** Add admin lifecycle and listing tools ([#3596](https://github.com/googleapis/mcp-toolbox/issues/3596)) ([801d589](https://github.com/googleapis/mcp-toolbox/commit/801d5899665c120200d64bac45172741a785ae5d))
+* **tools/bigtable:** Bigtable-list-schemas MCP tool ([#3683](https://github.com/googleapis/mcp-toolbox/issues/3683)) ([9228c61](https://github.com/googleapis/mcp-toolbox/commit/9228c61518a8828ad51bb83ad7eb820208104859))
+* **tools/databaseinsights:** Add Advanced Query Insights tools for AlloyDB ([#3722](https://github.com/googleapis/mcp-toolbox/issues/3722)) ([74d18ae](https://github.com/googleapis/mcp-toolbox/commit/74d18ae0b3c4009436e0727bf7e16d714b9c41a4))
+* **tools/looker:** Add additional tools to allow dashboards to be modified, and their layouts altered. ([#3597](https://github.com/googleapis/mcp-toolbox/issues/3597)) ([b2b80fb](https://github.com/googleapis/mcp-toolbox/commit/b2b80fbea64b6284f68b49c0ad3270ed79655282))
+* **tools:** Add cloud-sql-connect-gce for pg, mysql, mssql ([#3740](https://github.com/googleapis/mcp-toolbox/issues/3740)) ([ca58fa4](https://github.com/googleapis/mcp-toolbox/commit/ca58fa4b525d6726b9792a9f6303fbcc26c9ca3f))
+
+
+### Bug Fixes
+
+* **auth/mcp:** Derive PRM URL from Toolbox URL ([#3765](https://github.com/googleapis/mcp-toolbox/issues/3765)) ([aa30842](https://github.com/googleapis/mcp-toolbox/commit/aa308422ad6dd73a014722c3ebf9628d7aa9cc8f))
+* **config:** Ignore environment variables in YAML comments ([#3807](https://github.com/googleapis/mcp-toolbox/issues/3807)) ([79aa732](https://github.com/googleapis/mcp-toolbox/commit/79aa73247d35286e1cc4309883d539cf9a470686)), refs [#3793](https://github.com/googleapis/mcp-toolbox/issues/3793)
+* **mcp:** Return Tool execution error for invalid input param ([#3799](https://github.com/googleapis/mcp-toolbox/issues/3799)) ([8120197](https://github.com/googleapis/mcp-toolbox/commit/81201978a7a1d2a786eb3707ddaa7b090dd1c454))
+* **prebuilt/cloud-storage:** Declare tool collections as groups ([#3764](https://github.com/googleapis/mcp-toolbox/issues/3764)) ([7d468be](https://github.com/googleapis/mcp-toolbox/commit/7d468be107dfe476d77bd7f937b5dd9c61e5cdc8))
+* **server/mcp:** Disallow client overriding URL bound parameters ([#3798](https://github.com/googleapis/mcp-toolbox/issues/3798)) ([f15a9c7](https://github.com/googleapis/mcp-toolbox/commit/f15a9c7082215bd8e9990395d01b5e4fa3b36c69))
+* **server:** Avoid a nil-flusher panic in the SSE handler ([#3520](https://github.com/googleapis/mcp-toolbox/issues/3520)) ([947f42f](https://github.com/googleapis/mcp-toolbox/commit/947f42f3e8a07362466566043045491d2318db29))
+* **tools/bigquery:** Keep the provider error classification in bigquery-execute-sql ([#3738](https://github.com/googleapis/mcp-toolbox/issues/3738)) ([42570b8](https://github.com/googleapis/mcp-toolbox/commit/42570b833656fdf71cf36ba3333a2419f48730d2))
+* **tools/looker:** Scope the filters quoting rule to values in query description ([#3788](https://github.com/googleapis/mcp-toolbox/issues/3788)) ([78eb0b8](https://github.com/googleapis/mcp-toolbox/commit/78eb0b8580b0eebf781ba74e4cc12d1f94a7b65b))
+* **util:** Convert exponent-form JSON numbers in ConvertNumbers ([#3730](https://github.com/googleapis/mcp-toolbox/issues/3730)) ([e9713ee](https://github.com/googleapis/mcp-toolbox/commit/e9713eec3acea912e0b6a254b845bd9da04f8192))
+
 ## [1.8.0](https://github.com/googleapis/mcp-toolbox/compare/v1.7.0...v1.8.0) (2026-07-28)
 
 

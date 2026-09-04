@@ -121,7 +121,9 @@ type ResultMetaObject struct {
 // client can define its own, additional capabilities.
 type ClientCapabilities struct {
 	// Experimental, non-standard capabilities that the client supports.
-	Experimental map[string]interface{} `json:"experimental,omitempty"`
+	Experimental map[string]any `json:"experimental,omitempty"`
+	// Standard extensions that the client supports.
+	Extensions map[string]any `json:"extensions,omitempty"`
 	// Present if the client supports listing roots.
 	Roots *ListChanged `json:"roots,omitempty"`
 	// Present if the client supports sampling from an LLM.
@@ -188,9 +190,10 @@ type Implementation struct {
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // server can define its own, additional capabilities.
 type ServerCapabilities struct {
-	Tools     *ListChanged `json:"tools,omitempty"`
-	Prompts   *ListChanged `json:"prompts,omitempty"`
-	Resources *struct {
+	Extensions map[string]any `json:"extensions,omitempty"`
+	Tools      *ListChanged   `json:"tools,omitempty"`
+	Prompts    *ListChanged   `json:"prompts,omitempty"`
+	Resources  *struct {
 		Subscribe   *bool `json:"subscribe,omitempty"`
 		ListChanged *bool `json:"listChanged,omitempty"`
 	} `json:"resources,omitempty"`
@@ -312,7 +315,8 @@ type Tool struct {
 	 */
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
-	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
+	ToolInputSchema   InputSchema  `json:"inputSchema,omitempty"`
+	SecureInputSchema *InputSchema `json:"secureInputSchema,omitempty"`
 	// Optional additional tool information.
 	Annotations *ToolAnnotations `json:"annotations,omitempty"`
 	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
@@ -342,6 +346,10 @@ type CallToolRequestParams struct {
 	 * Arguments to use for the tool call.
 	 */
 	Arguments map[string]any `json:"arguments,omitempty"`
+	/**
+	 * Secure arguments to use for the tool call.
+	 */
+	SecureArguments map[string]any `json:"secureArguments,omitempty"`
 }
 
 // The sender or recipient of messages and data in a conversation.
@@ -607,22 +615,28 @@ type ReadResourceRequestParams struct {
 
 // The result returned by the server for a {@link ReadResourceRequest | resources/read} request.
 type ReadResourceResult struct {
-	jsonrpc.Result
+	Result
 	CacheableResult
 	// Could be either TextResourceContents or BlobResourceContents.
 	// For Toolbox, we will only be sending TextResourceContents.
 	Contents []TextResourceContents `json:"contents"`
 }
 
-// Text file contents
-type TextResourceContents struct {
+// The contents of a specific resource or sub-resource.
+type ResourceContents struct {
 	// The URI of this resource.
 	Uri string `json:"uri"`
 	// The MIME type of this resource, if known.
 	MimeType string `json:"mimeType,omitempty"`
-	// The text of the item. This must only be set if the item can actually be represented as text (not binary data).
-	Text     string         `json:"text"`
+	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
 	Metadata map[string]any `json:"_meta,omitempty"`
+}
+
+// Text file contents
+type TextResourceContents struct {
+	ResourceContents
+	// The text of the item. This must only be set if the item can actually be represented as text (not binary data).
+	Text string `json:"text"`
 }
 
 /* Groups */

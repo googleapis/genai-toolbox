@@ -37,7 +37,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
@@ -51,12 +50,17 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/resources/file"
 	_ "github.com/googleapis/mcp-toolbox/internal/resources/text"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	v20260728 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20260728"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
+	_ "github.com/googleapis/mcp-toolbox/internal/sources/postgres"
+	_ "github.com/googleapis/mcp-toolbox/internal/sources/sqlite"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/http"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlexecutesql"
+	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgresexecutesql"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
@@ -470,16 +474,6 @@ func TestUpdateServer(t *testing.T) {
 	if diff := cmp.Diff(gotTemplate, newResourceTemplates["example-template"]); diff != "" {
 		t.Errorf("error updating server, resource templates (-want +got):\n%s", diff)
 	}
-
-	gotResource, _ = s.PrimitiveMgr.GetResource("example-resource")
-	if diff := cmp.Diff(gotResource, newResources["example-resource"]); diff != "" {
-		t.Errorf("error updating server, resources (-want +got):\n%s", diff)
-	}
-
-	gotTemplate, _ = s.PrimitiveMgr.GetResourceTemplate("example-template")
-	if diff := cmp.Diff(gotTemplate, newResourceTemplates["example-template"]); diff != "" {
-		t.Errorf("error updating server, resource templates (-want +got):\n%s", diff)
-	}
 }
 
 func TestEndpointSecurityAllowedOrigin(t *testing.T) {
@@ -885,79 +879,126 @@ func TestPRMEndpoint(t *testing.T) {
 	}))
 	defer mockOIDC.Close()
 
-	// Configure the server
-	addr, port := "127.0.0.1", 5003
-	cfg := server.ServerConfig{
-		Version:      "0.0.0",
-		Address:      addr,
-		Port:         port,
-		ToolboxUrl:   "https://my-toolbox.example.com",
-		AllowedHosts: []string{"*"},
-		AuthServiceConfigs: map[string]auth.AuthServiceConfig{
-			"generic1": generic.Config{
-				Name:                "generic1",
-				Type:                generic.AuthServiceType,
-				McpEnabled:          true,
-				AuthorizationServer: mockOIDC.URL, // Injecting the mock server URL here
-				ScopesRequired:      []string{"read", "write"},
-			},
+	tests := []struct {
+		name         string
+		toolboxURL   string
+		wantEndpoint string
+		wantResource string
+		wantErr      string
+	}{
+		{
+			name:         "valid absolute url without path",
+			toolboxURL:   "https://my-toolbox.example.com",
+			wantEndpoint: "/.well-known/oauth-protected-resource",
+			wantResource: "https://my-toolbox.example.com",
+		},
+		{
+			name:         "valid absolute url with path",
+			toolboxURL:   "https://my-toolbox.example.com/mcp",
+			wantEndpoint: "/.well-known/oauth-protected-resource/mcp",
+			wantResource: "https://my-toolbox.example.com/mcp",
+		},
+		{
+			name:         "valid relative path without leading slash",
+			toolboxURL:   "mcp",
+			wantEndpoint: "/.well-known/oauth-protected-resource/mcp",
+			wantResource: "mcp",
+		},
+		{
+			name:         "valid relative path with leading slash",
+			toolboxURL:   "/mcp",
+			wantEndpoint: "/.well-known/oauth-protected-resource/mcp",
+			wantResource: "/mcp",
+		},
+		{
+			name:       "invalid absolute url missing host",
+			toolboxURL: "http://",
+			wantErr:    "must be a valid absolute URL with scheme and host",
 		},
 	}
 
-	// Initialize and start the server
-	s, err := server.NewServer(ctx, cfg)
-	if err != nil {
-		t.Fatalf("unable to initialize server: %v", err)
-	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := server.ServerConfig{
+				Version:      "0.0.0",
+				Address:      "127.0.0.1",
+				Port:         0,
+				ToolboxUrl:   tc.toolboxURL,
+				AllowedHosts: []string{"*"},
+				AuthServiceConfigs: map[string]auth.AuthServiceConfig{
+					"generic1": generic.Config{
+						Name:                "generic1",
+						Type:                generic.AuthServiceType,
+						McpEnabled:          true,
+						AuthorizationServer: mockOIDC.URL,
+						ScopesRequired:      []string{"read", "write"},
+					},
+				},
+			}
 
-	if err := s.Listen(ctx, "", ""); err != nil {
-		t.Fatalf("unable to start server: %v", err)
-	}
+			s, err := server.NewServer(ctx, cfg)
+			if tc.wantErr != "" {
+				if err == nil {
+					t.Fatalf("expected error containing %q, got nil", tc.wantErr)
+				}
+				if !strings.Contains(err.Error(), tc.wantErr) {
+					t.Fatalf("expected error containing %q, got: %v", tc.wantErr, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unable to initialize server: %v", err)
+			}
 
-	go func() {
-		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
-			t.Errorf("server serve error: %v", err)
-		}
-	}()
-	defer func() {
-		if err := s.Shutdown(ctx); err != nil {
-			t.Errorf("failed to cleanly shutdown server: %v", err)
-		}
-	}()
+			if err := s.Listen(ctx, "", ""); err != nil {
+				t.Fatalf("unable to start server: %v", err)
+			}
 
-	// Test the PRM endpoint
-	url := fmt.Sprintf("http://%s:%d/.well-known/oauth-protected-resource", addr, port)
-	resp, err := http.Get(url)
-	if err != nil {
-		t.Fatalf("error when sending a request: %s", err)
-	}
-	defer resp.Body.Close()
+			go func() {
+				if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+					t.Errorf("server serve error: %v", err)
+				}
+			}()
+			defer func() {
+				if err := s.Shutdown(ctx); err != nil {
+					t.Errorf("failed to cleanly shutdown server: %v", err)
+				}
+			}()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected status %d, got %d", http.StatusOK, resp.StatusCode)
-	}
+			reqURL := fmt.Sprintf("http://%s%s", s.Addr(), tc.wantEndpoint)
+			resp, err := http.Get(reqURL)
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
+			}
+			defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("unexpected error reading body: %s", err)
-	}
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("expected status %d, got %d", http.StatusOK, resp.StatusCode)
+			}
 
-	var got map[string]any
-	if err := json.Unmarshal(body, &got); err != nil {
-		t.Fatalf("unexpected error unmarshalling body: %s", err)
-	}
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unexpected error reading body: %s", err)
+			}
 
-	want := map[string]any{
-		"resource": "https://my-toolbox.example.com",
-		"authorization_servers": []any{
-			mockOIDC.URL,
-		},
-		"scopes_supported":         []any{"read", "write"},
-		"bearer_methods_supported": []any{"header"},
-	}
+			var got map[string]any
+			if err := json.Unmarshal(body, &got); err != nil {
+				t.Fatalf("unexpected error unmarshalling body: %s", err)
+			}
 
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("unexpected PRM response:\ngot  %+v\nwant %+v", got, want)
+			want := map[string]any{
+				"resource": tc.wantResource,
+				"authorization_servers": []any{
+					mockOIDC.URL,
+				},
+				"scopes_supported":         []any{"read", "write"},
+				"bearer_methods_supported": []any{"header"},
+			}
+
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("unexpected PRM response:\ngot  %+v\nwant %+v", got, want)
+			}
+		})
 	}
 }
 
@@ -1726,6 +1767,28 @@ tools:
 			},
 		},
 		{
+			name: "valid named group with resources and resource templates",
+			yaml: `
+kind: group
+name: my_group_with_resources
+tools:
+  - tool_a
+prompts:
+  - prompt_a
+resources:
+  - res_a
+resourceTemplates:
+  - tmpl_a
+`,
+			want: group.GroupConfig{
+				Name:                  "my_group_with_resources",
+				ToolNames:             []string{"tool_a"},
+				PromptNames:           []string{"prompt_a"},
+				ResourceNames:         []string{"res_a"},
+				ResourceTemplateNames: []string{"tmpl_a"},
+			},
+		},
+		{
 			name: "default group declaring tools is an error",
 			yaml: `
 kind: group
@@ -1742,6 +1805,26 @@ kind: group
 name:
 prompts:
   - prompt_a
+`,
+			wantError: true,
+		},
+		{
+			name: "default group declaring resources is an error",
+			yaml: `
+kind: group
+name:
+resources:
+  - res_a
+`,
+			wantError: true,
+		},
+		{
+			name: "default group declaring resourceTemplates is an error",
+			yaml: `
+kind: group
+name:
+resourceTemplates:
+  - tmpl_a
 `,
 			wantError: true,
 		},
@@ -1984,496 +2067,6 @@ func TestMCPAuthEnableAPIClash(t *testing.T) {
 	}
 }
 
-func TestResourceConfigValidation(t *testing.T) {
-	ctx := context.Background()
-
-	tests := []struct {
-		name        string
-		yaml        string
-		wantError   bool
-		errContains string
-	}{
-		{
-			name: "missing required text field for text resource triggers validation error",
-			yaml: `
-kind: resource
-name: test-resource
-type: text
-`,
-			wantError: true,
-		},
-		{
-			name: "unknown field triggers strict decoder error",
-			yaml: `
-kind: resource
-name: test-resource
-type: mock
-uri: mock://test
-invalidRandomField: true
-`,
-			wantError: true,
-		},
-		{
-			name: "size field is rejected by strict decoder",
-			yaml: `
-kind: resource
-name: test-resource
-type: mock
-uri: mock://test
-size: 100
-`,
-			wantError:   true,
-			errContains: "unknown field \"size\"",
-		},
-		{
-			name: "valid mock resource parses successfully",
-			yaml: `
-kind: resource
-name: test-resource
-type: mock
-uri: mock://test
-`,
-			wantError: false,
-		},
-		{
-			name: "missing type field triggers error",
-			yaml: `
-kind: resource
-name: test-resource
-uri: mock://test
-`,
-			wantError: true,
-		},
-		{
-			name: "invalid type field (not string) triggers error",
-			yaml: `
-kind: resource
-name: test-resource
-type: 123
-uri: mock://test
-`,
-			wantError: true,
-		},
-		{
-			name: "missing uri field triggers error",
-			yaml: `
-kind: resource
-name: test-resource
-type: mock
-`,
-			wantError: true,
-		},
-		{
-			name: "invalid uri field (not string) triggers error",
-			yaml: `
-kind: resource
-name: test-resource
-type: mock
-uri: 123
-`,
-			wantError: true,
-		},
-		{
-			name: "invalid RFC URI triggers error",
-			yaml: `
-kind: resource
-name: test-resource
-type: mock
-uri: ://missing.scheme
-`,
-			wantError: true,
-		},
-		{
-			name: "duplicate resource names triggers error",
-			yaml: `
-kind: resource
-name: duplicate-resource
-type: mock
-uri: mock://test1
----
-kind: resource
-name: duplicate-resource
-type: mock
-uri: mock://test2
-`,
-			wantError: true,
-		},
-		{
-			name: "duplicate resource URIs triggers error",
-			yaml: `
-kind: resource
-name: resource1
-type: mock
-uri: mock://duplicate
----
-kind: resource
-name: resource2
-type: mock
-uri: mock://duplicate
-`,
-			wantError: true,
-		},
-		{
-			name: "malformed file type with missing path triggers validation error",
-			yaml: `
-kind: resource
-name: bad-file
-type: file
-uri: file://bad-file
-`,
-			wantError: true,
-		},
-		{
-			name: "missing type",
-			yaml: `
-kind: resource
-name: test
-uri: mock://test
-`,
-			wantError: true,
-		},
-		{
-			name: "valid resource template",
-			yaml: `
-kind: resourceTemplate
-type: file
-name: project_files
-uriTemplate: file://{path}
-description: Access files in the project directory.
-`,
-			wantError: false,
-		},
-		{
-			name: "missing name",
-			yaml: `
-kind: resourceTemplate
-type: file
-uriTemplate: file://{path}
-`,
-			wantError:   true,
-			errContains: "missing 'name' field",
-		},
-		{
-			name: "missing type throws error",
-			yaml: `
-kind: resourceTemplate
-name: test
-uriTemplate: file://{path}
-`,
-			wantError:   true,
-			errContains: "missing 'type' field or it is not a string",
-		},
-		{
-			name: "invalid scheme for file template",
-			yaml: `
-kind: resourceTemplate
-type: file
-name: test
-uriTemplate: http://example.com/{path}
-`,
-			wantError:   true,
-			errContains: "invalid scheme for file resource template",
-		},
-		{
-			name: "duplicate uri template",
-			yaml: `
-kind: resourceTemplate
-type: file
-name: t1
-uriTemplate: file://{path}
----
-kind: resourceTemplate
-type: file
-name: t2
-uriTemplate: file://{path}
-`,
-			wantError:   true,
-			errContains: "duplicate resource URI",
-		},
-		{
-			name: "malformed template without URITemplate",
-			yaml: `
-kind: resourceTemplate
-name: test
-type: file
-`,
-			wantError:   true,
-			errContains: "missing required 'uriTemplate' field",
-		},
-
-		{
-			name: "duplicate audience triggers validation error",
-			yaml: `
-kind: resource
-name: test-audience
-type: mock
-uri: mock://test
-annotations:
-  audience:
-    - user
-    - user
-`,
-			wantError:   true,
-			errContains: "duplicate audience",
-		},
-		{
-			name: "invalid mimeType triggers validation error",
-			yaml: `
-kind: resource
-name: test-mime
-type: mock
-uri: mock://test
-mimeType: invalid_mime
-`,
-			wantError:   true,
-			errContains: "invalid mimeType",
-		},
-		{
-			name: "invalid lastModified triggers validation error",
-			yaml: `
-kind: resource
-name: test-lastmod
-type: mock
-uri: mock://test
-annotations:
-  lastModified: "2025-01-12"
-`,
-			wantError:   true,
-			errContains: "not a valid ISO 8601 string",
-		},
-		{
-			name: "invalid RFC 6570 uriTemplate triggers validation error",
-			yaml: `
-kind: resourceTemplate
-name: test-template
-type: file
-uriTemplate: file:///{path
-`,
-			wantError:   true,
-			errContains: "invalid RFC 6570 uriTemplate",
-		},
-		{
-			name: "invalid variable name in uriTemplate triggers validation error",
-			yaml: `
-kind: resourceTemplate
-name: test-template2
-type: file
-uriTemplate: file:///{foo}
-`,
-			wantError:   true,
-			errContains: "only the 'path' variable is supported",
-		},
-		{
-			name: "duplicate name",
-			yaml: `
-kind: resourceTemplate
-type: file
-name: t1
-uriTemplate: file://{path}
----
-kind: resourceTemplate
-type: file
-name: t1
-uriTemplate: file:///{path}
-`,
-			wantError:   true,
-			errContains: "duplicate resourceTemplate name",
-		},
-	}
-
-	// Register a mock factory for this test package to use
-	mockFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
-		var cfg testutils.MockResourceConfig
-		cfg.Name = name
-		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
-			return nil, err
-		}
-		return &cfg, nil
-	}
-	resources.Register("mock", mockFactory)
-
-	mockTemplateFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceTemplateConfig, error) {
-		var cfg testutils.MockResourceTemplateConfig
-		cfg.Name = name
-		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
-			return nil, err
-		}
-		return &cfg, nil
-	}
-	resources.RegisterTemplate("file", mockTemplateFactory)
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
-			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
-			}
-			if err != nil && tc.errContains != "" {
-				if !strings.Contains(err.Error(), tc.errContains) {
-					t.Fatalf("expected error to contain %q, got %q", tc.errContains, err.Error())
-				}
-			}
-		})
-	}
-}
-
-func TestResourceAnnotationsParsing(t *testing.T) {
-	ctx := context.Background()
-
-	mockFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
-		var cfg testutils.MockResourceConfig
-		cfg.Name = name
-		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
-			return nil, err
-		}
-		return &cfg, nil
-	}
-	resources.Register("mock", mockFactory)
-
-	// Scenario 1: Valid parsed config (checks case-insensitivity on 'Priority' and 'LastModified')
-	yamlBytes := []byte(`
-kind: resource
-name: test-annotations
-type: mock
-uri: mock://test
-annotations:
-  priority: 0.8
-  audience:
-    - user
-    - assistant
-  lastModified: 2024-01-01T00:00:00Z
-`)
-	_, _, _, _, _, resConfigs, _, _, err := server.UnmarshalPrimitiveConfig(ctx, yamlBytes)
-	if err != nil {
-		t.Fatalf("unexpected error parsing valid config: %v", err)
-	}
-
-	cfg, ok := resConfigs["test-annotations"]
-	if !ok {
-		t.Fatalf("missing parsed config")
-	}
-
-	mockCfg, ok := cfg.(*testutils.MockResourceConfig)
-	if !ok {
-		t.Fatalf("config is not a MockResourceConfig")
-	}
-	if mockCfg.Annotations == nil {
-		t.Fatalf("annotations map is nil")
-	}
-
-	if mockCfg.Annotations.Priority == nil || *mockCfg.Annotations.Priority != 0.8 {
-		t.Errorf("priority = %v, want 0.8", mockCfg.Annotations.Priority)
-	}
-
-	if len(mockCfg.Annotations.Audience) != 2 || mockCfg.Annotations.Audience[0] != resources.RoleUser {
-		t.Errorf("audience = %v, want [user, assistant]", mockCfg.Annotations.Audience)
-	}
-
-	// Verify the unquoted timestamp parsed correctly into the string field
-	if mockCfg.Annotations.LastModified != "2024-01-01T00:00:00Z" {
-		t.Errorf("lastModified = %v, want 2024-01-01T00:00:00Z", mockCfg.Annotations.LastModified)
-	}
-
-	// Edge Cases & Validation Testing
-	testCases := []struct {
-		name        string
-		yaml        string
-		wantError   bool
-		errContains string
-	}{
-		{
-			name: "unknown field strict error",
-			yaml: `
-kind: resource
-name: test-invalid
-type: mock
-uri: mock://test
-annotations:
-  unknownField: "should error"`,
-			wantError:   true,
-			errContains: "unknownField",
-		},
-		{
-			name: "invalid priority type",
-			yaml: `
-kind: resource
-name: test-invalid
-type: mock
-uri: mock://test
-annotations:
-  priority: "high"`,
-			wantError:   true,
-			errContains: "cannot unmarshal",
-		},
-		{
-			name: "invalid audience scalar",
-			yaml: `
-kind: resource
-name: test-invalid
-type: mock
-uri: mock://test
-annotations:
-  audience: user`,
-			wantError:   true,
-			errContains: "string was used where sequence is expected",
-		},
-		{
-			name: "invalid audience value",
-			yaml: `
-kind: resource
-name: test-invalid
-type: mock
-uri: mock://test
-annotations:
-  audience:
-    - admin`,
-			wantError:   true,
-			errContains: "invalid audience \"admin\"",
-		},
-		{
-			name: "duplicate audience value",
-			yaml: `
-kind: resource
-name: test-duplicate
-type: mock
-uri: mock://test
-annotations:
-  audience:
-    - user
-    - user`,
-			wantError:   true,
-			errContains: "duplicate audience \"user\"",
-		},
-		{
-			name: "empty block safety (no error expected)",
-			yaml: `
-kind: resource
-name: test-empty
-type: mock
-uri: mock://test
-annotations: {}`,
-			wantError: false,
-		},
-	}
-
-	for _, tt := range testCases {
-		t.Run(tt.name, func(t *testing.T) {
-			_, _, _, _, _, _, _, _, err = server.UnmarshalPrimitiveConfig(ctx, []byte(tt.yaml))
-			if tt.wantError {
-				if err == nil {
-					t.Errorf("expected error for %q, got nil", tt.name)
-				} else if !strings.Contains(err.Error(), tt.errContains) {
-					t.Errorf("expected error to contain %q, got: %v", tt.errContains, err)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("unexpected error for %q: %v", tt.name, err)
-				}
-			}
-		})
-	}
-}
-
 func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -2508,4 +2101,331 @@ func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
 	if diff := cmp.Diff(expectedOrder, defaultToolset.ToolNames); diff != "" {
 		t.Errorf("default toolset ToolNames mismatch (-want +got):\n%s", diff)
 	}
+}
+
+func TestNewServer_Extensions(t *testing.T) {
+	orig := v20260728.SupportedExtensions
+	t.Cleanup(func() {
+		v20260728.SupportedExtensions = orig
+	})
+	v20260728.SupportedExtensions = map[string]any{"com.google.cloud/toolbox.v1": map[string]any{}, "io.modelcontextprotocol/tasks": map[string]any{}}
+
+	ctx := context.Background()
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	tests := []struct {
+		name       string
+		disableExt []string
+		want       []string
+	}{
+		{
+			name:       "default enables all supported extensions",
+			disableExt: nil,
+			want:       []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"},
+		},
+		{
+			name:       "disable one extension",
+			disableExt: []string{"io.modelcontextprotocol/tasks"},
+			want:       []string{"com.google.cloud/toolbox.v1"},
+		},
+		{
+			name:       "disable all supported extensions",
+			disableExt: []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"},
+			want:       nil,
+		},
+		{
+			name:       "empty strings or unknown extensions in disableExt ignored",
+			disableExt: []string{"", "com.example/unknown"},
+			want:       []string{"com.google.cloud/toolbox.v1", "io.modelcontextprotocol/tasks"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := server.ServerConfig{
+				DisableExt: tt.disableExt,
+			}
+			_, err := server.NewServer(ctx, cfg)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			var got []string
+			for k := range v20260728.ServerExtensions {
+				got = append(got, k)
+			}
+			slices.Sort(got)
+			slices.Sort(tt.want)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("v20260728.ServerExtensions keys = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestShouldSuppressTool(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+
+	readOnlySource := &testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{Name: "readonly-db", ReadOnly: true}}
+	readWriteSource := &testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{Name: "readwrite-db", ReadOnly: false}}
+
+	initTool := func(cfg testutils.MockToolConfig) tools.Tool {
+		t, err := cfg.Initialize(ctx)
+		if err != nil {
+			panic(err)
+		}
+		return t
+	}
+
+	testCases := []struct {
+		desc   string
+		source sources.Source
+		tool   tools.Tool
+		want   bool
+	}{
+		{
+			desc:   "nil source -> not suppressed",
+			source: nil,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "some-tool"}, Source: "readonly-db"}),
+			want:   false,
+		},
+		{
+			desc:   "nil tool -> not suppressed",
+			source: readOnlySource,
+			tool:   nil,
+			want:   false,
+		},
+		{
+			desc:   "write tool on read-write source (readOnlyHint: false) -> not suppressed",
+			source: readWriteSource,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "write-tool"}, Source: "readwrite-db", Annotations: tools.NewWriteAnnotations()}),
+			want:   false,
+		},
+		{
+			desc:   "write tool on read-only source (readOnlyHint: false) -> suppressed",
+			source: readOnlySource,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "write-tool"}, Source: "readonly-db", Annotations: tools.NewWriteAnnotations()}),
+			want:   true,
+		},
+		{
+			desc:   "read-only tool on read-only source (readOnlyHint: true) -> not suppressed",
+			source: readOnlySource,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "readonly-tool"}, Source: "readonly-db", Annotations: tools.NewReadOnlyAnnotations()}),
+			want:   false,
+		},
+		{
+			desc:   "unannotated tool on read-only source -> not suppressed",
+			source: readOnlySource,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "unannotated-tool"}, Source: "readonly-db", Annotations: nil}),
+			want:   false,
+		},
+		{
+			desc:   "tool with non-nil annotations but nil readOnlyHint on read-only source -> not suppressed",
+			source: readOnlySource,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "nil-hint-tool"}, Source: "readonly-db", Annotations: &tools.ToolAnnotations{ReadOnlyHint: nil}}),
+			want:   false,
+		},
+		{
+			desc:   "mysql-execute-sql on read-only source -> not suppressed (dynamically reports readOnlyHint: true)",
+			source: readOnlySource,
+			tool: func() tools.Tool {
+				t, err := mysqlexecutesql.Config{
+					ConfigBase: tools.ConfigBase{Name: "mysql-execute-sql", Description: "execute sql query"},
+					Type:       "mysql-execute-sql",
+					Source:     "readonly-db",
+				}.Initialize(ctx)
+				if err != nil {
+					panic(err)
+				}
+				return t
+			}(),
+			want: false,
+		},
+		{
+			desc:   "postgres-execute-sql on read-only source -> not suppressed (dynamically reports readOnlyHint: true)",
+			source: readOnlySource,
+			tool: func() tools.Tool {
+				t, err := postgresexecutesql.Config{
+					ConfigBase: tools.ConfigBase{Name: "postgres-execute-sql", Description: "execute sql query"},
+					Type:       "postgres-execute-sql",
+					Source:     "readonly-db",
+				}.Initialize(ctx)
+				if err != nil {
+					panic(err)
+				}
+				return t
+			}(),
+			want: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := tools.ShouldSuppress(ctx, tc.tool, tc.source)
+			if got != tc.want {
+				t.Errorf("ShouldSuppress(ctx) = %v, want %v", got, tc.want)
+			}
+			gotNilLogger := tools.ShouldSuppress(context.Background(), tc.tool, tc.source)
+			if gotNilLogger != tc.want {
+				t.Errorf("ShouldSuppress(nil logger) = %v, want %v", gotNilLogger, tc.want)
+			}
+		})
+	}
+}
+
+func TestInitializeGroups(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	t.Run("suppressed tool is pruned from group", func(t *testing.T) {
+		cfg := server.ServerConfig{
+			SourceConfigs: server.SourceConfigs{
+				"readonly-db": &testutils.MockSourceConfig{Name: "readonly-db", ReadOnly: true},
+			},
+			ToolConfigs: server.ToolConfigs{
+				"allowed_read_tool": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "allowed_read_tool"},
+					Source:      "readonly-db",
+					Annotations: tools.NewReadOnlyAnnotations(),
+				},
+				"suppressed_write_tool": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "suppressed_write_tool"},
+					Source:      "readonly-db",
+					Annotations: tools.NewWriteAnnotations(),
+				},
+			},
+			GroupConfigs: server.GroupConfigs{
+				"my-custom-group": group.GroupConfig{
+					Name:      "my-custom-group",
+					ToolNames: []string{"allowed_read_tool", "suppressed_write_tool"},
+				},
+			},
+		}
+
+		s, err := server.NewServer(ctx, cfg)
+		if err != nil {
+			t.Fatalf("failed to create server: %v", err)
+		}
+
+		grp, ok := s.PrimitiveMgr.GetGroup("my-custom-group")
+		if !ok {
+			t.Fatalf("expected group 'my-custom-group' to be registered, but not found")
+		}
+
+		// Verify allowed tool is present in group
+		if !grp.ContainsTool("allowed_read_tool") {
+			t.Errorf("expected group to contain 'allowed_read_tool'")
+		}
+
+		// Verify suppressed tool was pruned from group
+		if grp.ContainsTool("suppressed_write_tool") {
+			t.Errorf("expected group to NOT contain suppressed tool 'suppressed_write_tool'")
+		}
+
+		// Verify group ToolNames slice only contains allowed_read_tool
+		wantTools := []string{"allowed_read_tool"}
+		if diff := cmp.Diff(wantTools, grp.ToolNames); diff != "" {
+			t.Errorf("group ToolNames mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("group with all tools suppressed remains registered with empty tools", func(t *testing.T) {
+		cfg := server.ServerConfig{
+			SourceConfigs: server.SourceConfigs{
+				"readonly-db": &testutils.MockSourceConfig{Name: "readonly-db", ReadOnly: true},
+			},
+			ToolConfigs: server.ToolConfigs{
+				"write_tool_1": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "write_tool_1"},
+					Source:      "readonly-db",
+					Annotations: tools.NewWriteAnnotations(),
+				},
+				"write_tool_2": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "write_tool_2"},
+					Source:      "readonly-db",
+					Annotations: tools.NewWriteAnnotations(),
+				},
+			},
+			GroupConfigs: server.GroupConfigs{
+				"admin-group": group.GroupConfig{
+					Name:      "admin-group",
+					ToolNames: []string{"write_tool_1", "write_tool_2"},
+				},
+			},
+		}
+
+		s, err := server.NewServer(ctx, cfg)
+		if err != nil {
+			t.Fatalf("failed to create server: %v", err)
+		}
+
+		grp, ok := s.PrimitiveMgr.GetGroup("admin-group")
+		if !ok {
+			t.Fatalf("expected group 'admin-group' to be registered even when empty, but not found")
+		}
+
+		if len(grp.ToolNames) != 0 {
+			t.Errorf("expected group ToolNames to be empty, got: %v", grp.ToolNames)
+		}
+	})
+
+	t.Run("group with no tools suppressed initializes normally", func(t *testing.T) {
+		cfg := server.ServerConfig{
+			SourceConfigs: server.SourceConfigs{
+				"readwrite-db": &testutils.MockSourceConfig{Name: "readwrite-db", ReadOnly: false},
+			},
+			ToolConfigs: server.ToolConfigs{
+				"tool_1": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "tool_1"},
+					Source:      "readwrite-db",
+					Annotations: tools.NewWriteAnnotations(),
+				},
+				"tool_2": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "tool_2"},
+					Source:      "readwrite-db",
+					Annotations: tools.NewReadOnlyAnnotations(),
+				},
+			},
+			GroupConfigs: server.GroupConfigs{
+				"all-tools-group": group.GroupConfig{
+					Name:      "all-tools-group",
+					ToolNames: []string{"tool_1", "tool_2"},
+				},
+			},
+		}
+
+		s, err := server.NewServer(ctx, cfg)
+		if err != nil {
+			t.Fatalf("failed to create server: %v", err)
+		}
+
+		grp, ok := s.PrimitiveMgr.GetGroup("all-tools-group")
+		if !ok {
+			t.Fatalf("expected group 'all-tools-group' to be registered, but not found")
+		}
+
+		wantTools := []string{"tool_1", "tool_2"}
+		if diff := cmp.Diff(wantTools, grp.ToolNames); diff != "" {
+			t.Errorf("group ToolNames mismatch (-want +got):\n%s", diff)
+		}
+	})
 }
