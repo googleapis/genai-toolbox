@@ -9,7 +9,7 @@
         "toolbox__get_documents"
       ],
       "kind": "tools",
-      "max_turns": 1
+      "max_turns": 2
     },
     {
       "id": "firestore-data-02",

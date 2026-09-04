@@ -147,6 +147,9 @@ steps:
       - "FIRESTORE_PROJECT=$PROJECT_ID"
       - "FIRESTORE_DATABASE=${_FIRESTORE_DATABASE}"
 
+      - "TEARDOWN_PROJECT=$PROJECT_ID"
+      - "TEARDOWN_DATABASE=${_FIRESTORE_DATABASE}"
+
   # Turns the allowFailure steps back into a red build. No waitFor, which means
   # every step above, so a new database needs no edit here.
   - id: "report-failures"
