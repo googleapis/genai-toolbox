@@ -58,4 +58,3 @@ func TestCompactTableMetadataSchema(t *testing.T) {
 		t.Errorf("compacted metadata dropped table-level metadata: %s", got)
 	}
 }
-
