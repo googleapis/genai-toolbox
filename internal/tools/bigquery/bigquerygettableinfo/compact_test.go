@@ -24,7 +24,7 @@ import (
 
 func TestCompactTableMetadataSchema(t *testing.T) {
 	metadata := &bigqueryapi.TableMetadata{
-		NumBytes: 9007199254740993,
+		NumBytes:    9007199254740993,
 		Description: "table description",
 		Schema: bigqueryapi.Schema{
 			{Name: "id", Type: bigqueryapi.IntegerFieldType},
