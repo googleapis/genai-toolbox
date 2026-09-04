@@ -727,9 +727,11 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 	result := &ReadResourceResult{
 		Contents: []TextResourceContents{
 			{
-				Uri:      uri,
-				MimeType: mimeType,
-				Text:     textContent,
+				ResourceContents: ResourceContents{
+					Uri:      uri,
+					MimeType: mimeType,
+				},
+				Text: textContent,
 			},
 		},
 	}

@@ -690,6 +690,7 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 		genAIAttrs.OperationName = "read_resource"
 	}
 
+	// Verify resource belongs to the current group before resolving globally.
 	res, resTmpl, params, err := getResourceOrTemplateByURI(uri, g, primitiveMgr)
 	if err != nil {
 		err = fmt.Errorf("resource lookup failed: %w", err)
@@ -726,9 +727,11 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 	result := &ReadResourceResult{
 		Contents: []TextResourceContents{
 			{
-				Uri:      uri,
-				MimeType: mimeType,
-				Text:     textContent,
+				ResourceContents: ResourceContents{
+					Uri:      uri,
+					MimeType: mimeType,
+				},
+				Text: textContent,
 			},
 		},
 	}

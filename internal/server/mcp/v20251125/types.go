@@ -386,8 +386,8 @@ type Resource struct {
 // Optional annotations for the client. The client can use annotations to inform how objects are used or displayed
 type Annotations struct {
 	// Describes who the intended audience of this object or data is.
-  //
-  // It can include multiple entries to indicate content useful for multiple audiences (e.g., `["user", "assistant"]`).
+	//
+	// It can include multiple entries to indicate content useful for multiple audiences (e.g., `["user", "assistant"]`).
 	Audience []Role `json:"audience,omitempty"`
 	// Describes how important this data is for operating the server.
 	//
@@ -460,14 +460,19 @@ type ReadResourceResult struct {
 	Contents []TextResourceContents `json:"contents"`
 }
 
-// TextResourceContents represents text-based resource content.
-type TextResourceContents struct {
-	// The URI of the resource.
+// The contents of a specific resource or sub-resource.
+type ResourceContents struct {
+	// The URI of this resource.
 	Uri string `json:"uri"`
 	// The MIME type of this resource, if known.
 	MimeType string `json:"mimeType,omitempty"`
+	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
+	Metadata map[string]any `json:"_meta,omitempty"`
+}
+
+// TextResourceContents represents text-based resource content.
+type TextResourceContents struct {
+	ResourceContents
 	// The text of the item. This must only be set if the item can actually be represented as text (not binary data).
 	Text string `json:"text"`
-	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#meta) for notes on `_meta` usage.
-	Metadata map[string]any `json:"_meta,omitempty"`
 }
