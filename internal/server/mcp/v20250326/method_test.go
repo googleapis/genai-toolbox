@@ -23,6 +23,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
@@ -895,4 +896,80 @@ func TestResourcesReadHandler(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetResourceOrTemplateByURI(t *testing.T) {
+	resourcesMap := map[string]resources.Resource{
+		"res1": testutils.NewMockResource("res1", "file:///res1", "", "", "", nil, nil),
+		"res2": testutils.NewMockResource("res2", "file:///res2", "", "", "", nil, nil),
+	}
+	templatesMap := map[string]resources.ResourceTemplate{
+		"tmpl1": testutils.NewMockResourceTemplate("tmpl1", "file:///tmpl/{path}", "", "", "", nil),
+		"tmpl2": testutils.NewMockResourceTemplate("tmpl2", "file:///other/{path}", "", "", "", nil),
+	}
+
+	// Create a group that only contains res1 and tmpl1
+	g, err := group.GroupConfig{
+		Name:                  "test_group",
+		ResourceNames:         []string{"res1"},
+		ResourceTemplateNames: []string{"tmpl1"},
+	}.Initialize(nil, nil, resourcesMap, templatesMap)
+	if err != nil {
+		t.Fatalf("failed to init group: %v", err)
+	}
+
+	primMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, resourcesMap, templatesMap, map[string]group.Group{"test_group": g})
+
+	t.Run("Exact Match Resource", func(t *testing.T) {
+		res, tmpl, params, err := getResourceOrTemplateByURI("file:///res1", g, primMgr)
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		if res == nil || res.GetName() != "res1" {
+			t.Errorf("expected res1, got %v", res)
+		}
+		if tmpl != nil {
+			t.Errorf("expected nil template, got %v", tmpl)
+		}
+		if params != nil {
+			t.Errorf("expected nil params, got %v", params)
+		}
+	})
+
+	t.Run("Excluded Resource (Not in Group)", func(t *testing.T) {
+		_, _, _, err := getResourceOrTemplateByURI("file:///res2", g, primMgr)
+		if err == nil {
+			t.Fatal("expected error for resource not in group")
+		}
+	})
+
+	t.Run("Template Match", func(t *testing.T) {
+		res, tmpl, params, err := getResourceOrTemplateByURI("file:///tmpl/foo/bar.txt", g, primMgr)
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		if res != nil {
+			t.Errorf("expected nil resource, got %v", res)
+		}
+		if tmpl == nil || tmpl.GetName() != "tmpl1" {
+			t.Errorf("expected tmpl1, got %v", tmpl)
+		}
+		if params["path"] != "foo/bar.txt" {
+			t.Errorf("expected path param 'foo/bar.txt', got %v", params["path"])
+		}
+	})
+
+	t.Run("Excluded Template (Not in Group)", func(t *testing.T) {
+		_, _, _, err := getResourceOrTemplateByURI("file:///other/baz.txt", g, primMgr)
+		if err == nil {
+			t.Fatal("expected error for template not in group")
+		}
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		_, _, _, err := getResourceOrTemplateByURI("file:///unknown", g, primMgr)
+		if err == nil {
+			t.Fatal("expected error for unknown URI")
+		}
+	})
 }

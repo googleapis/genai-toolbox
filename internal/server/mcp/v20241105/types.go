@@ -354,12 +354,12 @@ type ListResourcesRequest struct {
 // A known resource that the server is capable of reading.
 type Resource struct {
 	// A human-readable name for this resource.
-	// 
+	//
 	// This can be used by clients to populate UI elements.
 	Name string `json:"name"`
 	// A description of what this resource represents.
-  //
-  // This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
+	//
+	// This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
 	Description string `json:"description,omitempty"`
 	// The URI of this resource.
 	Uri string `json:"uri"`
@@ -381,12 +381,12 @@ type ListResourceTemplatesRequest struct {
 // A template description for resources available on the server.
 type ResourceTemplate struct {
 	// A human-readable name for the type of resource this template refers to.
-  // 
+	//
 	// This can be used by clients to populate UI elements.
 	Name string `json:"name"`
 	// A description of what this template is for.
-   // 
-   // This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
+	//
+	// This can be used by clients to improve the LLM's understanding of available resources. It can be thought of like a "hint" to the model.
 	Description string `json:"description,omitempty"`
 	// A URI template (according to RFC 6570) that can be used to construct resource URIs.
 	UriTemplate string `json:"uriTemplate"`
@@ -394,7 +394,7 @@ type ResourceTemplate struct {
 	MimeType string `json:"mimeType,omitempty"`
 }
 
-//The server's response to a resources/templates/list request from the client.
+// The server's response to a resources/templates/list request from the client.
 type ListResourceTemplatesResult struct {
 	PaginatedResult
 	ResourceTemplates []ResourceTemplate `json:"resourceTemplates"`
@@ -414,12 +414,17 @@ type ReadResourceResult struct {
 	Contents []TextResourceContents `json:"contents"`
 }
 
-// TextResourceContents represents text-based resource content.
-type TextResourceContents struct {
+// The contents of a specific resource or sub-resource.
+type ResourceContents struct {
 	// The URI of this resource.
-	Uri      string `json:"uri"`
+	Uri string `json:"uri"`
 	// The MIME type of this resource, if known.
 	MimeType string `json:"mimeType,omitempty"`
-	//The text of the item. This must only be set if the item can actually be represented as text (not binary data).
+}
+
+// Text resource content.
+type TextResourceContents struct {
+	ResourceContents
+	// The text of the item. This must only be set if the item can actually be represented as text (not binary data).
 	Text string `json:"text"`
 }

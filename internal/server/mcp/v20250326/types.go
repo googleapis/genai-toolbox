@@ -289,7 +289,6 @@ type ToolAnnotations struct {
 	OpenWorldHint *bool `json:"openWorldHint,omitempty"`
 }
 
-
 /* Prompts */
 
 // Sent from the client to request a list of prompts the server has.
@@ -438,12 +437,17 @@ type ReadResourceResult struct {
 	Contents []TextResourceContents `json:"contents"`
 }
 
-// TextResourceContents represents text-based resource content.
-type TextResourceContents struct {
+// The contents of a specific resource or sub-resource.
+type ResourceContents struct {
 	// The URI of the resource.
 	Uri string `json:"uri"`
 	// The MIME type of this resource, if known.
 	MimeType string `json:"mimeType,omitempty"`
+}
+
+// Text resource content.
+type TextResourceContents struct {
+	ResourceContents
 	// The text of the item. This must only be set if the item can actually be represented as text (not binary data).
 	Text string `json:"text"`
 }
