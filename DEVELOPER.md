@@ -21,9 +21,9 @@ Before you begin, ensure you have the following:
 
 ### Running from Local Source
 
-1. **Configuration:** Create a `tools.yaml` file to configure your sources,
+1. **Configuration:** Create a tools.yaml file to configure your sources,
    tools, prompts, resources, and groups. See the [Configuration section in the
-   README](./README.md#Configuration) for details.
+   README](./README.md#configuration) for details.
 1. **CLI Flags:** List available command-line flags for the Toolbox server:
 
     ```bash
