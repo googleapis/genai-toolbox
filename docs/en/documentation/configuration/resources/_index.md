@@ -9,7 +9,7 @@ description: >
 A `resource` represents read-only data or content that can be discovered and retrieved by MCP clients to provide contextual information to Large Language Models (LLMs).
 
 {{< notice note >}}
-You can use [Groups](../groups/) to organize resources and resource templates into collections. When you connect to a group's endpoint (`/mcp/{name}`), `resources/list` and `resources/templates/list` return only the items in that group, and `resources/read` strictly enforces that requested URIs belong to that group. The default endpoint (`/mcp`) provides access to all resources.
+You can use [Groups](../groups/_index.md) to organize resources and resource templates into collections. When you connect to a group's endpoint /mcp/{name}, resources/list and resources/templates/list return only the items in that group, and resources/read strictly enforces that requested URIs belong to that group. The default endpoint /mcp provides access to all resources.
 {{< /notice >}}
 
 Resources are analogous to file attachments or contextual snippets: they allow the model to inspect data (such as documentation, schema definitions or log files) without needing to invoke executable tools. The Toolbox server implements the following methods from the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/concepts/resources) specification:
