@@ -73,9 +73,15 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{Name: name, MaxQueryResultRows: 50}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
+	}
+	if actual.WriteMode == "" {
+		actual.WriteMode = WriteModeAllowed
+		if actual.ReadOnly != nil && *actual.ReadOnly {
+			actual.WriteMode = WriteModeBlocked
+		}
 	}
 	return actual, nil
 }
@@ -86,7 +92,8 @@ type Config struct {
 	Type                      string              `yaml:"type" validate:"required"`
 	Project                   string              `yaml:"project" validate:"required"`
 	Location                  string              `yaml:"location"`
-	WriteMode                 string              `yaml:"writeMode"`
+	ReadOnly                  *bool               `yaml:"readOnly,omitempty"`
+	WriteMode                 string              `yaml:"writeMode" validate:"omitempty,oneof=blocked protected allowed"`
 	AllowedDatasets           StringOrStringSlice `yaml:"allowedDatasets"`
 	UseClientOAuth            string              `yaml:"useClientOAuth"`
 	QuotaProject              string              `yaml:"quotaProject"`
@@ -132,6 +139,23 @@ func (r Config) SourceConfigType() string {
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	if r.WriteMode == "" {
 		r.WriteMode = WriteModeAllowed
+		if r.ReadOnly != nil && *r.ReadOnly {
+			r.WriteMode = WriteModeBlocked
+		}
+	}
+
+	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
+		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
+	}
+
+	if r.ReadOnly != nil {
+		// A writeMode is considered a read-only mode if it is Blocked or Protected.
+		isReadOnlyMode := (r.WriteMode == WriteModeBlocked || r.WriteMode == WriteModeProtected)
+
+		// The declared readOnly boolean must match the writeMode's behavior.
+		if *r.ReadOnly != isReadOnlyMode {
+			return nil, fmt.Errorf("conflicting source configuration: readOnly is %v, but writeMode is %q", *r.ReadOnly, r.WriteMode)
+		}
 	}
 
 	if r.MaxQueryResultRows == 0 {
@@ -163,8 +187,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:              client,
 		RestService:         restService,
 		TokenSource:         tokenSource,
-		MaxQueryResultRows:  r.MaxQueryResultRows,
-		MaximumBytesBilled:  r.MaximumBytesBilled,
 		ClientCreator:       clientCreator,
 		AuthTokenHeaderName: "Authorization",
 	}
@@ -218,6 +240,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 				dataset := s.Client.DatasetInProject(projectID, datasetID)
 				_, err := dataset.Metadata(ctx)
 				if err != nil {
+					s.Client.Close()
 					if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
 						return nil, fmt.Errorf("allowedDataset '%s' not found in project '%s'", datasetID, projectID)
 					}
@@ -230,10 +253,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s.AllowedDatasets = allowedDatasets
 	s.SessionProvider = s.newBigQuerySessionProvider()
-
-	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
-		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
-	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
 }
@@ -298,8 +317,6 @@ type Source struct {
 	RestService               *bigqueryrestapi.Service
 	TokenSource               oauth2.TokenSource
 	AuthTokenHeaderName       string
-	MaxQueryResultRows        int
-	MaximumBytesBilled        int64
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
 	sessionMutex              sync.Mutex
@@ -321,13 +338,20 @@ type Session struct {
 	LastUsed     time.Time
 }
 
+func (s *Source) IsReadOnly() bool {
+	return s.WriteMode == WriteModeBlocked || s.WriteMode == WriteModeProtected
+}
+
 func (s *Source) SourceType() string {
 	// Returns BigQuery Google SQL source type
 	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
-	return s.Config
+	cfg := s.Config
+	readOnly := s.IsReadOnly()
+	cfg.ReadOnly = &readOnly
+	return cfg
 }
 
 func (s *Source) BigQueryClient() *bigqueryapi.Client {
