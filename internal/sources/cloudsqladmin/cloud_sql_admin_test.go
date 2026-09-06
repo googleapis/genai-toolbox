@@ -63,6 +63,23 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "readOnly set to true",
+			in: `
+			kind: source
+			name: my-cloud-sql-admin-instance
+			type: cloud-sql-admin
+			readOnly: true
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-cloud-sql-admin-instance": cloudsqladmin.Config{
+					Name:           "my-cloud-sql-admin-instance",
+					Type:           cloudsqladmin.SourceType,
+					UseClientOAuth: false,
+					ReadOnly:       true,
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		tc := tc
@@ -74,6 +91,14 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 			}
 			if !cmp.Equal(tc.want, got) {
 				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
+			}
+			for _, sc := range got {
+				if cfg, ok := sc.(cloudsqladmin.Config); ok {
+					src := &cloudsqladmin.Source{Config: cfg}
+					if src.IsReadOnly() != cfg.ReadOnly {
+						t.Errorf("IsReadOnly() = %v, want %v", src.IsReadOnly(), cfg.ReadOnly)
+					}
+				}
 			}
 		})
 	}

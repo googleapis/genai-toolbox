@@ -23,6 +23,38 @@
 
 set -euo pipefail
 
+# Both early exits stay above the trap, which needs TOOLBOX_PREBUILT.
+
+# detect-changes writes this when the pull request lacks the 'evals: run' label.
+if [[ -f /workspace/skip-evals ]]; then
+  echo "no 'evals: run' label; skipping"
+  [[ "${1:-}" == "--check-any" ]] && exit 1
+  exit 0
+fi
+
+# Paths that put every step in scope. internal/tools/ is here because most tool
+# descriptions default in Go rather than in the prebuilt config, so the change an
+# eval is meant to measure often touches no path this script can attribute to a
+# single database.
+common_pattern='(^|/)evals/(run_configs|model_configs|setup|teardown)/|(^|/)internal/tools/|\.ci/evals\.cloudbuild\.yaml|\.ci/run_evals\.sh'
+
+# --check-any: true when any step's evals would run, so build-toolbox can skip
+# the compile.
+if [[ "${1:-}" == "--check-any" ]]; then
+  [[ -s /workspace/changed_files.txt ]] || exit 0
+  grep -qE "${common_pattern}" /workspace/changed_files.txt && exit 0
+  # Every step's evalset and prebuilt config, read back out of the build config.
+  targets=$(sed -n -e 's|.*EVAL_DATASET=\([^"]*\).*|\1|p' \
+                   -e 's|.*TOOLBOX_PREBUILT=\([^"]*\).*|internal/prebuiltconfigs/tools/\1.yaml|p' \
+                   /workspace/.ci/evals.cloudbuild.yaml)
+  grep -qxF "${targets}" /workspace/changed_files.txt && exit 0
+  exit 1
+fi
+
+# The step is allowFailure, so a database that fails does not cancel the others
+# mid-run. This marker is what the build's last step fails on.
+trap '[ $? -eq 0 ] || touch "/workspace/failed-${TOOLBOX_PREBUILT}"' EXIT
+
 # Empty values fail quietly, which is why they are checked: ALLOW_LOOSE blanks
 # an undefined substitution, empty postgres credentials degrade to IAM auth so
 # every tool disappears, and an empty EVAL_REPORTING_PROJECT falls back to the
@@ -44,6 +76,18 @@ for var in "${required[@]}"; do
   fi
 done
 
+# Exact-line matches, since git diff emits repo-relative paths. Only a non-empty
+# list can narrow the run: empty means a scheduled build, or a checkout the diff
+# failed against.
+if [[ -s /workspace/changed_files.txt ]] &&
+   ! grep -qxF -e "${EVAL_DATASET}" \
+               -e "internal/prebuiltconfigs/tools/${TOOLBOX_PREBUILT}.yaml" \
+               /workspace/changed_files.txt &&
+   ! grep -qE "${common_pattern}" /workspace/changed_files.txt; then
+  echo "no changes affecting ${TOOLBOX_PREBUILT}; skipping"
+  exit 0
+fi
+
 echo "prebuilt config: ${TOOLBOX_PREBUILT}"
 echo "harnesses:       ${EVAL_HARNESSES}"
 "${TOOLBOX_BIN}" --version  # built on Debian, exec'd here on Ubuntu
@@ -63,6 +107,10 @@ for harness in "${harnesses[@]}"; do
 done
 
 ulimit -n 4096
+
+# Lower bound for teardown, so it cannot reach resources that predate this build.
+# Its absence is also how teardown knows the evals never ran.
+date -u +%Y-%m-%dT%H:%M:%SZ > "/workspace/eval-start-${TOOLBOX_PREBUILT}"
 
 # One process per harness: pyaml_env resolves !ENV at load time, so a single
 # process could not vary EVAL_MODEL_CONFIG between runs.

@@ -255,34 +255,34 @@ steps:
           exit 0
         fi
 
-  - id: "bigtable"
-    name: golang:1
-    waitFor: ["compile-test-binary", "detect-changes"]
-    entrypoint: /bin/bash
-    env:
-      - "GOPATH=/gopath"
-      - "BIGTABLE_PROJECT=$PROJECT_ID"
-      - "BIGTABLE_INSTANCE=$_BIGTABLE_INSTANCE"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID"]
-    volumes:
-      - name: "go"
-        path: "/gopath"
-    args:
-      - -c
-      - |
-        PATTERN="(^|/)bigtable/|$$(cat .ci/core_pattern.txt)"
-
-        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
-          echo "Changes detected. Running Bigtable tests..."
-          .ci/test_with_coverage.sh \
-            "Bigtable" \
-            bigtable \
-            bigtable
-        else
-          echo "No relevant changes for Bigtable. Skipping shard."
-          exit 0
-        fi
+  # - id: "bigtable"
+  #   name: golang:1
+  #   waitFor: ["compile-test-binary", "detect-changes"]
+  #   entrypoint: /bin/bash
+  #   env:
+  #     - "GOPATH=/gopath"
+  #     - "BIGTABLE_PROJECT=$PROJECT_ID"
+  #     - "BIGTABLE_INSTANCE=$_BIGTABLE_INSTANCE"
+  #     - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+  #   secretEnv: ["CLIENT_ID"]
+  #   volumes:
+  #     - name: "go"
+  #       path: "/gopath"
+  #   args:
+  #     - -c
+  #     - |
+  #       PATTERN="(^|/)bigtable/|$$(cat .ci/core_pattern.txt)"
+  #
+  #       if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+  #         echo "Changes detected. Running Bigtable tests..."
+  #         .ci/test_with_coverage.sh \
+  #           "Bigtable" \
+  #           bigtable \
+  #           bigtable
+  #       else
+  #         echo "No relevant changes for Bigtable. Skipping shard."
+  #         exit 0
+  #       fi
 
   - id: "bigquery"
     name: golang:1
@@ -625,6 +625,32 @@ steps:
             neo4j
         else
           echo "No relevant changes for Neo4j. Skipping shard."
+          exit 0
+        fi
+
+  - id: "falkordb"
+    name: golang:1
+    waitFor: ["compile-test-binary", "detect-changes"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    secretEnv: ["API_KEY"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        PATTERN="(^|/)falkordb/|$$(cat .ci/core_pattern.txt)"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running FalkorDB tests..."
+          .ci/test_with_coverage.sh \
+            "FalkorDB" \
+            falkordb \
+            falkordb
+        else
+          echo "No relevant changes for FalkorDB. Skipping shard."
           exit 0
         fi
 

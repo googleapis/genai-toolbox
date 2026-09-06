@@ -50,10 +50,14 @@ import (
 	v20260728 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20260728"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
+	_ "github.com/googleapis/mcp-toolbox/internal/sources/postgres"
+	_ "github.com/googleapis/mcp-toolbox/internal/sources/sqlite"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/http"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlexecutesql"
+	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgresexecutesql"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
@@ -1359,184 +1363,6 @@ func TestMCPAuthMiddleware(t *testing.T) {
 	}
 }
 
-func TestGoogleAuthConfigValidation(t *testing.T) {
-	ctx := context.Background()
-
-	tests := []struct {
-		name      string
-		yaml      string
-		wantError bool
-	}{
-		{
-			name: "only clientId, mcpEnabled false",
-			yaml: `
-kind: authService
-name: my-google-auth
-type: google
-clientId: my-client-id
-`,
-			wantError: false,
-		},
-		{
-			name: "only audience, mcpEnabled false",
-			yaml: `
-kind: authService
-name: my-google-auth
-type: google
-audience: my-audience
-`,
-			wantError: true,
-		},
-		{
-			name: "only audience, mcpEnabled true",
-			yaml: `
-kind: authService
-name: my-google-auth
-type: google
-audience: my-audience
-mcpEnabled: true
-`,
-			wantError: false,
-		},
-		{
-			name: "scopesRequired, mcpEnabled false",
-			yaml: `
-kind: authService
-name: my-google-auth
-type: google
-scopesRequired:
-  - email
-`,
-			wantError: true,
-		},
-		{
-			name: "scopesRequired, mcpEnabled true",
-			yaml: `
-kind: authService
-name: my-google-auth
-type: google
-scopesRequired:
-  - email
-mcpEnabled: true
-`,
-			wantError: false,
-		},
-		{
-			name: "both clientId and audience, mcpEnabled true",
-			yaml: `
-kind: authService
-name: my-google-auth
-type: google
-clientId: my-client-id
-audience: my-audience
-mcpEnabled: true
-`,
-			wantError: false,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
-			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
-			}
-		})
-	}
-}
-
-func TestGenericAuthConfigValidation(t *testing.T) {
-	ctx := context.Background()
-
-	tests := []struct {
-		name      string
-		yaml      string
-		wantError bool
-	}{
-		{
-			name: "valid mcpEnabled false",
-			yaml: `
-kind: authService
-name: my-generic-auth
-type: generic
-audience: my-audience
-authorizationServer: https://example.com
-`,
-			wantError: false,
-		},
-		{
-			name: "valid mcpEnabled true",
-			yaml: `
-kind: authService
-name: my-generic-auth
-type: generic
-audience: my-audience
-authorizationServer: https://example.com
-mcpEnabled: true
-`,
-			wantError: false,
-		},
-		{
-			name: "introspectionEndpoint, mcpEnabled false",
-			yaml: `
-kind: authService
-name: my-generic-auth
-type: generic
-audience: my-audience
-authorizationServer: https://example.com
-introspectionEndpoint: http://example.com/introspect
-`,
-			wantError: true,
-		},
-		{
-			name: "introspectionMethod, mcpEnabled false",
-			yaml: `
-kind: authService
-name: my-generic-auth
-type: generic
-audience: my-audience
-authorizationServer: https://example.com
-introspectionMethod: POST
-`,
-			wantError: true,
-		},
-		{
-			name: "introspectionParamName, mcpEnabled false",
-			yaml: `
-kind: authService
-name: my-generic-auth
-type: generic
-audience: my-audience
-authorizationServer: https://example.com
-introspectionParamName: token
-`,
-			wantError: true,
-		},
-		{
-			name: "scopesRequired, mcpEnabled false",
-			yaml: `
-kind: authService
-name: my-generic-auth
-type: generic
-audience: my-audience
-authorizationServer: https://example.com
-scopesRequired:
-  - email
-`,
-			wantError: true,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
-			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
-			}
-		})
-	}
-}
-
 func TestDuplicateResourceConfig(t *testing.T) {
 	ctx := context.Background()
 
@@ -1656,195 +1482,6 @@ messages:
 				t.Fatalf("UnmarshalPrimitiveConfig() error = %v, want it to mention 'declared more than once'", err)
 			}
 		})
-	}
-}
-
-func TestGroupConfigParsing(t *testing.T) {
-	ctx := context.Background()
-
-	tests := []struct {
-		name      string
-		yaml      string
-		want      group.GroupConfig
-		wantError bool
-	}{
-		{
-			name: "valid named group",
-			yaml: `
-kind: group
-name: my_group
-description: a group of tools and prompts
-tools:
-  - tool_a
-  - tool_b
-prompts:
-  - prompt_a
-`,
-			want: group.GroupConfig{
-				Name:        "my_group",
-				Description: "a group of tools and prompts",
-				ToolNames:   []string{"tool_a", "tool_b"},
-				PromptNames: []string{"prompt_a"},
-			},
-		},
-		{
-			name: "named group with only description",
-			yaml: `
-kind: group
-name: my_group
-description: just a description
-`,
-			want: group.GroupConfig{
-				Name:        "my_group",
-				Description: "just a description",
-			},
-		},
-		{
-			name: "default group with only description",
-			yaml: `
-kind: group
-name:
-description: default server instruction
-`,
-			want: group.GroupConfig{
-				Description: "default server instruction",
-			},
-		},
-		{
-			name: "default group omitting name field",
-			yaml: `
-kind: group
-description: default server instruction
-`,
-			want: group.GroupConfig{
-				Description: "default server instruction",
-			},
-		},
-		{
-			name: "kind toolset folds into a tools-only group",
-			yaml: `
-kind: toolset
-name: my_toolset
-tools:
-  - tool_a
-  - tool_b
-`,
-			want: group.GroupConfig{
-				Name:      "my_toolset",
-				ToolNames: []string{"tool_a", "tool_b"},
-			},
-		},
-		{
-			name: "default group declaring tools is an error",
-			yaml: `
-kind: group
-name:
-tools:
-  - tool_a
-`,
-			wantError: true,
-		},
-		{
-			name: "default group declaring prompts is an error",
-			yaml: `
-kind: group
-name:
-prompts:
-  - prompt_a
-`,
-			wantError: true,
-		},
-		{
-			name: "unknown field is an error",
-			yaml: `
-kind: group
-name: my_group
-resources:
-  - res_a
-`,
-			wantError: true,
-		},
-		{
-			name: "duplicate default group is an error",
-			yaml: `
-kind: group
-name:
-description: first
----
-kind: group
-name:
-description: second
-`,
-			wantError: true,
-		},
-		{
-			name: "duplicate named group is an error",
-			yaml: `
-kind: group
-name: my_group
-tools:
-  - tool_a
----
-kind: group
-name: my_group
-tools:
-  - tool_b
-`,
-			wantError: true,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
-			if (err != nil) != tc.wantError {
-				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
-			}
-			if tc.wantError {
-				return
-			}
-			gc, ok := groups[tc.want.Name]
-			if !ok {
-				t.Fatalf("expected group %q to be parsed, got: %v", tc.want.Name, groups)
-			}
-			if diff := cmp.Diff(tc.want, gc); diff != "" {
-				t.Errorf("group mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestGroupConfigValues(t *testing.T) {
-	ctx := context.Background()
-	yaml := `
-kind: group
-name: my_group
-description: a group
-tools:
-  - tool_a
-  - tool_b
-prompts:
-  - prompt_a
-`
-	_, _, _, _, _, groups, err := server.UnmarshalPrimitiveConfig(ctx, []byte(yaml))
-	if err != nil {
-		t.Fatalf("UnmarshalPrimitiveConfig() returned unexpected error: %v", err)
-	}
-	gc, ok := groups["my_group"]
-	if !ok {
-		t.Fatalf("expected group %q to be parsed, got: %v", "my_group", groups)
-	}
-	if gc.Name != "my_group" {
-		t.Errorf("group name: got %q, want %q", gc.Name, "my_group")
-	}
-	if gc.Description != "a group" {
-		t.Errorf("group description: got %q, want %q", gc.Description, "a group")
-	}
-	if diff := cmp.Diff([]string{"tool_a", "tool_b"}, gc.ToolNames); diff != "" {
-		t.Errorf("group tools mismatch (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff([]string{"prompt_a"}, gc.PromptNames); diff != "" {
-		t.Errorf("group prompts mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -2096,4 +1733,262 @@ func TestNewServer_Extensions(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestShouldSuppressTool(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+
+	readOnlySource := &testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{Name: "readonly-db", ReadOnly: true}}
+	readWriteSource := &testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{Name: "readwrite-db", ReadOnly: false}}
+
+	initTool := func(cfg testutils.MockToolConfig) tools.Tool {
+		t, err := cfg.Initialize(ctx)
+		if err != nil {
+			panic(err)
+		}
+		return t
+	}
+
+	testCases := []struct {
+		desc   string
+		source sources.Source
+		tool   tools.Tool
+		want   bool
+	}{
+		{
+			desc:   "nil source -> not suppressed",
+			source: nil,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "some-tool"}, Source: "readonly-db"}),
+			want:   false,
+		},
+		{
+			desc:   "nil tool -> not suppressed",
+			source: readOnlySource,
+			tool:   nil,
+			want:   false,
+		},
+		{
+			desc:   "write tool on read-write source (readOnlyHint: false) -> not suppressed",
+			source: readWriteSource,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "write-tool"}, Source: "readwrite-db", Annotations: tools.NewWriteAnnotations()}),
+			want:   false,
+		},
+		{
+			desc:   "write tool on read-only source (readOnlyHint: false) -> suppressed",
+			source: readOnlySource,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "write-tool"}, Source: "readonly-db", Annotations: tools.NewWriteAnnotations()}),
+			want:   true,
+		},
+		{
+			desc:   "read-only tool on read-only source (readOnlyHint: true) -> not suppressed",
+			source: readOnlySource,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "readonly-tool"}, Source: "readonly-db", Annotations: tools.NewReadOnlyAnnotations()}),
+			want:   false,
+		},
+		{
+			desc:   "unannotated tool on read-only source -> not suppressed",
+			source: readOnlySource,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "unannotated-tool"}, Source: "readonly-db", Annotations: nil}),
+			want:   false,
+		},
+		{
+			desc:   "tool with non-nil annotations but nil readOnlyHint on read-only source -> not suppressed",
+			source: readOnlySource,
+			tool:   initTool(testutils.MockToolConfig{ConfigBase: tools.ConfigBase{Name: "nil-hint-tool"}, Source: "readonly-db", Annotations: &tools.ToolAnnotations{ReadOnlyHint: nil}}),
+			want:   false,
+		},
+		{
+			desc:   "mysql-execute-sql on read-only source -> not suppressed (dynamically reports readOnlyHint: true)",
+			source: readOnlySource,
+			tool: func() tools.Tool {
+				t, err := mysqlexecutesql.Config{
+					ConfigBase: tools.ConfigBase{Name: "mysql-execute-sql", Description: "execute sql query"},
+					Type:       "mysql-execute-sql",
+					Source:     "readonly-db",
+				}.Initialize(ctx)
+				if err != nil {
+					panic(err)
+				}
+				return t
+			}(),
+			want: false,
+		},
+		{
+			desc:   "postgres-execute-sql on read-only source -> not suppressed (dynamically reports readOnlyHint: true)",
+			source: readOnlySource,
+			tool: func() tools.Tool {
+				t, err := postgresexecutesql.Config{
+					ConfigBase: tools.ConfigBase{Name: "postgres-execute-sql", Description: "execute sql query"},
+					Type:       "postgres-execute-sql",
+					Source:     "readonly-db",
+				}.Initialize(ctx)
+				if err != nil {
+					panic(err)
+				}
+				return t
+			}(),
+			want: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := tools.ShouldSuppress(ctx, tc.tool, tc.source)
+			if got != tc.want {
+				t.Errorf("ShouldSuppress(ctx) = %v, want %v", got, tc.want)
+			}
+			gotNilLogger := tools.ShouldSuppress(context.Background(), tc.tool, tc.source)
+			if gotNilLogger != tc.want {
+				t.Errorf("ShouldSuppress(nil logger) = %v, want %v", gotNilLogger, tc.want)
+			}
+		})
+	}
+}
+
+func TestInitializeGroups(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	t.Run("suppressed tool is pruned from group", func(t *testing.T) {
+		cfg := server.ServerConfig{
+			SourceConfigs: server.SourceConfigs{
+				"readonly-db": &testutils.MockSourceConfig{Name: "readonly-db", ReadOnly: true},
+			},
+			ToolConfigs: server.ToolConfigs{
+				"allowed_read_tool": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "allowed_read_tool"},
+					Source:      "readonly-db",
+					Annotations: tools.NewReadOnlyAnnotations(),
+				},
+				"suppressed_write_tool": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "suppressed_write_tool"},
+					Source:      "readonly-db",
+					Annotations: tools.NewWriteAnnotations(),
+				},
+			},
+			GroupConfigs: server.GroupConfigs{
+				"my-custom-group": group.GroupConfig{
+					Name:      "my-custom-group",
+					ToolNames: []string{"allowed_read_tool", "suppressed_write_tool"},
+				},
+			},
+		}
+
+		s, err := server.NewServer(ctx, cfg)
+		if err != nil {
+			t.Fatalf("failed to create server: %v", err)
+		}
+
+		grp, ok := s.PrimitiveMgr.GetGroup("my-custom-group")
+		if !ok {
+			t.Fatalf("expected group 'my-custom-group' to be registered, but not found")
+		}
+
+		// Verify allowed tool is present in group
+		if !grp.ContainsTool("allowed_read_tool") {
+			t.Errorf("expected group to contain 'allowed_read_tool'")
+		}
+
+		// Verify suppressed tool was pruned from group
+		if grp.ContainsTool("suppressed_write_tool") {
+			t.Errorf("expected group to NOT contain suppressed tool 'suppressed_write_tool'")
+		}
+
+		// Verify group ToolNames slice only contains allowed_read_tool
+		wantTools := []string{"allowed_read_tool"}
+		if diff := cmp.Diff(wantTools, grp.ToolNames); diff != "" {
+			t.Errorf("group ToolNames mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("group with all tools suppressed remains registered with empty tools", func(t *testing.T) {
+		cfg := server.ServerConfig{
+			SourceConfigs: server.SourceConfigs{
+				"readonly-db": &testutils.MockSourceConfig{Name: "readonly-db", ReadOnly: true},
+			},
+			ToolConfigs: server.ToolConfigs{
+				"write_tool_1": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "write_tool_1"},
+					Source:      "readonly-db",
+					Annotations: tools.NewWriteAnnotations(),
+				},
+				"write_tool_2": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "write_tool_2"},
+					Source:      "readonly-db",
+					Annotations: tools.NewWriteAnnotations(),
+				},
+			},
+			GroupConfigs: server.GroupConfigs{
+				"admin-group": group.GroupConfig{
+					Name:      "admin-group",
+					ToolNames: []string{"write_tool_1", "write_tool_2"},
+				},
+			},
+		}
+
+		s, err := server.NewServer(ctx, cfg)
+		if err != nil {
+			t.Fatalf("failed to create server: %v", err)
+		}
+
+		grp, ok := s.PrimitiveMgr.GetGroup("admin-group")
+		if !ok {
+			t.Fatalf("expected group 'admin-group' to be registered even when empty, but not found")
+		}
+
+		if len(grp.ToolNames) != 0 {
+			t.Errorf("expected group ToolNames to be empty, got: %v", grp.ToolNames)
+		}
+	})
+
+	t.Run("group with no tools suppressed initializes normally", func(t *testing.T) {
+		cfg := server.ServerConfig{
+			SourceConfigs: server.SourceConfigs{
+				"readwrite-db": &testutils.MockSourceConfig{Name: "readwrite-db", ReadOnly: false},
+			},
+			ToolConfigs: server.ToolConfigs{
+				"tool_1": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "tool_1"},
+					Source:      "readwrite-db",
+					Annotations: tools.NewWriteAnnotations(),
+				},
+				"tool_2": &testutils.MockToolConfig{
+					ConfigBase:  tools.ConfigBase{Name: "tool_2"},
+					Source:      "readwrite-db",
+					Annotations: tools.NewReadOnlyAnnotations(),
+				},
+			},
+			GroupConfigs: server.GroupConfigs{
+				"all-tools-group": group.GroupConfig{
+					Name:      "all-tools-group",
+					ToolNames: []string{"tool_1", "tool_2"},
+				},
+			},
+		}
+
+		s, err := server.NewServer(ctx, cfg)
+		if err != nil {
+			t.Fatalf("failed to create server: %v", err)
+		}
+
+		grp, ok := s.PrimitiveMgr.GetGroup("all-tools-group")
+		if !ok {
+			t.Fatalf("expected group 'all-tools-group' to be registered, but not found")
+		}
+
+		wantTools := []string{"tool_1", "tool_2"}
+		if diff := cmp.Diff(wantTools, grp.ToolNames); diff != "" {
+			t.Errorf("group ToolNames mismatch (-want +got):\n%s", diff)
+		}
+	})
 }

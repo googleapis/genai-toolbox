@@ -394,12 +394,16 @@ To cover a new prebuilt config:
   config's `TOOLBOX_PREBUILT`, `EVAL_DATASET`, and connection settings.
   `EVAL_ENV_PREFIX` names the prefix those settings share, which is how
   [run_evals.sh](.ci/run_evals.sh) knows which ones to require. Set
-  `EVAL_HARNESSES` to run more than the default harness.
+  `EVAL_HARNESSES` to run more than the default harness, and `allowFailure: true`
+  so the step's failure does not cancel the other databases. On a pull request the
+  step runs when its evalset or its prebuilt config changed; both paths are
+  derived from the settings above, so there is nothing else to configure.
 
 Evals call real models against live infrastructure, so they are neither free nor
 deterministic, and they are not part of the pull request gate. Like integration
 tests, they need credentials a contributor's pull request cannot supply, so a
-maintainer runs them; an evalset that has not been run is not a blocker.
+maintainer runs them by applying the `evals: run` label and commenting
+`/gcbrun`; an evalset that has not been run is not a blocker.
 
 To run them yourself, follow EvalBench's own setup, then copy `evals/` into your
 EvalBench checkout and start the run from there — it resolves the paths in

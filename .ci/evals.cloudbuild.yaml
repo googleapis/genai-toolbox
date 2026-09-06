@@ -20,12 +20,39 @@
 # steps inherit _EVAL_HARNESSES unless they set their own.
 
 steps:
+  # Narrows a pull request run to the databases it touched. Empty on a scheduled
+  # build, which run_evals.sh runs in full.
+  - id: "detect-changes"
+    name: "gcr.io/cloud-builders/git"
+    waitFor: ["-"]
+    entrypoint: "bash"
+    args:
+      - -c
+      - |
+        # Cloud Build has no label filter, so the opt-in gate lives here. It
+        # covers the maintainer pull requests that build without a /gcbrun too.
+        # Empty _PR_NUMBER is a scheduled build, which is ungated.
+        if [ -n "$_PR_NUMBER" ] &&
+           ! curl -sfL "https://api.github.com/repos/googleapis/mcp-toolbox/issues/$_PR_NUMBER/labels" |
+             grep -q '"name": *"evals: run"'; then
+          echo "pull request #$_PR_NUMBER is not labelled 'evals: run'; skipping"
+          touch /workspace/skip-evals
+          exit 0
+        fi
+
+        # Blobless: --name-only needs tree entries, not file contents.
+        git fetch --unshallow --filter=blob:none || true
+        git fetch --filter=blob:none origin main > /dev/null 2>&1
+        git diff --name-only origin/main...HEAD > /workspace/changed_files.txt
+        cat /workspace/changed_files.txt
+
   - id: "build-toolbox"
     name: golang:1
-    waitFor: ["-"]
+    waitFor: ["detect-changes"]
     env:
       - "CGO_ENABLED=1"  # godror does not build without cgo
     script: |
+      bash /workspace/.ci/run_evals.sh --check-any || exit 0
       go build -o /workspace/toolbox .
       /workspace/toolbox --version
 
@@ -42,6 +69,7 @@ steps:
     dir: /evalbench
     entrypoint: bash
     args: ["/workspace/.ci/run_evals.sh"]
+    allowFailure: true
     env:
       - "TOOLBOX_PREBUILT=cloud-sql-postgres"
       - "EVAL_DATASET=evals/evalsets/cloud-sql-postgres.json"
@@ -63,6 +91,7 @@ steps:
     dir: /evalbench
     entrypoint: bash
     args: ["/workspace/.ci/run_evals.sh"]
+    allowFailure: true
     env:
       - "TOOLBOX_PREBUILT=cloud-sql-mysql"
       - "EVAL_DATASET=evals/evalsets/cloud-sql-mysql.json"
@@ -76,6 +105,46 @@ steps:
     secretEnv:
       - "CLOUD_SQL_MYSQL_USER"
       - "CLOUD_SQL_MYSQL_PASSWORD"
+
+  # These evals create real backups and the toolbox has no delete tool, so the
+  # TEARDOWN_ variables drive evals/teardown/, which EvalBench runs after each
+  # harness.
+  #
+  # No secretEnv: the cloud-sql-admin source authenticates through ADC. Only
+  # three CLOUD_SQL_POSTGRES_ variables are set, so run_evals.sh's prefix check
+  # does not see an empty user or password.
+  - id: "evals-cloud-sql-postgres-admin"
+    name: "${_EVALBENCH_IMAGE}"
+    waitFor: ["build-toolbox", "pull-evalbench"]
+    dir: /evalbench
+    entrypoint: bash
+    args: ["/workspace/.ci/run_evals.sh"]
+    allowFailure: true
+    env:
+      - "TOOLBOX_PREBUILT=cloud-sql-postgres-admin"
+      - "EVAL_DATASET=evals/evalsets/cloud-sql-postgres-admin.json"
+      - "EVAL_ENV_PREFIX=CLOUD_SQL_POSTGRES"
+
+      - "TEARDOWN_PROJECT=$PROJECT_ID"
+      - "TEARDOWN_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
+
+      - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
+      - "CLOUD_SQL_POSTGRES_REGION=${_REGION}"
+      - "CLOUD_SQL_POSTGRES_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
+
+  # Turns the allowFailure steps back into a red build. No waitFor, which means
+  # every step above, so a new database needs no edit here.
+  - id: "report-failures"
+    name: "gcr.io/cloud-builders/git"
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        if ls /workspace/failed-* > /dev/null 2>&1; then
+          echo "evals failed:"
+          ls /workspace/failed-*
+          exit 1
+        fi
 
 availableSecrets:
   secretManager:
@@ -94,6 +163,9 @@ options:
   logging: CLOUD_LOGGING_ONLY
   substitutionOption: "ALLOW_LOOSE"
   dynamicSubstitutions: true
+  # Steps share one worker, so databases evaluated in parallel contend for the
+  # same CPU.
+  machineType: E2_HIGHCPU_32
   env:
     - "TOOLBOX_BIN=/workspace/toolbox"
     - "EVAL_HARNESSES=${_EVAL_HARNESSES}"
@@ -101,6 +173,7 @@ options:
     - "EVAL_CLAUDE_MODEL=${_CLAUDE_MODEL}"
     - "EVAL_GCP_PROJECT_ID=$PROJECT_ID"
     - "EVAL_REPORTING_PROJECT=${_EVAL_REPORTING_PROJECT}"
+    - "EVAL_GROUP=${_EVAL_GROUP}"
     - "EVAL_GCP_PROJECT_REGION=${_VERTEX_LOCATION}"
     - "UV_CACHE_DIR=/tmp/uv-cache"
 
@@ -110,6 +183,8 @@ timeout: 7200s
 # step when one is missing.
 substitutions:
   _EVAL_HARNESSES: "claude_cli"
+  # Presubmit runs override this so their rows stay out of the scheduled runs.
+  _EVAL_GROUP: "mcp-toolbox"
   _GEMINI_MODEL: "gemini-3.7-flash"
-  _CLAUDE_MODEL: "claude-opus-4-6"
+  _CLAUDE_MODEL: "claude-opus-4-8"
   _EVALBENCH_IMAGE: "us-central1-docker.pkg.dev/cloud-db-nl2sql/evalbench/eval_server:latest"
