@@ -105,6 +105,10 @@ type ServerConfig struct {
 	SkipSourceValidation bool
 	// DisableExt specifies MCP extension URIs disabled on this server.
 	DisableExt []string
+	// MaxRows and MaxResponseBytes are the server-wide result caps applied to
+	// tools that do not declare their own. Zero means uncapped.
+	MaxRows          int
+	MaxResponseBytes int
 }
 
 type logFormat string

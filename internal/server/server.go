@@ -68,6 +68,8 @@ type Server struct {
 	mcpPrmFile          string
 	httpMaxRequestBytes int64
 	enableDraftSpecs    bool
+	maxRows             int
+	maxResponseBytes    int
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -476,6 +478,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	sseManager := newSseManager(ctx)
 
 	primitiveManager := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap)
+	primitiveManager.SetResultCaps(cfg.MaxRows, cfg.MaxResponseBytes)
 
 	limit := cfg.HttpMaxRequestBytes
 	if limit <= 0 {
@@ -509,6 +512,8 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		mcpPrmFile:          cfg.McpPrmFile,
 		httpMaxRequestBytes: limit,
 		enableDraftSpecs:    cfg.EnableDraftSpecs,
+		maxRows:             cfg.MaxRows,
+		maxResponseBytes:    cfg.MaxResponseBytes,
 	}
 
 	if s.enableDraftSpecs {

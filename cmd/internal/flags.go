@@ -77,4 +77,6 @@ func ServeFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
 	flags.Int64Var(&opts.Cfg.HttpMaxRequestBytes, "http-max-request-bytes", server.DefaultHTTPMaxRequestBytes, "Maximum MCP HTTP request body size in bytes.")
 	flags.BoolVar(&opts.Cfg.EnableDraftSpecs, "enable-draft-specs", false, "Opt-in and test upcoming draft MCP specifications.")
 	flags.StringSliceVar(&opts.Cfg.DisableExt, "disable-ext", []string{}, "Specifies MCP extension URIs disabled on this server.")
+	flags.IntVar(&opts.Cfg.MaxRows, "max-rows", 0, "Default cap on the number of rows a tool result may contain. 0 means uncapped. Overridden per tool by the maxRows field.")
+	flags.IntVar(&opts.Cfg.MaxResponseBytes, "max-response-bytes", 0, "Default cap on the serialized size of a tool result, in bytes. 0 means uncapped. Overridden per tool by the maxResponseBytes field.")
 }
