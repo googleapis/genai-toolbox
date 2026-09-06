@@ -117,8 +117,33 @@ func TestAccessTokenParseBearerToken(t *testing.T) {
 			want:   "abc123",
 		},
 		{
+			desc:   "multiple spaces between scheme and token",
+			header: "Bearer  abc123",
+			want:   "abc123",
+		},
+		{
+			desc:   "surrounding whitespace",
+			header: "  Bearer abc123  ",
+			want:   "abc123",
+		},
+		{
+			desc:   "case-insensitive scheme",
+			header: "bearer abc123",
+			want:   "abc123",
+		},
+		{
 			desc:    "empty bearer token",
 			header:  "Bearer ",
+			wantErr: true,
+		},
+		{
+			desc:    "scheme only",
+			header:  "Bearer",
+			wantErr: true,
+		},
+		{
+			desc:    "too many parts",
+			header:  "Bearer abc123 extra",
 			wantErr: true,
 		},
 		{
