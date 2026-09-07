@@ -86,7 +86,7 @@ func newTemplateConfig(ctx context.Context, name string, decoder *yaml.Decoder) 
 type Config struct {
 	resources.ResourceConfigBase `yaml:",inline"`
 	Path                         string `yaml:"path" validate:"required"`
-	MaxSize                      *int64 `yaml:"max_size,omitempty"`
+	MaxSize                      *int64 `yaml:"maxSize,omitempty"`
 	baseDir                      string
 }
 
@@ -124,9 +124,9 @@ func (c *Config) Validate() error {
 
 	if c.MaxSize != nil {
 		if *c.MaxSize <= 0 {
-			return fmt.Errorf("file resource %q max_size must be greater than 0", c.Name)
+			return fmt.Errorf("file resource %q maxSize must be greater than 0", c.Name)
 		} else if *c.MaxSize > 1024*1024*1024 {
-			return fmt.Errorf("file resource %q max_size cannot exceed 1GB", c.Name)
+			return fmt.Errorf("file resource %q maxSize cannot exceed 1GB", c.Name)
 		}
 	}
 	return nil
@@ -429,7 +429,7 @@ func (r *FileResource) GetCurrentSize() (int64, error) {
 type TemplateConfig struct {
 	resources.ResourceTemplateConfigBase `yaml:",inline"`
 	AllowedPaths                         []string `yaml:"allowedPaths,omitempty"`
-	MaxSize                              *int64   `yaml:"max_size,omitempty"`
+	MaxSize                              *int64   `yaml:"maxSize,omitempty"`
 	baseDir                              string
 }
 
@@ -453,9 +453,9 @@ func (c *TemplateConfig) Validate() error {
 
 	if c.MaxSize != nil {
 		if *c.MaxSize <= 0 {
-			return fmt.Errorf("file resource template %q max_size must be greater than 0", c.Name)
+			return fmt.Errorf("file resource template %q maxSize must be greater than 0", c.Name)
 		} else if *c.MaxSize > 1024*1024*1024 {
-			return fmt.Errorf("file resource template %q max_size cannot exceed 1GB", c.Name)
+			return fmt.Errorf("file resource template %q maxSize cannot exceed 1GB", c.Name)
 		}
 	}
 	return nil

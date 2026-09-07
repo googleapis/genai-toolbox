@@ -354,35 +354,35 @@ func TestFileTemplate_Validation(t *testing.T) {
 			wantErrMsg: "Field validation for 'URITemplate' failed on the 'required' tag",
 		},
 		{
-			name: "invalid max_size negative",
+			name: "invalid maxSize negative",
 			yamlStr: `
 			kind: resourceTemplate
 			name: my-template
 			type: file
 			uriTemplate: "file://{path}"
-			max_size: -50
+			maxSize: -50
 			`,
 			wantErrMsg: "must be greater than 0",
 		},
 		{
-			name: "invalid max_size zero",
+			name: "invalid maxSize zero",
 			yamlStr: `
 			kind: resourceTemplate
 			name: my-template
 			type: file
 			uriTemplate: "file://{path}"
-			max_size: 0
+			maxSize: 0
 			`,
 			wantErrMsg: "must be greater than 0",
 		},
 		{
-			name: "max_size too large",
+			name: "maxSize too large",
 			yamlStr: `
 			kind: resourceTemplate
 			name: my-template
 			type: file
 			uriTemplate: "file://{path}"
-			max_size: 2000000000
+			maxSize: 2000000000
 			`,
 			wantErrMsg: "cannot exceed 1GB",
 		},

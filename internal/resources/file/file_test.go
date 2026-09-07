@@ -73,13 +73,13 @@ func TestParseFromYamlFile(t *testing.T) {
 			},
 		},
 		{
-			desc: "with max_size and annotations",
+			desc: "with maxSize and annotations",
 			in: fmt.Sprintf(`
 			kind: resource
 			name: my-file-annotated
 			type: file
 			path: %s
-			max_size: 1024
+			maxSize: 1024
 			annotations:
 				priority: 0.5
 				audience:
@@ -153,46 +153,46 @@ func TestFailParseFromYaml(t *testing.T) {
 			err: "Field validation for 'Path' failed on the 'required' tag",
 		},
 		{
-			desc: "max_size zero",
+			desc: "maxSize zero",
 			in: fmt.Sprintf(`
 			kind: resource
 			name: my-file
 			type: file
 			path: %s
-			max_size: 0
+			maxSize: 0
 			`, filepath.ToSlash(validPath)),
 			err: "must be greater than 0",
 		},
 		{
-			desc: "max_size negative",
+			desc: "maxSize negative",
 			in: fmt.Sprintf(`
 			kind: resource
 			name: my-file
 			type: file
 			path: %s
-			max_size: -50
+			maxSize: -50
 			`, filepath.ToSlash(validPath)),
 			err: "must be greater than 0",
 		},
 		{
-			desc: "max_size too large",
+			desc: "maxSize too large",
 			in: fmt.Sprintf(`
 			kind: resource
 			name: my-file
 			type: file
 			path: %s
-			max_size: 2000000000
+			maxSize: 2000000000
 			`, filepath.ToSlash(validPath)),
 			err: "cannot exceed 1GB",
 		},
 		{
-			desc: "max_size type string",
+			desc: "maxSize type string",
 			in: fmt.Sprintf(`
 			kind: resource
 			name: my-file
 			type: file
 			path: %s
-			max_size: 50MB
+			maxSize: 50MB
 			`, filepath.ToSlash(validPath)),
 			err: "cannot unmarshal",
 		},
@@ -398,7 +398,7 @@ func TestFileResource_PathResolution(t *testing.T) {
 }
 
 // TestFileResource_Truncation checks that file contents exceeding the safety
-// max_size limit are truncated properly, appending a clear warning message
+// maxSize limit are truncated properly, appending a clear warning message
 // to indicate partial reads to the MCP client.
 func TestFileResource_Truncation(t *testing.T) {
 	tmpDir := t.TempDir()
@@ -435,13 +435,13 @@ func TestFileResource_Truncation(t *testing.T) {
 			wantTrunc: true,
 		},
 		{
-			name:      "override max_size small",
-			yamlStr:   fmt.Sprintf("type: file\npath: %s\nmax_size: 50", filepath.ToSlash(smallPath)),
+			name:      "override maxSize small",
+			yamlStr:   fmt.Sprintf("type: file\npath: %s\nmaxSize: 50", filepath.ToSlash(smallPath)),
 			wantTrunc: true,
 		},
 		{
 			name:      "no truncation needed",
-			yamlStr:   fmt.Sprintf("type: file\npath: %s\nmax_size: 200", filepath.ToSlash(smallPath)),
+			yamlStr:   fmt.Sprintf("type: file\npath: %s\nmaxSize: 200", filepath.ToSlash(smallPath)),
 			wantTrunc: false,
 		},
 	}
@@ -703,7 +703,7 @@ func TestFileResource_UTF8Truncation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	yamlStr := fmt.Sprintf("type: file\npath: %s\nmax_size: 8", filepath.ToSlash(filePath))
+	yamlStr := fmt.Sprintf("type: file\npath: %s\nmaxSize: 8", filepath.ToSlash(filePath))
 	ctx := context.Background()
 	decoder := yaml.NewDecoder(bytes.NewReader([]byte(yamlStr)), yaml.Strict())
 	cfg, err := resources.DecodeConfig(ctx, "file", "test", decoder)
