@@ -210,8 +210,21 @@ export enum GroupsErrorCode {
   MissingRequiredClientCapability = -32021,
 
   /**
+   * Returned over HTTP when the `Mcp-Method` or `Mcp-Name` header disagrees
+   * with the request body. The stdio transport has no headers and skips the
+   * check.
+   */
+  HeaderMismatch = -32020,
+
+  /**
    * Returned by `groups/get` when the requested group does not exist, and by
    * either method when required request metadata is missing.
    */
   InvalidParams = -32602,
+
+  /**
+   * Returned when the request body cannot be parsed into the method's request
+   * shape.
+   */
+  InvalidRequest = -32600,
 }
