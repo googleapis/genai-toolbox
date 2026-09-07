@@ -73,8 +73,9 @@ mimeType: "text/markdown"
 ## Guardrails & Security Model
 
 - **Strict `{path}` Variable Requirement**: The `uriTemplate` must follow the [RFC 6570](https://datatracker.ietf.org/doc/html/rfc6570) specification and **must contain only the `{path}` variable**. Any other template variables (e.g., `{id}`, `{filename}`) will fail validation at startup.
-> [!CAUTION]
-> **Global System Access by Default**: If `allowedPaths` is omitted, the template will have **no sandbox**. It will be able to read **any file on the entire system** that possesses an allowed extension (e.g. `.txt`, `.json`). It is highly recommended to always specify `allowedPaths` to sandbox the template to a specific directory tree.
+{{< notice caution >}}
+**Global System Access by Default**: If `allowedPaths` is omitted, the template will have **no sandbox**. It will be able to read **any file on the entire system** that possesses an allowed extension (e.g. `.txt`, `.json`). It is highly recommended to always specify `allowedPaths` to sandbox the template to a specific directory tree.
+{{< /notice >}}
 
 - **Path Traversal Prevention**:
   - If `allowedPaths` is defined, the target path must resolve strictly within one of the specified allowed directories.
