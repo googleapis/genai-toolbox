@@ -236,7 +236,6 @@ func TestFileResource_Validation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-
 	nonExistentPath := filepath.Join(tmpDir, "nonexistent.txt")
 
 	noPermPath := filepath.Join(tmpDir, "noperm.txt")
