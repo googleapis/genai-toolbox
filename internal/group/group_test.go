@@ -33,8 +33,9 @@ import (
 
 func testFixtures() (map[string]tools.Tool, map[string]prompts.Prompt, map[string]resources.Resource, map[string]resources.ResourceTemplate) {
 	toolsMap := map[string]tools.Tool{
-		"tool1": testutils.NewMockTool("tool1", "first tool", "", []parameters.Parameter{}, false, false),
-		"tool2": testutils.NewMockTool("tool2", "second tool", "", []parameters.Parameter{}, false, false),
+		"tool1":        testutils.NewMockTool("tool1", "first tool", "", []parameters.Parameter{}, false, false),
+		"tool2":        testutils.NewMockTool("tool2", "second tool", "", []parameters.Parameter{}, false, false),
+		"tool-with-ui": testutils.NewMockToolWithUI("tool-with-ui", "tool with ui", "", []parameters.Parameter{}, false, false, "res1"),
 	}
 	promptsMap := map[string]prompts.Prompt{
 		"prompt1": testutils.NewMockPrompt("prompt1", "first prompt", prompts.Arguments{}),
@@ -70,6 +71,24 @@ func TestGroupConfig_Initialize(t *testing.T) {
 		wantTTLMs      *int
 		wantCacheScope string
 	}{
+		{
+			name: "success when ui resource is in group",
+			config: group.GroupConfig{
+				Name:          "valid-group",
+				ToolNames:     []string{"tool-with-ui"},
+				ResourceNames: []string{"res1"},
+			},
+			wantTools: []string{"tool-with-ui"},
+			wantRes:   []string{"res1"},
+		},
+		{
+			name: "failure when ui resource not in group",
+			config: group.GroupConfig{
+				Name:      "invalid-group",
+				ToolNames: []string{"tool-with-ui"},
+			},
+			wantErr: "requires UI resource \"res1\" which is not included in group",
+		},
 		{
 			name: "all primitives",
 			config: group.GroupConfig{

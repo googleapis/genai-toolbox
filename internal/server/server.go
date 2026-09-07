@@ -285,6 +285,20 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d resource templates: %s", len(resourceTemplatesMap), strings.Join(resourceTemplateNames, ", ")))
 
+	// Validate that any UI resources referenced by tools actually exist
+	for toolName, tool := range toolsMap {
+		uiMeta := tool.GetToolUIMetadata()
+		if uiMeta != nil {
+			if resName, ok := uiMeta["resource"].(string); ok && resName != "" {
+				_, hasRes := resourcesMap[resName]
+				_, hasTmpl := resourceTemplatesMap[resName]
+				if !hasRes && !hasTmpl {
+					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to retrieve UI resource %q for tool %q", resName, toolName)
+				}
+			}
+		}
+	}
+
 	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, instrumentation, l)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, err
