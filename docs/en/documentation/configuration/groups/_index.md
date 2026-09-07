@@ -8,7 +8,7 @@ description: >
 
 A Group is a single named collection that scopes MCP primitives together — currently **tools** and **prompts**, with more (such as resources) planned. Where a [Toolset](../toolsets/) groups only tools, a group bundles these primitives under one name and one MCP endpoint, and carries a `description` that describes the collection.
 
-Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list methods (such as `tools/list` and `prompts/list`) to that group. Groups are also introspectable over MCP through the [`groups/list` and `groups/get`](#introspecting-groups-over-mcp) methods, which are available only on the latest MCP protocol version (`2026-07-28`) and only behind the `com.google.cloud/toolbox.v1` extension.
+Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list methods (such as `tools/list` and `prompts/list`) to that group. Groups are also introspectable over MCP through methods which are available on the `com.google.cloud/toolbox.v1` [extension](https://github.com/googleapis/mcp-toolbox/tree/main/extensions).
 
 ## Defining Groups
 
