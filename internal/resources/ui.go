@@ -24,10 +24,10 @@ import (
 
 // CSPConfig defines allowed external origins for the UI Resource.
 type CSPConfig struct {
-	ConnectDomains  []string `yaml:"connectDomains,omitempty"`
-	ResourceDomains []string `yaml:"resourceDomains,omitempty"`
-	FrameDomains    []string `yaml:"frameDomains,omitempty"`
-	BaseUriDomains  []string `yaml:"baseUriDomains,omitempty"`
+	ConnectDomains  []string `yaml:"connectDomains,omitempty" json:"connectDomains,omitempty"`
+	ResourceDomains []string `yaml:"resourceDomains,omitempty" json:"resourceDomains,omitempty"`
+	FrameDomains    []string `yaml:"frameDomains,omitempty" json:"frameDomains,omitempty"`
+	BaseUriDomains  []string `yaml:"baseUriDomains,omitempty" json:"baseUriDomains,omitempty"`
 }
 
 // Validate validates that every configured domain is a valid origin with a supported scheme.
@@ -82,13 +82,13 @@ func (p *PermissionsConfig) UnmarshalYAML(b []byte) error {
 	if err := yaml.Unmarshal(b, &list); err != nil {
 		return fmt.Errorf("permissions must be a list of permission names (e.g. [camera, microphone]): %w", err)
 	}
-	t := true
 	seen := make(map[string]bool)
 	for _, name := range list {
 		if seen[name] {
 			return fmt.Errorf("duplicate permission %q is not allowed", name)
 		}
 		seen[name] = true
+		t := true
 		switch name {
 		case "camera":
 			p.Camera = &t
@@ -128,8 +128,8 @@ func (p *PermissionsConfig) ToUIMetadata() map[string]any {
 
 // ResourceUIMetadata represents the metadata for a UI Resource.
 type ResourceUIMetadata struct {
-	CSP           *CSPConfig     `yaml:"csp,omitempty"`
-	Permissions   map[string]any `yaml:"permissions,omitempty"`
-	Domain        string         `yaml:"domain,omitempty"`
-	PrefersBorder *bool          `yaml:"prefersBorder,omitempty"`
+	CSP           *CSPConfig     `yaml:"csp,omitempty" json:"csp,omitempty"`
+	Permissions   map[string]any `yaml:"permissions,omitempty" json:"permissions,omitempty"`
+	Domain        string         `yaml:"domain,omitempty" json:"domain,omitempty"`
+	PrefersBorder *bool          `yaml:"prefersBorder,omitempty" json:"prefersBorder,omitempty"`
 }
