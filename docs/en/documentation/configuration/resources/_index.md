@@ -73,7 +73,7 @@ allowedPaths:
 | `type`           | string                                 | Yes          | The type of resource template. Supported type: `"file"`.                                                     |
 | `uriTemplate`    | string                                 | Yes          | An RFC 6570 URI template. Must contain the `{path}` template variable (e.g., `file:///logs/{path}`).        |
 | `allowedPaths`   | []string                               | No           | Allowed base directories for filesystem sandboxing. Traversal attempts outside these paths are rejected.     |
-| `max_size`       | int64 / string                         | No           | Maximum allowed file size in bytes (e.g., `5242880` or `5MB`). Defaults to 5MB.                             |
+| `maxSize`       | int64 / string                         | No           | Maximum allowed file size in bytes (e.g., `5242880` or `5MB`). Defaults to 5MB.                             |
 | `description`    | string                                 | No           | A brief explanation of what the resource template exposes.                                                   |
 | `title`          | string                                 | No           | Human-readable title for the resource template.                                                              |
 | `mimeType`       | string                                 | No           | The default MIME type for content returned by this template.                                                 |

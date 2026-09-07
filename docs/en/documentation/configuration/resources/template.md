@@ -64,7 +64,7 @@ mimeType: "text/markdown"
 | `type`           | string                             | Yes          | Must be `"file"`.                                                                                             |
 | `uriTemplate`    | string                             | Yes          | RFC 6570 URI template. Must contain the `{path}` variable (e.g., `file:///logs/{path}`).                     |
 | `allowedPaths`   | []string                           | No           | Allowed directory trees on disk. Any path resolving outside these boundaries is blocked.                      |
-| `max_size`       | int64 / string                     | No           | Maximum allowed file size in bytes (defaults to 5MB / `5242880` bytes).                                       |
+| `maxSize`       | int64 / string                     | No           | Maximum allowed file size in bytes (defaults to 5MB / `5242880` bytes).                                       |
 | `description`    | string                             | No           | A brief explanation of what the resource template exposes.                                                    |
 | `title`          | string                             | No           | Human-readable title for client display.                                                                      |
 | `mimeType`       | string                             | No           | Default MIME type for content returned by this template.                                                      |
@@ -88,8 +88,8 @@ mimeType: "text/markdown"
   - Requests for files with unsupported extensions are rejected.
 - **Regular Files Only**:
   - `resources/read` can only read regular files. If a client provides a URI that resolves to a directory, block device, socket, or pipe, an error is returned.
-- **Size Limits & Truncation (`max_size`)**:
-  - If a matched file exceeds `max_size` (defaults to 5MB / `5242880` bytes, configurable up to 1GB), Toolbox does not error. Instead, it reads up to `max_size` bytes, safely cleans incomplete multi-byte UTF-8 sequences at the cut-off boundary, and appends a clear truncation notice:
+- **Size Limits & Truncation (`maxSize`)**:
+  - If a matched file exceeds `maxSize` (defaults to 5MB / `5242880` bytes, configurable up to 1GB), Toolbox does not error. Instead, it reads up to `maxSize` bytes, safely cleans incomplete multi-byte UTF-8 sequences at the cut-off boundary, and appends a clear truncation notice:
     ```text
     ...[TRUNCATED BY SERVER: Payload exceeded <limit> byte safety limit]...
     ```
