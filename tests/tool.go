@@ -2792,10 +2792,12 @@ func setUpDatabase(t *testing.T, ctx context.Context, pool *pgxpool.Pool, dbName
 	}
 	_, err = pool.Exec(ctx, fmt.Sprintf("GRANT %s TO current_user;", dbOwner))
 	if err != nil {
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", dbOwner))
 		t.Fatalf("failed to grant %s to current_user: %v", dbOwner, err)
 	}
 	_, err = pool.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s OWNER %s;", dbName, dbOwner))
 	if err != nil {
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", dbOwner))
 		t.Fatalf("failed to create %s: %v", dbName, err)
 	}
 	return func() {
