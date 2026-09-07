@@ -525,7 +525,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			tools:
 			  - tool_a
 			`,
-			err: "the default (nameless) group cannot declare 'tools' or 'prompts'",
+			err: "the default (nameless) group cannot declare 'tools', 'prompts', 'resources', or 'resourceTemplates'",
 		},
 		{
 			desc: "default group declaring prompts",
@@ -535,17 +535,17 @@ func TestFailParseFromYaml(t *testing.T) {
 			prompts:
 			  - prompt_a
 			`,
-			err: "the default (nameless) group cannot declare 'tools' or 'prompts'",
+			err: "the default (nameless) group cannot declare 'tools', 'prompts', 'resources', or 'resourceTemplates'",
 		},
 		{
 			desc: "unknown field",
 			in: `
 			kind: group
 			name: my_group
-			resources:
-			  - res_a
+			unknownField123:
+			  - something
 			`,
-			err: "unknown field \"resources\"",
+			err: "unknown field \"unknownField123\"",
 		},
 		{
 			desc: "duplicate default group",
