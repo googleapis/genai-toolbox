@@ -2799,8 +2799,13 @@ func setUpDatabase(t *testing.T, ctx context.Context, pool *pgxpool.Pool, dbName
 		t.Fatalf("failed to create %s: %v", dbName, err)
 	}
 	return func() {
-		_, _ = pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP DATABASE IF EXISTS %s;", dbName))
-		_, _ = pool.Exec(context.WithoutCancel(ctx), fmt.Sprintf("DROP ROLE IF EXISTS %s;", dbOwner))
+		cleanupCtx := context.WithoutCancel(ctx)
+		if _, err := pool.Exec(cleanupCtx, fmt.Sprintf("DROP DATABASE IF EXISTS %s WITH (FORCE);", dbName)); err != nil {
+			t.Errorf("failed to drop database %s: %v", dbName, err)
+		}
+		if _, err := pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", dbOwner)); err != nil {
+			t.Errorf("failed to drop role %s: %v", dbOwner, err)
+		}
 	}
 }
 
@@ -2838,9 +2843,15 @@ func setupPostgresRoles(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (
 	return adminUser, superUser, normalUser, func(t *testing.T) {
 		t.Helper()
 		cleanupCtx := context.WithoutCancel(ctx)
-		_, _ = pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", normalUser))
-		_, _ = pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", superUser))
-		_, _ = pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", adminUser))
+		if _, err := pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", normalUser)); err != nil {
+			t.Errorf("failed to drop role %s: %v", normalUser, err)
+		}
+		if _, err := pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", superUser)); err != nil {
+			t.Errorf("failed to drop role %s: %v", superUser, err)
+		}
+		if _, err := pool.Exec(cleanupCtx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", adminUser)); err != nil {
+			t.Errorf("failed to drop role %s: %v", adminUser, err)
+		}
 	}
 }
 
