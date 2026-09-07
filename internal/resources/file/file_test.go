@@ -822,8 +822,8 @@ permissions:
 			t.Fatalf("Initialize failed: %v", err)
 		}
 
-		if !(res.GetResourceUIMetadata() != nil) {
-			t.Errorf("Expected (res.GetResourceUIMetadata() != nil) to be true")
+		if res.GetResourceUIMetadata() == nil {
+			t.Errorf("Expected GetResourceUIMetadata() to not be nil")
 		}
 		if res.GetMimeType() != "text/html;profile=mcp-app" {
 			t.Errorf("Expected res.GetMimeType() to be 'text/html;profile=mcp-app', got %q", res.GetMimeType())

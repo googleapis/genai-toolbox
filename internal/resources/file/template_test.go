@@ -451,8 +451,8 @@ permissions:
 			t.Fatalf("Initialize failed: %v", err)
 		}
 
-		if !(tmpl.GetResourceUIMetadata() != nil) {
-			t.Errorf("Expected (tmpl.GetResourceUIMetadata() != nil) to be true")
+		if tmpl.GetResourceUIMetadata() == nil {
+			t.Errorf("Expected GetResourceUIMetadata() to not be nil")
 		}
 		if tmpl.GetMimeType() != "text/html;profile=mcp-app" {
 			t.Errorf("Expected default MimeType 'text/html;profile=mcp-app', got %q", tmpl.GetMimeType())
