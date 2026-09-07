@@ -262,8 +262,8 @@ func RegisterMockResource() {
 
 // MockResourceConfig is a mock implementation of resources.ResourceConfig
 type MockResourceConfig struct {
-	resources.BaseConfig `yaml:",inline"`
-	Size                 *int64 `yaml:"-"`
+	resources.ResourceConfigBase `yaml:",inline"`
+	Size                         *int64 `yaml:"-"`
 }
 
 func (m *MockResourceConfig) ResourceConfigType() string {
@@ -279,7 +279,6 @@ type MockResource struct {
 	config *MockResourceConfig
 }
 
-func (m MockResource) GetName() string                                { return m.config.GetName() }
 func (m MockResource) GetTitle() string                               { return m.config.GetTitle() }
 func (m MockResource) GetDescription() string                         { return m.config.GetDescription() }
 func (m MockResource) GetMimeType() string                            { return m.config.GetMimeType() }
@@ -293,4 +292,103 @@ func (m MockResource) Read(ctx context.Context, params map[string]any) (any, err
 
 func (m MockResource) ToConfig() resources.ResourceConfig {
 	return m.config
+}
+
+func (m MockResource) GetName() string {
+	return m.config.Name
+}
+
+// MockResourceTemplateConfig is a mock implementation of resources.ResourceTemplateConfig
+type MockResourceTemplateConfig struct {
+	resources.ResourceTemplateConfigBase `yaml:",inline"`
+}
+
+func (m *MockResourceTemplateConfig) ResourceTemplateConfigType() string {
+	if m.Type != "" {
+		return m.Type
+	}
+	return "mock"
+}
+
+func (m *MockResourceTemplateConfig) Initialize(ctx context.Context) (resources.ResourceTemplate, error) {
+	return MockResourceTemplate{config: m}, nil
+}
+
+// MockResourceTemplate is a mock implementation of resources.ResourceTemplate
+type MockResourceTemplate struct {
+	config *MockResourceTemplateConfig
+}
+
+func (m MockResourceTemplate) GetTitle() string       { return m.config.GetTitle() }
+func (m MockResourceTemplate) GetDescription() string { return m.config.GetDescription() }
+func (m MockResourceTemplate) GetMimeType() string    { return m.config.GetMimeType() }
+func (m MockResourceTemplate) GetURITemplate() string { return m.config.GetURITemplate() }
+
+func (m MockResourceTemplate) Read(ctx context.Context, params map[string]any) (any, error) {
+	return "mock resource template data", nil
+}
+
+func (m MockResourceTemplate) ToConfig() resources.ResourceTemplateConfig {
+	return m.config
+}
+
+func (m MockResourceTemplate) GetName() string {
+	return m.config.Name
+}
+
+func NewMockResource(name, uri, title, description, mimeType string, size *int64, annotations *resources.ResourceAnnotations) MockResource {
+	cfgBase := resources.ConfigBase{Name: name}
+	if title != "" {
+		cfgBase.Title = title
+	}
+	if description != "" {
+		cfgBase.Description = description
+	}
+	if mimeType != "" {
+		cfgBase.MimeType = mimeType
+	}
+	if annotations != nil {
+		cfgBase.Annotations = annotations
+	}
+
+	resCfg := resources.ResourceConfigBase{
+		ConfigBase: cfgBase,
+		URI:        uri,
+	}
+
+	return MockResource{
+		config: &MockResourceConfig{
+			ResourceConfigBase: resCfg,
+			Size:               size,
+		},
+	}
+}
+
+func NewMockResourceTemplate(name, uriTemplate, title, description, mimeType string, annotations *resources.ResourceAnnotations) MockResourceTemplate {
+	cfgBase := resources.ConfigBase{Name: name}
+	if title != "" {
+		cfgBase.Title = title
+	}
+	if description != "" {
+		cfgBase.Description = description
+	}
+	if mimeType != "" {
+		cfgBase.MimeType = mimeType
+	}
+	if annotations != nil {
+		cfgBase.Annotations = annotations
+	}
+
+	return MockResourceTemplate{
+		config: &MockResourceTemplateConfig{
+			ResourceTemplateConfigBase: resources.ResourceTemplateConfigBase{
+				ConfigBase:  resources.ConfigBase{Name: name},
+				URITemplate: uriTemplate,
+			},
+		},
+	}
+}
+
+func (m MockResourceTemplate) GetAnnotations() *resources.ResourceAnnotations {
+	return m.config.Annotations
 }
