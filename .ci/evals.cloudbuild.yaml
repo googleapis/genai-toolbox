@@ -74,7 +74,6 @@ steps:
       - "TOOLBOX_PREBUILT=cloud-sql-postgres"
       - "EVAL_DATASET=evals/evalsets/cloud-sql-postgres.json"
       - "EVAL_ENV_PREFIX=CLOUD_SQL_POSTGRES"
-      # - "EVAL_HARNESSES=claude_cli gemini_cli"
 
       - "CLOUD_SQL_POSTGRES_PROJECT=$PROJECT_ID"
       - "CLOUD_SQL_POSTGRES_REGION=${_REGION}"
