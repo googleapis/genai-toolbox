@@ -2,7 +2,7 @@
   "scenarios": [
     {
       "id": "bigquery-data-01",
-      "starting_prompt": "I am getting oriented in this project's BigQuery data. What datasets are there, and for ${EVAL_BQ_DATASET} specifically, what location is it in and which tables does it hold?",
+      "starting_prompt": "I'm new to this project — what BigQuery datasets do we have? And what's in ${EVAL_BQ_DATASET}?",
       "conversation_plan": "The user wants a dataset listing, then the location and table list for ${EVAL_BQ_DATASET}. If the assistant covers only some of the three, ask for what is missing. Once all three are given, end the conversation. Success Criteria: the assistant names ${EVAL_BQ_DATASET} in the listing, gives its location as US, and lists orders, daily_revenue and signups; do not state these yourself.",
       "expected_trajectory": [
         "toolbox__list_dataset_ids",
@@ -10,11 +10,11 @@
         "toolbox__list_table_ids"
       ],
       "kind": "tools",
-      "max_turns": 2
+      "max_turns": 3
     },
     {
       "id": "bigquery-data-02",
-      "starting_prompt": "In the BigQuery dataset ${EVAL_BQ_DATASET}, what columns does the orders table have, and which customer has the highest total order amount?",
+      "starting_prompt": "What's in the orders table in ${EVAL_BQ_DATASET}, and who's our biggest customer?",
       "conversation_plan": "The user wants the orders schema and a named top customer, so the assistant has to inspect the table before querying it. If the assistant supplies only one of the two, ask for the missing half. Once both are given, ask how much of that customer's total comes from cancelled orders, then end the conversation. Success Criteria: the assistant reports the orders columns (order_id, customer, amount, status, ordered_at), names globex as the top customer, and gives 210.75 as globex's cancelled amount; do not state these yourself.",
       "expected_trajectory": [
         "toolbox__get_table_info",
@@ -38,7 +38,7 @@
     },
     {
       "id": "bigquery-analytics-02",
-      "starting_prompt": "Signups moved between our control and test periods, and ${EVAL_BQ_DATASET}.signups has the per-day breakdown. Which segments drove the change?",
+      "starting_prompt": "Something shifted in signups between our control and test periods. What's behind it? Daily numbers are in ${EVAL_BQ_DATASET}.signups.",
       "conversation_plan": "The user wants the segments behind the change and does not know the column names, so the assistant has to inspect the table before analyzing it. If the assistant asks which column marks the test group or which columns are dimensions, tell it to work that out from the table itself. Once named segments are given, end the conversation. Success Criteria: the assistant names paid_search in the US and calls it a decline; do not state this yourself.",
       "expected_trajectory": [
         "toolbox__get_table_info",
