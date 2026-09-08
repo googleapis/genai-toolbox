@@ -45,6 +45,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tasks/taskcrypto"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -468,6 +469,21 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, groupsMap, err := InitializeConfigs(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize configs: %w", err)
+	}
+
+	// Validate tasks encryption key if any tool uses async tasks
+	tasksRequired := false
+	for _, t := range toolsMap {
+		if _, asyncEnabled := t.GetAsyncSetting(); asyncEnabled {
+			tasksRequired = true
+			break
+		}
+	}
+	
+	if tasksRequired {
+		if _, err := taskcrypto.GetEncryptionKey(); err != nil {
+			return nil, fmt.Errorf("server requires tasks encryption key because one or more tools have enableAsync configured: %w", err)
+		}
 	}
 
 	addr := net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port))
