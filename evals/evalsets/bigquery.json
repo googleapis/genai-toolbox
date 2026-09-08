@@ -15,19 +15,21 @@
     {
       "id": "bigquery-data-02",
       "starting_prompt": "In the BigQuery dataset ${EVAL_BQ_DATASET}, what columns does the orders table have, and which customer has the highest total order amount?",
-      "conversation_plan": "The user wants the orders schema and a named top customer, so the assistant has to inspect the table before querying it. If the assistant supplies only one of the two, ask for the missing half. Once both are given, end the conversation. Success Criteria: the assistant reports the orders columns (order_id, customer, amount, status, ordered_at) and names globex as the top customer; do not state these yourself.",
+      "conversation_plan": "The user wants the orders schema and a named top customer, so the assistant has to inspect the table before querying it. If the assistant supplies only one of the two, ask for the missing half. Once both are given, ask how much of that customer's total comes from cancelled orders, then end the conversation. Success Criteria: the assistant reports the orders columns (order_id, customer, amount, status, ordered_at), names globex as the top customer, and gives 210.75 as globex's cancelled amount; do not state these yourself.",
       "expected_trajectory": [
         "toolbox__get_table_info",
+        "toolbox__execute_sql",
         "toolbox__execute_sql"
       ],
       "kind": "tools",
-      "max_turns": 2
+      "max_turns": 3
     },
     {
       "id": "bigquery-analytics-01",
-      "starting_prompt": "Our daily revenue history is in the BigQuery table ${EVAL_BQ_DATASET}.daily_revenue. Where is revenue headed over the next 14 days?",
-      "conversation_plan": "The user wants a 14-day forecast and does not know the column names, so the assistant has to inspect the table before forecasting. If the assistant asks which columns hold the date and the value, tell it to work that out from the table itself. Once a forecast is given, end the conversation. Success Criteria: the forecast covers 14 days past the end of the history and shows revenue still rising; do not state this yourself.",
+      "starting_prompt": "Our daily revenue history is somewhere in the BigQuery dataset ${EVAL_BQ_DATASET}. Where is revenue headed over the next 14 days?",
+      "conversation_plan": "The user wants a 14-day forecast and does not know which table holds the history or what its columns are called, so the assistant has to find the table and inspect it before forecasting. If the assistant asks which table to use or which columns hold the date and the value, tell it to work that out from the dataset itself. Once a forecast is given, end the conversation. Success Criteria: the forecast covers 14 days past the end of the history and shows revenue still rising; do not state this yourself.",
       "expected_trajectory": [
+        "toolbox__list_table_ids",
         "toolbox__get_table_info",
         "toolbox__forecast"
       ],
