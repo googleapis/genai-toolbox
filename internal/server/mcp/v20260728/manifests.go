@@ -27,7 +27,7 @@ import (
 )
 
 // generateToolManifest generates Tool for list tools result
-func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations, urlParams map[string]string) Tool {
+func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations, urlParams map[string]string, uiMetadata map[string]any) Tool {
 	var standardParams parameters.Parameters
 	var secureParams parameters.Parameters
 	for _, p := range params {
@@ -66,6 +66,9 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 	}
 	if len(authParams) > 0 {
 		metadata["com.google.cloud/authParam"] = authParams
+	}
+	if uiMetadata != nil {
+		metadata["ui"] = uiMetadata
 	}
 	if len(metadata) > 0 {
 		mcpManifest.Metadata = metadata
@@ -139,7 +142,30 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 		if tool.HasSecureParams() && !supportsSecureParams {
 			continue
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(src), urlParams)
+		var uiMeta map[string]any
+		if uiMetaOrig := tool.GetToolUIMetadata(); uiMetaOrig != nil {
+			if uiMetaOrig.Resource != "" {
+				var uri string
+				if res, hasRes := pMgr.GetResource(uiMetaOrig.Resource); hasRes {
+					uri = res.GetURI()
+				} else if tmpl, hasTmpl := pMgr.GetResourceTemplate(uiMetaOrig.Resource); hasTmpl {
+					uri = tmpl.GetURITemplate()
+				} else {
+					return ListToolsResult{}, fmt.Errorf("unable to retrieve UI resource %q for tool %q", uiMetaOrig.Resource, toolName)
+				}
+				uiMeta = map[string]any{
+					"resourceUri": uri,
+				}
+				if len(uiMetaOrig.Visibility) > 0 {
+					vis := make([]string, len(uiMetaOrig.Visibility))
+					for i, v := range uiMetaOrig.Visibility {
+						vis[i] = string(v)
+					}
+					uiMeta["visibility"] = vis
+				}
+			}
+		}
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(src), urlParams, uiMeta)
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	res := ListToolsResult{
