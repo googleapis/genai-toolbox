@@ -288,13 +288,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	// Validate that any UI resources referenced by tools actually exist
 	for toolName, tool := range toolsMap {
 		uiMeta := tool.GetToolUIMetadata()
-		if uiMeta != nil {
-			if resName, ok := uiMeta["resource"].(string); ok && resName != "" {
-				_, hasRes := resourcesMap[resName]
-				_, hasTmpl := resourceTemplatesMap[resName]
-				if !hasRes && !hasTmpl {
-					return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to retrieve UI resource %q for tool %q", resName, toolName)
-				}
+		if uiMeta != nil && uiMeta.Resource != "" {
+			_, hasRes := resourcesMap[uiMeta.Resource]
+			_, hasTmpl := resourceTemplatesMap[uiMeta.Resource]
+			if !hasRes && !hasTmpl {
+				return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to retrieve UI resource %q for tool %q", uiMeta.Resource, toolName)
 			}
 		}
 	}

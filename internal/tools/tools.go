@@ -128,7 +128,7 @@ type Tool interface {
 	GetDescription() string
 	GetAuthRequired() []string
 	GetAnnotations(sources.Source) *ToolAnnotations
-	GetToolUIMetadata() map[string]any
+	GetToolUIMetadata() *ToolUIMetadata
 	Invoke(context.Context, sources.Source, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, PrimitiveManagerI) (parameters.ParamValues, error)
 	Manifest(sources.Source) (Manifest, error)
@@ -179,7 +179,7 @@ type ToolMeta interface {
 	GetDescription() string
 	GetAuthRequired() []string
 	GetScopesRequired() []string
-	GetToolUIMetadata() map[string]any
+	GetToolUIMetadata() *ToolUIMetadata
 }
 
 // ToolVisibility defines the visibility of a tool in the UI.
@@ -190,7 +190,7 @@ const (
 	VisibilityApp   ToolVisibility = "app"
 )
 
-// ToolUIMetadata defines the UI-specific metadata for a tool with UI Resource 
+// ToolUIMetadata defines the UI-specific metadata for a tool with UI Resource
 type ToolUIMetadata struct {
 	Resource   string           `yaml:"resource" validate:"required"`
 	Visibility []ToolVisibility `yaml:"visibility,omitempty" validate:"omitempty,dive,oneof=model app"`
@@ -202,10 +202,10 @@ type ToolUIMetadata struct {
 // configs omit description: and rely on a canned per-tool string), so
 // post-Initialize ConfigBase.Description holds the resolved value.
 type ConfigBase struct {
-	Name           string   `yaml:"name"           validate:"required"`
-	Description    string   `yaml:"description"`
-	AuthRequired   []string `yaml:"authRequired"`
-	ScopesRequired []string `yaml:"scopesRequired"`
+	Name           string          `yaml:"name"           validate:"required"`
+	Description    string          `yaml:"description"`
+	AuthRequired   []string        `yaml:"authRequired"`
+	ScopesRequired []string        `yaml:"scopesRequired"`
 	UI             *ToolUIMetadata `yaml:"ui,omitempty"`
 }
 
@@ -213,23 +213,15 @@ func (c ConfigBase) GetName() string             { return c.Name }
 func (c ConfigBase) GetDescription() string      { return c.Description }
 func (c ConfigBase) GetAuthRequired() []string   { return c.AuthRequired }
 func (c ConfigBase) GetScopesRequired() []string { return c.ScopesRequired }
-func (c ConfigBase) GetToolUIMetadata() map[string]any {
+func (c ConfigBase) GetToolUIMetadata() *ToolUIMetadata {
 	if c.UI == nil {
 		return nil
 	}
-	m := make(map[string]any)
-	if c.UI.Resource != "" {
-		m["resource"] = c.UI.Resource
+	ui := *c.UI
+	if len(ui.Visibility) == 0 {
+		ui.Visibility = []ToolVisibility{VisibilityModel, VisibilityApp}
 	}
-	if len(c.UI.Visibility) > 0 {
-		m["visibility"] = c.UI.Visibility
-	} else {
-		m["visibility"] = []ToolVisibility{VisibilityModel, VisibilityApp}
-	}
-	if len(m) == 0 {
-		return nil
-	}
-	return m
+	return &ui
 }
 
 // BaseTool provides default implementations of various methods on the Tool
@@ -336,6 +328,6 @@ func ShouldSuppress(ctx context.Context, t Tool, src sources.Source) bool {
 	return false
 }
 
-func (b BaseTool[T]) GetToolUIMetadata() map[string]any {
+func (b BaseTool[T]) GetToolUIMetadata() *ToolUIMetadata {
 	return b.Cfg.GetToolUIMetadata()
 }
