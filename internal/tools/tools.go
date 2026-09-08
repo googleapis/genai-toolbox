@@ -217,11 +217,12 @@ func (c ConfigBase) GetToolUIMetadata() *ToolUIMetadata {
 	if c.UI == nil {
 		return nil
 	}
-	ui := *c.UI
-	if len(ui.Visibility) == 0 {
+	if len(c.UI.Visibility) == 0 {
+		ui := *c.UI
 		ui.Visibility = []ToolVisibility{VisibilityModel, VisibilityApp}
+		return &ui
 	}
-	return &ui
+	return c.UI
 }
 
 // BaseTool provides default implementations of various methods on the Tool

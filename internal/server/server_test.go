@@ -1608,6 +1608,58 @@ func TestInitializeConfigs(t *testing.T) {
 			t.Fatalf("expected InitializeConfigs to succeed, got: %v", err)
 		}
 	})
+
+	t.Run("fails when UI resource is missing globally in offline mode", func(t *testing.T) {
+		cfg := server.ServerConfig{
+			ToolConfigs: map[string]tools.ToolConfig{
+				"tool-with-ui": testutils.MockToolConfig{
+					ConfigBase: tools.ConfigBase{
+						Name: "tool-with-ui",
+						UI: &tools.ToolUIMetadata{
+							Resource: "missing-resource",
+						},
+					},
+				},
+			},
+		}
+
+		_, _, err := server.InitializeOfflineConfigs(ctx, cfg)
+		if err == nil {
+			t.Fatal("expected InitializeOfflineConfigs to fail")
+		}
+		if !strings.Contains(err.Error(), "unable to retrieve UI resource \"missing-resource\"") {
+			t.Fatalf("expected missing resource error, got: %v", err)
+		}
+	})
+
+	t.Run("succeeds when UI resource is present globally in offline mode", func(t *testing.T) {
+		cfg := server.ServerConfig{
+			ToolConfigs: map[string]tools.ToolConfig{
+				"tool-with-ui": testutils.MockToolConfig{
+					ConfigBase: tools.ConfigBase{
+						Name: "tool-with-ui",
+						UI: &tools.ToolUIMetadata{
+							Resource: "valid-resource",
+						},
+					},
+				},
+			},
+			ResourceConfigs: map[string]resources.ResourceConfig{
+				"valid-resource": &testutils.MockResourceConfig{
+					ResourceConfigBase: resources.ResourceConfigBase{
+						ConfigBase: resources.ConfigBase{
+							Name: "valid-resource",
+						},
+					},
+				},
+			},
+		}
+
+		_, _, err := server.InitializeOfflineConfigs(ctx, cfg)
+		if err != nil {
+			t.Fatalf("expected InitializeOfflineConfigs to succeed, got: %v", err)
+		}
+	})
 }
 
 func TestInitializeOfflineConfigs(t *testing.T) {
