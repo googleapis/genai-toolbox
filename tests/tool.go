@@ -3845,10 +3845,15 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 			}
 			got = details
 
-			// The tool orders by total_latency, which the two seeded tables tie on,
-			// so the returned order is not stable across runs.
+			// The tool sorts on measured total_latency, so which table comes back
+			// first varies between runs. Compare as a set.
 			if diff := cmp.Diff(tc.want, got,
-				cmpopts.SortSlices(func(a, b tableStatsDetails) bool { return a.TableName < b.TableName }),
+				cmpopts.SortSlices(func(a, b tableStatsDetails) bool {
+					if a.TableSchema != b.TableSchema {
+						return a.TableSchema < b.TableSchema
+					}
+					return a.TableName < b.TableName
+				}),
 				cmp.Comparer(func(a, b tableStatsDetails) bool {
 					return a.TableSchema == b.TableSchema && a.TableName == b.TableName
 				})); diff != "" {
