@@ -201,6 +201,11 @@ func (c *ConfigBase) Validate() error {
 				return fmt.Errorf("invalid csp for UI resource %q: %w", c.Name, err)
 			}
 		}
+		if c.Domain != "" {
+			if err := validateHTTPOrigin(c.Domain); err != nil {
+				return fmt.Errorf("invalid domain %q for UI resource %q: %w", c.Domain, c.Name, err)
+			}
+		}
 	}
 	return nil
 }

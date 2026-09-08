@@ -30,6 +30,19 @@ type CSPConfig struct {
 	BaseUriDomains  []string `yaml:"baseUriDomains,omitempty" json:"baseUriDomains,omitempty"`
 }
 
+// validateHTTPOrigin checks that a string is a valid absolute URI with an http or https scheme and a host.
+func validateHTTPOrigin(raw string) error {
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return fmt.Errorf("must be a valid absolute URI with scheme and host")
+	}
+	scheme := strings.ToLower(u.Scheme)
+	if scheme != "http" && scheme != "https" {
+		return fmt.Errorf("scheme must be http or https")
+	}
+	return nil
+}
+
 // Validate validates that every configured domain is a valid origin with a supported scheme.
 func (c *CSPConfig) Validate() error {
 	if c == nil {
@@ -41,13 +54,8 @@ func (c *CSPConfig) Validate() error {
 			if trimmed == "" {
 				return fmt.Errorf("csp %s cannot contain empty domain", field)
 			}
-			u, err := url.Parse(trimmed)
-			if err != nil || u.Scheme == "" || u.Host == "" {
-				return fmt.Errorf("invalid csp %s origin %q: must be a valid RFC-compliant URI with scheme and host (e.g. https://example.com)", field, d)
-			}
-			scheme := strings.ToLower(u.Scheme)
-			if scheme != "http" && scheme != "https" && scheme != "ws" && scheme != "wss" {
-				return fmt.Errorf("invalid csp %s origin %q: scheme must be http, https, ws, or wss", field, d)
+			if err := validateHTTPOrigin(trimmed); err != nil {
+				return fmt.Errorf("invalid csp %s origin %q: %w", field, d, err)
 			}
 		}
 		return nil

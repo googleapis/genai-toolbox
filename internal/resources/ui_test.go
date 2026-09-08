@@ -34,7 +34,7 @@ prefersBorder: true
 csp:
   connectDomains:
     - https://api.example.com
-    - wss://api.example.com
+    - http://localhost:3000
   resourceDomains:
     - https://cdn.example.com
     - https://*.example.com
@@ -96,7 +96,7 @@ permissions:
 		Domain:        "https://example.com",
 		PrefersBorder: &tVal,
 		CSP: &resources.CSPConfig{
-			ConnectDomains:  []string{"https://api.example.com", "wss://api.example.com"},
+			ConnectDomains:  []string{"https://api.example.com", "http://localhost:3000"},
 			ResourceDomains: []string{"https://cdn.example.com", "https://*.example.com"},
 			FrameDomains:    []string{"https://embed.example.com"},
 			BaseUriDomains:  []string{"https://base.example.com"},
@@ -142,7 +142,7 @@ func TestUIConfig_Validation(t *testing.T) {
 			cfg: resources.ConfigBase{
 				Name: "test", Type: "mock", UI: true,
 				CSP: &resources.CSPConfig{
-					ConnectDomains:  []string{"https://api.example.com", "wss://realtime.example.com"},
+					ConnectDomains:  []string{"https://api.example.com", "http://localhost:3000"},
 					ResourceDomains: []string{"https://cdn.example.com", "http://localhost:8080", "https://*.cloudflare.com"},
 					FrameDomains:    []string{"https://frame.example.com"},
 				},
@@ -196,6 +196,47 @@ func TestUIConfig_Validation(t *testing.T) {
 				CSP: &resources.CSPConfig{ConnectDomains: []string{"   "}},
 			},
 			errSubstr: "cannot contain empty domain",
+		},
+		// Domain validation tests
+		{
+			name: "ValidDomainHTTP",
+			cfg: resources.ConfigBase{
+				Name: "test", Type: "mock", UI: true,
+				Domain: "http://localhost:8080",
+			},
+			errSubstr: "",
+		},
+		{
+			name: "ValidDomainHTTPS",
+			cfg: resources.ConfigBase{
+				Name: "test", Type: "mock", UI: true,
+				Domain: "https://example.com",
+			},
+			errSubstr: "",
+		},
+		{
+			name: "InvalidDomainNoScheme",
+			cfg: resources.ConfigBase{
+				Name: "test", Type: "mock", UI: true,
+				Domain: "example.com",
+			},
+			errSubstr: "must be a valid absolute URI with scheme and host",
+		},
+		{
+			name: "InvalidDomainUnsupportedScheme",
+			cfg: resources.ConfigBase{
+				Name: "test", Type: "mock", UI: true,
+				Domain: "ftp://example.com",
+			},
+			errSubstr: "scheme must be http or https",
+		},
+		{
+			name: "InvalidDomainMalformed",
+			cfg: resources.ConfigBase{
+				Name: "test", Type: "mock", UI: true,
+				Domain: "://invalid-domain",
+			},
+			errSubstr: "must be a valid absolute URI with scheme and host",
 		},
 	}
 
