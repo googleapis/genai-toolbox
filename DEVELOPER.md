@@ -340,7 +340,7 @@ When updating documentation, you must adhere to the structural constraints enfor
   * If a new database inherits tools from a base integration (like Cloud SQL inheriting Postgres tools), create the `tools/` directory with an `_index.md` file.
   * Map the inherited tools dynamically by adding the `shared_tools` YAML array to the frontmatter of this `tools/_index.md` file. **This file must strictly contain only frontmatter.**
 * **Adding a New Resource:**
-  * Add resource documentation in a new markdown file within `docs/en/documentation/configuration/resources/` (e.g., `docs/en/documentation/configuration/resources/<resource_type>.md`).
+  * Add resource documentation in a subfolder with an `_index.md` file within `docs/en/documentation/configuration/resources/` (e.g., `docs/en/documentation/configuration/resources/<resource_type>/_index.md`).
 * **Adding Samples:**
   * **Physical Location:**
     1. **Quickstarts:** `docs/en/documentation/getting-started/quickstart/`.

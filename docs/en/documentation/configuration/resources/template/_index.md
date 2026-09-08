@@ -68,7 +68,7 @@ mimeType: "text/markdown"
 | `description`    | string                             | No           | A brief explanation of what the resource template exposes.                                                    |
 | `title`          | string                             | No           | Human-readable title for client display.                                                                      |
 | `mimeType`       | string                             | No           | Default MIME type for content returned by this template.                                                      |
-| `annotations`    | [Annotations](./_index.md#annotations-schema) | No   | Metadata annotations (`priority`, `audience`, `lastModified`).                                                |
+| `annotations`    | [Annotations](../_index.md#annotations-schema) | No   | Metadata annotations (`priority`, `audience`, `lastModified`).                                                |
 
 ## Guardrails & Security Model
 

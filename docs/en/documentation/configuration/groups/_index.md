@@ -6,7 +6,7 @@ description: >
   Groups let you scope MCP primitives such as tools, prompts, resources, and resource templates together under a single name, with a description used as group metadata.
 ---
 
-A Group is a single named collection that scopes MCP primitives together — including [**tools**](../tools/_index.md), [**prompts**](../prompts/_index.md), [**resources**](../resources/_index.md), and [**resource templates**](../resources/template.md). Where a [Toolset](../toolsets/_index.md) groups only tools, a group bundles these primitives under one name and one MCP endpoint, and carries a `description` that describes the collection.
+A Group is a single named collection that scopes MCP primitives together — including [**tools**](../tools/_index.md), [**prompts**](../prompts/_index.md), [**resources**](../resources/_index.md), and [**resource templates**](../resources/template/_index.md). Where a [Toolset](../toolsets/_index.md) groups only tools, a group bundles these primitives under one name and one MCP endpoint, and carries a `description` that describes the collection.
 
 Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list and read methods (such as `tools/list`, `prompts/list`, `resources/list`, `resources/templates/list`, and `resources/read`) to that group. When querying `resources/read`, requests are verified to ensure that the requested URI belongs to the target group.
 
