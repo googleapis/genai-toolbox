@@ -20,7 +20,15 @@ import (
 	"time"
 )
 
+func setupTestKey(t *testing.T) {
+	os.Setenv("MCP_TOOLBOX_TASK_ENCRYPTION_KEY", "12345678901234567890123456789012")
+	t.Cleanup(func() {
+		os.Unsetenv("MCP_TOOLBOX_TASK_ENCRYPTION_KEY")
+	})
+}
+
 func TestEncryptDecryptTaskID(t *testing.T) {
+	setupTestKey(t)
 	payload := TaskTokenPayload{
 		Source:    "bigquery-prod",
 		Engine:    "bigquery",
@@ -47,6 +55,7 @@ func TestEncryptDecryptTaskID(t *testing.T) {
 }
 
 func TestDecryptTaskID_InvalidBase64(t *testing.T) {
+	setupTestKey(t)
 	_, err := DecryptTaskID("invalid_base64!")
 	if err != ErrInvalidToken {
 		t.Errorf("Expected ErrInvalidToken, got: %v", err)
@@ -54,6 +63,7 @@ func TestDecryptTaskID_InvalidBase64(t *testing.T) {
 }
 
 func TestDecryptTaskID_TamperedToken(t *testing.T) {
+	setupTestKey(t)
 	payload := TaskTokenPayload{
 		Source:    "bigquery-prod",
 		Engine:    "bigquery",
@@ -75,20 +85,30 @@ func TestDecryptTaskID_TamperedToken(t *testing.T) {
 }
 
 func TestGetEncryptionKey(t *testing.T) {
-	// Test default
+	// Test missing
 	os.Unsetenv("MCP_TOOLBOX_TASK_ENCRYPTION_KEY")
-	key := getEncryptionKey()
-	if string(key) != string(defaultKey) {
-		t.Errorf("Expected default key, got %v", key)
+	_, err := GetEncryptionKey()
+	if err != ErrMissingEncryptionKey {
+		t.Errorf("Expected ErrMissingEncryptionKey, got %v", err)
 	}
 
-	// Test custom
+	// Test invalid length
+	os.Setenv("MCP_TOOLBOX_TASK_ENCRYPTION_KEY", "too-short")
+	_, err = GetEncryptionKey()
+	if err != ErrMissingEncryptionKey {
+		t.Errorf("Expected ErrMissingEncryptionKey, got %v", err)
+	}
+
+	// Test valid custom
 	customKey := "12345678901234567890123456789012"
 	os.Setenv("MCP_TOOLBOX_TASK_ENCRYPTION_KEY", customKey)
 	defer os.Unsetenv("MCP_TOOLBOX_TASK_ENCRYPTION_KEY")
 
-	key = getEncryptionKey()
+	key, err := GetEncryptionKey()
+	if err != nil {
+		t.Fatalf("Expected valid key, got error %v", err)
+	}
 	if string(key) != customKey {
-		t.Errorf("Expected custom key, got %v", key)
+		t.Errorf("Expected custom key %v, got %v", customKey, string(key))
 	}
 }

@@ -34,24 +34,22 @@ type TaskTokenPayload struct {
 }
 
 var (
-	// defaultKey is the fallback 32-byte AES-256 key if none is provided.
-	defaultKey = []byte("mcp-toolbox-default-task-enc-key") // 32 bytes
-
 	// ErrInvalidToken is returned when a task token cannot be decrypted or parsed.
 	ErrInvalidToken = errors.New("invalid task token")
+	
+	// ErrMissingEncryptionKey is returned when the encryption key is missing or invalid.
+	ErrMissingEncryptionKey = errors.New("MCP_TOOLBOX_TASK_ENCRYPTION_KEY environment variable is not set or invalid (must be 32 bytes)")
 )
 
-// getEncryptionKey retrieves the AES key from environment variables or falls back to the default key.
-func getEncryptionKey() []byte {
-	// For Secret Manager, in a real implementation this would fetch the secret.
-	// We rely on the environment variable for now.
+// GetEncryptionKey retrieves the AES key from environment variables or Secret Manager.
+func GetEncryptionKey() ([]byte, error) {
 	if key := os.Getenv("MCP_TOOLBOX_TASK_ENCRYPTION_KEY"); key != "" {
 		keyBytes := []byte(key)
 		if len(keyBytes) == 32 {
-			return keyBytes
+			return keyBytes, nil
 		}
 	}
-	return defaultKey
+	return nil, ErrMissingEncryptionKey
 }
 
 // EncryptTaskID serializes the payload to JSON, encrypts it using AES-256-GCM, and returns a URL-safe base64 string.
@@ -61,7 +59,12 @@ func EncryptTaskID(payload TaskTokenPayload) (string, error) {
 		return "", err
 	}
 
-	block, err := aes.NewCipher(getEncryptionKey())
+	key, err := GetEncryptionKey()
+	if err != nil {
+		return "", err
+	}
+
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
 	}
@@ -87,7 +90,12 @@ func DecryptTaskID(token string) (*TaskTokenPayload, error) {
 		return nil, ErrInvalidToken
 	}
 
-	block, err := aes.NewCipher(getEncryptionKey())
+	key, err := GetEncryptionKey()
+	if err != nil {
+		return nil, err
+	}
+
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
