@@ -131,11 +131,8 @@ steps:
       - "CLOUD_SQL_POSTGRES_REGION=${_REGION}"
       - "CLOUD_SQL_POSTGRES_INSTANCE=${_CLOUD_SQL_POSTGRES_INSTANCE}"
 
-  # No secretEnv: the source authenticates through ADC. BIGQUERY_READONLY is not
-  # hygiene -- an empty writeMode defaults to "allowed", which would give
-  # execute_sql DROP rights over everything the build service account can reach.
-  #
-  # The evalset reads a dataset that evals/setup/bigquery.sh seeds per build.
+  # BIGQUERY_READONLY is load-bearing: an empty writeMode defaults to
+  # "allowed", giving execute_sql DROP rights.
   - id: "evals-bigquery"
     name: "${_EVALBENCH_IMAGE}"
     waitFor: ["build-toolbox", "pull-evalbench"]
