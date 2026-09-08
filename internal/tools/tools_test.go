@@ -230,7 +230,7 @@ func TestConfigBase_GetToolUIMetadata(t *testing.T) {
 	tests := []struct {
 		name     string
 		config   tools.ConfigBase
-		expected map[string]any
+		expected *tools.ToolUIMetadata
 	}{
 		{
 			name:     "no ui config",
@@ -244,9 +244,9 @@ func TestConfigBase_GetToolUIMetadata(t *testing.T) {
 					Resource: "my-resource",
 				},
 			},
-			expected: map[string]any{
-				"resource":   "my-resource",
-				"visibility": []tools.ToolVisibility{tools.VisibilityModel, tools.VisibilityApp},
+			expected: &tools.ToolUIMetadata{
+				Resource:   "my-resource",
+				Visibility: []tools.ToolVisibility{tools.VisibilityModel, tools.VisibilityApp},
 			},
 		},
 		{
@@ -257,9 +257,9 @@ func TestConfigBase_GetToolUIMetadata(t *testing.T) {
 					Visibility: []tools.ToolVisibility{tools.VisibilityApp},
 				},
 			},
-			expected: map[string]any{
-				"resource":   "my-resource",
-				"visibility": []tools.ToolVisibility{tools.VisibilityApp},
+			expected: &tools.ToolUIMetadata{
+				Resource:   "my-resource",
+				Visibility: []tools.ToolVisibility{tools.VisibilityApp},
 			},
 		},
 	}
@@ -267,12 +267,6 @@ func TestConfigBase_GetToolUIMetadata(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			got := tc.config.GetToolUIMetadata()
-			if tc.expected == nil {
-				if got != nil {
-					t.Errorf("expected nil, got %v", got)
-				}
-				return
-			}
 			if !reflect.DeepEqual(got, tc.expected) {
 				t.Errorf("GetToolUIMetadata() mismatch: expected %v, got %v", tc.expected, got)
 			}
