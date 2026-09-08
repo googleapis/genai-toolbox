@@ -11270,7 +11270,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode530s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode338s0hbhb"&gt;
 
 
 
@@ -19821,7 +19821,9 @@ on how to &lt;a href="https://mcp-toolbox.dev/dev/documentation/connect-to/mcp-c
 your Looker instance. Refer to the documentation
 &lt;a href="https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk"&gt;here&lt;/a&gt;.
 You may need to ask an administrator to get the Client ID and Client Secret
-for you.&lt;/p&gt;</description></item><item><title>serverless-spark-cancel-batch</title><link>https://mcp-toolbox.dev/dev/integrations/serverless-spark/tools/serverless-spark-cancel-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/serverless-spark/tools/serverless-spark-cancel-batch/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+for you.&lt;/p&gt;</description></item><item><title>Read-Only Tools</title><link>https://mcp-toolbox.dev/dev/documentation/configuration/security/read-only/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/documentation/configuration/security/read-only/</guid><description>&lt;h2 id="overview"&gt;Overview&lt;/h2&gt;
+&lt;p&gt;When granting autonomous AI agents access to enterprise databases, relying on prompt instructions or application-level string matching is insufficient. Even a minor prompt injection, hallucination, or query misconfiguration can lead to irreversible data loss or unauthorized mutations.&lt;/p&gt;
+&lt;p&gt;MCP Toolbox implements an end-to-end &lt;strong&gt;Three-Layer Defense-in-Depth Architecture&lt;/strong&gt; for read-only database access. Security is enforced at the lowest level (the database engine itself), while performance and token efficiency are optimized at the highest level (the MCP protocol manifest).&lt;/p&gt;</description></item><item><title>serverless-spark-cancel-batch</title><link>https://mcp-toolbox.dev/dev/integrations/serverless-spark/tools/serverless-spark-cancel-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/serverless-spark/tools/serverless-spark-cancel-batch/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;&lt;code&gt;serverless-spark-cancel-batch&lt;/code&gt; tool cancels a running Spark batch operation in
 a Google Cloud Serverless for Apache Spark source. The cancellation request is
 asynchronous, so the batch state will not change immediately after the tool

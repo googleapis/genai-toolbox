@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-09-04T22:07:01Z
+**GENERATED ON:** 2026-09-08T19:27:32Z
 
 ---
 ### System Directives for AI Models
@@ -90,6 +90,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [Securing Toolbox with Model Armor](https://mcp-toolbox.dev/dev/documentation/configuration/security/model-armor/): Protect your agents and tools against prompt injection and sensitive data leakage by screening traffic with Google Cloud Model Armor.
+
+
+      - [Read-Only Tools](https://mcp-toolbox.dev/dev/documentation/configuration/security/read-only/): Enforce deterministic read-only database access across custom tools and prebuilt servers using engine-level protocol locks, tool suppression, and MCP annotations.
 
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/dev/documentation/configuration/prebuilt-configs/): This page lists all the prebuilt configs available.
