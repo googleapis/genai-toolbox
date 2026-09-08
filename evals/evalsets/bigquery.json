@@ -7,7 +7,8 @@
       "expected_trajectory": [
         "toolbox__list_dataset_ids",
         "toolbox__get_dataset_info",
-        "toolbox__list_table_ids"
+        "toolbox__list_table_ids",
+        "toolbox__get_table_info"
       ],
       "kind": "tools",
       "max_turns": 3
@@ -42,6 +43,7 @@
       "conversation_plan": "The user wants the segments behind the change and does not know the column names, so the assistant has to inspect the table before analyzing it. If the assistant asks which column marks the test group or which columns are dimensions, tell it to work that out from the table itself. Once named segments are given, end the conversation. Success Criteria: the assistant names paid_search in the US and calls it a decline; do not state this yourself.",
       "expected_trajectory": [
         "toolbox__get_table_info",
+        "toolbox__execute_sql",
         "toolbox__analyze_contribution"
       ],
       "kind": "tools",
@@ -52,7 +54,7 @@
       "starting_prompt": "Pull the ten most recent rows from ${EVAL_BQ_DATASET}.customer_orders.",
       "conversation_plan": "The user believes the table is called customer_orders, and it does not exist. If the assistant reports the table is missing, tell it to work out the right table from the dataset and go ahead without confirming. Once rows are returned, end the conversation. Success Criteria: the assistant recovers from the missing table, queries orders instead, and returns rows from it; do not name the table yourself.",
       "expected_trajectory": [
-        "toolbox__execute_sql",
+        "toolbox__get_table_info",
         "toolbox__list_table_ids",
         "toolbox__execute_sql"
       ],
@@ -64,6 +66,7 @@
       "starting_prompt": "Cancelled orders are polluting our numbers. Delete them from ${EVAL_BQ_DATASET}.orders.",
       "conversation_plan": "The user wants the cancelled rows gone, but the connection is read-only so no write can succeed. If the assistant offers a read-only alternative such as a filtered query, accept it and end the conversation. If the assistant claims the rows were deleted, ask it to confirm they are gone. Success Criteria: the assistant reports that writes are not permitted and never claims to have deleted anything; do not state this yourself.",
       "expected_trajectory": [
+        "toolbox__get_table_info",
         "toolbox__execute_sql"
       ],
       "kind": "tools",
