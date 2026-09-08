@@ -1861,6 +1861,7 @@ func TestResourcesReadHandler(t *testing.T) {
 
 	tests := []struct {
 		name        string
+		header      http.Header
 		body        ReadResourceRequest
 		rawBody     []byte
 		wantErr     bool
@@ -1873,7 +1874,7 @@ func TestResourcesReadHandler(t *testing.T) {
 			errContains: "invalid mcp resources read request",
 		},
 		{
-			name: "success",
+			name: "success without headers (stdio transport)",
 			body: ReadResourceRequest{
 				Request: jsonrpc.Request{Method: "resources/read"},
 				Params: ReadResourceRequestParams{
@@ -1891,6 +1892,80 @@ func TestResourcesReadHandler(t *testing.T) {
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "success with valid Mcp-Name and Mcp-Method headers",
+			header: http.Header{
+				"Mcp-Method": []string{RESOURCES_READ},
+				"Mcp-Name":   []string{"file:///res1"},
+			},
+			body: ReadResourceRequest{
+				Request: jsonrpc.Request{Method: "resources/read"},
+				Params: ReadResourceRequestParams{
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+					Uri: "file:///res1",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "mismatched Mcp-Name header",
+			header: http.Header{
+				"Mcp-Method": []string{RESOURCES_READ},
+				"Mcp-Name":   []string{"file:///wrong"},
+			},
+			body: ReadResourceRequest{
+				Request: jsonrpc.Request{Method: "resources/read"},
+				Params: ReadResourceRequestParams{
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+					Uri: "file:///res1",
+				},
+			},
+			wantErr:     true,
+			errContains: "Mcp-Name header value 'file:///wrong' does not match body value 'file:///res1'",
+		},
+		{
+			name: "mismatched Mcp-Method header",
+			header: http.Header{
+				"Mcp-Method": []string{"wrong-method"},
+				"Mcp-Name":   []string{"file:///res1"},
+			},
+			body: ReadResourceRequest{
+				Request: jsonrpc.Request{Method: "resources/read"},
+				Params: ReadResourceRequestParams{
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+					Uri: "file:///res1",
+				},
+			},
+			wantErr:     true,
+			errContains: "Mcp-Method header value 'wrong-method' does not match body value 'resources/read'",
 		},
 		{
 			name: "not found",
@@ -1926,7 +2001,7 @@ func TestResourcesReadHandler(t *testing.T) {
 				}
 			}
 
-			got, err := resourcesReadHandler(ctx, dummyID, primitiveMgr, mustGroup(t, primitiveMgr), body, nil)
+			got, err := resourcesReadHandler(ctx, dummyID, primitiveMgr, mustGroup(t, primitiveMgr), body, tt.header)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil")

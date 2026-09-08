@@ -1636,9 +1636,14 @@ func TestMcpEndpoint(t *testing.T) {
 					if slices.Contains(vtc.reqHeader, "Mcp-Method") {
 						header["Mcp-Method"] = tc.methodName
 					}
-					if slices.Contains(vtc.reqHeader, "Mcp-Name") && (tc.methodName == "tools/call" || tc.methodName == "prompts/get") {
-						params := tc.body.Params.(map[string]any)
-						header["Mcp-Name"] = params["name"].(string)
+					if slices.Contains(vtc.reqHeader, "Mcp-Name") {
+						if params, ok := tc.body.Params.(map[string]any); ok {
+							if tc.methodName == "tools/call" || tc.methodName == "prompts/get" {
+								header["Mcp-Name"] = params["name"].(string)
+							} else if tc.methodName == "resources/read" {
+								header["Mcp-Name"] = params["uri"].(string)
+							}
+						}
 					}
 					if vtc.meta != nil {
 						body := tc.body

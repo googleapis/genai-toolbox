@@ -1018,7 +1018,7 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 		err = fmt.Errorf("invalid mcp resources read request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
-	validateHeaderErr, err := validateHeader(id, header, RESOURCES_READ, "")
+	validateHeaderErr, err := validateHeader(id, header, RESOURCES_READ, req.Params.Uri)
 	if err != nil {
 		return validateHeaderErr, err
 	}
