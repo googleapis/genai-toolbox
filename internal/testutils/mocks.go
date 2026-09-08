@@ -105,6 +105,28 @@ type MockTool struct {
 
 var _ tools.Tool = MockTool{}
 
+// NewMockToolWithUI creates a new mock tool with UI metadata for testing.
+func NewMockToolWithUI(name, desc, source string, params []parameters.Parameter, unauthorized, reqClientAutho bool, uiResource string) MockTool {
+	mockConfig := MockToolConfig{
+		ConfigBase: tools.ConfigBase{
+			Name:        name,
+			Description: desc,
+			UI: &tools.ToolUIMetadata{
+				Resource: uiResource,
+			},
+		},
+		Source:     source,
+		Type:       "mock-tool",
+		Parameters: params,
+	}
+	ctx := context.Background()
+	t, _ := mockConfig.Initialize(ctx)
+	mt := t.(MockTool)
+	mt.unauthorized = unauthorized
+	mt.requireClientAuthorization = reqClientAutho
+	return mt
+}
+
 // NewMockTool creates a new mock prompt for testing.
 func NewMockTool(name, desc, source string, params []parameters.Parameter, unauthorized, reqClientAutho bool) MockTool {
 	mockConfig := MockToolConfig{
