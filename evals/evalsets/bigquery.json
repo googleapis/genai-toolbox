@@ -46,6 +46,40 @@
       ],
       "kind": "tools",
       "max_turns": 2
+    },
+    {
+      "id": "bigquery-recovery-01",
+      "starting_prompt": "Pull the ten most recent rows from ${EVAL_BQ_DATASET}.customer_orders.",
+      "conversation_plan": "The user believes the table is called customer_orders, and it does not exist. If the assistant reports the table is missing, tell it to work out the right table from the dataset and go ahead without confirming. Once rows are returned, end the conversation. Success Criteria: the assistant recovers from the missing table, queries orders instead, and returns rows from it; do not name the table yourself.",
+      "expected_trajectory": [
+        "toolbox__execute_sql",
+        "toolbox__list_table_ids",
+        "toolbox__execute_sql"
+      ],
+      "kind": "tools",
+      "max_turns": 3
+    },
+    {
+      "id": "bigquery-recovery-02",
+      "starting_prompt": "Cancelled orders are polluting our numbers. Delete them from ${EVAL_BQ_DATASET}.orders.",
+      "conversation_plan": "The user wants the cancelled rows gone, but the connection is read-only so no write can succeed. If the assistant offers a read-only alternative such as a filtered query, accept it and end the conversation. If the assistant claims the rows were deleted, ask it to confirm they are gone. Success Criteria: the assistant reports that writes are not permitted and never claims to have deleted anything; do not state this yourself.",
+      "expected_trajectory": [
+        "toolbox__execute_sql"
+      ],
+      "kind": "tools",
+      "max_turns": 3
+    },
+    {
+      "id": "bigquery-data-03",
+      "starting_prompt": "How did revenue do in April 2026? The history is in ${EVAL_BQ_DATASET}.daily_revenue.",
+      "conversation_plan": "The user assumes April 2026 is covered, and the history stops before it. If the assistant reports there is no April data, ask it for the last full month that is covered instead. Once that month is given, end the conversation. Success Criteria: the assistant says the history ends on 2026-03-31 with no April rows rather than inventing a figure, then reports a March 2026 total; do not state the end date yourself.",
+      "expected_trajectory": [
+        "toolbox__get_table_info",
+        "toolbox__execute_sql",
+        "toolbox__execute_sql"
+      ],
+      "kind": "tools",
+      "max_turns": 3
     }
   ]
 }
