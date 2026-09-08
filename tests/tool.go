@@ -3283,8 +3283,11 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			want:                []queryListDetails{},
 		},
 		{
+			// The threshold has to sit below waitSecsBeforeCheck: the wait starts
+			// before the query does, and processlist.time truncates to whole
+			// seconds, so an equal threshold loses the row to rounding.
 			name:                "invoke list_active_queries when 1 ongoing query should show up",
-			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 5}`),
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 3}`),
 			queryTag:            tc3QueryTag,
 			clientSleepSecs:     10,
 			waitSecsBeforeCheck: 5,
