@@ -10,56 +10,6 @@ Resource templates allow you to expose an entire directory tree of files dynamic
 
 ## Examples
 
-### System Directory Template
-
-Here is an example exposing an application's log directory using an absolute filesystem path:
-
-```yaml
-kind: resourceTemplate
-name: app_logs
-type: file
-title: "Application Logs"
-description: "Dynamically read application log files."
-uriTemplate: "file:///var/log/my-app/{path}"
-allowedPaths:
-  - "/var/log/my-app"
-```
-
-When a client queries `resources/templates/list`, the server returns the available template definitions:
-
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": {
-    "resourceTemplates": [
-      {
-        "name": "app_logs",
-        "title": "Application Logs",
-        "uriTemplate": "file:///var/log/my-app/{path}",
-        "description": "Dynamically read application log files.",
-        "annotations": {
-          "priority": 1
-        }
-      }
-    ]
-  }
-}
-```
-
-The client can then resolve the `{path}` parameter and fetch a specific file using `resources/read`:
-
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 2,
-  "method": "resources/read",
-  "params": {
-    "uri": "file:///var/log/my-app/service-errors.txt"
-  }
-}
-```
-
 ### Project Documentation Template
 
 You can configure a template dedicated to documentation files with a custom `mimeType`. Note that `allowedPaths` can also use relative paths (such as `./docs`), which are automatically resolved relative to the directory containing your configuration file:
