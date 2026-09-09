@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -55,8 +56,9 @@ type compatibleSource interface {
 
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
-	Type             string `yaml:"type" validate:"required"`
-	Source           string `yaml:"source" validate:"required"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -65,13 +67,13 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	// parameters are marked required/ optional based on the vector assist function defintions
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("spec_id", "The unique ID of the vector specification to apply.", false),
-		parameters.NewStringParameterWithRequired("table_name", "The name of the table to apply the vector specification to (in case of a single spec defined on the table).", false),
-		parameters.NewStringParameterWithRequired("column_name", "The text_column_name or vector_column_name of the spec to identify the exact spec in case there are multiple specs defined on a table.", false),
-		parameters.NewStringParameterWithRequired("schema_name", "The schema name for the table.", false),
+		parameters.NewStringParameter("spec_id", "The unique ID of the vector specification to apply.", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("table_name", "The name of the table to apply the vector specification to (in case of a single spec defined on the table).", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("column_name", "The text_column_name or vector_column_name of the spec to identify the exact spec in case there are multiple specs defined on a table.", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("schema_name", "The schema name for the table.", parameters.WithStringRequired(false)),
 	}
 
 	if cfg.Description == "" {
@@ -81,7 +83,7 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
-			nil,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
 			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),
@@ -94,10 +96,10 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
 	paramsMap := params.AsMap()
 
@@ -115,6 +117,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
+}
+
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
+	}
+	return nil
 }

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"time"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -60,6 +61,10 @@ type Config struct {
 	QueryParams   map[string]string `yaml:"queryParams"`
 	QueryExecMode string            `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
 	SQLCommenter  *bool             `yaml:"sqlCommenter"`
+	// ConnectTimeout optionally bounds how long a single connection attempt may
+	// take, in seconds. When unset, no timeout is applied and connection behavior
+	// is unchanged.
+	ConnectTimeout *int `yaml:"connectTimeout" validate:"omitempty,gte=1"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -67,13 +72,14 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams, r.QueryExecMode)
+	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams, r.QueryExecMode, r.ConnectTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
 
 	err = pool.Ping(ctx)
 	if err != nil {
+		pool.Close()
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 
@@ -89,6 +95,10 @@ var _ sources.Source = &Source{}
 type Source struct {
 	Config
 	Pool *pgxpool.Pool
+}
+
+func (s *Source) IsReadOnly() bool {
+	return false
 }
 
 func (s *Source) SourceType() string {
@@ -120,7 +130,8 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 		}
 		row := orderedmap.Row{}
 		for i, f := range fields {
-			row.Add(f.Name, values[i])
+			val := sources.NormalizeValue(values[i], f.DataTypeOID)
+			row.Add(f.Name, val)
 		}
 		out = append(out, row)
 	}
@@ -131,7 +142,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	return out, nil
 }
 
-func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string, queryExecMode string) (*pgxpool.Pool, error) {
+func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string, queryExecMode string, connectTimeout *int) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -157,6 +168,10 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 		return nil, err
 	}
 	config.ConnConfig.DefaultQueryExecMode = execMode
+
+	if connectTimeout != nil {
+		config.ConnConfig.ConnectTimeout = time.Duration(*connectTimeout) * time.Second
+	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {

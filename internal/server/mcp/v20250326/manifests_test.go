@@ -21,7 +21,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -83,7 +85,7 @@ func TestGenerateToolManifest(t *testing.T) {
 			name:        "basic",
 			description: "foo bar",
 			authInvoke:  []string{},
-			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
+			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter", parameters.WithStringAuth(authServices))},
 			annotations: nil,
 			wantMetadata: map[string]any{
 				"toolbox/authParam": map[string][]string{
@@ -96,7 +98,7 @@ func TestGenerateToolManifest(t *testing.T) {
 			name:        "basic",
 			description: "foo bar",
 			authInvoke:  []string{"auth1", "auth2"},
-			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
+			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter", parameters.WithStringAuth(authServices))},
 			annotations: nil,
 			wantMetadata: map[string]any{
 				"toolbox/authInvoke": []string{"auth1", "auth2"},
@@ -147,9 +149,9 @@ func TestParamManifest(t *testing.T) {
 		{
 			name: "all types",
 			in: parameters.Parameters{
-				parameters.NewStringParameterWithDefault("foo-string", "foo", "bar"),
+				parameters.NewStringParameter("foo-string", "bar", parameters.WithStringDefault("foo")),
 				parameters.NewStringParameter("foo-string2", "bar"),
-				parameters.NewStringParameterWithAuth("foo-string3-auth", "bar", authServices),
+				parameters.NewStringParameter("foo-string3-auth", "bar", parameters.WithStringAuth(authServices)),
 				parameters.NewIntParameter("foo-int2", "bar"),
 				parameters.NewFloatParameter("foo-float", "bar"),
 				parameters.NewArrayParameter("foo-array2", "bar", parameters.NewStringParameter("foo-string", "bar")),
@@ -229,27 +231,24 @@ func TestParamManifest(t *testing.T) {
 }
 
 func TestGenerateListToolsResult(t *testing.T) {
-	tool1 := testutils.NewMockTool("no_params", "", []parameters.Parameter{}, false, false)
+	tool1 := testutils.NewMockTool("no_params", "", "", []parameters.Parameter{}, false, false)
 	tool2 := testutils.NewMockTool(
 		"some_params",
-		"",
+		"", "",
 		parameters.Parameters{
 			parameters.NewIntParameter("param1", "This is the first parameter."),
 			parameters.NewIntParameter("param2", "This is the second parameter."),
 		}, false, false)
 	toolsMap := make(map[string]tools.Tool)
-	toolsMap[tool1.Name] = tool1
-	toolsMap[tool2.Name] = tool2
-	tc := tools.ToolsetConfig{
+	toolsMap[tool1.GetName()] = tool1
+	toolsMap[tool2.GetName()] = tool2
+	g := group.NewGroup(group.GroupConfig{
 		Name:      "test-toolset",
 		ToolNames: []string{"no_params", "some_params"},
-	}
-	toolset, err := tc.Initialize("test-version", toolsMap)
-	if err != nil {
-		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
-	}
+	})
 
-	got, err := GenerateListToolsResult(nil, toolset, toolsMap, nil)
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
+	got, err := GenerateListToolsResult(pMgr, g, nil)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
@@ -321,7 +320,7 @@ func TestGeneratePromptManifest(t *testing.T) {
 			description: "Prompt with args.",
 			args: prompts.Arguments{
 				{Parameter: parameters.NewStringParameter("param1", "First param")},
-				{Parameter: parameters.NewIntParameterWithRequired("param2", "Second param", false)},
+				{Parameter: parameters.NewIntParameter("param2", "Second param", parameters.WithIntRequired(false))},
 			},
 			want: Prompt{
 				Name:        "arg-prompt",
@@ -353,16 +352,15 @@ func TestGenerateListPromptsResult(t *testing.T) {
 	promptsMap := make(map[string]prompts.Prompt)
 	promptsMap[prompt1.Name] = prompt1
 	promptsMap[prompt2.Name] = prompt2
-	pc := prompts.PromptsetConfig{
+	g := group.NewGroup(group.GroupConfig{
 		Name:        "test-promptset",
 		PromptNames: []string{"prompt1", "prompt2"},
+	})
+	gMap := map[string]group.Group{
+		g.Name: g,
 	}
-	promptset, err := pc.Initialize("test-version", promptsMap)
-	if err != nil {
-		t.Fatalf("unable to initialize promptset %q: %s", "test-promptset", err)
-	}
-
-	got, err := GenerateListPromptsResult(promptset, promptsMap)
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, promptsMap, gMap)
+	got, err := GenerateListPromptsResult(pMgr, g)
 	if err != nil {
 		t.Fatalf("unable to generate list prompt result: %s", err)
 	}
@@ -388,5 +386,46 @@ func TestGenerateListPromptsResult(t *testing.T) {
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Fatalf("unexpected list tools result (-want +got):\n%s", diff)
+	}
+}
+
+func TestGenerateListToolsResultWithSecureParams(t *testing.T) {
+	paramsStandard := parameters.Parameters{
+		parameters.NewStringParameter("param1", "desc"),
+	}
+	paramsSecure := parameters.Parameters{
+		&parameters.StringParameter{
+			CommonParameter: parameters.CommonParameter{
+				Name:   "param2",
+				Type:   parameters.TypeString,
+				Desc:   "desc",
+				Secure: true,
+			},
+		},
+	}
+	toolStandard := testutils.NewMockTool("standard_tool", "", "", paramsStandard, false, false)
+	toolSecure := testutils.NewMockTool("secure_tool", "", "", paramsSecure, false, false)
+
+	toolsMap := map[string]tools.Tool{
+		"standard_tool": toolStandard,
+		"secure_tool":   toolSecure,
+	}
+
+	g := group.NewGroup(group.GroupConfig{
+		Name:      "test-toolset",
+		ToolNames: []string{"standard_tool", "secure_tool"},
+	})
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
+
+	got, err := GenerateListToolsResult(pMgr, g, nil)
+	if err != nil {
+		t.Fatalf("failed GenerateListToolsResult: %s", err)
+	}
+
+	if len(got.Tools) != 1 {
+		t.Fatalf("expected 1 tool, got %d: %+v", len(got.Tools), got.Tools)
+	}
+	if got.Tools[0].Name != "standard_tool" {
+		t.Errorf("expected standard_tool, got: %s", got.Tools[0].Name)
 	}
 }

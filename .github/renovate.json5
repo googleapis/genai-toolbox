@@ -73,11 +73,37 @@
         'minor',
         'patch',
       ],
+      ignorePaths: [
+        'docs/**',
+      ],
+    },
+    {
+      groupName: 'Node Samples',
+      matchManagers: [
+        'npm',
+      ],
+      // Explicitly match the sample directories
+      matchFileNames: [
+        'docs/**',
+      ],
     },
     {
       groupName: 'Pip',
       matchManagers: [
         'pip_requirements',
+      ],
+      ignorePaths: [
+        'docs/**',
+      ],
+    },
+    {
+      groupName: 'Python Samples',
+      matchManagers: [
+        'pip_requirements',
+      ],
+      // Explicitly match the sample directories
+      matchFileNames: [
+        'docs/**',
       ],
     },
   ],

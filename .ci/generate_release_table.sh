@@ -9,6 +9,36 @@ fi
 
 
 FILES=("linux.amd64" "darwin.arm64" "darwin.amd64" "windows.amd64" "windows.arm64")
+
+echo "Waiting for Kokoro to sign and upload binaries to gs://mcp-toolbox-for-databases..."
+
+# We wait for each of the main binaries
+for file_key in "${FILES[@]}"; do
+    OS=$(echo "$file_key" | cut -d '.' -f 1)
+    ARCH=$(echo "$file_key" | cut -d '.' -f 2)
+
+    if [ "$OS" = 'windows' ]; then
+        URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox.exe"
+    else
+        URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox"
+    fi
+
+    until curl --fail --silent --head "${URL}" > /dev/null 2>&1; do
+        echo "Waiting for signed binary: ${URL}..."
+        sleep 30
+    done
+    echo "Found signed binary: ${URL}!"
+done
+
+# Wait for the Linux GPG signature
+LINUX_SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/amd64/toolbox.asc"
+until curl --fail --silent --head "${LINUX_SIG_URL}" > /dev/null 2>&1; do
+    echo "Waiting for Linux GPG signature: ${LINUX_SIG_URL}..."
+    sleep 30
+done
+echo "Found Linux GPG signature: ${LINUX_SIG_URL}!"
+
+
 output_string=""
 
 # Define the descriptions - ensure this array's order matches FILES
@@ -50,7 +80,12 @@ do
     SHA256=$(shasum -a 256 toolbox | awk '{print $1}')
 
     # Write the table row
-    output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL)" "$description_text" "$SHA256")$'\n'
+    if [ "$OS" = 'linux' ]; then
+        SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/amd64/toolbox.asc"
+        output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL) ([Signature]($SIG_URL))" "$description_text" "$SHA256")$'\n'
+    else
+        output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL)" "$description_text" "$SHA256")$'\n'
+    fi
 
     rm toolbox
 done

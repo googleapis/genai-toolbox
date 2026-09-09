@@ -17,7 +17,9 @@ package v20251125
 import (
 	"fmt"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -98,18 +100,30 @@ func generateParamManifest(ps parameters.Parameters, urlParams map[string]string
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(srcs map[string]sources.Source, t tools.Toolset, toolsMap map[string]tools.Tool, urlParams map[string]string) (ListToolsResult, error) {
-	mcpManifest := make([]Tool, 0, len(t.ToolNames))
-	for _, toolName := range t.ToolNames {
-		tool, ok := toolsMap[toolName]
+func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, urlParams map[string]string) (ListToolsResult, error) {
+	mcpManifest := make([]Tool, 0, len(g.ToolNames))
+	for _, toolName := range g.ToolNames {
+		tool, ok := pMgr.GetTool(toolName)
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
-		params, err := tool.GetParameters(srcs)
+		// Skip a Tool that requires secure params as they are not supported in this protocol version.
+		if tool.HasSecureParams() {
+			continue
+		}
+		srcName := tool.GetSourceName()
+		var src sources.Source
+		if srcName != "" {
+			src, ok = pMgr.GetSource(srcName)
+			if !ok {
+				return ListToolsResult{}, fmt.Errorf("unable to retrieve %s source for tool %q", srcName, tool.GetName())
+			}
+		}
+		params, err := tool.GetParameters(src)
 		if err != nil {
 			return ListToolsResult{}, fmt.Errorf("error getting parameters for tool %q: %w", toolName, err)
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(), urlParams)
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(src), urlParams)
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	return ListToolsResult{Tools: mcpManifest}, nil
@@ -134,10 +148,10 @@ func generatePromptManifest(name, desc string, args prompts.Arguments) Prompt {
 }
 
 // GenerateListPromptsResult generates the list/prompts result
-func GenerateListPromptsResult(p prompts.Promptset, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
-	mcpManifest := make([]Prompt, 0, len(p.PromptNames))
-	for _, promptName := range p.PromptNames {
-		prompt, ok := promptsMap[promptName]
+func GenerateListPromptsResult(pMgr *primitives.PrimitiveManager, g group.Group) (ListPromptsResult, error) {
+	mcpManifest := make([]Prompt, 0, len(g.PromptNames))
+	for _, promptName := range g.PromptNames {
+		prompt, ok := pMgr.GetPrompt(promptName)
 		if !ok {
 			return ListPromptsResult{}, fmt.Errorf("prompt does not exist: %s", promptName)
 		}

@@ -187,6 +187,12 @@ func TestRestoreBackupToolEndpoints(t *testing.T) {
 			want:     `{"error":"error processing GCP request: source project and instance are required when restoring via backup ID"}`,
 		},
 		{
+			name:     "missing source instance with source project for standard backup",
+			toolName: "restore-backup",
+			body:     `{"target_project": "p1", "target_instance": "instance-project-level", "backup_id": "12345", "source_project": "p1"}`,
+			want:     `{"error":"error processing GCP request: source project and instance are required when restoring via backup ID"}`,
+		},
+		{
 			name:     "missing backup identifier",
 			toolName: "restore-backup",
 			body:     `{"target_project": "p1", "target_instance": "instance-project-level"}`,

@@ -6,7 +6,6 @@
 
 <a href="https://trendshift.io/repositories/25495" target="_blank"><img src="https://trendshift.io/api/badge/repositories/25495" alt="googleapis%2Fmcp-toolbox | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/mcp-toolbox)](https://goreportcard.com/report/github.com/googleapis/mcp-toolbox)
 [![License: Apache
 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docs](https://img.shields.io/badge/Docs-MCP_Toolbox-blue)](https://mcp-toolbox.dev/)
@@ -241,7 +240,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=1.5.0
+> export VERSION=1.10.0
 > curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -254,7 +253,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=1.5.0
+> export VERSION=1.10.0
 > curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/arm64/toolbox
 > chmod +x toolbox
 > ```
@@ -267,7 +266,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=1.5.0
+> export VERSION=1.10.0
 > curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -280,7 +279,7 @@ To install Toolbox as a binary:
 >
 > ```cmd
 > :: see releases page for other versions
-> set VERSION=1.5.0
+> set VERSION=1.10.0
 > curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/amd64/toolbox.exe"
 > ```
 >
@@ -292,7 +291,7 @@ To install Toolbox as a binary:
 >
 > ```powershell
 > # see releases page for other versions
-> $VERSION = "1.5.0"
+> $VERSION = "1.10.0"
 > curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/amd64/toolbox.exe"
 > ```
 >
@@ -304,7 +303,7 @@ To install Toolbox as a binary:
 >
 > ```cmd
 > :: see releases page for other versions
-> set VERSION=1.5.0
+> set VERSION=1.10.0
 > curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/arm64/toolbox.exe"
 > ```
 >
@@ -316,7 +315,7 @@ To install Toolbox as a binary:
 >
 > ```powershell
 > # see releases page for other versions
-> $VERSION = "1.5.0"
+> $VERSION = "1.10.0"
 > curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/arm64/toolbox.exe"
 > ```
 >
@@ -329,7 +328,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=1.5.0
+export VERSION=1.10.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -353,7 +352,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/mcp-toolbox@v1.5.0
+go install github.com/googleapis/mcp-toolbox@v1.10.0
 ```
 <!-- {x-release-please-end} -->
 
@@ -1080,6 +1079,8 @@ gemini skills install ./skills/my-skill
 ```
 
 For more details, see the [Generate Agent Skills guide](https://mcp-toolbox.dev/documentation/configuration/skills/).
+
+The repository also ships ready-to-use Agent Skills (e.g. maintainer workflows). See [`skills/`](./skills/README.md) for the catalog and install instructions.
 
 ---
 

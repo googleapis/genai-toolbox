@@ -74,7 +74,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -99,17 +99,28 @@ type Tool struct {
 	tools.BaseTool[Config]
 }
 
+func (t Tool) GetSourceName() string {
+	return t.Cfg.Source
+}
+
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
-// Invoke runs the contribution analysis.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+func (t Tool) ValidateSource(source sources.Source) error {
+	_, ok := source.(compatibleSource)
+	if !ok {
+		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
+	return nil
+}
 
+// Invoke runs the contribution analysis.
+func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
+	}
 	paramsMap := params.AsMap()
 	inputData, ok := paramsMap["input_data"].(string)
 	if !ok {
@@ -282,20 +293,20 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return false, err
+func (t Tool) RequiresClientAuthorization(source sources.Source) (bool, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.UseClientAuthorization(), nil
+	return s.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return "", err
+func (t Tool) GetAuthTokenHeaderName(source sources.Source) (string, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return "", fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
-	return source.GetAuthTokenHeaderName(), nil
+	return s.GetAuthTokenHeaderName(), nil
 }
 
 // resolveParams builds the tool's parameters using the source's allowed-dataset configuration.
@@ -310,27 +321,23 @@ func buildParams(allowedDatasets []string) parameters.Parameters {
 	}
 
 	inputDataParameter := parameters.NewStringParameter("input_data", inputDataDescription)
-	contributionMetricParameter := parameters.NewStringParameterWithEscape("contribution_metric",
-		`The name of the column that contains the metric to analyze.
+	contributionMetricParameter := parameters.NewStringParameter("contribution_metric", `The name of the column that contains the metric to analyze.
 		Provides the expression to use to calculate the metric you are analyzing.
 		To calculate a summable metric, the expression must be in the form SUM(metric_column_name),
 		where metric_column_name is a numeric data type.
-
 		To calculate a summable ratio metric, the expression must be in the form
 		SUM(numerator_metric_column_name)/SUM(denominator_metric_column_name),
 		where numerator_metric_column_name and denominator_metric_column_name are numeric data types.
-
 		To calculate a summable by category metric, the expression must be in the form
 		SUM(metric_sum_column_name)/COUNT(DISTINCT categorical_column_name). The summed column must be a numeric data type.
-		The categorical column must have type BOOL, DATE, DATETIME, TIME, TIMESTAMP, STRING, or INT64.`, "single-quotes")
-	isTestColParameter := parameters.NewStringParameterWithEscape("is_test_col",
-		"The name of the column that identifies whether a row is in the test or control group.", "single-quotes")
-	dimensionIDColsParameter := parameters.NewArrayParameterWithRequired("dimension_id_cols",
-		"An array of column names that uniquely identify each dimension.", false, parameters.NewStringParameterWithEscape("dimension_id_col", "A dimension column name.", "single-quotes"))
-	topKInsightsParameter := parameters.NewIntParameterWithDefault("top_k_insights_by_apriori_support", 30,
-		"The number of top insights to return, ranked by apriori support.")
-	pruningMethodParameter := parameters.NewStringParameterWithDefault("pruning_method", "PRUNE_REDUNDANT_INSIGHTS",
-		"The method to use for pruning redundant insights. Can be 'NO_PRUNING' or 'PRUNE_REDUNDANT_INSIGHTS'.")
+		The categorical column must have type BOOL, DATE, DATETIME, TIME, TIMESTAMP, STRING, or INT64.`, parameters.WithStringEscape(
+		"single-quotes"))
+	isTestColParameter := parameters.NewStringParameter("is_test_col", "The name of the column that identifies whether a row is in the test or control group.", parameters.WithStringEscape(
+		"single-quotes"))
+	dimensionIDColsParameter := parameters.NewArrayParameter("dimension_id_cols", "An array of column names that uniquely identify each dimension.", parameters.NewStringParameter("dimension_id_col", "A dimension column name.", parameters.WithStringEscape("single-quotes")), parameters.WithArrayRequired(
+		false))
+	topKInsightsParameter := parameters.NewIntParameter("top_k_insights_by_apriori_support", "The number of top insights to return, ranked by apriori support.", parameters.WithIntDefault(30))
+	pruningMethodParameter := parameters.NewStringParameter("pruning_method", "The method to use for pruning redundant insights. Can be 'NO_PRUNING' or 'PRUNE_REDUNDANT_INSIGHTS'.", parameters.WithStringDefault("PRUNE_REDUNDANT_INSIGHTS"))
 
 	return parameters.Parameters{
 		inputDataParameter,
@@ -342,22 +349,22 @@ func buildParams(allowedDatasets []string) parameters.Parameters {
 	}
 }
 
-func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, err
+func (t Tool) resolveParams(source sources.Source) (parameters.Parameters, error) {
+	s, ok := source.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
 	return buildParams(s.BigQueryAllowedDatasets()), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.
-func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	return t.resolveParams(srcs)
+func (t Tool) GetParameters(source sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(source)
 }
 
 // Manifest returns the tool's manifest, resolved against the source.
-func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
-	params, err := t.resolveParams(srcs)
+func (t Tool) Manifest(source sources.Source) (tools.Manifest, error) {
+	params, err := t.resolveParams(source)
 	if err != nil {
 		return tools.Manifest{}, err
 	}

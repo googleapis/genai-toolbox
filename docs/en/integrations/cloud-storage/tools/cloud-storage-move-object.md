@@ -33,6 +33,9 @@ already exists, `storage.objects.delete` is also required.
 | source_object      |  string  |     true     | Full source object name (path) within the bucket, e.g. `path/to/file.txt`.       |
 | destination_object |  string  |     true     | Full destination object name (path) within the same bucket.                      |
 
+If `bucket` is configured on the tool, it is removed from the parameter list and
+the configured bucket is used for every invocation.
+
 ## Example
 
 ```yaml
@@ -41,6 +44,15 @@ name: move_object
 type: cloud-storage-move-object
 source: my-gcs-source
 description: Use this tool to move or rename an object within a Cloud Storage bucket.
+```
+
+```yaml
+kind: tool
+name: move_reports
+type: cloud-storage-move-object
+source: my-gcs-source
+description: Use this tool to move report objects within the reports bucket.
+bucket: analytics-exports
 ```
 
 ## Output Format
@@ -62,3 +74,4 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-move-object".                 |
 | source      |  string  |     true     | Name of the Cloud Storage source to move objects in. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.   |
+| bucket      |  string  |    false     | Cloud Storage bucket to use for every invocation. When set, `bucket` is hidden from the tool parameters. |

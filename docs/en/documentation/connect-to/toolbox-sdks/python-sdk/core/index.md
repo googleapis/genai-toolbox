@@ -87,6 +87,10 @@ For advanced use cases, you can provide an external `aiohttp.ClientSession` duri
 Closing the `ToolboxClient` also closes the underlying network session shared by all tools loaded from that client. As a result, any tool instances you have loaded will cease to function and will raise an error if you attempt to invoke them after the client is closed.
 {{< /notice >}}
 
+{{< notice note >}}
+If your connection URL contains query parameters (e.g., `http://localhost:5000?foo=bar`), the client automatically preserves them across API requests for parameter binding.
+{{< /notice >}}
+
 ## Transport Protocols
 
 The SDK supports multiple transport protocols for communicating with the Toolbox server. By default, the client uses the latest supported version of the **Model Context Protocol (MCP)**.
@@ -99,13 +103,17 @@ You can explicitly select a protocol using the `protocol` option during client i
 
 ### Supported Protocols
 
-We currently support different versions of the MCP protocol.
+We currently support different versions of the MCP protocol. For a complete and up-to-date list, see the [`Protocol` enum definition on GitHub](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/src/toolbox_core/protocol.py).
 
 | Constant | Description |
 | :--- | :--- |
-| `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-06-18`). |
+| `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2026-07-28`). |
+| `Protocol.MCP_LATEST` | Alias for the latest stable MCP version (currently `2026-07-28`). |
+| `Protocol.MCP_DRAFT` | Alias for the upcoming draft MCP version (currently `2026-07-28`). |
+| `Protocol.MCP_v20260728` | MCP Protocol version 2026-07-28. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
+| `Protocol.MCP_v20250326` | MCP Protocol version 2025-03-26. |
 | `Protocol.MCP_v20241105` | MCP Protocol version 2024-11-05. |
 
 ### Example
@@ -119,7 +127,7 @@ async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP) as tool
     pass
 ```
 
-If you want to pin the MCP Version 2025-03-26:
+If you want to set the preferred starting protocol to 2025-03-26 (allowing fallback negotiation if the server doesn't support it):
 
 ```py
 from toolbox_core import ToolboxClient
@@ -129,6 +137,24 @@ async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP_v2025032
     # Use client
     pass
 ```
+
+To restrict negotiation to a specific subset of versions, you can pass a list of supported protocols to the `protocol` parameter:
+
+```py
+from toolbox_core import ToolboxClient
+from toolbox_core.protocol import Protocol
+
+async with ToolboxClient(
+    "http://127.0.0.1:5000", 
+    protocol=[Protocol.MCP_LATEST, Protocol.MCP_v20250618]
+) as toolbox:
+    # Use client
+    pass
+```
+
+{{< notice tip >}}
+If you want to strictly pin the version and disable protocol fallback, you must pass an array containing just one value: `protocol=[Protocol.MCP_DRAFT]`
+{{< /notice >}}
 
 ## Loading Tools
 
@@ -538,6 +564,96 @@ async def get_dynamic_value():
 # Assuming `tool` is a loaded tool instance from a ToolboxClient
 dynamic_bound_tool = tool.bind_param("param", get_dynamic_value)
 ```
+
+## Secure Parameters
+
+{{< notice note >}}
+Secure parameters are supported starting in `toolbox-core` version `1.4.0` and require MCP protocol version `2026-07-28` or newer with the [`com.google.cloud/toolbox.v1` extension](https://github.com/googleapis/mcp-toolbox/blob/main/extensions/2026-07-28/README.md). For server configuration details, see [Secure Parameters](../../../../configuration/tools/_index.md#secure-parameters).
+{{< /notice >}}
+
+Secure parameters are designed for sensitive runtime context (such as an end-user `customer_id`, tenant identifier, or secret tokens) that LLMs must not see, control, or hallucinate.
+
+Unlike standard parameters, parameters marked as `secure: true` in your Toolbox server configuration:
+* **Schema Isolation:** The SDK completely strips secure parameters from the public tool declaration, docstrings, and runtime function signature (reflected in `__signature__` and `inspect.signature(tool)`). The LLM is never aware of these parameters, keeping your model's context window clean and preventing credential exposure.
+* **Prompt Injection Defense:** If a model or caller attempts to provide a value for a secure parameter in standard arguments, the SDK rejects execution immediately.
+* **Fast-Fail Validation:** The SDK verifies all required secure parameters locally before sending a request over the wire. If any required secure parameter is missing, execution fails immediately.
+* **Wire Protocol Separation:** Secure parameters are transmitted out-of-band in the `secureArguments` field of the MCP 2026-07-28 `tools/call` JSON-RPC payload, isolated from regular arguments.
+
+### Option A: Binding Secure Parameters to a Loaded Tool
+
+Bind secure values to a tool object *after* it has been loaded. Each binding method returns a **new, immutable tool instance**, leaving the original unmodified.
+
+```python
+from toolbox_core import ToolboxClient
+
+async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
+    tool = await toolbox.load_tool("search_secure_data")
+
+    # Bind a single secure parameter
+    bound_tool = tool.bind_secure_param("customer_id", "cust_12345")
+
+    # OR bind multiple secure parameters at once
+    multi_bound_tool = tool.bind_secure_params({
+        "customer_id": "cust_12345",
+        "session_token": "token-xyz"
+    })
+```
+
+### Option B: Binding Secure Parameters While Loading Tools
+
+Pre-bind secure parameters directly when loading a tool or toolset. The SDK validates that all supplied keys exist as secure parameters on the target tools.
+
+```python
+async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
+    # Load a single tool with secure parameters
+    tool = await toolbox.load_tool(
+        "search_secure_data",
+        secure_params={"customer_id": "cust_12345"}
+    )
+
+    # Load an entire toolset with secure parameters
+    tools = await toolbox.load_toolset(
+        "my-toolset",
+        secure_params={"customer_id": "cust_12345"}
+    )
+```
+
+### Binding Dynamic Secure Values
+
+You can also bind a secure parameter to a synchronous or asynchronous callable. The callable is evaluated at execution time each time the tool is invoked:
+
+```python
+async def get_current_user_token() -> str:
+    # Dynamically fetch session token or user identifier
+    return "session-token-abc"
+
+secure_tool = tool.bind_secure_param("auth_token", get_current_user_token)
+```
+
+### Synchronous Usage
+
+Secure parameter binding is also available on `ToolboxSyncTool` when using `ToolboxSyncClient`:
+
+```python
+from toolbox_core import ToolboxSyncClient
+
+with ToolboxSyncClient("http://127.0.0.1:5000") as toolbox:
+    tool = toolbox.load_tool(
+        "search_secure_data",
+        secure_params={"customer_id": "cust_12345"}
+    )
+    result = tool()
+```
+
+### Cross-Binding Guidance & Mutual Exclusivity
+
+To prevent security misconfigurations and ensure strict separation between model arguments and application arguments:
+
+* Calling `bind_param()` or `bind_params()` on a secure parameter raises:  
+  `ValueError: parameter '<name>' is a secure parameter; use bind_secure_param/bind_secure_params instead`
+* Calling `bind_secure_param()` or `bind_secure_params()` on a regular parameter raises:  
+  `ValueError: parameter '<name>' is a regular parameter; use bind_param/bind_params instead`
+
 
 ## OpenTelemetry
 

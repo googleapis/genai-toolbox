@@ -86,7 +86,7 @@ func TestParseFromYamlCloudStorageDeleteBucket(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -109,15 +109,6 @@ func (m *mockSource) DeleteBucket(ctx context.Context, bucket string) (map[strin
 	return map[string]any{"bucket": bucket, "deleted": true}, nil
 }
 
-type mockSourceProvider struct {
-	tools.SourceProvider
-	source *mockSource
-}
-
-func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.source, true
-}
-
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragedeletebucket.Config{
 		ConfigBase: tools.ConfigBase{
@@ -127,7 +118,7 @@ func TestInvokeValidation(t *testing.T) {
 		Type:   "cloud-storage-delete-bucket",
 		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -145,9 +136,8 @@ func TestInvokeValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
 			params := parameters.ParamValues{{Name: "bucket", Value: tc.bucket}}
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), src, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")

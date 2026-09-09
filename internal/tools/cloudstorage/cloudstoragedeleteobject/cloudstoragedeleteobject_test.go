@@ -83,10 +83,33 @@ func TestParseFromYamlCloudStorageDeleteObject(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with configurable bucket",
+			in: `
+			kind: tool
+			name: configured_delete
+			type: cloud-storage-delete-object
+			source: prod-gcs
+			description: Delete configured object
+			bucket: baked-bucket
+			`,
+			want: server.ToolConfigs{
+				"configured_delete": cloudstoragedeleteobject.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_delete",
+						Description:  "Delete configured object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-delete-object",
+					Source: "prod-gcs",
+					Bucket: strPtr("baked-bucket"),
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -97,6 +120,10 @@ func TestParseFromYamlCloudStorageDeleteObject(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
 type mockSource struct {
 	sources.Source
 	called    bool
@@ -104,20 +131,84 @@ type mockSource struct {
 	gotObject string
 }
 
+func TestConfiguredBucketHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragedeleteobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "delete_tool",
+			Description: "Delete",
+		},
+		Type:   "cloud-storage-delete-object",
+		Source: "my-gcs",
+		Bucket: strPtr("baked-bucket"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"object"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{{Name: "object", Value: "o"}}
+	if _, err := tool.Invoke(context.Background(), src, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotBucket != "baked-bucket" || src.gotObject != "o" {
+		t.Fatalf("forwarded params = %q/%q, want baked-bucket/o", src.gotBucket, src.gotObject)
+	}
+}
+
+func TestUnsetBucketRemainsVisible(t *testing.T) {
+	cfg := cloudstoragedeleteobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "delete_tool",
+			Description: "Delete",
+		},
+		Type:   "cloud-storage-delete-object",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket", "object"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredBucketRejected(t *testing.T) {
+	cfg := cloudstoragedeleteobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "delete_tool",
+			Description: "Delete",
+		},
+		Type:   "cloud-storage-delete-object",
+		Source: "my-gcs",
+		Bucket: strPtr(""),
+	}
+	if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), "bucket") {
+		t.Fatalf("Initialize() error = %v, want bucket error", err)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
+}
+
 func (m *mockSource) DeleteObject(ctx context.Context, bucket, object string) (map[string]any, error) {
 	m.called = true
 	m.gotBucket = bucket
 	m.gotObject = object
 	return map[string]any{"bucket": bucket, "object": object, "deleted": true}, nil
-}
-
-type mockSourceProvider struct {
-	tools.SourceProvider
-	source *mockSource
-}
-
-func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.source, true
 }
 
 func TestInvokeValidation(t *testing.T) {
@@ -129,7 +220,7 @@ func TestInvokeValidation(t *testing.T) {
 		Type:   "cloud-storage-delete-object",
 		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -149,12 +240,11 @@ func TestInvokeValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
 			params := parameters.ParamValues{
 				{Name: "bucket", Value: tc.bucket},
 				{Name: "object", Value: tc.object},
 			}
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), src, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")

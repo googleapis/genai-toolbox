@@ -88,7 +88,7 @@ func TestSubstituteMessages(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		arguments := prompts.Arguments{
 			{Parameter: parameters.NewStringParameter("name", "The name to use.")},
-			{Parameter: parameters.NewStringParameterWithRequired("location", "The location.", false)},
+			{Parameter: parameters.NewStringParameter("location", "The location.", parameters.WithStringRequired(false))},
 		}
 		messages := []prompts.Message{
 			{Role: "user", Content: "Hello, my name is {{.name}} and I am in {{.location}}."},

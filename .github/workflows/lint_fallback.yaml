@@ -14,7 +14,8 @@
 
 name: lint
 
-on:
+# zizmor flags pull_request_target, but this fallback workflow never checks out code.
+on: # zizmor: ignore[dangerous-triggers]
   pull_request:
     paths:
       - "docs/**"

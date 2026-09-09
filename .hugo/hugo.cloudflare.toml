@@ -55,7 +55,6 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
   github_subdir = "docs"
   offlineSearch = false
   version_menu = "Releases"
-  disableMigrationBanner = true
   releases_url = "/releases.releases"
   global_logo_url = "/"
   pagefind = true
@@ -81,32 +80,28 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 # The order of versions in this file is mirrored into the dropdown
 
 [[params.versions]]
+  version = "v1.10.0"
+  url = "https://mcp-toolbox.dev/v1.10.0/"
+
+[[params.versions]]
+  version = "v1.9.0"
+  url = "https://mcp-toolbox.dev/v1.9.0/"
+
+[[params.versions]]
+  version = "v1.8.0"
+  url = "https://mcp-toolbox.dev/v1.8.0/"
+
+[[params.versions]]
+  version = "v1.7.0"
+  url = "https://mcp-toolbox.dev/v1.7.0/"
+
+[[params.versions]]
+  version = "v1.6.0"
+  url = "https://mcp-toolbox.dev/v1.6.0/"
+
+[[params.versions]]
   version = "v1.5.0"
   url = "https://mcp-toolbox.dev/v1.5.0/"
-
-[[params.versions]]
-  version = "v1.4.0"
-  url = "https://mcp-toolbox.dev/v1.4.0/"
-
-[[params.versions]]
-  version = "v1.3.0"
-  url = "https://mcp-toolbox.dev/v1.3.0/"
-
-[[params.versions]]
-  version = "v1.2.0"
-  url = "https://mcp-toolbox.dev/v1.2.0/"
-
-[[params.versions]]
-  version = "v1.1.0"
-  url = "https://mcp-toolbox.dev/v1.1.0/"
-
-[[params.versions]]
-  version = "v1.0.0"
-  url = "https://mcp-toolbox.dev/v1.0.0/"
-
-[[params.versions]]
-  version = "v0.32.0"
-  url = "https://mcp-toolbox.dev/v0.32.0/"
 
 [[menu.main]]
   name = "GitHub"

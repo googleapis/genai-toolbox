@@ -69,6 +69,7 @@ description: |
     that can be used directly as filters for that dimension.
   - If a `suggest_explore` and `suggest_dimension` are provided, you can query
     that specified explore and dimension to retrieve a list of valid filter values.
+  - If a dimension includes `"suggestable": true`, you can retrieve its valid value suggestions by calling the 'get_field_value_suggestions' tool, passing the dimension's 'name' as the 'field' parameter, alongside the explore and model names.
 ---
 kind: tool
 name: get_measures
@@ -123,6 +124,25 @@ description: |
   - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
 ---
 kind: tool
+name: get_field_value_suggestions
+type: looker-get-field-value-suggestions
+source: looker-source
+description: |
+  This tool retrieves distinct value suggestions for a field, facilitating accurate filtering in downstream queries.
+
+  Required Parameters:
+  - model: The name of the LookML model, obtained from `get_models`.
+  - explore: The name of the explore containing the field, obtained from `get_explores`.
+  - field: The name of the field to get suggestions for (obtained from a dimension where 'suggestable' is true in the 'get_dimensions' output).
+
+  Optional Parameters:
+  - term: Optional search term pattern to filter suggestions. Evaluated as `%term%`.
+  - filters: Optional filters to enable conditional suggestions, represented as a map of field names to filter expressions, e.g., `{"users.state": "CA"}`.
+
+  Output:
+  - A JSON object with a "suggestions" key containing an array of string values representing suggestions.
+---
+kind: tool
 name: query
 type: looker-query
 source: looker-source
@@ -136,10 +156,31 @@ description: |
 
   Optional Parameters:
   - pivots: A list of fields to pivot the results by. These fields must also be included in the `fields` list.
-  - filters: A map of filter expressions, e.g., `{"view.field": "value", "view.date": "7 days"}`.
-    - Do not quote field names.
+  - filters: A map of filter expressions, e.g., `{"view_name.field_name": "value", "view_name.date": "7 days"}`.
+    - Each key must be a fully-scoped `view_name.field_name`, copied verbatim from
+      `get_dimensions`, `get_measures`, `get_filters`, or `get_parameters`. The view
+      prefix and the dot are required.
+    - Each value is a Looker filter expression. Pass values bare: do not wrap them in
+      extra quote characters. For LookML `parameter` fields, use the raw allowed_value
+      (e.g. `first_touch`, not `"first_touch"`).
     - Use `not null` instead of `-NULL`.
-    - If a value contains a comma, enclose it in single quotes (e.g., "'New York, NY'").
+    - If a value contains a comma, enclose it in single quotes (e.g., `'New York, NY'`).
+    - To retrieve valid filter values for a suggestible field, use the 'get_field_value_suggestions' tool.
+  - filter_expression: A Looker expression filter string (custom filter). This allows complex logic and comparing fields.
+    - Reference fields using `${view.field_name}` syntax.
+    - Supports logical operators (`AND`, `OR`, `NOT`) and comparison operators.
+    - Supports Looker functions (e.g., `matches_filter`, `now`, `add_days`, `diff_days`).
+    - Examples:
+      - `${orders.order_date} < add_years(-1, now())`
+      - `${activity.email} != ${activity_drive_facts.current_owner_email}`
+      - `matches_filter(${order.order_month}, '24 months') AND matches_filter(${order.order_month}, 'before 2024/07/01')`
+  - dynamic_fields: An optional array of dynamic fields (table calculations, custom measures, custom dimensions) defined as JSON objects.
+    - Useful for ad-hoc calculations that are not defined in the LookML model.
+    - Reference fields using `${view.field_name}` syntax.
+    - Examples:
+      - Table Calculation: `[{"table_calculation": "test", "label": "test", "expression": "${order_items.total_sale_price} * 0.8", "_type_hint": "number"}]`
+      - Custom Dimension: `[{"dimension": "days_since_order", "label": "days since order", "expression": "diff_days(${order.order_date}, now())", "_type_hint": "number"}]`
+      - Custom Measure: `[{"measure": "sum_of_revenue", "label": "Sum of Revenue", "based_on": "training.revenue", "type": "sum", "_type_hint": "number"}]`
   - sorts: A list of fields to sort by, optionally including direction (e.g., `["view.field desc"]`).
   - limit: Row limit (default 500). Use "-1" for unlimited.
   - query_timezone: specific timezone for the query (e.g. `America/Los_Angeles`).
@@ -158,7 +199,7 @@ description: |
   Parameters:
   All parameters for this tool are identical to those of the `query` tool.
   This includes `model_name`, `explore_name`, `fields` (required),
-  and optional parameters like `pivots`, `filters`, `sorts`, `limit`, and `query_timezone`.
+  and optional parameters like `pivots`, `filters`, `filter_expression`, `dynamic_fields`, `sorts`, `limit`, and `query_timezone`.
   
   Output:
   The result of this tool is the raw SQL text.
@@ -174,7 +215,7 @@ description: |
 
   Parameters:
   All query parameters (e.g., `model_name`, `explore_name`, `fields`, `pivots`,
-  `filters`, `sorts`, `limit`, `query_timezone`) are the same as the `query` tool.
+  `filters`, `filter_expression`, `dynamic_fields`, `sorts`, `limit`, `query_timezone`) are the same as the `query` tool.
 
   Additionally, it accepts an optional `vis_config` parameter:
   - vis_config (optional): A JSON object that controls the default visualization
@@ -816,8 +857,71 @@ description: |
     - For dashboards and looks, use the numeric ID (e.g., "123").
     - For explores, use the format "model_name/explore_name".
 ---
-kind: toolset
+kind: tool
+name: get_dashboard
+type: looker-get-dashboard
+source: looker-source
+description: |
+  This tool retrieves the JSON design of a Looker dashboard by its ID.
+  The output is trimmed to essential fields, excluding alerts and scheduled plans,
+  making it suitable for replicating or analyzing the dashboard structure.
+
+  Parameters:
+  - dashboard_id (required): The unique identifier of the dashboard.
+---
+kind: tool
+name: update_dashboard_element
+type: looker-update-dashboard-element
+source: looker-source
+description: |
+  This tool updates an existing query element (tile) in a Looker dashboard.
+  It reconstructs the query for the element using the provided parameters
+  and updates its title and visualization configuration.
+
+  Required Parameters:
+  - dashboard_id: The ID of the dashboard containing the element.
+  - dashboard_element_id: The ID of the element to update.
+  - model, explore, fields: These query parameters define the data for the tile.
+
+  Optional Parameters:
+  - title: The new title for the dashboard tile.
+  - pivots, filters, sorts, limit, tz: These query parameters customize the tile's query.
+  - vis_config: A JSON object defining the visualization settings.
+  - dashboard_filters: An array of dashboard filters to connect to this element.
+---
+kind: tool
+name: create_dashboard_layout
+type: looker-create-dashboard-layout
+source: looker-source
+description: |
+  This tool creates a new dashboard layout, which typically represents a tab
+  in modern Looker dashboards.
+
+  Parameters:
+  - dashboard_id (required): The ID of the dashboard.
+  - label (required): The label (title) of the new tab.
+  - type (optional): The type of layout (defaults to 'newspaper').
+  - active (optional): Whether to make this layout active.
+---
+kind: tool
+name: update_dashboard_layout_component
+type: looker-update-dashboard-layout-component
+source: looker-source
+description: |
+  This tool updates a dashboard layout component, allowing you to move a tile
+  to a different tab (layout) and/or change its position and size.
+
+  Parameters:
+  - dashboard_layout_component_id (required): The ID of the component to update.
+  - dashboard_layout_id (optional): The ID of the target layout (tab) to move to.
+  - row (optional): The new row position.
+  - column (optional): The new column position.
+  - width (optional): The new width.
+  - height (optional): The new height.
+---
+kind: group
 name: looker_tools
+description: These skills are designed for data discovery and business intelligence.
 tools:
 - get_models
 - get_explores
@@ -825,6 +929,7 @@ tools:
 - get_measures
 - get_filters
 - get_parameters
+- get_field_value_suggestions
 - query
 - query_sql
 - query_url
@@ -837,3 +942,7 @@ tools:
 - add_dashboard_element
 - add_dashboard_filter
 - generate_embed_url
+- get_dashboard
+- update_dashboard_element
+- create_dashboard_layout
+- update_dashboard_layout_component
