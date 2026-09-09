@@ -23,6 +23,10 @@ TOOL_PACKAGE_NAMES=("$@")
 COVERAGE_FILE="${TEST_BINARY%.test}_coverage.out"
 FILTERED_COVERAGE_FILE="${TEST_BINARY%.test}_filtered_coverage.out"
 
+# Shards that deliberately skip part of their suite (e.g. quota-bound tests)
+# lower this; everything else is held to 50%.
+COVERAGE_THRESHOLD="${COVERAGE_THRESHOLD:-50}"
+
 export path="github.com/googleapis/mcp-toolbox/internal/"
 
 GREP_PATTERN="^mode:|${path}${SOURCE_PATH}"
@@ -54,8 +58,8 @@ echo "${DISPLAY_NAME} total coverage: $total_coverage"
 coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
 
 # Check coverage threshold
-if awk -v coverage="$coverage_numeric" 'BEGIN {exit !(coverage < 50)}'; then
-    echo "Coverage failure: ${DISPLAY_NAME} total coverage($total_coverage) is below 50%."
+if awk -v coverage="$coverage_numeric" -v threshold="$COVERAGE_THRESHOLD" 'BEGIN {exit !(coverage < threshold)}'; then
+    echo "Coverage failure: ${DISPLAY_NAME} total coverage($total_coverage) is below ${COVERAGE_THRESHOLD}%."
     exit 1
 else
     echo "Coverage for ${DISPLAY_NAME} is sufficient."
