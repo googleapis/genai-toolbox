@@ -35,14 +35,11 @@ type contextKey string
 const BaseDirKey contextKey = "baseDir"
 
 // SkillScheme addresses a resource that belongs to an Agent Skill. A skill's
-// files are served under skill:// whatever backs them, so a resource of any
-// type may carry it in place of the scheme named after that type.
+// files are served under skill://<skill-name>/*.
 const SkillScheme = "skill"
 
 // SchemeAllowed reports whether uri carries either nativeScheme — the one named
-// after the resource's own type — or SkillScheme. Callers format their own
-// error so it can name the type; this only decides the rule, and it lives here
-// so every resource type answers the question the same way.
+// after the resource's own type — or SkillScheme.
 func SchemeAllowed(uri, nativeScheme string) bool {
 	parsed, err := url.Parse(uri)
 	if err != nil {
