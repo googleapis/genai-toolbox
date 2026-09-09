@@ -285,7 +285,7 @@ steps:
             export RUN_EXPENSIVE_TESTS="true"
           fi
           if [ "$$RUN_EXPENSIVE_TESTS" != "true" ]; then
-            # Admin tool tests skipped; measured baseline is 42.6%.
+            # Admin tool tests are skipped here, so their packages go uncovered.
             export COVERAGE_THRESHOLD=40
           fi
           .ci/test_with_coverage.sh \
