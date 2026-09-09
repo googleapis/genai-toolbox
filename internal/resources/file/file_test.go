@@ -792,6 +792,11 @@ func TestFileResource_SchemeBinding(t *testing.T) {
 		{"skill scheme", "skill://analytics-guide/references/queries.md", ""},
 		{"foreign scheme", "query://queries", "must be 'file' or 'skill'"},
 		{"text scheme", "text://queries", "must be 'file' or 'skill'"},
+		// Schemes are case-insensitive per RFC 3986 §3.1; url.Parse lowercases
+		// them, so an uppercase scheme must bind the same as its lowercase form.
+		{"uppercase native scheme", "FILE://queries", ""},
+		{"uppercase skill scheme", "SKILL://analytics-guide/references/queries.md", ""},
+		{"uppercase foreign scheme", "QUERY://queries", "must be 'file' or 'skill'"},
 	}
 
 	for _, tc := range tcs {
