@@ -34,6 +34,23 @@ type contextKey string
 // BaseDirKey is the context key for storing the base directory path during config parsing.
 const BaseDirKey contextKey = "baseDir"
 
+// SkillScheme addresses a resource that belongs to an Agent Skill. A skill's
+// files are served under skill:// whatever backs them, so a resource of any
+// type may carry it in place of the scheme named after that type.
+const SkillScheme = "skill"
+
+// SchemeAllowed reports whether uri carries either nativeScheme — the one named
+// after the resource's own type — or SkillScheme. Callers format their own
+// error so it can name the type; this only decides the rule, and it lives here
+// so every resource type answers the question the same way.
+func SchemeAllowed(uri, nativeScheme string) bool {
+	parsed, err := url.Parse(uri)
+	if err != nil {
+		return false
+	}
+	return parsed.Scheme == nativeScheme || parsed.Scheme == SkillScheme
+}
+
 // GetBaseDirFromContext extracts the base directory path from the context.
 func GetBaseDirFromContext(ctx context.Context) string {
 	if ctx == nil {
