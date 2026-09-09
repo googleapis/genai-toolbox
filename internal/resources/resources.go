@@ -38,8 +38,8 @@ const BaseDirKey contextKey = "baseDir"
 // files are served under skill://<skill-name>/*.
 const SkillScheme = "skill"
 
-// SchemeAllowed reports whether uri carries either nativeScheme — the one named
-// after the resource's own type — or SkillScheme.
+// SchemeAllowed reports whether uri carries either nativeScheme (eg. type: file) or 
+// SkillScheme (entry containing skill://).
 func SchemeAllowed(uri, nativeScheme string) bool {
 	parsed, err := url.Parse(uri)
 	if err != nil {
