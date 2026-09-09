@@ -16,6 +16,7 @@ package bigqueryexecutesql_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -307,13 +308,20 @@ func TestInvokeDatasetRestrictionsCatchesNonexistentTableBeforeDryRun(t *testing
 
 				// Any dataset/table not explicitly listed here stands in for
 				// one BigQuery can't resolve: dry run 404s, matching what a
-				// real non-existent (or unreadable) table produces.
+				// real non-existent (or unreadable) table produces. The
+				// dataset name is echoed back from the query so the error
+				// message matches whichever dataset the test case actually
+				// targets, instead of always naming forbidden_dataset.
 				if strings.Contains(query, "no_such_table") {
 					w.WriteHeader(http.StatusNotFound)
+					dataset := "forbidden_dataset"
+					if strings.Contains(query, "allowed_dataset") {
+						dataset = "allowed_dataset"
+					}
 					_ = json.NewEncoder(w).Encode(map[string]any{
 						"error": map[string]any{
 							"code":    404,
-							"message": "Not found: Table test-project:forbidden_dataset.no_such_table",
+							"message": fmt.Sprintf("Not found: Table test-project:%s.no_such_table", dataset),
 						},
 					})
 					return
@@ -398,7 +406,7 @@ func TestInvokeDatasetRestrictionsCatchesNonexistentTableBeforeDryRun(t *testing
 			desc:    "nonexistent table in allowed dataset: the underlying dry-run failure still surfaces",
 			sql:     "SELECT * FROM allowed_dataset.no_such_table",
 			wantErr: true,
-			wantSub: "Not found: Table test-project:forbidden_dataset.no_such_table",
+			wantSub: "Not found: Table test-project:allowed_dataset.no_such_table",
 		},
 	}
 
