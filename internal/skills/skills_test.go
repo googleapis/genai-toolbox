@@ -97,6 +97,19 @@ func TestManifestUnmarshalJSON(t *testing.T) {
 			in:      `{"refs":[]}`,
 			wantErr: "must be an array",
 		},
+		{
+			// null unmarshals cleanly into both a string and a slice, so
+			// without the type switch this is either reported as an
+			// empty-string marker or silently accepted as an empty manifest.
+			desc:    "null is not a manifest",
+			in:      `null`,
+			wantErr: "must be an array",
+		},
+		{
+			desc:    "a number is not a manifest",
+			in:      `42`,
+			wantErr: "must be an array",
+		},
 	}
 
 	for _, tc := range tcs {

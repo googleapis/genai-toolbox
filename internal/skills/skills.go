@@ -55,10 +55,10 @@ func (m Manifest) MarshalJSON() ([]byte, error) {
 	if m.Dynamic {
 		return json.Marshal(DynamicMarker)
 	}
-	// A static skill always lists at least SKILL.md, so nil would mean the
-	// manifest was never populated rather than that the skill is empty.
+	// A static skill always lists at least SKILL.md, so an empty Refs means the
+	// manifest was never populated rather than that the skill has no files.
 	// Emitting [] keeps the wire type an array either way.
-	if m.Refs == nil {
+	if len(m.Refs) == 0 {
 		return json.Marshal([]ResourceRef{})
 	}
 	return json.Marshal(m.Refs)
@@ -66,22 +66,37 @@ func (m Manifest) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON accepts either form and rejects anything else, so a malformed
 // entry fails here rather than surfacing as an empty file list.
+//
+// The type switch is load-bearing: encoding/json unmarshals a JSON null into
+// both a string and a slice without error, leaving each at its zero value. So
+// null would otherwise be reported as an empty-string marker, or worse, be
+// accepted as an empty file list — and SEP-2640 requires an entry with no
+// resources to be rejected outright.
 func (m *Manifest) UnmarshalJSON(data []byte) error {
-	var marker string
-	if err := json.Unmarshal(data, &marker); err == nil {
-		if marker != DynamicMarker {
-			return fmt.Errorf("invalid skill manifest %q: the only permitted string is %q", marker, DynamicMarker)
+	var raw any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("invalid skill manifest: %w", err)
+	}
+
+	switch v := raw.(type) {
+	case string:
+		if v != DynamicMarker {
+			return fmt.Errorf("invalid skill manifest %q: the only permitted string is %q", v, DynamicMarker)
 		}
 		m.Dynamic, m.Refs = true, nil
 		return nil
-	}
 
-	var refs []ResourceRef
-	if err := json.Unmarshal(data, &refs); err != nil {
+	case []any:
+		var refs []ResourceRef
+		if err := json.Unmarshal(data, &refs); err != nil {
+			return fmt.Errorf("invalid skill manifest: %w", err)
+		}
+		m.Dynamic, m.Refs = false, refs
+		return nil
+
+	default:
 		return fmt.Errorf("invalid skill manifest: must be an array of {uri, digest, size} or the string %q", DynamicMarker)
 	}
-	m.Dynamic, m.Refs = false, refs
-	return nil
 }
 
 // Entry is one skill as skills/list and skills/get publish it.
