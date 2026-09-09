@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
@@ -45,25 +46,32 @@ func TestUpdateServer(t *testing.T) {
 	newGroups := map[string]group.Group{
 		"example-toolset": group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 	}
-	resMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
+	newResources := map[string]resources.Resource{"example-resource": nil}
+	newResourceTemplates := map[string]resources.ResourceTemplate{"example-template": nil}
+	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newResources, newResourceTemplates, newGroups)
 
-	gotSource, _ := resMgr.GetSource("example-source")
+	gotSource, _ := primMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
 	}
 
-	gotAuthService, _ := resMgr.GetAuthService("example-auth")
+	gotAuthService, _ := primMgr.GetAuthService("example-auth")
 	if diff := cmp.Diff(gotAuthService, newAuth["example-auth"]); diff != "" {
 		t.Errorf("error updating server, authServices (-want +got):\n%s", diff)
 	}
 
-	gotTool, _ := resMgr.GetTool("example-tool")
+	gotResource, _ := primMgr.GetResource("example-resource")
+	if diff := cmp.Diff(gotResource, newResources["example-resource"]); diff != "" {
+		t.Errorf("error updating server, resources (-want +got):\n%s", diff)
+	}
+
+	gotTool, _ := primMgr.GetTool("example-tool")
 	if diff := cmp.Diff(gotTool, newTools["example-tool"]); diff != "" {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
 	wantGroup := newGroups["example-toolset"]
-	gotGroup, ok := resMgr.GetGroup("example-toolset")
+	gotGroup, ok := primMgr.GetGroup("example-toolset")
 	if !ok {
 		t.Fatal("expected group \"example-toolset\" to exist")
 	}
@@ -71,11 +79,15 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, group (-want +got):\n%s", diff)
 	}
 
-	gotPrompt, _ := resMgr.GetPrompt("example-prompt")
+	gotPrompt, _ := primMgr.GetPrompt("example-prompt")
 	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
 	}
 
+	gotTemplate, _ := primMgr.GetResourceTemplate("example-template")
+	if diff := cmp.Diff(gotTemplate, newResourceTemplates["example-template"]); diff != "" {
+		t.Errorf("error updating server, resource templates (-want +got):\n%s", diff)
+	}
 	updateSource := map[string]sources.Source{
 		"example-source2": &alloydbpg.Source{
 			Config: alloydbpg.Config{
@@ -85,8 +97,8 @@ func TestUpdateServer(t *testing.T) {
 		},
 	}
 
-	resMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
-	gotSource, _ = resMgr.GetSource("example-source2")
+	primMgr.SetPrimitives(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newResources, newResourceTemplates, newGroups)
+	gotSource, _ = primMgr.GetSource("example-source2")
 	if diff := cmp.Diff(gotSource, updateSource["example-source2"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
 	}

@@ -46,6 +46,9 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
+	_ "github.com/googleapis/mcp-toolbox/internal/resources/file"
+	_ "github.com/googleapis/mcp-toolbox/internal/resources/text"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	v20260728 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20260728"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -426,7 +429,9 @@ func TestUpdateServer(t *testing.T) {
 	newGroups := map[string]group.Group{
 		"example-toolset": group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
 	}
-	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
+	newResources := map[string]resources.Resource{"example-resource": nil}
+	newResourceTemplates := map[string]resources.ResourceTemplate{"example-template": nil}
+	s.PrimitiveMgr.SetPrimitives(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newResources, newResourceTemplates, newGroups)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
@@ -458,6 +463,16 @@ func TestUpdateServer(t *testing.T) {
 	gotPrompt, _ := s.PrimitiveMgr.GetPrompt("example-prompt")
 	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
+	}
+
+	gotResource, _ := s.PrimitiveMgr.GetResource("example-resource")
+	if diff := cmp.Diff(gotResource, newResources["example-resource"]); diff != "" {
+		t.Errorf("error updating server, resources (-want +got):\n%s", diff)
+	}
+
+	gotTemplate, _ := s.PrimitiveMgr.GetResourceTemplate("example-template")
+	if diff := cmp.Diff(gotTemplate, newResourceTemplates["example-template"]); diff != "" {
+		t.Errorf("error updating server, resource templates (-want +got):\n%s", diff)
 	}
 }
 
@@ -1474,7 +1489,7 @@ messages:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if err == nil {
 				t.Fatalf("UnmarshalPrimitiveConfig() expected a duplicate error, got nil")
 			}
@@ -1508,7 +1523,7 @@ func TestInitializeConfigs(t *testing.T) {
 				"my-tool": tools1.ToConfig(),
 			},
 		}
-		sourcesMap, _, _, toolsMap, _, _, err := server.InitializeConfigs(ctx, validCfg)
+		sourcesMap, _, _, toolsMap, _, _, _, _, err := server.InitializeConfigs(ctx, validCfg)
 		if err != nil {
 			t.Fatalf("unexpected error during config initialization: %s", err)
 		}
@@ -1531,7 +1546,7 @@ func TestInitializeConfigs(t *testing.T) {
 				"my-invalid-tool": testutils.NewMockTool("my-tool", "mock tool for offline config", "my-source", nil, false, false).ToConfig(),
 			},
 		}
-		_, _, _, _, _, _, err := server.InitializeConfigs(ctx, invalidCfg)
+		_, _, _, _, _, _, _, _, err := server.InitializeConfigs(ctx, invalidCfg)
 		if err == nil {
 			t.Fatalf("expected error but got nil")
 		}
