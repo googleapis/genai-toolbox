@@ -245,7 +245,6 @@ Sample code is aggregated visually in the UI via the Samples section, but the ph
 
 1.  **File Size Limits:** Never add files larger than 24MB to the `docs/` directory.
 
-
 ## Security Review
 
 Before opening a PR, review the change against the security surfaces below.
@@ -263,8 +262,8 @@ Flag anything you cannot verify instead of assuming it is safe.
 -   **Honor resource allow-lists:** Tools that accept a resource identifier must
     check the source's allow-list (e.g. `BigQueryAllowedDatasets()`) before
     issuing a request, and return an access-denied error otherwise.
--   **Honor write modes:** New query paths must respect the source's write mode
-    (`WriteModeBlocked`, `WriteModeProtected`) instead of bypassing it.
+-   **BigQuery write modes:** New BigQuery query paths must respect the source's
+    write mode (`WriteModeBlocked`, `WriteModeProtected`) instead of bypassing it.
 -   **Auth-bound parameters:** Values declared with `authServices` must be
     resolved from verified claims (`parseFromAuthService`) and must never be
     overridable by a client-supplied parameter value.
