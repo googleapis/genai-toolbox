@@ -66,7 +66,7 @@ func TestParseFromYamlMySQLListTables(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -110,19 +110,23 @@ func TestInvokeScopesListTablesToConfiguredDatabase(t *testing.T) {
 		t.Fatalf("unable to initialize tool: %s", err)
 	}
 
-	source := &mockMySQLSource{database: "app_db"}
-	got, invokeErr := tool.Invoke(context.Background(), source, parameters.ParamValues{
-		{Name: "table_names", Value: ""},
-		{Name: "output_format", Value: "detailed"},
-	}, "")
-	if invokeErr != nil {
-		t.Fatalf("unexpected invoke error: %s", invokeErr)
-	}
-	if diff := cmp.Diff([]any{}, got); diff != "" {
-		t.Fatalf("unexpected invoke response diff (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff([]any{"", "detailed", "app_db"}, source.params); diff != "" {
-		t.Fatalf("incorrect SQL params diff (-want +got):\n%s", diff)
+	for _, database := range []string{"app_db", " app_db", "App_DB", "app_café"} {
+		t.Run(database, func(t *testing.T) {
+			source := &mockMySQLSource{database: database}
+			got, invokeErr := tool.Invoke(context.Background(), source, parameters.ParamValues{
+				{Name: "table_names", Value: ""},
+				{Name: "output_format", Value: "detailed"},
+			}, "")
+			if invokeErr != nil {
+				t.Fatalf("unexpected invoke error: %s", invokeErr)
+			}
+			if diff := cmp.Diff([]any{}, got); diff != "" {
+				t.Fatalf("unexpected invoke response diff (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff([]any{"", "detailed", database, database}, source.params); diff != "" {
+				t.Fatalf("incorrect SQL params diff (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
 
@@ -148,7 +152,7 @@ func TestInvokePreservesUnscopedBehaviorWithoutConfiguredDatabase(t *testing.T) 
 	if invokeErr != nil {
 		t.Fatalf("unexpected invoke error: %s", invokeErr)
 	}
-	if diff := cmp.Diff([]any{"orders", "simple", ""}, source.params); diff != "" {
+	if diff := cmp.Diff([]any{"orders", "simple", "", ""}, source.params); diff != "" {
 		t.Fatalf("incorrect SQL params diff (-want +got):\n%s", diff)
 	}
 }

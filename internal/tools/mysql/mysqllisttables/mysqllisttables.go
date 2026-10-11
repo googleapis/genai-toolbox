@@ -173,10 +173,10 @@ const listTablesStatement = `
         END AS object_details
     FROM
         INFORMATION_SCHEMA.TABLES T
-    CROSS JOIN (SELECT @table_names := ?, @output_format := ?, @connected_schema := ?) AS variables
+    CROSS JOIN (SELECT @table_names := ?, @output_format := ?) AS variables
     WHERE
         T.TABLE_SCHEMA NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys')
-        AND (NULLIF(TRIM(@connected_schema), '') IS NULL OR T.TABLE_SCHEMA = TRIM(@connected_schema))
+        AND (NULLIF(TRIM(?), '') IS NULL OR T.TABLE_SCHEMA = ?)
         AND (NULLIF(TRIM(@table_names), '') IS NULL OR FIND_IN_SET(T.TABLE_NAME, @table_names))
         AND T.TABLE_TYPE = 'BASE TABLE'
     ORDER BY
@@ -205,9 +205,8 @@ type compatibleSource interface {
 
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
-	Type             string                 `yaml:"type" validate:"required"`
-	Source           string                 `yaml:"source" validate:"required"`
-	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Type             string `yaml:"type" validate:"required"`
+	Source           string `yaml:"source" validate:"required"`
 }
 
 // validate interface
@@ -259,7 +258,9 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 	if outputFormat != "simple" && outputFormat != "detailed" {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat), nil)
 	}
-	resp, err := source.RunSQL(ctx, listTablesStatement, []any{tableNames, outputFormat, source.MySQLDatabase()})
+	// Bind the database directly so the comparison uses MySQL's schema-name collation.
+	database := source.MySQLDatabase()
+	resp, err := source.RunSQL(ctx, listTablesStatement, []any{tableNames, outputFormat, database, database})
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}

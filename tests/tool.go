@@ -3055,14 +3055,12 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 		wantStatusCode int
 		want           any
 		isSimple       bool
-		isAllTables    bool
 	}{
 		{
 			name:           "invoke list_tables for all tables detailed output",
 			requestBody:    bytes.NewBufferString(`{"table_names":""}`),
 			wantStatusCode: http.StatusOK,
 			want:           []objectDetails{authTableWant, paramTableWant},
-			isAllTables:    true,
 		},
 		{
 			name:           "invoke list_tables detailed output",
@@ -3155,6 +3153,9 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 				}
 				details := []map[string]any{}
 				for _, table := range tables {
+					if table.SchemaName != databaseName {
+						t.Fatalf("table %q belongs to schema %q, want %q", table.ObjectName, table.SchemaName, databaseName)
+					}
 					var d map[string]any
 					if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
 						t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
@@ -3169,6 +3170,9 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 				}
 				details := []objectDetails{}
 				for _, table := range tables {
+					if table.SchemaName != databaseName {
+						t.Fatalf("table %q belongs to schema %q, want %q", table.ObjectName, table.SchemaName, databaseName)
+					}
 					var d objectDetails
 					if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
 						t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
@@ -3182,19 +3186,6 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 				cmpopts.SortSlices(func(a, b objectDetails) bool { return a.ObjectName < b.ObjectName }),
 				cmpopts.SortSlices(func(a, b column) bool { return a.ColumnName < b.ColumnName }),
 				cmpopts.SortSlices(func(a, b map[string]any) bool { return a["name"].(string) < b["name"].(string) }),
-			}
-
-			// Checking only the current database where the test tables are created to avoid brittle tests.
-			if tc.isAllTables {
-				filteredGot := []objectDetails{}
-				if got != nil {
-					for _, item := range got.([]objectDetails) {
-						if item.SchemaName == databaseName {
-							filteredGot = append(filteredGot, item)
-						}
-					}
-				}
-				got = filteredGot
 			}
 
 			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
@@ -3283,8 +3274,11 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			want:                []queryListDetails{},
 		},
 		{
+			// The threshold has to sit below waitSecsBeforeCheck: the wait starts
+			// before the query does, and processlist.time truncates to whole
+			// seconds, so an equal threshold loses the row to rounding.
 			name:                "invoke list_active_queries when 1 ongoing query should show up",
-			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 5}`),
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 3}`),
 			queryTag:            tc3QueryTag,
 			clientSleepSecs:     10,
 			waitSecsBeforeCheck: 5,
@@ -3845,9 +3839,18 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 			}
 			got = details
 
-			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b tableStatsDetails) bool {
-				return a.TableSchema == b.TableSchema && a.TableName == b.TableName
-			})); diff != "" {
+			// The tool sorts on measured total_latency, so which table comes back
+			// first varies between runs. Compare as a set.
+			if diff := cmp.Diff(tc.want, got,
+				cmpopts.SortSlices(func(a, b tableStatsDetails) bool {
+					if a.TableSchema != b.TableSchema {
+						return a.TableSchema < b.TableSchema
+					}
+					return a.TableName < b.TableName
+				}),
+				cmp.Comparer(func(a, b tableStatsDetails) bool {
+					return a.TableSchema == b.TableSchema && a.TableName == b.TableName
+				})); diff != "" {
 				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
 			}
 		})
