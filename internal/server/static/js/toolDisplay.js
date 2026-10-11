@@ -41,8 +41,9 @@ export function setRegisteredTools(tools) {
 
 /**
  * Checks whether an embedded MCP App iframe is permitted to invoke `toolName`.
- * Per the MCP Apps specification, an app may invoke its own associated tool
- * or any tool in the active toolset whose `_meta.ui.visibility` includes `"app"`.
+ * Per the MCP Apps specification (SEP-1865), an app may invoke its own associated
+ * tool or any registered tool in the active toolset whose `_meta.ui.visibility`
+ * includes `"app"` (defaulting to `["model", "app"]` when omitted).
  */
 function isAppCallableTool(toolName, associatedToolId) {
     if (toolName === associatedToolId) {
@@ -53,7 +54,10 @@ function isAppCallableTool(toolName, associatedToolId) {
         return false;
     }
     const visibility = targetTool._meta?.ui?.visibility || targetTool.ui?.visibility;
-    return Array.isArray(visibility) && visibility.includes('app');
+    if (!Array.isArray(visibility) || visibility.length === 0) {
+        return true;
+    }
+    return visibility.includes('app');
 }
 
 // Bounds applied to the height an MCP App may request via
@@ -692,44 +696,165 @@ function setAppDisplayMode(mcpContainer, iframeElement, mode) {
     }
 }
 
+// Global diagnostics registry exposed for automated E2E verification and developer inspection
+const pendingInspectRequests = new Map();
+if (typeof window !== 'undefined') {
+    if (!window.__MCP_PLAYGROUND_DIAGNOSTICS__) {
+        window.__MCP_PLAYGROUND_DIAGNOSTICS__ = {};
+    }
+    window.__MCP_INSPECT_IFRAME__ = function(toolId, timeoutMs = 3000) {
+        return new Promise((resolve) => {
+            const iframe = document.getElementById(`mcp-app-iframe-${toolId}`) || document.querySelector('.mcp-app-iframe');
+            const diag = window.__MCP_PLAYGROUND_DIAGNOSTICS__?.[toolId] || null;
+            if (!iframe || !iframe.contentWindow) {
+                resolve({ ok: false, error: 'Iframe not found', diagnostics: diag, dom: null });
+                return;
+            }
+            const reqId = `inspect-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const timer = setTimeout(() => {
+                pendingInspectRequests.delete(reqId);
+                resolve({ ok: false, error: 'Inspect timeout', diagnostics: diag, dom: null });
+            }, timeoutMs);
+            pendingInspectRequests.set(reqId, (domSnapshot) => {
+                clearTimeout(timer);
+                resolve({ ok: true, diagnostics: window.__MCP_PLAYGROUND_DIAGNOSTICS__?.[toolId] || diag, dom: domSnapshot });
+            });
+            iframe.contentWindow.postMessage({ type: 'ui/sandbox-inspect-request', id: reqId }, '*');
+        });
+    };
+}
+
+function getOrResetDiagnostics(toolId, cspHeader = '') {
+    const entry = {
+        toolId,
+        enforcedCsp: cspHeader,
+        cspViolations: [],
+        runtimeErrors: [],
+        initialized: false,
+        lastUpdated: new Date().toISOString()
+    };
+    if (typeof window !== 'undefined') {
+        window.__MCP_PLAYGROUND_DIAGNOSTICS__[toolId] = entry;
+    }
+    return entry;
+}
+
 /**
  * Constructs a standard Content Security Policy string according to SEP-1865.
+ * Relies strictly on the server-provided `_meta.ui.csp` domains.
  */
 function constructCsp(csp) {
     const connectList = new Set(Array.isArray(csp?.connectDomains) ? csp.connectDomains : []);
     const resourceList = new Set(Array.isArray(csp?.resourceDomains) ? csp.resourceDomains : []);
-
-    // In local development or testing environments, ensure localhost and host ports are allowed
-    const isLocal = window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1' || 
-                    window.location.hostname.endsWith('.googlers.com');
-    if (isLocal) {
-        ['http://localhost:9998', 'http://localhost:9999', 'http://localhost:19999', 'http://localhost:3035',
-         'http://127.0.0.1:9998', 'http://127.0.0.1:9999', 'http://127.0.0.1:19999', 'http://127.0.0.1:3035'].forEach(d => {
-            resourceList.add(d);
-            connectList.add(d);
-        });
-        connectList.add('ws://localhost:*');
-        connectList.add('ws://127.0.0.1:*');
-        connectList.add('wss://localhost:*');
-        connectList.add('wss://127.0.0.1:*');
-    }
 
     const connect = Array.from(connectList).join(' ');
     const resource = Array.from(resourceList).join(' ');
     const frame = (Array.isArray(csp?.frameDomains) && csp.frameDomains.length > 0) ? csp.frameDomains.join(' ') : "'none'";
     const baseUri = (Array.isArray(csp?.baseUriDomains) && csp.baseUriDomains.length > 0) ? csp.baseUriDomains.join(' ') : "'self'";
 
-    return `default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' ${resource}; style-src 'self' 'unsafe-inline' ${resource}; connect-src 'self' ${connect}; img-src 'self' data: ${resource}; font-src 'self' data: ${resource}; media-src 'self' data: ${resource}; frame-src ${frame}; object-src 'none'; base-uri ${baseUri};`.replace(/\s+/g, ' ').trim();
+    const isLocalDev = (window.location.hostname === 'localhost' ||
+                        window.location.hostname === '127.0.0.1' ||
+                        window.location.hostname.endsWith('.googlers.com')) &&
+                       !window.__MCP_STRICT_NO_EVAL__;
+    const scriptEvalDirective = isLocalDev ? " 'unsafe-eval'" : '';
+    const scriptInlineDirective = window.__MCP_STRICT_NO_INLINE_SCRIPT__ ? '' : " 'unsafe-inline'";
+
+    return `default-src 'none'; script-src 'self'${scriptInlineDirective}${scriptEvalDirective} ${resource}; style-src 'self' 'unsafe-inline' ${resource}; connect-src 'self' ${connect}; img-src 'self' data: ${resource}; font-src 'self' ${resource}; media-src 'self' data: ${resource}; frame-src ${frame}; object-src 'none'; base-uri ${baseUri};`.replace(/\s+/g, ' ').trim();
 }
 
 /**
- * Injects a Content-Security-Policy meta tag into the raw HTML.
+ * Injects a pre-CSP diagnostic telemetry hook and the Content-Security-Policy
+ * meta tag into the raw HTML. Placing the diagnostic script immediately before
+ * the CSP meta tag ensures telemetry continues to work even when 'unsafe-inline'
+ * is omitted from script-src.
  */
 function injectCspIntoHtml(html, cspHeader) {
     // Only escape & and " so that single-quoted CSP keywords ('self', 'unsafe-inline') are preserved literally
     const safeCspHeader = cspHeader.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-    const metaTag = `<meta http-equiv="Content-Security-Policy" content="${safeCspHeader}">`;
+    const diagnosticScript = `<script>(function(){
+  var telemetry = window.__MCP_SANDBOX_TELEMETRY__ = { cspViolations: [], runtimeErrors: [] };
+  function report(kind, detail) {
+    try {
+      if (kind === 'csp-violation') telemetry.cspViolations.push(detail);
+      else telemetry.runtimeErrors.push(detail);
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'ui/sandbox-diagnostic', kind: kind, detail: detail }, '*');
+      }
+    } catch (err) {}
+  }
+  document.addEventListener('securitypolicyviolation', function(e) {
+    report('csp-violation', {
+      effectiveDirective: e.effectiveDirective,
+      violatedDirective: e.violatedDirective,
+      blockedURI: e.blockedURI,
+      sourceFile: e.sourceFile,
+      lineNumber: e.lineNumber,
+      columnNumber: e.columnNumber,
+      sample: e.sample || ''
+    });
+  });
+  window.addEventListener('error', function(e) {
+    if (e && e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+      report('runtime-error', {
+        message: 'Failed to load resource: ' + (e.target.src || e.target.href || e.target.tagName),
+        source: e.target.src || e.target.href || ''
+      });
+      return;
+    }
+    var msg = e && e.message ? String(e.message) : '';
+    if (msg.indexOf('ResizeObserver loop') !== -1) return;
+    report('runtime-error', {
+      message: msg || 'Uncaught error',
+      filename: (e && e.filename) || '',
+      lineno: (e && e.lineno) || 0
+    });
+  }, true);
+  window.addEventListener('unhandledrejection', function(e) {
+    var reason = e && e.reason ? (e.reason.stack || e.reason.message || String(e.reason)) : 'Unhandled promise rejection';
+    report('runtime-error', { message: String(reason) });
+  });
+  window.addEventListener('message', function(e) {
+    var d = e && e.data;
+    if (d && typeof d === 'object' && d.type === 'ui/sandbox-inspect-request' && d.id) {
+      try {
+        var rootEl = (document.body && document.body.firstElementChild) || document.body;
+        var snapshot = {
+          rootChildCount: rootEl ? rootEl.children.length : 0,
+          svgCount: document.querySelectorAll('svg').length,
+          buttonCount: document.querySelectorAll('button').length,
+          bodyHeight: document.body ? document.body.scrollHeight : 0,
+          textPreview: rootEl ? String(rootEl.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 600) : '',
+          cspViolations: telemetry.cspViolations,
+          runtimeErrors: telemetry.runtimeErrors
+        };
+        window.parent.postMessage({ type: 'ui/sandbox-inspect-response', id: d.id, dom: snapshot }, '*');
+      } catch (err) {
+        window.parent.postMessage({ type: 'ui/sandbox-inspect-response', id: d.id, error: String(err) }, '*');
+      }
+    }
+  });
+  var OrigWorker = window.Worker;
+  if (typeof OrigWorker === 'function') {
+    window.Worker = function(scriptURL, options) {
+      var urlStr = String(scriptURL || '');
+      if (urlStr.indexOf('blob:') === 0) {
+        var detail = {
+          effectiveDirective: 'worker-src',
+          violatedDirective: "default-src 'none'",
+          blockedURI: urlStr,
+          sourceFile: 'sandbox-parity-guard',
+          lineNumber: 0,
+          sample: 'new Worker(blob:...)'
+        };
+        report('csp-violation', detail);
+        throw new DOMException("Refused to create a worker from '" + urlStr + "' because it violates Content Security Policy.", "SecurityError");
+      }
+      return new OrigWorker(scriptURL, options);
+    };
+    window.Worker.prototype = OrigWorker.prototype;
+  }
+})();</script>`;
+    const metaTag = `${diagnosticScript}<meta http-equiv="Content-Security-Policy" content="${safeCspHeader}">`;
     
     const headMatch = html.match(/<head[^>]*>/i);
     if (headMatch) {
@@ -749,8 +874,13 @@ function injectCspIntoHtml(html, cspHeader) {
  */
 async function loadAppResource(uri, iframeElement, statusElement, headers) {
     if (!uri || !iframeElement) return;
+    const toolId = iframeElement.id ? iframeElement.id.replace('mcp-app-iframe-', '') : uri;
     try {
-        if (statusElement) statusElement.textContent = 'Loading resource...';
+        if (statusElement) {
+            statusElement.textContent = 'Loading resource...';
+            statusElement.style.color = '';
+            statusElement.style.fontWeight = '';
+        }
         const response = await fetch('/mcp', {
             method: 'POST',
             headers: createMcpHeaders('resources/read', uri, headers),
@@ -768,6 +898,7 @@ async function loadAppResource(uri, iframeElement, statusElement, headers) {
             if (resContent.text) {
                 const csp = resContent._meta?.ui?.csp || data.result?._meta?.ui?.csp;
                 const cspHeader = constructCsp(csp);
+                getOrResetDiagnostics(toolId, cspHeader);
                 const finalHtml = injectCspIntoHtml(resContent.text, cspHeader);
 
                 iframeElement.srcdoc = finalHtml;
@@ -776,7 +907,7 @@ async function loadAppResource(uri, iframeElement, statusElement, headers) {
                     const connectDomains = Array.isArray(csp?.connectDomains) ? csp.connectDomains : [];
                     const domains = resourceDomains.concat(connectDomains);
                     if (domains.length > 0) {
-                        statusElement.title = `Enforced CSP: ${domains.join(', ')}`;
+                        statusElement.title = `Enforced CSP: ${cspHeader}`;
                         statusElement.textContent = 'App Ready (CSP Enforced)';
                     } else {
                         statusElement.textContent = 'App Ready (Restricted CSP)';
@@ -814,9 +945,52 @@ window.addEventListener('message', (event) => {
     }
 
     if (data && typeof data === 'object') {
+        const toolId = matchingIframe.id ? matchingIframe.id.replace('mcp-app-iframe-', '') : '';
+        if (data.type === 'ui/sandbox-inspect-response' && data.id) {
+            const resolver = pendingInspectRequests.get(data.id);
+            if (resolver) {
+                pendingInspectRequests.delete(data.id);
+                resolver(data.dom || { error: data.error });
+            }
+            return;
+        }
+        if (data.type === 'ui/sandbox-diagnostic') {
+            const diag = window.__MCP_PLAYGROUND_DIAGNOSTICS__?.[toolId] || getOrResetDiagnostics(toolId);
+            diag.lastUpdated = new Date().toISOString();
+            if (data.kind === 'csp-violation') {
+                diag.cspViolations.push(data.detail);
+                console.error(`[MCP Sandbox CSP Violation][${toolId}]`, data.detail);
+            } else {
+                diag.runtimeErrors.push(data.detail);
+                console.error(`[MCP Sandbox Runtime Error][${toolId}]`, data.detail);
+            }
+            const container = matchingIframe.closest('.mcp-app-container');
+            const statusEl = container?.querySelector('.mcp-app-status');
+            if (statusEl) {
+                const vCount = diag.cspViolations.length;
+                const eCount = diag.runtimeErrors.length;
+                if (vCount > 0) {
+                    const last = diag.cspViolations[vCount - 1];
+                    statusEl.textContent = `⚠️ CSP Violation (${vCount})`;
+                    statusEl.style.color = '#d93025';
+                    statusEl.style.fontWeight = '600';
+                    statusEl.title = `CSP Violation: ${last.effectiveDirective} blocked ${last.blockedURI || last.sample || ''}`;
+                } else if (eCount > 0) {
+                    const last = diag.runtimeErrors[eCount - 1];
+                    statusEl.textContent = `⚠️ Runtime Error (${eCount})`;
+                    statusEl.style.color = '#e37400';
+                    statusEl.style.fontWeight = '600';
+                    statusEl.title = `Runtime Error: ${last.message}`;
+                }
+            }
+            return;
+        }
         const hasId = data.id !== undefined && data.id !== null;
         console.debug('[MCP Host Received Message]', data);
         if (data.method === 'ui/initialize' && hasId) {
+            if (window.__MCP_PLAYGROUND_DIAGNOSTICS__?.[toolId]) {
+                window.__MCP_PLAYGROUND_DIAGNOSTICS__[toolId].initialized = true;
+            }
             console.debug('Handling MCP Apps initialize request:', data);
             sender?.postMessage({
                 jsonrpc: '2.0',

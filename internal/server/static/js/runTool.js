@@ -132,7 +132,14 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
         const isError = !!results.error || results.result?.isError === true;
 
         if (statusElement) {
-            statusElement.textContent = isError ? 'Tool Error' : 'App Active';
+            const diag = window.__MCP_PLAYGROUND_DIAGNOSTICS__?.[toolId];
+            if (diag && diag.cspViolations && diag.cspViolations.length > 0) {
+                statusElement.textContent = `⚠️ CSP Violation (${diag.cspViolations.length})`;
+                statusElement.style.color = '#d93025';
+                statusElement.style.fontWeight = '600';
+            } else {
+                statusElement.textContent = isError ? 'Tool Error' : 'App Active';
+            }
         }
 
         // Send MCP App postMessage to iframe if this is an App tool
