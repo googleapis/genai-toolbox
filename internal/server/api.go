@@ -236,7 +236,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if any of the specified auth services is verified
-	isAuthorized := tool.Authorized(verifiedAuthServices)
+	isAuthorized := tools.IsAuthorized(tool.GetAuthRequired(), verifiedAuthServices)
 	if !isAuthorized {
 		err = fmt.Errorf("tool invocation not authorized. Please make sure you specify correct auth headers")
 		s.logger.DebugContext(ctx, err.Error())
