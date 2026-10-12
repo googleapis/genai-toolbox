@@ -119,32 +119,35 @@ if [[ "$(echo "${RESP}" | jq -r '.error // empty')" != "" ]]; then
 fi
 
 OP_NAME=$(echo "${RESP}" | jq -r '.name // empty')
-if [[ -n "${OP_NAME}" ]]; then
-  echo "Waiting for promotion operation ${OP_NAME} to complete..."
-  OP_START=$SECONDS
-  OP_COMPLETED=false
-  while (( SECONDS - OP_START < 300 )); do
-    OP_STATUS=$(curl -fsSL \
-      -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-      -H "Content-Type: application/json" \
-      "https://artifactregistry.googleapis.com/v1/${OP_NAME}")
+if [[ -z "${OP_NAME}" ]]; then
+  echo "ERROR: Promote API response did not contain an operation name: ${RESP}" >&2
+  exit 1
+fi
 
-    if [[ "$(echo "${OP_STATUS}" | jq -r '.done // false')" == "true" ]]; then
-      if [[ "$(echo "${OP_STATUS}" | jq -r '.error // empty')" != "" ]]; then
-        echo "ERROR: Artifact promotion failed: ${OP_STATUS}" >&2
-        exit 1
-      fi
-      echo "Artifact promotion completed successfully."
-      OP_COMPLETED=true
-      break
+echo "Waiting for promotion operation ${OP_NAME} to complete..."
+OP_START=$SECONDS
+OP_COMPLETED=false
+while (( SECONDS - OP_START < 300 )); do
+  OP_STATUS=$(curl -fsSL \
+    -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+    -H "Content-Type: application/json" \
+    "https://artifactregistry.googleapis.com/v1/${OP_NAME}")
+
+  if [[ "$(echo "${OP_STATUS}" | jq -r '.done // false')" == "true" ]]; then
+    if [[ "$(echo "${OP_STATUS}" | jq -r '.error // empty')" != "" ]]; then
+      echo "ERROR: Artifact promotion failed: ${OP_STATUS}" >&2
+      exit 1
     fi
-
-    echo "Promotion in progress, waiting 5s..."
-    sleep 5
-  done
-
-  if [[ "${OP_COMPLETED}" != "true" ]]; then
-    echo "ERROR: Timed out waiting for promotion operation ${OP_NAME}" >&2
-    exit 1
+    echo "Artifact promotion completed successfully."
+    OP_COMPLETED=true
+    break
   fi
+
+  echo "Promotion in progress, waiting 5s..."
+  sleep 5
+done
+
+if [[ "${OP_COMPLETED}" != "true" ]]; then
+  echo "ERROR: Timed out waiting for promotion operation ${OP_NAME}" >&2
+  exit 1
 fi
