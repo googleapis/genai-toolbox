@@ -57,21 +57,7 @@ while (( SECONDS - POLL_START < POLL_TIMEOUT )); do
     --location="${LOCATION}" \
     --repository="${STAGING_REPO}" \
     --filter="target=\"${TARGET_VERSION}\" AND type=\"application/vnd.in-toto.verification_summary+dsse\"" \
-    --format="value(name)" 2>/dev/null | head -n 1 || true)
-
-  if [[ -z "${OCCURRENCES}" ]]; then
-    OCCURRENCES=$(curl -fsSL -G \
-      -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-      --data-urlencode "filter=target=\"${TARGET_VERSION}\" AND type=\"application/vnd.in-toto.verification_summary+dsse\"" \
-      "https://artifactregistry.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${STAGING_REPO}/attachments" 2>/dev/null | jq -r '.attachments[0].name // empty' || true)
-  fi
-
-  if [[ -z "${OCCURRENCES}" ]]; then
-    OCCURRENCES=$(curl -fsSL -G \
-      -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-      --data-urlencode "filter=kind=\"ATTESTATION\" AND resourceUrl=\"https://${STAGING_IMAGE_URI}@${IMAGE_DIGEST}\"" \
-      "https://containeranalysis.googleapis.com/v1/projects/${PROJECT_ID}/occurrences" 2>/dev/null | jq -r '.occurrences[0].name // empty' || true)
-  fi
+    --format="value(name)" | head -n 1)
 
   if [[ -n "${OCCURRENCES}" ]]; then
     echo "Found BCID attestation for ${STAGING_IMAGE_URI}@${IMAGE_DIGEST}: ${OCCURRENCES}"
