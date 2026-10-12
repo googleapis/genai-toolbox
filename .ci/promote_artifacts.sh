@@ -79,7 +79,7 @@ gcloud artifacts docker tags add \
   "${STAGING_IMAGE_URI}@${IMAGE_DIGEST}" \
   "${STAGING_IMAGE_URI}:${VERSION#v}" \
   --project="${PROJECT_ID}" \
-  --quiet || true
+  --quiet
 
 echo "Promoting ${PACKAGE_NAME}@${IMAGE_DIGEST} from ${STAGING_REPO} to ${PROD_REPO}..."
 PROMOTE_URL="https://artifactregistry.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${PROD_REPO}:promoteArtifact"
