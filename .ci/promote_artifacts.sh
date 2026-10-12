@@ -81,6 +81,15 @@ gcloud artifacts docker tags add \
   --project="${PROJECT_ID}" \
   --quiet
 
+if [[ "${PUSH_LATEST:-false}" == "true" ]]; then
+  echo "Tagging ${STAGING_IMAGE_URI}@${IMAGE_DIGEST} as latest..."
+  gcloud artifacts docker tags add \
+    "${STAGING_IMAGE_URI}@${IMAGE_DIGEST}" \
+    "${STAGING_IMAGE_URI}:latest" \
+    --project="${PROJECT_ID}" \
+    --quiet
+fi
+
 PROD_IMAGE_URI="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${PROD_REPO}/${PACKAGE_NAME}"
 EXISTING_PROD_DIGEST=$(gcloud artifacts docker tags list "${PROD_IMAGE_URI}" \
   --project="${PROJECT_ID}" \

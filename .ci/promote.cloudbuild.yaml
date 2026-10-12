@@ -45,6 +45,7 @@ steps:
       bash .ci/setup_apt.sh ${_AIRLOCK_AR_PROJECT} && apt-get update && apt-get install -y jq
 
       export VERSION="${TAG_NAME:-$(cat ./cmd/version.txt)}"
+      export PUSH_LATEST="${_PUSH_LATEST}"
       bash .ci/promote_artifacts.sh "${PROJECT_ID}" "${_REGION}" "${_STAGING_AR_REPO_NAME}" "${_PROD_AR_REPO_NAME}" "toolbox" "${VERSION}"
 
   - id: "fetch-binaries"
@@ -129,6 +130,7 @@ substitutions:
   _AIRLOCK_AR_PROJECT: artifact-foundry-prod
   _STAGING_AR_REPO_NAME: toolbox-containers-staging
   _PROD_AR_REPO_NAME: toolbox
+  _PUSH_LATEST: "false" # Substituted in trigger
   _BUCKET_NAME: mcp-toolbox-for-databases
   _EXIT_GATE_PROJECT: "mcp-toolbox"
   _EXIT_GATE_MANIFEST_BUCKET: "oss-exit-gate-prod-projects-bucket"
