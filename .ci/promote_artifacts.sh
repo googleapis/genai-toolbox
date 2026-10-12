@@ -128,7 +128,7 @@ echo "Waiting for promotion operation ${OP_NAME} to complete..."
 OP_START=$SECONDS
 OP_COMPLETED=false
 while (( SECONDS - OP_START < 300 )); do
-  OP_STATUS=$(curl -fsSL \
+  OP_STATUS=$(curl -fsSL --retry 3 \
     -H "Authorization: Bearer $(gcloud auth print-access-token)" \
     -H "Content-Type: application/json" \
     "https://artifactregistry.googleapis.com/v1/${OP_NAME}")
