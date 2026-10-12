@@ -56,12 +56,10 @@ steps:
       set -eo pipefail
       VERSION="v$(cat ./cmd/version.txt)"
       BUCKET="gs://${_BUCKET_NAME}/${VERSION}"
-      FALLBACK_BUCKET="gs://${_UNSIGNED_BUCKET_NAME}/${VERSION}"
 
       fetch_bin() {
         local remote_path="$1" local_path="$2"
-        gcloud storage cp "${BUCKET}/${remote_path}" "${local_path}" || \
-          gcloud storage cp "${FALLBACK_BUCKET}/${remote_path}" "${local_path}"
+        gcloud storage cp "${BUCKET}/${remote_path}" "${local_path}"
       }
 
       fetch_bin "linux/amd64/toolbox"       toolbox.linux.amd64
@@ -132,7 +130,6 @@ substitutions:
   _STAGING_AR_REPO_NAME: toolbox-containers-staging
   _PROD_AR_REPO_NAME: toolbox
   _BUCKET_NAME: mcp-toolbox-for-databases
-  _UNSIGNED_BUCKET_NAME: mcp-toolbox-for-databases-unsigned
   _EXIT_GATE_PROJECT: "mcp-toolbox"
   _EXIT_GATE_MANIFEST_BUCKET: "oss-exit-gate-prod-projects-bucket"
   _PUSH_TO_EXIT_GATES: "false"
