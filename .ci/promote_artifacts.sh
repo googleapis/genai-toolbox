@@ -151,3 +151,13 @@ if [[ "${OP_COMPLETED}" != "true" ]]; then
   echo "ERROR: Timed out waiting for promotion operation ${OP_NAME}" >&2
   exit 1
 fi
+
+echo "Verifying prod tag ${PROD_REPO}/${PACKAGE_NAME}:${VERSION#v} -> ${IMAGE_DIGEST}..."
+PROD_DIGEST=$(curl -fsSL --retry 3 \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://artifactregistry.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${PROD_REPO}/packages/${PACKAGE_NAME}/tags/${VERSION#v}" \
+  | jq -r '.version // empty' | awk -F'/' '{print $NF}')
+if [[ "${PROD_DIGEST}" != "${IMAGE_DIGEST}" ]]; then
+  echo "ERROR: prod tag ${VERSION#v} resolves to '${PROD_DIGEST}', expected ${IMAGE_DIGEST}" >&2
+  exit 1
+fi
