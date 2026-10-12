@@ -188,6 +188,9 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 						map[string]any{
 							"name":        "unauthorized_tool",
 							"inputSchema": basicInputSchema,
+							"_meta": map[string]any{
+								"toolbox/authInvoke": []any{"mock-auth-service"},
+							},
 						},
 						map[string]any{
 							"name":        "require_client_auth_tool",
@@ -689,6 +692,9 @@ func TestMcpEndpoint(t *testing.T) {
 						map[string]any{
 							"name":        "unauthorized_tool",
 							"inputSchema": basicInputSchema,
+							"_meta": map[string]any{
+								"com.google.cloud/authInvoke": []any{"mock-auth-service"},
+							},
 						},
 						map[string]any{
 							"name":        "require_client_auth_tool",
@@ -857,6 +863,9 @@ func TestMcpEndpoint(t *testing.T) {
 						map[string]any{
 							"name":        "unauthorized_tool",
 							"inputSchema": basicInputSchema,
+							"_meta": map[string]any{
+								"com.google.cloud/authInvoke": []any{"mock-auth-service"},
+							},
 						},
 						map[string]any{
 							"name":        "require_client_auth_tool",
@@ -1094,6 +1103,9 @@ func TestMcpEndpoint(t *testing.T) {
 								map[string]any{
 									"name":        "unauthorized_tool",
 									"inputSchema": basicInputSchema,
+									"_meta": map[string]any{
+										"toolbox/authInvoke": []any{"mock-auth-service"},
+									},
 								},
 								map[string]any{
 									"name":        "require_client_auth_tool",
@@ -1425,6 +1437,9 @@ func TestMcpEndpoint(t *testing.T) {
 								map[string]any{
 									"name":        "unauthorized_tool",
 									"inputSchema": basicInputSchema,
+									"_meta": map[string]any{
+										"toolbox/authInvoke": []any{"mock-auth-service"},
+									},
 								},
 								map[string]any{
 									"name":        "require_client_auth_tool",
