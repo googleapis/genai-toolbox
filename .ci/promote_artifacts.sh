@@ -34,19 +34,9 @@ STAGING_IMAGE_URI="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${STAGING_REPO}/${PA
 echo "Resolving image digest for ${STAGING_IMAGE_URI}:${VERSION}..."
 IMAGE_DIGEST=$(gcloud artifacts docker tags list "${STAGING_IMAGE_URI}" \
   --project="${PROJECT_ID}" \
-  --filter="tag ~ /tags/(v?${VERSION#v})$" \
-  --format="value(version)" 2>/dev/null | head -n 1 || true)
+  --filter="tag ~ \"/tags/v?${VERSION#v}\$\"" \
+  --format="value(version)" | head -n 1)
 IMAGE_DIGEST="${IMAGE_DIGEST##*/}"
-
-if [[ -z "${IMAGE_DIGEST}" ]]; then
-  for CANDIDATE_TAG in "v${VERSION#v}" "${VERSION#v}"; do
-    TAG_RESP=$(curl -fsSL \
-      -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-      "https://artifactregistry.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${STAGING_REPO}/packages/${PACKAGE_NAME}/tags/${CANDIDATE_TAG}" 2>/dev/null || true)
-    IMAGE_DIGEST=$(echo "${TAG_RESP}" | jq -r '.version // empty' | awk -F'/' '{print $NF}')
-    [[ -n "${IMAGE_DIGEST}" ]] && break
-  done
-fi
 
 if [[ -z "${IMAGE_DIGEST}" ]]; then
   echo "ERROR: Could not resolve image digest for ${STAGING_IMAGE_URI}:${VERSION}" >&2
