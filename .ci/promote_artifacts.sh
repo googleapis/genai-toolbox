@@ -81,6 +81,18 @@ gcloud artifacts docker tags add \
   --project="${PROJECT_ID}" \
   --quiet
 
+PROD_IMAGE_URI="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${PROD_REPO}/${PACKAGE_NAME}"
+EXISTING_PROD_DIGEST=$(gcloud artifacts docker tags list "${PROD_IMAGE_URI}" \
+  --project="${PROJECT_ID}" \
+  --filter="tag ~ \"/tags/v?${VERSION#v}\$\"" \
+  --format="value(version)" | head -n 1)
+EXISTING_PROD_DIGEST="${EXISTING_PROD_DIGEST##*/}"
+
+if [[ -n "${EXISTING_PROD_DIGEST}" && "${EXISTING_PROD_DIGEST}" != "${IMAGE_DIGEST}" ]]; then
+  echo "ERROR: Refusing to overwrite existing prod tag for ${VERSION} (existing digest ${EXISTING_PROD_DIGEST} != staged digest ${IMAGE_DIGEST})" >&2
+  exit 1
+fi
+
 echo "Promoting ${PACKAGE_NAME}@${IMAGE_DIGEST} from ${STAGING_REPO} to ${PROD_REPO}..."
 PROMOTE_URL="https://artifactregistry.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${PROD_REPO}:promoteArtifact"
 PAYLOAD=$(cat <<EOF
