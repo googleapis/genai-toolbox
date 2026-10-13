@@ -372,3 +372,52 @@ func TestGetAnnotations(t *testing.T) {
 		})
 	}
 }
+
+func TestGetParameters_AllowedDatasetsDeterministicOrder(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	cfg := bigqueryexecutesql.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "execute_sql_tool",
+			Description: "Execute SQL",
+		},
+		Type:   "bigquery-execute-sql",
+		Source: "my-bq-source",
+	}
+	tool, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	src := &bigqueryds.Source{
+		Config: bigqueryds.Config{
+			WriteMode: bigqueryds.WriteModeBlocked,
+		},
+		AllowedDatasets: map[string]struct{}{
+			"my-project.gamma": {},
+			"my-project.alpha": {},
+			"my-project.beta":  {},
+		},
+	}
+
+	wantSQLDesc := "The SQL to execute. In 'blocked' mode, only SELECT statements are allowed; other statement types will fail. " +
+		"The query must only access datasets from the following list: `my-project.alpha`, `my-project.beta`, `my-project.gamma`."
+
+	for i := 0; i < 20; i++ {
+		manifest, err := tool.Manifest(src)
+		if err != nil {
+			t.Fatalf("iteration %d: Manifest() unexpected error: %v", i, err)
+		}
+		if len(manifest.Parameters) == 0 {
+			t.Fatalf("iteration %d: expected parameters in manifest, got none", i)
+		}
+		gotDesc := manifest.Parameters[0].Description
+		if gotDesc != wantSQLDesc {
+			t.Fatalf("iteration %d: sql parameter description = %q, want %q", i, gotDesc, wantSQLDesc)
+		}
+	}
+}
+
