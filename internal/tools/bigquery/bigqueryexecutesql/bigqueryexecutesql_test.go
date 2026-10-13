@@ -403,21 +403,37 @@ func TestGetParameters_AllowedDatasetsDeterministicOrder(t *testing.T) {
 		},
 	}
 
-	wantSQLDesc := "The SQL to execute. In 'blocked' mode, only SELECT statements are allowed; other statement types will fail. " +
-		"The query must only access datasets from the following list: `my-project.alpha`, `my-project.beta`, `my-project.gamma`."
+	wantSuffix := "The query must only access datasets from the following list: `my-project.alpha`, `my-project.beta`, `my-project.gamma`."
 
 	for i := 0; i < 20; i++ {
+		params, err := tool.GetParameters(src)
+		if err != nil {
+			t.Fatalf("iteration %d: GetParameters() unexpected error: %v", i, err)
+		}
+		var sqlParamDesc string
+		for _, p := range params {
+			if p.GetName() == "sql" {
+				sqlParamDesc = p.GetDesc()
+				break
+			}
+		}
+		if !strings.HasSuffix(sqlParamDesc, wantSuffix) {
+			t.Fatalf("iteration %d: GetParameters() sql description = %q, want suffix %q", i, sqlParamDesc, wantSuffix)
+		}
+
 		manifest, err := tool.Manifest(src)
 		if err != nil {
 			t.Fatalf("iteration %d: Manifest() unexpected error: %v", i, err)
 		}
-		if len(manifest.Parameters) == 0 {
-			t.Fatalf("iteration %d: expected parameters in manifest, got none", i)
+		var sqlManifestDesc string
+		for _, p := range manifest.Parameters {
+			if p.Name == "sql" {
+				sqlManifestDesc = p.Description
+				break
+			}
 		}
-		gotDesc := manifest.Parameters[0].Description
-		if gotDesc != wantSQLDesc {
-			t.Fatalf("iteration %d: sql parameter description = %q, want %q", i, gotDesc, wantSQLDesc)
+		if !strings.HasSuffix(sqlManifestDesc, wantSuffix) {
+			t.Fatalf("iteration %d: Manifest() sql description = %q, want suffix %q", i, sqlManifestDesc, wantSuffix)
 		}
 	}
 }
-

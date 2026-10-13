@@ -782,6 +782,11 @@ func TestInitialize_ReadOnlyAndWriteModeValidation(t *testing.T) {
 }
 
 func TestBigQueryAllowedDatasets_Sorted(t *testing.T) {
+	emptySrc := &bigquery.Source{}
+	if got := emptySrc.BigQueryAllowedDatasets(); got != nil {
+		t.Fatalf("BigQueryAllowedDatasets() on empty source = %v, want nil", got)
+	}
+
 	src := &bigquery.Source{
 		AllowedDatasets: map[string]struct{}{
 			"my-project.zeta":  {},
@@ -807,4 +812,3 @@ func TestBigQueryAllowedDatasets_Sorted(t *testing.T) {
 		}
 	}
 }
-
