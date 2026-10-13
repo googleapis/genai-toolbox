@@ -15,22 +15,19 @@
 package conversationalanalyticscreatedataagent
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	cloudgdads "github.com/googleapis/mcp-toolbox/internal/sources/cloudgda"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/conversationalanalytics"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
-	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 )
 
@@ -50,21 +47,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-type compatibleSource interface {
-	GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
-	GetProjectID() string
-	UseClientAuthorization() bool
-}
-
-// validate compatible sources are still compatible
-var _ compatibleSource = &cloudgdads.Source{}
-
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
-	Type             string                 `yaml:"type" validate:"required"`
-	Source           string                 `yaml:"source" validate:"required"`
-	Location         string                 `yaml:"location"`
-	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Type             string `yaml:"type" validate:"required"`
+	Source           string `yaml:"source" validate:"required"`
+	Location         string `yaml:"location"`
 }
 
 // validate interface
@@ -136,7 +123,7 @@ func (t Tool) GetSourceName() string {
 }
 
 func (t Tool) ValidateSource(source sources.Source) error {
-	_, ok := source.(compatibleSource)
+	_, ok := source.(conversationalanalytics.CompatibleSource)
 	if !ok {
 		return fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
@@ -148,7 +135,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, ok := s.(compatibleSource)
+	source, ok := s.(conversationalanalytics.CompatibleSource)
 	if !ok {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, nil)
 	}
@@ -174,24 +161,9 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 		return nil, util.NewClientServerError("invalid agent config", http.StatusBadRequest, err)
 	}
 
-	var tokenSource oauth2.TokenSource
-	if source.UseClientAuthorization() {
-		if accessToken == "" {
-			return nil, util.NewClientServerError("tool is configured for client OAuth but no token was provided in the request header", http.StatusUnauthorized, nil)
-		}
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
-		}
-		tokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: tokenStr})
-	} else {
-		tokenSource, err = source.GoogleCloudTokenSourceWithScope(ctx, "")
-		if err != nil {
-			return nil, util.NewClientServerError("failed to get token source", http.StatusInternalServerError, err)
-		}
-		if tokenSource == nil {
-			return nil, util.NewClientServerError("cloud-platform token source is missing", http.StatusInternalServerError, nil)
-		}
+	tokenSource, tbErr := conversationalanalytics.GetTokenSource(ctx, source, accessToken)
+	if tbErr != nil {
+		return nil, tbErr
 	}
 
 	endpoint := t.endpoint
@@ -226,39 +198,16 @@ func createDataAgent(
 		url.QueryEscape(dataAgentID),
 	)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, caURL, bytes.NewReader(agentConfigBytes))
-	if err != nil {
-		return nil, util.NewClientServerError("failed to create request", http.StatusInternalServerError, err)
-	}
-	req.Header.Set("X-Goog-API-Client", util.GDAClientID)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, util.NewClientServerError("failed to send request", http.StatusInternalServerError, err)
-	}
-	respBody, readErr := io.ReadAll(resp.Body)
-	resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, util.NewAgentError(fmt.Sprintf("API returned error status: %d %s", resp.StatusCode, string(respBody)), nil)
-	}
-	if readErr != nil {
-		return nil, util.NewClientServerError("failed to read response body", http.StatusInternalServerError, readErr)
-	}
-
-	var result map[string]any
-	if len(bytes.TrimSpace(respBody)) == 0 {
-		result = map[string]any{"done": true}
-	} else if err := json.Unmarshal(respBody, &result); err != nil {
-		return nil, util.NewClientServerError("failed to decode response", http.StatusInternalServerError, err)
+	result, tbErr := conversationalanalytics.DoGDARequest(ctx, client, http.MethodPost, caURL, agentConfigBytes)
+	if tbErr != nil {
+		return nil, tbErr
 	}
 
 	return util.AwaitGDAOperation(ctx, client, endpoint, result, "creation", pollInterval, pollTimeout)
 }
 
 func (t Tool) RequiresClientAuthorization(s sources.Source) (bool, error) {
-	source, ok := s.(compatibleSource)
+	source, ok := s.(conversationalanalytics.CompatibleSource)
 	if !ok {
 		return false, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", t.Cfg.Type, t.Cfg.Source)
 	}
