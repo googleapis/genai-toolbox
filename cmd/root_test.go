@@ -26,11 +26,13 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/google/go-cmp/cmp"
-
+	"github.com/googleapis/gax-go/v2"
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/server"
@@ -38,6 +40,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/spf13/cobra"
+	"google.golang.org/api/option"
 )
 
 func withDefaults(c server.ServerConfig) server.ServerConfig {
@@ -1088,5 +1091,175 @@ authServices:
 	}
 	if !strings.Contains(err.Error(), "MCP Auth cannot be enabled together with the legacy HTTP API") {
 		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestSetSecretsFlag(t *testing.T) {
+	tcs := []struct {
+		desc string
+		args []string
+		want []string
+	}{
+		{
+			desc: "default value",
+			args: []string{},
+			want: []string{},
+		},
+		{
+			desc: "single secret flag",
+			args: []string{"--set-secrets", "DB_PASSWORD=prod-db-password:latest"},
+			want: []string{"DB_PASSWORD=prod-db-password:latest"},
+		},
+		{
+			desc: "comma-separated secrets in a single flag",
+			args: []string{"--set-secrets", "PG_PASSWORD=pg-secret:latest,MYSQL_PASSWORD=mysql-secret:2,EXTERNAL_API_KEY=api-key-secret"},
+			want: []string{"PG_PASSWORD=pg-secret:latest", "MYSQL_PASSWORD=mysql-secret:2", "EXTERNAL_API_KEY=api-key-secret"},
+		},
+		{
+			desc: "repeated set-secrets flags",
+			args: []string{
+				"--set-secrets", "PG_PASSWORD=pg-secret:latest",
+				"--set-secrets", "MYSQL_PASSWORD=mysql-secret:2",
+				"--set-secrets", "EXTERNAL_API_KEY=api-key-secret",
+			},
+			want: []string{"PG_PASSWORD=pg-secret:latest", "MYSQL_PASSWORD=mysql-secret:2", "EXTERNAL_API_KEY=api-key-secret"},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, opts, _, err := invokeCommand(tc.args)
+			if err != nil {
+				t.Fatalf("unexpected error invoking command: %s", err)
+			}
+			if diff := cmp.Diff(opts.Secrets, tc.want); diff != "" {
+				t.Fatalf("got %v, want %v, diff %s", opts.Secrets, tc.want, diff)
+			}
+		})
+	}
+}
+
+type mockSMClient struct {
+	mu      sync.Mutex
+	payload string
+	err     error
+}
+
+func (m *mockSMClient) AccessSecretVersion(_ context.Context, req *secretmanagerpb.AccessSecretVersionRequest, _ ...gax.CallOption) (*secretmanagerpb.AccessSecretVersionResponse, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.err != nil {
+		return nil, m.err
+	}
+	return &secretmanagerpb.AccessSecretVersionResponse{
+		Name: req.GetName(),
+		Payload: &secretmanagerpb.SecretPayload{
+			Data: []byte(m.payload),
+		},
+	}, nil
+}
+
+func (m *mockSMClient) Close() error {
+	return nil
+}
+
+func TestWatchSecrets(t *testing.T) {
+	origInterval := secretPollInterval
+	secretPollInterval = 25 * time.Millisecond
+	t.Cleanup(func() {
+		secretPollInterval = origInterval
+	})
+
+	t.Setenv("GOOGLE_CLOUD_PROJECT", "watch-proj")
+	t.Setenv("WATCH_SECRET_URL", "https://initial.example.com")
+
+	mockClient := &mockSMClient{payload: "https://initial.example.com"}
+	restoreSM := internal.SetSecretManagerClientFactoryForTest(func(_ context.Context, _ string, _ ...option.ClientOption) (internal.SecretManagerClient, error) {
+		return mockClient, nil
+	})
+	t.Cleanup(restoreSM)
+
+	cfgContent := `
+kind: source
+name: my-http
+type: http
+baseUrl: ${WATCH_SECRET_URL}
+`
+	cfgFile, cleanup, err := tmpFileWithCleanup([]byte(cfgContent))
+	if err != nil {
+		t.Fatalf("failed to create temp config: %v", err)
+	}
+	defer cleanup()
+
+	ctx, cancelCtx := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelCtx()
+
+	initLogger, err := log.NewStdLogger(io.Discard, io.Discard, "DEBUG")
+	if err != nil {
+		t.Fatalf("failed to setup init logger: %v", err)
+	}
+	ctx = util.WithLogger(ctx, initLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
+	if err != nil {
+		t.Fatalf("failed to setup instrumentation: %v", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	opts := &internal.ToolboxOptions{
+		Config:  cfgFile,
+		Secrets: []string{"WATCH_SECRET_URL=my-url-secret:latest"},
+		ResolvedSecrets: map[string]string{
+			"WATCH_SECRET_URL": "https://initial.example.com",
+		},
+	}
+	if _, err := opts.LoadConfig(ctx, &internal.ConfigParser{}); err != nil {
+		t.Fatalf("initial LoadConfig failed: %v", err)
+	}
+
+	s, err := server.NewServer(ctx, opts.Cfg)
+	if err != nil {
+		t.Fatalf("NewServer failed: %v", err)
+	}
+
+	pr, pw := io.Pipe()
+	defer pw.Close()
+	defer pr.Close()
+
+	logger, err := log.NewStdLogger(pw, pw, "DEBUG")
+	if err != nil {
+		t.Fatalf("failed to setup pipe logger: %v", err)
+	}
+	ctx = util.WithLogger(ctx, logger)
+
+	go watchSecrets(ctx, s, opts)
+
+	startedRegex := regexp.MustCompile(`Secret Manager polling enabled`)
+	if _, err := testutils.WaitForString(ctx, startedRegex, pr); err != nil {
+		t.Fatalf("timed out waiting for secret watcher to start: %v", err)
+	}
+
+	// Simulate transient Secret Manager error -> logs warning and continues
+	mockClient.mu.Lock()
+	mockClient.err = fmt.Errorf("transient network failure")
+	mockClient.mu.Unlock()
+
+	errRegex := regexp.MustCompile(`Error polling Secret Manager for secret updates`)
+	if _, err := testutils.WaitForString(ctx, errRegex, pr); err != nil {
+		t.Fatalf("timed out waiting for transient poll warning: %v", err)
+	}
+
+	// Simulate secret payload rotation -> triggers reload
+	mockClient.mu.Lock()
+	mockClient.err = nil
+	mockClient.payload = "https://rotated.example.com"
+	mockClient.mu.Unlock()
+
+	reloadRegex := regexp.MustCompile(`Server reloaded successfully after secret update`)
+	if _, err := testutils.WaitForString(ctx, reloadRegex, pr); err != nil {
+		t.Fatalf("timed out waiting for secret rotation reload: %v", err)
+	}
+
+	if got := os.Getenv("WATCH_SECRET_URL"); got != "https://rotated.example.com" {
+		t.Errorf("expected WATCH_SECRET_URL to be updated to %q, got %q", "https://rotated.example.com", got)
 	}
 }

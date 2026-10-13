@@ -19,6 +19,7 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -56,6 +57,8 @@ var (
 	buildType string = "dev" // should be one of "dev", "binary", or "container"
 	// commitSha is the git commit it was built from
 	commitSha string
+	// secretPollInterval defines the fixed polling interval for alias-referenced secrets in Secret Manager.
+	secretPollInterval = 1 * time.Minute
 )
 
 func init() {
@@ -357,6 +360,8 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 			reloadedOpts := *opts
 			reloadedOpts.PrebuiltConfigs = slices.Clone(opts.PrebuiltConfigs)
 			reloadedOpts.Configs = slices.Clone(opts.Configs)
+			reloadedOpts.Secrets = slices.Clone(opts.Secrets)
+			reloadedOpts.SkipSecretFetch = true
 			reloadedOpts.Cfg.Version = versionString
 
 			if _, err := reloadedOpts.LoadConfig(ctx, &internal.ConfigParser{}); err != nil {
@@ -368,6 +373,87 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 				logger.WarnContext(ctx, fmt.Sprintf("Error reloading server: %s", err))
 				continue
 			}
+		}
+	}
+}
+
+// watchSecrets polls Google Cloud Secret Manager at a fixed 5-minute interval
+// for secrets referenced via a version alias (e.g. "latest") and triggers
+// handleDynamicReload when any secret payload changes.
+func watchSecrets(ctx context.Context, s *server.Server, opts *internal.ToolboxOptions) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	lastSeen := maps.Clone(opts.ResolvedSecrets)
+	if lastSeen == nil {
+		lastSeen = make(map[string]string)
+	}
+
+	ticker := time.NewTicker(secretPollInterval)
+	defer ticker.Stop()
+
+	logger.DebugContext(ctx, fmt.Sprintf("Secret Manager polling enabled every %v", secretPollInterval))
+
+	for {
+		select {
+		case <-ctx.Done():
+			logger.DebugContext(ctx, "secret watcher context cancelled")
+			return
+		case <-ticker.C:
+			updated, changed, err := opts.PollAliasSecrets(ctx, lastSeen)
+			if err != nil {
+				logger.WarnContext(ctx, fmt.Sprintf("Error polling Secret Manager for secret updates: %s", err))
+				continue
+			}
+			if !changed {
+				continue
+			}
+
+			logger.DebugContext(ctx, "Secret payload change detected, attempting to reload server...")
+
+			prevEnv := make(map[string]string, len(updated))
+			prevSet := make(map[string]bool, len(updated))
+			for envVar, newVal := range updated {
+				if oldVal, ok := os.LookupEnv(envVar); ok {
+					prevEnv[envVar] = oldVal
+					prevSet[envVar] = true
+				}
+				_ = os.Setenv(envVar, newVal)
+			}
+
+			restoreEnv := func() {
+				for envVar := range updated {
+					if prevSet[envVar] {
+						_ = os.Setenv(envVar, prevEnv[envVar])
+					} else {
+						_ = os.Unsetenv(envVar)
+					}
+				}
+			}
+
+			reloadedOpts := *opts
+			reloadedOpts.PrebuiltConfigs = slices.Clone(opts.PrebuiltConfigs)
+			reloadedOpts.Configs = slices.Clone(opts.Configs)
+			reloadedOpts.Secrets = slices.Clone(opts.Secrets)
+			reloadedOpts.SkipSecretFetch = true
+			reloadedOpts.Cfg.Version = versionString
+
+			if _, err := reloadedOpts.LoadConfig(ctx, &internal.ConfigParser{}); err != nil {
+				logger.WarnContext(ctx, fmt.Sprintf("Error reloading config after secret update: %s", err))
+				restoreEnv()
+				continue
+			}
+
+			if err := handleDynamicReload(ctx, reloadedOpts.Cfg, s); err != nil {
+				logger.WarnContext(ctx, fmt.Sprintf("Error reloading server after secret update: %s", err))
+				restoreEnv()
+				continue
+			}
+
+			maps.Copy(lastSeen, updated)
+			logger.DebugContext(ctx, "Server reloaded successfully after secret update.")
 		}
 	}
 }
@@ -512,6 +598,8 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
 		go watchChanges(ctx, watchDirs, watchedFiles, s, opts)
 	}
+
+	go watchSecrets(ctx, s, opts)
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {

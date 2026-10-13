@@ -26,6 +26,26 @@ A default value can be specified like `${ENV_NAME:default}`.
 port: ${DB_PORT:3306}
 ```
 
+### Using Google Cloud Secret Manager
+
+You can inject secrets directly from **Google Cloud Secret Manager** into your `${ENV_NAME}` placeholders at runtime using the `--set-secrets` CLI flag. If a variable is specified via both an environment variable and `--set-secrets`, the value fetched from Secret Manager takes precedence.
+
+```bash
+# Single secret (short name defaults to version 'latest' in the default project using Global Secret Manager)
+./toolbox --config=tools.yaml --set-secrets="PASSWORD=prod-db-password:latest"
+
+# Multiple secrets (comma-separated or repeated flags)
+./toolbox --config=tools.yaml \
+  --set-secrets="PG_PASSWORD=pg-secret:latest,MYSQL_PASSWORD=mysql-secret:2,EXTERNAL_API_KEY=api-key-secret"
+
+# Cross-project (Global Secret Manager) or Regional Secret Manager using full resource references
+./toolbox --config=tools.yaml \
+  --set-secrets="PG_PASSWORD=projects/shared-security-proj/secrets/my-db-secret/versions/1" \
+  --set-secrets="REGIONAL_PASS=projects/my-project/locations/us-central1/secrets/my-db-secret/versions/latest"
+```
+
+When a secret is referenced via a version alias (such as `latest` or a user-defined alias), Toolbox automatically polls Secret Manager every 5 minutes and hot-reloads the server configuration when the secret payload changes.
+
 ### Sources
 
 The `source` kind of your `tools.yaml` defines what data source your

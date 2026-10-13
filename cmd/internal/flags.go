@@ -59,6 +59,7 @@ func ConfigFileFlags(parentCmd *cobra.Command, flags *pflag.FlagSet, opts *Toolb
 		strings.Join(prebuiltconfigs.GetPrebuiltSources(), "', '"),
 	)
 	flags.StringSliceVar(&opts.PrebuiltConfigs, "prebuilt", []string{}, prebuiltHelp)
+	flags.StringSliceVar(&opts.Secrets, "set-secrets", []string{}, "Google Cloud Secret Manager secret references mapped to environment variables (e.g. ENV_VAR=SECRET_REF). Can be specified multiple times or as a comma-separated list.")
 }
 
 // ServeFlags defines flags for starting and configuring the server.

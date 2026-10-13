@@ -44,6 +44,9 @@ type ToolboxOptions struct {
 	Configs         []string
 	ConfigFolder    string
 	PrebuiltConfigs []string
+	Secrets         []string
+	ResolvedSecrets map[string]string
+	SkipSecretFetch bool
 	VersionNum      string
 }
 
@@ -184,6 +187,11 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
+		return isCustomConfigured, err
+	}
+
+	if err := opts.LoadSecretsIntoEnv(ctx); err != nil {
+		logger.ErrorContext(ctx, err.Error())
 		return isCustomConfigured, err
 	}
 
