@@ -29,6 +29,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/api/option"
+	metricpb "google.golang.org/genproto/googleapis/api/metric"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -61,10 +62,25 @@ func (s *fakeTraceServer) spanNames() []string {
 
 type fakeMetricServer struct {
 	monitoringpb.UnimplementedMetricServiceServer
+	mu         sync.Mutex
+	timeSeries []*monitoringpb.TimeSeries
+}
+
+func (s *fakeMetricServer) CreateMetricDescriptor(ctx context.Context, req *monitoringpb.CreateMetricDescriptorRequest) (*metricpb.MetricDescriptor, error) {
+	return req.GetMetricDescriptor(), nil
 }
 
 func (s *fakeMetricServer) CreateTimeSeries(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) (*emptypb.Empty, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.timeSeries = append(s.timeSeries, req.GetTimeSeries()...)
 	return &emptypb.Empty{}, nil
+}
+
+func (s *fakeMetricServer) timeSeriesCount() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.timeSeries)
 }
 
 func TestGCPExportersDoNotSelfTrace(t *testing.T) {
@@ -116,16 +132,29 @@ func TestGCPExportersDoNotSelfTrace(t *testing.T) {
 		_ = metricExporter.Shutdown(context.Background())
 	}()
 
-	// Emit a single application span.
+	// Emit a single application span and metric.
 	_, span := tp.Tracer("test").Start(context.Background(), "app-span")
 	span.End()
 
+	counter, err := mp.Meter("test").Int64Counter("test_counter")
+	if err != nil {
+		t.Fatalf("failed to create counter: %v", err)
+	}
+	counter.Add(context.Background(), 1)
+
+	if err := mp.ForceFlush(context.Background()); err != nil {
+		t.Fatalf("failed to flush meter provider: %v", err)
+	}
 	if err := tp.ForceFlush(context.Background()); err != nil {
 		t.Fatalf("failed to flush trace provider: %v", err)
 	}
 
 	// Wait across multiple batch timeouts to ensure no self-tracing loop occurs.
 	time.Sleep(100 * time.Millisecond)
+
+	if got := metricSrv.timeSeriesCount(); got != 1 {
+		t.Fatalf("expected 1 exported time series, got %d", got)
+	}
 
 	names := traceSrv.spanNames()
 	if len(names) != 1 || names[0] != "app-span" {
