@@ -210,6 +210,7 @@ body {
     cursor: pointer;
     font-family: inherit;
     font-size: inherit;
+    box-sizing: border-box;
 
     transition: background-color 0.1s ease-in-out, border-radius 0.1s ease-in-out;
 
@@ -234,9 +235,18 @@ body {
     }
 }
 
+.tool-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 #secondary-panel-content {
     flex: 1; 
     overflow-y: auto; 
+    overflow-x: hidden;
     width: 100%; 
     min-height: 0; 
 
@@ -795,9 +805,11 @@ body {
     padding: 1px 6px;
     border-radius: 8px;
     margin-left: 6px;
+    margin-right: 6px;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     vertical-align: middle;
+    flex-shrink: 0;
 }
 
 .response-view-tabs {

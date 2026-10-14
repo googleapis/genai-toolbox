@@ -80,9 +80,14 @@ function renderToolList(apiResponse, secondNavContent, toolDisplayArea) {
     currentToolsList.forEach(toolObj => {
         const li = document.createElement('li');
         const button = document.createElement('button');
-        button.textContent = toolObj.name;
         button.dataset.toolname = toolObj.name;
         button.classList.add('tool-button');
+        button.title = toolObj.name;
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'tool-name';
+        nameSpan.textContent = toolObj.name;
+        button.appendChild(nameSpan);
 
         const uiMeta = toolObj._meta?.ui || toolObj.ui;
         if (uiMeta) {
