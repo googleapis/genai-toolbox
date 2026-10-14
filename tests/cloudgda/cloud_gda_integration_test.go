@@ -611,10 +611,6 @@ func TestCloudGDAConservationalAnalyticsTools(t *testing.T) {
 	// so dropping the dataset first is safe.
 	defer teardownTable(t)
 
-	// Create Data Agent
-	dataAgentDisplayName := fmt.Sprintf("test-agent-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
-	dataAgentID := setupDataAgent(t, ctx, projectID, datasetName, tableName, dataAgentDisplayName)
-
 	// A second agent guarantees the project holds more than one accessible data
 	// agent, which is what makes the page size assertions below deterministic
 	// instead of dependent on whatever the project already contains. Its
@@ -690,6 +686,54 @@ func TestCloudGDAConservationalAnalyticsTools(t *testing.T) {
 				"source":      "my-client-auth-source",
 				"description": "Tool to ask data agent with client auth.",
 			},
+			"my-create-data-agent-tool": map[string]any{
+				"type":        "conversational-analytics-create-data-agent",
+				"source":      "my-instance",
+				"description": "Tool to create data agent.",
+			},
+			"my-auth-create-data-agent-tool": map[string]any{
+				"type":         "conversational-analytics-create-data-agent",
+				"source":       "my-instance",
+				"description":  "Tool to create data agent with auth.",
+				"authRequired": []string{"my-google-auth"},
+			},
+			"my-client-auth-create-data-agent-tool": map[string]any{
+				"type":        "conversational-analytics-create-data-agent",
+				"source":      "my-client-auth-source",
+				"description": "Tool to create data agent with client auth.",
+			},
+			"my-update-data-agent-tool": map[string]any{
+				"type":        "conversational-analytics-update-data-agent",
+				"source":      "my-instance",
+				"description": "Tool to update data agent.",
+			},
+			"my-auth-update-data-agent-tool": map[string]any{
+				"type":         "conversational-analytics-update-data-agent",
+				"source":       "my-instance",
+				"description":  "Tool to update data agent with auth.",
+				"authRequired": []string{"my-google-auth"},
+			},
+			"my-client-auth-update-data-agent-tool": map[string]any{
+				"type":        "conversational-analytics-update-data-agent",
+				"source":      "my-client-auth-source",
+				"description": "Tool to update data agent with client auth.",
+			},
+			"my-delete-data-agent-tool": map[string]any{
+				"type":        "conversational-analytics-delete-data-agent",
+				"source":      "my-instance",
+				"description": "Tool to delete data agent.",
+			},
+			"my-auth-delete-data-agent-tool": map[string]any{
+				"type":         "conversational-analytics-delete-data-agent",
+				"source":       "my-instance",
+				"description":  "Tool to delete data agent with auth.",
+				"authRequired": []string{"my-google-auth"},
+			},
+			"my-client-auth-delete-data-agent-tool": map[string]any{
+				"type":        "conversational-analytics-delete-data-agent",
+				"source":      "my-client-auth-source",
+				"description": "Tool to delete data agent with client auth.",
+			},
 		},
 	}
 
@@ -708,12 +752,18 @@ func TestCloudGDAConservationalAnalyticsTools(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
+	// Create Data Agent using the create tool
+	dataAgentID, dataAgentDisplayName := runCreateDataAgentInvokeTest(t, ctx, projectID, datasetName, tableName)
+
 	// Both agents created above must come back from a single default call,
 	// which is what fetching every page automatically is supposed to give.
 	runListAccessibleDataAgentsInvokeTest(t, dataAgentDisplayName, secondDataAgentDisplayName)
 	runListAccessibleDataAgentsPageSizeTest(t, 1)
 	runGetDataAgentInfoInvokeTest(t, dataAgentID, dataAgentDisplayName)
+	updatedDisplayName := runUpdateDataAgentInvokeTest(t, dataAgentID)
+	runGetDataAgentInfoInvokeTest(t, dataAgentID, updatedDisplayName)
 	runAskDataAgentInvokeTest(t, dataAgentID)
+	runDeleteDataAgentInvokeTest(t, dataAgentID)
 }
 
 type listDataAgentsResult struct {
@@ -1149,4 +1199,270 @@ func runAskDataAgentInvokeTest(t *testing.T, dataAgentID string) {
 			}
 		})
 	}
+}
+
+func assertToolUnauthorized(t *testing.T, toolName string, jsonPayload string) {
+	t.Helper()
+	api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", toolName)
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, api, bytes.NewBufferString(jsonPayload))
+	if err != nil {
+		t.Fatalf("unable to create request for %s: %s", toolName, err)
+	}
+	req.Header.Add("Content-type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("unable to send request for %s: %s", toolName, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected 401 Unauthorized for %s without token, got %d: %s", toolName, resp.StatusCode, string(bodyBytes))
+	}
+}
+
+func runCreateDataAgentInvokeTest(t *testing.T, ctx context.Context, projectID, datasetID, tableID string) (string, string) {
+	t.Logf("Creating data agent with ProjectID: %q, DatasetID: %q, TableID: %q", projectID, datasetID, tableID)
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+
+	dataAgentId := "test" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	dataAgentDisplayName := "test-agent-" + strings.ReplaceAll(uuid.New().String(), "-", "")
+
+	client, err := util.NewGDAClient(context.WithoutCancel(ctx))
+	if err != nil {
+		t.Fatalf("failed to create GDA client: %v", err)
+	}
+	agentName := fmt.Sprintf("projects/%s/locations/global/dataAgents/%s", projectID, dataAgentId)
+	// Safety net in case the test fails before the agent is deleted. Once
+	// runDeleteDataAgentInvokeTest has deleted it, the agent is soft deleted (or
+	// gone), which deleteDataAgent tolerates.
+	t.Cleanup(func() { deleteDataAgent(t, ctx, client, agentName) })
+
+	requestBodyMap := map[string]any{
+		"displayName": dataAgentDisplayName,
+		"dataAnalyticsAgent": map[string]any{
+			"publishedContext": map[string]any{
+				"datasourceReferences": map[string]any{
+					"bq": map[string]any{
+						"tableReferences": []map[string]string{
+							{
+								"projectId": projectID,
+								"datasetId": datasetID,
+								"tableId":   tableID,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	agentConfigBytes, _ := json.Marshal(requestBodyMap)
+	payloadStr := fmt.Sprintf(`{"data_agent_id": "%s", "agent_config": %s}`, dataAgentId, string(agentConfigBytes))
+
+	assertToolUnauthorized(t, "my-auth-create-data-agent-tool", payloadStr)
+	assertToolUnauthorized(t, "my-client-auth-create-data-agent-tool", payloadStr)
+
+	api := "http://127.0.0.1:5000/api/tool/my-client-auth-create-data-agent-tool/invoke"
+	requestBody := bytes.NewBufferString(payloadStr)
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, api, requestBody)
+	if err != nil {
+		t.Fatalf("unable to create request: %s", err)
+	}
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+accessToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var body map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("error parsing response body")
+	}
+
+	got, ok := body["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find result in response body")
+	}
+
+	var createdAgent map[string]any
+	if err := json.Unmarshal([]byte(got), &createdAgent); err != nil {
+		t.Fatalf("failed to unmarshal created agent string: %v", err)
+	}
+
+	nameVal, ok := createdAgent["name"].(string)
+	if !ok {
+		t.Fatalf("created agent missing name: %s", got)
+	}
+	if !strings.HasSuffix(nameVal, dataAgentId) {
+		t.Fatalf("expected created agent name to end with %s, got: %s", dataAgentId, nameVal)
+	}
+
+	if displayName, ok := createdAgent["displayName"].(string); !ok || displayName != requestBodyMap["displayName"].(string) {
+		t.Fatalf("expected displayName %s, got: %s", requestBodyMap["displayName"], displayName)
+	}
+
+	return dataAgentId, dataAgentDisplayName
+}
+
+func runUpdateDataAgentInvokeTest(t *testing.T, dataAgentID string) string {
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+
+	updatedDisplayName := "updated-agent-" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	requestBodyMap := map[string]any{
+		"displayName": updatedDisplayName,
+	}
+	agentConfigBytes, _ := json.Marshal(requestBodyMap)
+	payloadStr := fmt.Sprintf(`{"data_agent_id": "%s", "agent_config": %s, "update_mask": "displayName"}`, dataAgentID, string(agentConfigBytes))
+
+	assertToolUnauthorized(t, "my-auth-update-data-agent-tool", payloadStr)
+	assertToolUnauthorized(t, "my-client-auth-update-data-agent-tool", payloadStr)
+
+	api := "http://127.0.0.1:5000/api/tool/my-client-auth-update-data-agent-tool/invoke"
+	requestBody := bytes.NewBufferString(payloadStr)
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, api, requestBody)
+	if err != nil {
+		t.Fatalf("unable to create request: %s", err)
+	}
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+accessToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var body map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("error parsing response body")
+	}
+
+	got, ok := body["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find result in response body")
+	}
+
+	var updatedAgent map[string]any
+	if err := json.Unmarshal([]byte(got), &updatedAgent); err != nil {
+		t.Fatalf("failed to unmarshal updated agent string: %v", err)
+	}
+
+	if displayName, ok := updatedAgent["displayName"].(string); !ok || displayName != updatedDisplayName {
+		t.Fatalf("expected displayName %s, got: %s", updatedDisplayName, displayName)
+	}
+
+	return updatedDisplayName
+}
+
+func runDeleteDataAgentInvokeTest(t *testing.T, dataAgentID string) {
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+
+	payloadStr := fmt.Sprintf(`{"data_agent_id": "%s"}`, dataAgentID)
+
+	assertToolUnauthorized(t, "my-auth-delete-data-agent-tool", payloadStr)
+	assertToolUnauthorized(t, "my-client-auth-delete-data-agent-tool", payloadStr)
+
+	api := "http://127.0.0.1:5000/api/tool/my-client-auth-delete-data-agent-tool/invoke"
+	requestBody := bytes.NewBufferString(payloadStr)
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, api, requestBody)
+	if err != nil {
+		t.Fatalf("unable to create request: %s", err)
+	}
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", "Bearer "+accessToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	// Tool errors are returned as HTTP 200 with an "error" key in the result,
+	// so the status code alone does not prove the delete succeeded.
+	deleteResult := decodeToolResult(t, resp.Body)
+	if errMsg, ok := deleteResult["error"]; ok {
+		t.Fatalf("delete tool returned an error: %v", errMsg)
+	}
+
+	// Verify the agent is no longer active via get-data-agent-info
+	getAPI := "http://127.0.0.1:5000/api/tool/my-get-data-agent-info-tool/invoke"
+	getReq, err := http.NewRequestWithContext(t.Context(), http.MethodPost, getAPI, bytes.NewBufferString(payloadStr))
+	if err != nil {
+		t.Fatalf("unable to create get request after delete: %s", err)
+	}
+	getReq.Header.Add("Content-type", "application/json")
+	getResp, err := http.DefaultClient.Do(getReq)
+	if err != nil {
+		t.Fatalf("unable to send get request after delete: %s", err)
+	}
+	defer getResp.Body.Close()
+	if getResp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(getResp.Body)
+		t.Fatalf("get after delete: response status code is not 200, got %d: %s", getResp.StatusCode, string(bodyBytes))
+	}
+
+	getResult := decodeToolResult(t, getResp.Body)
+	if errMsg, ok := getResult["error"].(string); ok {
+		// A deleted agent that is no longer readable surfaces as a 404 from the API.
+		// "non-200 status: 404" matches the AgentError text of the
+		// conversational-analytics-get-data-agent-info tool
+		// (internal/tools/conversationalanalytics/conversationalanalyticsgetdataagentinfo,
+		// "API returned non-200 status: %d %s"); keep the two in sync.
+		if !strings.Contains(errMsg, "non-200 status: 404") && !strings.Contains(errMsg, "NOT_FOUND") {
+			t.Fatalf("expected NOT_FOUND after delete, got error: %s", errMsg)
+		}
+		return
+	}
+	// A soft-deleted agent may still be readable, but must carry a deleteTime.
+	if deleteTime, _ := getResult["deleteTime"].(string); deleteTime == "" {
+		t.Fatalf("expected deleted agent to be NOT_FOUND or to have a deleteTime, got: %v", getResult)
+	}
+}
+
+// decodeToolResult decodes the "result" string of a tool invoke response into a map.
+func decodeToolResult(t *testing.T, body io.Reader) map[string]any {
+	t.Helper()
+	var envelope map[string]any
+	if err := json.NewDecoder(body).Decode(&envelope); err != nil {
+		t.Fatalf("error parsing response body: %s", err)
+	}
+	resultStr, ok := envelope["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find result in response body: %v", envelope)
+	}
+	var result map[string]any
+	if err := json.Unmarshal([]byte(resultStr), &result); err != nil {
+		t.Fatalf("failed to unmarshal tool result %q: %s", resultStr, err)
+	}
+	return result
 }
