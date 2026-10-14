@@ -599,7 +599,9 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		go watchChanges(ctx, watchDirs, watchedFiles, s, opts)
 	}
 
-	go watchSecrets(ctx, s, opts)
+	if isCustomConfigured && !opts.Cfg.DisableReload {
+		go watchSecrets(ctx, s, opts)
+	}
 
 	// wait for either the server to error out or the command's context to be canceled
 	select {
