@@ -483,10 +483,6 @@ substitutions:
   _UNSIGNED_BUCKET_NAME: mcp-toolbox-for-databases-unsigned
   _ASSETS_BUCKET: toolbox-build-assets
   _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/toolbox
-  _PUSH_LATEST: "false" # Substituted in trigger
-  _EXIT_GATE_PROJECT: "mcp-toolbox"
-  _EXIT_GATE_MANIFEST_BUCKET: "oss-exit-gate-prod-projects-bucket"
-  _PUSH_TO_EXIT_GATES: "false"
 
 artifacts:
   testResults:
