@@ -858,12 +858,12 @@ function injectCspIntoHtml(html, cspHeader) {
 })();</script>`;
     const metaTag = `${diagnosticScript}<meta http-equiv="Content-Security-Policy" content="${safeCspHeader}">`;
     
-    const headMatch = html.match(/<head[^>]*>/i);
+    const headMatch = html.match(/<head\b[^>]*>/i);
     if (headMatch) {
         const index = headMatch.index + headMatch[0].length;
         return html.slice(0, index) + '\n  ' + metaTag + html.slice(index);
     }
-    const htmlMatch = html.match(/<html[^>]*>/i);
+    const htmlMatch = html.match(/<html\b[^>]*>/i);
     if (htmlMatch) {
         const index = htmlMatch.index + htmlMatch[0].length;
         return html.slice(0, index) + '\n<head>' + metaTag + '</head>' + html.slice(index);
