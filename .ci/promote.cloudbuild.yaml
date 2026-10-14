@@ -19,6 +19,11 @@ steps:
     script: |
       #!/usr/bin/env bash
       set -e
+      EXPECTED_TAG="v$(cat ./cmd/version.txt)"
+      if [[ "${TAG_NAME}" != "${EXPECTED_TAG}" ]]; then
+        echo "ERROR: TAG_NAME ('${TAG_NAME}') does not match v\$(cat ./cmd/version.txt) ('${EXPECTED_TAG}')" >&2
+        exit 1
+      fi
       TOKEN=$(gcloud auth print-access-token)
 
       # Write auth files to the persistent /workspace directory
@@ -44,7 +49,7 @@ steps:
       # Install jq (Required for parsing the API responses)
       bash .ci/setup_apt.sh ${_AIRLOCK_AR_PROJECT} && apt-get update && apt-get install -y jq
 
-      export VERSION="${TAG_NAME:-$(cat ./cmd/version.txt)}"
+      export VERSION="${TAG_NAME}"
       export PUSH_LATEST="${_PUSH_LATEST}"
       bash .ci/promote_artifacts.sh "${PROJECT_ID}" "${_REGION}" "${_STAGING_AR_REPO_NAME}" "${_PROD_AR_REPO_NAME}" "toolbox" "${VERSION}"
 

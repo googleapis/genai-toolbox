@@ -18,6 +18,11 @@ steps:
     script: |
       #!/usr/bin/env bash
       set -e
+      EXPECTED_TAG="v$(cat ./cmd/version.txt)"
+      if [[ "${TAG_NAME}" != "${EXPECTED_TAG}" ]]; then
+        echo "ERROR: TAG_NAME ('${TAG_NAME}') does not match v\$(cat ./cmd/version.txt) ('${EXPECTED_TAG}')" >&2
+        exit 1
+      fi
       TOKEN=$(gcloud auth print-access-token)
       
       # Write auth files to the persistent /workspace directory
