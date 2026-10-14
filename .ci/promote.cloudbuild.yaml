@@ -47,7 +47,9 @@ steps:
       set -eo pipefail
 
       # Install jq (Required for parsing the API responses)
-      bash .ci/setup_apt.sh ${_AIRLOCK_AR_PROJECT} && apt-get update && apt-get install -y jq
+      if ! command -v jq >/dev/null 2>&1; then
+        bash .ci/setup_apt.sh ${_AIRLOCK_AR_PROJECT} && apt-get update && apt-get install -y jq
+      fi
 
       export VERSION="${TAG_NAME}"
       export PUSH_LATEST="${_PUSH_LATEST}"

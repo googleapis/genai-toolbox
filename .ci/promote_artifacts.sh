@@ -79,20 +79,54 @@ if [[ "${ATTESTATION_FOUND}" != "true" ]]; then
   exit 1
 fi
 
+TAG_PARENT="projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${STAGING_REPO}/packages/${PACKAGE_NAME}"
+TARGET_VERSION_NAME="${TAG_PARENT}/versions/${IMAGE_DIGEST}"
+
+upsert_staging_tag() {
+  local tag_id="$1"
+  local existing_digest
+  existing_digest=$(gcloud artifacts docker tags list "${STAGING_IMAGE_URI}" \
+    --project="${PROJECT_ID}" \
+    --filter="tag ~ \"/tags/${tag_id}\$\"" \
+    --format="value(version)" | head -n 1)
+  existing_digest="${existing_digest##*/}"
+
+  if [[ "${existing_digest}" == "${IMAGE_DIGEST}" ]]; then
+    echo "Tag ${tag_id} on ${STAGING_IMAGE_URI} already points to ${IMAGE_DIGEST}."
+    return 0
+  fi
+
+  local tag_url method
+  if [[ -z "${existing_digest}" ]]; then
+    echo "Creating tag ${tag_id} on ${STAGING_IMAGE_URI}@${IMAGE_DIGEST}..."
+    tag_url="https://artifactregistry.googleapis.com/v1/${TAG_PARENT}/tags?tagId=${tag_id}"
+    method="POST"
+  else
+    echo "Updating tag ${tag_id} on ${STAGING_IMAGE_URI} from ${existing_digest} to ${IMAGE_DIGEST}..."
+    tag_url="https://artifactregistry.googleapis.com/v1/${TAG_PARENT}/tags/${tag_id}?updateMask=version"
+    method="PATCH"
+  fi
+
+  local resp http_code body
+  resp=$(curl -sS -w "\n%{http_code}" -X "${method}" \
+    -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+    -H "Content-Type: application/json" \
+    "${tag_url}" \
+    -d "{\"name\": \"${TAG_PARENT}/tags/${tag_id}\", \"version\": \"${TARGET_VERSION_NAME}\"}")
+  http_code=$(echo "${resp}" | tail -n 1)
+  body=$(echo "${resp}" | sed '$d')
+  if [[ "${http_code}" -lt 200 || "${http_code}" -ge 300 ]]; then
+    echo "ERROR: Failed to ${method} tag ${tag_id} (HTTP ${http_code}): ${body}" >&2
+    exit 1
+  fi
+}
+
 echo "Ensuring version tag ${VERSION#v} is present on ${STAGING_IMAGE_URI}@${IMAGE_DIGEST}..."
-gcloud artifacts docker tags add \
-  "${STAGING_IMAGE_URI}@${IMAGE_DIGEST}" \
-  "${STAGING_IMAGE_URI}:${VERSION#v}" \
-  --project="${PROJECT_ID}" \
-  --quiet
+upsert_staging_tag "${VERSION#v}"
 
 if [[ "${PUSH_LATEST:-false}" == "true" ]]; then
   echo "Tagging ${STAGING_IMAGE_URI}@${IMAGE_DIGEST} as latest..."
-  gcloud artifacts docker tags add \
-    "${STAGING_IMAGE_URI}@${IMAGE_DIGEST}" \
-    "${STAGING_IMAGE_URI}:latest" \
-    --project="${PROJECT_ID}" \
-    --quiet
+  upsert_staging_tag "latest"
 fi
 
 PROD_IMAGE_URI="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${PROD_REPO}/${PACKAGE_NAME}"
