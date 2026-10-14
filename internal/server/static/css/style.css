@@ -785,6 +785,21 @@ body {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
+.tool-app-badge {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #1a73e8 0%, #7b1fa2 100%);
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
 .response-view-tabs {
     display: flex;
     gap: 8px;

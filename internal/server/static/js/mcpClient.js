@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const MCP_PROTOCOL_VERSION = '2026-07-28';
+export const MCP_PROTOCOL_VERSION = '2024-11-05';
 
 export const MCP_CLIENT_INFO = {
     name: 'mcp-toolbox-playground',

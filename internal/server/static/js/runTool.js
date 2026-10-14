@@ -164,56 +164,17 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
                 parsedData = results.result;
             }
 
-            let structuredContent = results.result?.structuredContent;
+            let structuredContent = results.result?.structuredContent || parsedData?.structuredContent;
             if (!structuredContent) {
-                if (parsedData !== null && typeof parsedData === 'object') {
-                    if (Array.isArray(parsedData)) {
-                        structuredContent = { data: parsedData };
-                    } else {
-                        structuredContent = { ...parsedData };
-                    }
+                if (Array.isArray(parsedData)) {
+                    structuredContent = { data: parsedData };
+                } else if (parsedData !== null && typeof parsedData === 'object') {
+                    structuredContent = parsedData;
                 } else if (parsedData !== null) {
                     structuredContent = { result: parsedData };
                 } else {
                     structuredContent = {};
                 }
-            }
-
-            // If tabular or visualization data is present, attach queryData and visualizationData for visualization components
-            const rawData = structuredContent.data || (Array.isArray(parsedData) ? parsedData : []);
-            if (!structuredContent.visualizationData && (rawData.length > 0 || structuredContent.vis_config || structuredContent.fields)) {
-                let visConfig = { type: 'table' };
-                if (structuredContent.vis_config) {
-                    try {
-                        visConfig = typeof structuredContent.vis_config === 'string' ? JSON.parse(structuredContent.vis_config) : structuredContent.vis_config;
-                    } catch (e) {
-                        visConfig = { type: structuredContent.vis_config };
-                    }
-                }
-
-                structuredContent.visualizationData = {
-                    queryResult: {
-                        data: rawData,
-                        fields: structuredContent.fields,
-                        pivots: structuredContent.pivots || [],
-                        totals_data: structuredContent.totals_data
-                    },
-                    visConfig: visConfig,
-                    title: visConfig?.title || structuredContent.title || (structuredContent.explore ? `${structuredContent.explore} query` : 'Visualization'),
-                    query: {
-                        id: structuredContent.query_id || structuredContent.qid || typedParams?.query_id,
-                        model: structuredContent.model || typedParams?.model,
-                        view: structuredContent.explore || structuredContent.view || typedParams?.explore,
-                        fields: structuredContent.fields || typedParams?.fields,
-                        filters: structuredContent.filters || typedParams?.filters,
-                        pivots: structuredContent.pivots || typedParams?.pivots,
-                        sorts: structuredContent.sorts || typedParams?.sorts,
-                        limit: structuredContent.limit || typedParams?.limit
-                    }
-                };
-            }
-            if (rawData.length > 0 && !structuredContent.queryData) {
-                structuredContent.queryData = rawData;
             }
 
             const toolResultNotification = {
@@ -301,6 +262,24 @@ function parseArrayParameter(rawValue, valueType, paramName) {
                 return item;
         }
     });
+}
+
+let lastToolResult = null;
+
+/**
+ * Updates the cached last tool result.
+ * @param {?Object} results The tool result object.
+ */
+export function updateLastResults(results) {
+    lastToolResult = results;
+}
+
+/**
+ * Gets the cached last tool result.
+ * @return {?Object}
+ */
+export function getLastResults() {
+    return lastToolResult;
 }
 
 /**

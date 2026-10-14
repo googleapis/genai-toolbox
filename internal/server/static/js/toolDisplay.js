@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { handleRunTool, displayResults } from './runTool.js';
+import { handleRunTool, displayResults, updateLastResults } from './runTool.js';
 import { createGoogleAuthMethodItem } from './auth.js'
 import { escapeHtml } from './sanitize.js'
 import { createMcpHeaders, createMcpRequestBody, MCP_PROTOCOL_VERSION } from './mcpClient.js';
 
 let activeTool = null;
+let activeUpdateLastResults = null;
 const toolHeadersMap = new Map();
 const registeredToolsMap = new Map();
 let activeHeaders = {
@@ -401,6 +402,7 @@ export function renderToolInterface(tool, containerElement) {
     const updateLastResults = (newResults) => {
         lastResults = newResults;
     };
+    activeUpdateLastResults = updateLastResults;
     const updateCurrentHeaders = (newHeaders) => {
         currentHeaders = newHeaders;
         activeHeaders = newHeaders;
@@ -1189,20 +1191,16 @@ window.addEventListener('message', (event) => {
                 if (isError) {
                     // Don't hand back error text as if it were renderable data.
                     structuredContent = undefined;
+                } else if (toolResult.result?.structuredContent) {
+                    structuredContent = toolResult.result.structuredContent;
                 } else if (Array.isArray(parsedData)) {
-                    structuredContent = {
-                        data: parsedData,
-                        queryData: parsedData
-                    };
+                    structuredContent = { data: parsedData };
                 } else if (parsedData && typeof parsedData === 'object') {
-                    const rawData = parsedData.visualizationData?.queryResult?.data || parsedData.data || [];
-                    structuredContent = {
-                        ...parsedData,
-                        queryData: rawData,
-                        visualizationData: parsedData.visualizationData
-                    };
-                } else {
                     structuredContent = parsedData;
+                } else if (parsedData !== null) {
+                    structuredContent = { result: parsedData };
+                } else {
+                    structuredContent = {};
                 }
 
                 const resultContent = toolResult.result?.content || [
@@ -1239,7 +1237,8 @@ window.addEventListener('message', (event) => {
                     const responseArea = document.querySelector('.tool-response-area');
                     const prettifyCheckbox = document.querySelector('.prettify-checkbox');
                     if (responseArea) {
-                        responseArea.value = prettifyCheckbox && prettifyCheckbox.checked ? JSON.stringify(toolResult, null, 2) : JSON.stringify(toolResult);
+                        updateLastResults(toolResult);
+                        displayResults(toolResult, responseArea, prettifyCheckbox ? prettifyCheckbox.checked : false);
                     }
                 }
             })

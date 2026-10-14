@@ -83,6 +83,15 @@ function renderToolList(apiResponse, secondNavContent, toolDisplayArea) {
         button.textContent = toolObj.name;
         button.dataset.toolname = toolObj.name;
         button.classList.add('tool-button');
+
+        const uiMeta = toolObj._meta?.ui || toolObj.ui;
+        if (uiMeta) {
+            const badge = document.createElement('span');
+            badge.className = 'tool-app-badge';
+            badge.textContent = 'APP';
+            button.appendChild(badge);
+        }
+
         button.addEventListener('click', (event) => handleToolClick(event, secondNavContent, toolDisplayArea));
         li.appendChild(button);
         ul.appendChild(li);
@@ -97,13 +106,14 @@ function renderToolList(apiResponse, secondNavContent, toolDisplayArea) {
  * @param {!HTMLElement} toolDisplayArea The HTML element where tool details will be shown.
  */
 function handleToolClick(event, secondNavContent, toolDisplayArea) {
-    const toolName = event.target.dataset.toolname;
+    const button = event.target.closest('button');
+    const toolName = button?.dataset.toolname;
     if (toolName) {
         const currentActive = secondNavContent.querySelector('.tool-button.active');
         if (currentActive) {
             currentActive.classList.remove('active');
         }
-        event.target.classList.add('active');
+        button.classList.add('active');
         renderToolDetails(toolName, toolDisplayArea);
     }
 }
