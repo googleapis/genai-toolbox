@@ -102,9 +102,27 @@ if [[ -n "${EXISTING_PROD_DIGEST}" && "${EXISTING_PROD_DIGEST}" != "${IMAGE_DIGE
   exit 1
 fi
 
-echo "Promoting ${PACKAGE_NAME}@${IMAGE_DIGEST} from ${STAGING_REPO} to ${PROD_REPO}..."
-PROMOTE_URL="https://artifactregistry.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${PROD_REPO}:promoteArtifact"
-PAYLOAD=$(cat <<EOF
+SKIP_PROMOTE=false
+if [[ "${EXISTING_PROD_DIGEST}" == "${IMAGE_DIGEST}" ]]; then
+  SKIP_PROMOTE=true
+  if [[ "${PUSH_LATEST:-false}" == "true" ]]; then
+    EXISTING_LATEST_DIGEST=$(gcloud artifacts docker tags list "${PROD_IMAGE_URI}" \
+      --project="${PROJECT_ID}" \
+      --filter="tag ~ \"/tags/latest\$\"" \
+      --format="value(version)" | head -n 1)
+    EXISTING_LATEST_DIGEST="${EXISTING_LATEST_DIGEST##*/}"
+    if [[ "${EXISTING_LATEST_DIGEST}" != "${IMAGE_DIGEST}" ]]; then
+      SKIP_PROMOTE=false
+    fi
+  fi
+fi
+
+if [[ "${SKIP_PROMOTE}" == "true" ]]; then
+  echo "Image ${PACKAGE_NAME}@${IMAGE_DIGEST} (and requested tags) already promoted to ${PROD_REPO}; skipping promoteArtifact call."
+else
+  echo "Promoting ${PACKAGE_NAME}@${IMAGE_DIGEST} from ${STAGING_REPO} to ${PROD_REPO}..."
+  PROMOTE_URL="https://artifactregistry.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${PROD_REPO}:promoteArtifact"
+  PAYLOAD=$(cat <<EOF
 {
   "source_repository": "projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${STAGING_REPO}",
   "source_version": "projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${STAGING_REPO}/packages/${PACKAGE_NAME}/versions/${IMAGE_DIGEST}",
@@ -115,50 +133,51 @@ PAYLOAD=$(cat <<EOF
 EOF
 )
 
-RESP=$(curl -sSL -X POST \
-  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-  -H "Content-Type: application/json" \
-  "${PROMOTE_URL}" \
-  -d "${PAYLOAD}")
-
-echo "Promote API response: ${RESP}"
-if [[ "$(echo "${RESP}" | jq -r '.error // empty')" != "" ]]; then
-  echo "ERROR: Promote API request failed: ${RESP}" >&2
-  exit 1
-fi
-
-OP_NAME=$(echo "${RESP}" | jq -r '.name // empty')
-if [[ -z "${OP_NAME}" ]]; then
-  echo "ERROR: Promote API response did not contain an operation name: ${RESP}" >&2
-  exit 1
-fi
-
-echo "Waiting for promotion operation ${OP_NAME} to complete..."
-OP_START=$SECONDS
-OP_COMPLETED=false
-while (( SECONDS - OP_START < 300 )); do
-  OP_STATUS=$(curl -fsSL --retry 3 \
+  RESP=$(curl -sSL -X POST \
     -H "Authorization: Bearer $(gcloud auth print-access-token)" \
     -H "Content-Type: application/json" \
-    "https://artifactregistry.googleapis.com/v1/${OP_NAME}")
+    "${PROMOTE_URL}" \
+    -d "${PAYLOAD}")
 
-  if [[ "$(echo "${OP_STATUS}" | jq -r '.done // false')" == "true" ]]; then
-    if [[ "$(echo "${OP_STATUS}" | jq -r '.error // empty')" != "" ]]; then
-      echo "ERROR: Artifact promotion failed: ${OP_STATUS}" >&2
-      exit 1
-    fi
-    echo "Artifact promotion completed successfully."
-    OP_COMPLETED=true
-    break
+  echo "Promote API response: ${RESP}"
+  if [[ "$(echo "${RESP}" | jq -r '.error // empty')" != "" ]]; then
+    echo "ERROR: Promote API request failed: ${RESP}" >&2
+    exit 1
   fi
 
-  echo "Promotion in progress, waiting 5s..."
-  sleep 5
-done
+  OP_NAME=$(echo "${RESP}" | jq -r '.name // empty')
+  if [[ -z "${OP_NAME}" ]]; then
+    echo "ERROR: Promote API response did not contain an operation name: ${RESP}" >&2
+    exit 1
+  fi
 
-if [[ "${OP_COMPLETED}" != "true" ]]; then
-  echo "ERROR: Timed out waiting for promotion operation ${OP_NAME}" >&2
-  exit 1
+  echo "Waiting for promotion operation ${OP_NAME} to complete..."
+  OP_START=$SECONDS
+  OP_COMPLETED=false
+  while (( SECONDS - OP_START < 300 )); do
+    OP_STATUS=$(curl -fsSL --retry 3 \
+      -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+      -H "Content-Type: application/json" \
+      "https://artifactregistry.googleapis.com/v1/${OP_NAME}")
+
+    if [[ "$(echo "${OP_STATUS}" | jq -r '.done // false')" == "true" ]]; then
+      if [[ "$(echo "${OP_STATUS}" | jq -r '.error // empty')" != "" ]]; then
+        echo "ERROR: Artifact promotion failed: ${OP_STATUS}" >&2
+        exit 1
+      fi
+      echo "Artifact promotion completed successfully."
+      OP_COMPLETED=true
+      break
+    fi
+
+    echo "Promotion in progress, waiting 5s..."
+    sleep 5
+  done
+
+  if [[ "${OP_COMPLETED}" != "true" ]]; then
+    echo "ERROR: Timed out waiting for promotion operation ${OP_NAME}" >&2
+    exit 1
+  fi
 fi
 
 echo "Verifying prod tag ${PROD_REPO}/${PACKAGE_NAME}:${VERSION#v} -> ${IMAGE_DIGEST}..."
