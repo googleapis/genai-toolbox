@@ -29,6 +29,11 @@ readonly PROD_REPO="${4:-${PROD_REPO:?PROD_REPO must be set}}"
 readonly PACKAGE_NAME="${5:-${PACKAGE_NAME:?PACKAGE_NAME must be set}}"
 readonly VERSION="${6:-${VERSION:-$(cat ./cmd/version.txt)}}"
 
+if [[ ! "${VERSION}" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "ERROR: Invalid VERSION '${VERSION}'; expected vX.Y.Z or X.Y.Z" >&2
+  exit 1
+fi
+
 STAGING_IMAGE_URI="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${STAGING_REPO}/${PACKAGE_NAME}"
 
 echo "Resolving image digest for ${STAGING_IMAGE_URI}:${VERSION}..."
