@@ -58,6 +58,40 @@ steps:
       VERSION="v$(cat ./cmd/version.txt)"
       BUCKET="gs://${_BUCKET_NAME}/${VERSION}"
 
+      REQUIRED_BINS=(
+        "linux/amd64/toolbox"
+        "darwin/arm64/toolbox"
+        "darwin/amd64/toolbox"
+        "windows/amd64/toolbox.exe"
+        "windows/arm64/toolbox.exe"
+      )
+
+      echo "Waiting for signed binaries in ${BUCKET}..."
+      POLL_START=$SECONDS
+      POLL_TIMEOUT=600
+      ALL_READY=false
+      while (( SECONDS - POLL_START < POLL_TIMEOUT )); do
+        MISSING=false
+        for remote_path in "${REQUIRED_BINS[@]}"; do
+          if ! gcloud storage ls "${BUCKET}/${remote_path}" >/dev/null 2>&1; then
+            MISSING=true
+            break
+          fi
+        done
+        if [[ "${MISSING}" == "false" ]]; then
+          echo "All 5 signed binaries found in ${BUCKET}."
+          ALL_READY=true
+          break
+        fi
+        echo "Signed binaries not all present in ${BUCKET} yet; waiting 15s..."
+        sleep 15
+      done
+
+      if [[ "${ALL_READY}" != "true" ]]; then
+        echo "ERROR: Timed out waiting for signed binaries in ${BUCKET}. Ensure binary signing has completed." >&2
+        exit 1
+      fi
+
       fetch_bin() {
         local remote_path="$1" local_path="$2"
         gcloud storage cp "${BUCKET}/${remote_path}" "${local_path}"
