@@ -163,7 +163,7 @@ Unlike standard tools, prompts, or resources that are scoped to specific [Groups
 - **Legacy Protocols (`2024-11-05`, `2025-03-26`, `2025-06-18`, and `2025-11-25`)**:
   - Toolbox backports client capability advertisement and negotiation to all legacy protocols to support modern clients running on older endpoints:
     1. **Initialization**: Clients advertise UI capabilities during `initialize` via `capabilities.extensions["io.modelcontextprotocol/ui"]` (with `mimeTypes: ["text/html;profile=mcp-app"]`). When present, Toolbox advertises server UI capability in `InitializeResult.capabilities.extensions["io.modelcontextprotocol/ui"]: {}`. If omitted by the client, server `extensions` is omitted.
-    2. **Per-Request Negotiation**: Clients can also advertise UI support in request metadata (`_meta` or `params.capabilities`) on `tools/list`:
+    2. **Per-Request Negotiation**: Clients **should** also advertise UI support in request metadata (`_meta` or `params.capabilities`) on `tools/list`:
        ```json
        {
          "_meta": {
