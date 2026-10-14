@@ -17,7 +17,6 @@ package util
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"mime"
 
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
@@ -118,14 +117,7 @@ func checkCapsMapForUI(caps map[string]any) bool {
 }
 
 // CheckUISupportFromRequest checks whether the raw JSON-RPC request body indicates support for MCP Apps UI.
-//
-// NOTE: Request body inspection is disabled to align with MCP specification capability negotiation,
-// which requires client capabilities to be negotiated during initialize.
 func CheckUISupportFromRequest(body []byte) bool {
-	// Disabled to comply with client capability negotiation specification.
-	if true {
-		return false
-	}
 	if len(body) == 0 || !bytes.Contains(body, []byte(UIExtensionURI)) {
 		return false
 	}
@@ -148,10 +140,10 @@ func CheckUISupportFromRequest(body []byte) bool {
 }
 
 // ResolveToolUIMetadata resolves a tool's UI resource and returns the UI metadata map.
-func ResolveToolUIMetadata(pMgr *primitives.PrimitiveManager, tool tools.Tool) (map[string]any, error) {
+func ResolveToolUIMetadata(pMgr *primitives.PrimitiveManager, tool tools.Tool) map[string]any {
 	uiMetaOrig := tool.GetToolUIMetadata()
 	if uiMetaOrig == nil || uiMetaOrig.Resource == "" {
-		return nil, nil
+		return nil
 	}
 
 	var uri string
@@ -159,12 +151,8 @@ func ResolveToolUIMetadata(pMgr *primitives.PrimitiveManager, tool tools.Tool) (
 		uri = res.GetURI()
 	} else if tmpl, hasTmpl := pMgr.GetResourceTemplate(uiMetaOrig.Resource); hasTmpl {
 		uri = tmpl.GetURITemplate()
-	} else if res, hasRes := pMgr.GetUIResourceFromURI(uiMetaOrig.Resource); hasRes {
-		uri = res.GetURI()
-	} else if tmpl, _, hasTmpl := pMgr.GetUIResourceTemplateByURI(uiMetaOrig.Resource); hasTmpl {
-		uri = tmpl.GetURITemplate()
 	} else {
-		return nil, fmt.Errorf("UI resource %q for tool %q is not registered", uiMetaOrig.Resource, tool.GetName())
+		uri = ""
 	}
 
 	uiMeta := map[string]any{
@@ -177,5 +165,5 @@ func ResolveToolUIMetadata(pMgr *primitives.PrimitiveManager, tool tools.Tool) (
 		}
 		uiMeta["visibility"] = vis
 	}
-	return uiMeta, nil
+	return uiMeta
 }

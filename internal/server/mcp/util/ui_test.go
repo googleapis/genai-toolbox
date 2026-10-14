@@ -261,9 +261,8 @@ func TestCheckUISupportFromRequest(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			got := CheckUISupportFromRequest(tc.body)
-			// CheckUISupportFromRequest is currently disabled to comply with capability negotiation spec.
-			if got != false {
-				t.Errorf("CheckUISupportFromRequest() = %v, want false (disabled)", got)
+			if got != tc.supportsUI {
+				t.Errorf("CheckUISupportFromRequest() = %v, want %v", got, tc.supportsUI)
 			}
 		})
 	}
@@ -271,80 +270,60 @@ func TestCheckUISupportFromRequest(t *testing.T) {
 
 func TestResolveToolUIMetadata(t *testing.T) {
 	resByName := testutils.NewMockResource("res-by-name", "ui://app/res-name.html", "", "", "", nil, nil)
-	uiResByURI := testutils.NewMockUIResource("ui-res", "ui://app/by-uri.html", "", "", "", nil, nil, nil, nil, "", nil)
 	tmplByName := testutils.NewMockResourceTemplate("tmpl-by-name", "ui://app/tmpl/{path}", "", "", "", nil)
-	uiTmplByURI := testutils.NewMockUIResourceTemplate("ui-tmpl", "ui://app/ui-tmpl/{path}", "", "", "", nil, nil, nil, "", nil)
 
 	resourcesMap := map[string]resources.Resource{
-		resByName.GetName():  resByName,
-		uiResByURI.GetName(): uiResByURI,
+		resByName.GetName(): resByName,
 	}
 	templatesMap := map[string]resources.ResourceTemplate{
-		tmplByName.GetName():  tmplByName,
-		uiTmplByURI.GetName(): uiTmplByURI,
+		tmplByName.GetName(): tmplByName,
 	}
 	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, resourcesMap, templatesMap, nil)
 
 	tests := []struct {
-		name    string
-		tool    tools.Tool
-		wantURI string
-		wantErr bool
+		name        string
+		tool        tools.Tool
+		wantNil     bool
+		wantURI     string
+		wantVisible []string
 	}{
 		{
 			name:    "tool without UI metadata",
 			tool:    testutils.NewMockTool("plain-tool", "", "", nil, false, false),
-			wantURI: "",
-			wantErr: false,
+			wantNil: true,
 		},
 		{
 			name:    "resolve resource by name",
 			tool:    testutils.NewMockToolWithUI("tool-res-name", "", "", nil, false, false, "res-by-name"),
 			wantURI: "ui://app/res-name.html",
-			wantErr: false,
 		},
 		{
 			name:    "resolve resource template by name",
 			tool:    testutils.NewMockToolWithUI("tool-tmpl-name", "", "", nil, false, false, "tmpl-by-name"),
 			wantURI: "ui://app/tmpl/{path}",
-			wantErr: false,
 		},
 		{
-			name:    "resolve UI resource by URI",
-			tool:    testutils.NewMockToolWithUI("tool-ui-res-uri", "", "", nil, false, false, "ui://app/by-uri.html"),
-			wantURI: "ui://app/by-uri.html",
-			wantErr: false,
-		},
-		{
-			name:    "resolve UI resource template by URI",
-			tool:    testutils.NewMockToolWithUI("tool-ui-tmpl-uri", "", "", nil, false, false, "ui://app/ui-tmpl/dashboard"),
-			wantURI: "ui://app/ui-tmpl/{path}",
-			wantErr: false,
-		},
-		{
-			name:    "unregistered UI resource returns error",
+			name:    "unregistered UI resource returns empty URI",
 			tool:    testutils.NewMockToolWithUI("tool-missing", "", "", nil, false, false, "nonexistent-res"),
 			wantURI: "",
-			wantErr: true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := ResolveToolUIMetadata(pMgr, tc.tool)
-			if (err != nil) != tc.wantErr {
-				t.Fatalf("ResolveToolUIMetadata() error = %v, wantErr %v", err, tc.wantErr)
-			}
-			if tc.wantURI == "" {
+			got := ResolveToolUIMetadata(pMgr, tc.tool)
+			if tc.wantNil {
 				if got != nil {
 					t.Errorf("ResolveToolUIMetadata() = %v, want nil", got)
 				}
 				return
 			}
-			if got == nil || got["resourceUri"] != tc.wantURI {
-				t.Errorf("ResolveToolUIMetadata() resourceUri = %v, want %q", got, tc.wantURI)
+			if got == nil {
+				t.Fatalf("ResolveToolUIMetadata() returned nil, want metadata with resourceUri=%q", tc.wantURI)
+			}
+			if got["resourceUri"] != tc.wantURI {
+				t.Errorf("ResolveToolUIMetadata() resourceUri = %v, want %q", got["resourceUri"], tc.wantURI)
 			}
 		})
 	}
 }
-

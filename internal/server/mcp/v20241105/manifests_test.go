@@ -206,7 +206,7 @@ func TestParamManifest(t *testing.T) {
 				Required: []string{"foo-string2", "foo-string3-auth", "foo-int2", "foo-float", "foo-array2", "foo-map-int", "foo-map-any"},
 			},
 			wantAuthParam: map[string][]string{
-				"foo-string3-auth": []string{"my-google-auth-service", "other-auth-service"},
+				"foo-string3-auth": {"my-google-auth-service", "other-auth-service"},
 			},
 		},
 		{
@@ -274,7 +274,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 	}
 	want := ListToolsResult{
 		Tools: []Tool{
-			Tool{
+			{
 				Name:        "no_params",
 				Description: "",
 				ToolInputSchema: InputSchema{
@@ -283,20 +283,20 @@ func TestGenerateListToolsResult(t *testing.T) {
 					Required:   []string{},
 				},
 			},
-			Tool{
+			{
 				Name:        "some_params",
 				Description: "",
 				ToolInputSchema: InputSchema{
 					Type: "object",
 					Properties: map[string]parameters.ParameterMcpManifest{
-						"param1": parameters.ParameterMcpManifest{
+						"param1": {
 							Type:                 "integer",
 							Description:          "This is the first parameter.",
 							Items:                nil,
 							Default:              nil,
 							AdditionalProperties: nil,
 						},
-						"param2": parameters.ParameterMcpManifest{
+						"param2": {
 							Type:                 "integer",
 							Description:          "This is the second parameter.",
 							Items:                nil,
@@ -430,16 +430,16 @@ func TestGenerateListPromptsResult(t *testing.T) {
 	}
 	want := ListPromptsResult{
 		Prompts: []Prompt{
-			Prompt{
+			{
 				Name:        "prompt1",
 				Description: "First test prompt",
 				Arguments:   []PromptArgument{},
 			},
-			Prompt{
+			{
 				Name:        "prompt2",
 				Description: "Second test prompt",
 				Arguments: []PromptArgument{
-					PromptArgument{
+					{
 						Name:        "arg1",
 						Description: "Test argument",
 						Required:    true,
@@ -617,6 +617,26 @@ func TestGenerateListResourcesResult(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("unexpected list resources result (-want +got):\n%s", diff)
 	}
+
+	t.Run("excludes UI resources", func(t *testing.T) {
+		uiRes := testutils.NewMockUIResource("ui_res", "ui://test", "", "", "", nil, nil, nil, nil, "", nil)
+		resMap := map[string]resources.Resource{
+			res1.GetName():  res1,
+			uiRes.GetName(): uiRes,
+		}
+		groupWithUI := group.NewGroup(group.GroupConfig{
+			Name:          "test-resourceset",
+			ResourceNames: []string{"res1", "ui_res"},
+		})
+		pm := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, resMap, nil, map[string]group.Group{groupWithUI.Name: groupWithUI})
+		resList, err := GenerateListResourcesResult(pm, groupWithUI)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(resList.Resources) != 1 || resList.Resources[0].Name != "res1" {
+			t.Fatalf("expected UI resource to be excluded from resources/list, got %+v", resList.Resources)
+		}
+	})
 }
 
 func TestGenerateListResourceTemplatesResult(t *testing.T) {
@@ -656,4 +676,24 @@ func TestGenerateListResourceTemplatesResult(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("unexpected list resource templates result (-want +got):\n%s", diff)
 	}
+
+	t.Run("excludes UI resource templates", func(t *testing.T) {
+		uiTmpl := testutils.NewMockUIResourceTemplate("ui_tmpl", "ui://test/{path}", "", "", "", nil, nil, nil, "", nil)
+		tmplMap := map[string]resources.ResourceTemplate{
+			tmpl1.GetName():  tmpl1,
+			uiTmpl.GetName(): uiTmpl,
+		}
+		groupWithUI := group.NewGroup(group.GroupConfig{
+			Name:                  "test-templateset",
+			ResourceTemplateNames: []string{"tmpl1", "ui_tmpl"},
+		})
+		pm := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, nil, tmplMap, map[string]group.Group{groupWithUI.Name: groupWithUI})
+		tmplList, err := GenerateListResourceTemplatesResult(pm, groupWithUI)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(tmplList.ResourceTemplates) != 1 || tmplList.ResourceTemplates[0].Name != "tmpl1" {
+			t.Fatalf("expected UI resource template to be excluded from resources/templates/list, got %+v", tmplList.ResourceTemplates)
+		}
+	})
 }

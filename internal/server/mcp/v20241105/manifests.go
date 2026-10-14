@@ -128,11 +128,7 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 		}
 		var uiMeta map[string]any
 		if supportsUI {
-			var err error
-			uiMeta, err = mcputil.ResolveToolUIMetadata(pMgr, tool)
-			if err != nil {
-				return ListToolsResult{}, err
-			}
+			uiMeta = mcputil.ResolveToolUIMetadata(pMgr, tool)
 		}
 		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(src), urlParams, uiMeta)
 		mcpManifest = append(mcpManifest, toolManifest)
@@ -190,6 +186,10 @@ func GenerateListResourcesResult(pMgr *primitives.PrimitiveManager, g group.Grou
 		if !ok {
 			return ListResourcesResult{}, fmt.Errorf("resource does not exist: %s", name)
 		}
+		// If Resource is of type UI skip adding it to the list/resources response.
+		if res.IsUI() {
+			continue
+		}
 		mcpManifest = append(mcpManifest, generateResourceManifest(name, res.GetDescription(), res.GetURI(), res.GetMimeType()))
 	}
 	return ListResourcesResult{Resources: mcpManifest}, nil
@@ -212,6 +212,10 @@ func GenerateListResourceTemplatesResult(pMgr *primitives.PrimitiveManager, g gr
 		tmpl, ok := pMgr.GetResourceTemplate(name)
 		if !ok {
 			return ListResourceTemplatesResult{}, fmt.Errorf("resource template does not exist: %s", name)
+		}
+		// If Resource Template is of type UI skip adding it to the list/resource templates response.
+		if tmpl.IsUI() {
+			continue
 		}
 		mcpManifest = append(mcpManifest, generateResourceTemplateManifest(name, tmpl.GetDescription(), tmpl.GetURITemplate(), tmpl.GetMimeType()))
 	}

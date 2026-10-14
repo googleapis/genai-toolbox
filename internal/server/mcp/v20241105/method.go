@@ -756,9 +756,6 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 	}
 
 	result := &ReadResourceResult{
-		Result: jsonrpc.Result{
-			Meta: contentMeta,
-		},
 		Contents: []TextResourceContents{
 			{
 				ResourceContents: ResourceContents{

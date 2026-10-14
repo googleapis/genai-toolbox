@@ -896,6 +896,36 @@ func TestResourcesReadHandler(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("UI resource includes metadata in contents only", func(t *testing.T) {
+		uiRes := testutils.NewMockUIResource("ui_res", "ui://test", "UI Title", "UI Desc", "text/html;profile=mcp-app", nil, nil, nil, nil, "https://example.com", nil)
+		pm := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, map[string]resources.Resource{uiRes.GetName(): uiRes}, nil, groups)
+		reqBody, err := json.Marshal(ReadResourceRequest{
+			Request: jsonrpc.Request{Method: "resources/read"},
+			Params: struct {
+				Uri string `json:"uri"`
+			}{
+				Uri: "ui://test",
+			},
+		})
+		if err != nil {
+			t.Fatalf("failed to marshal request: %v", err)
+		}
+		got, err := resourcesReadHandler(ctx, dummyID, pm, mustGroup(t, pm), reqBody)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		resp := got.(jsonrpc.JSONRPCResponse).Result.(*ReadResourceResult)
+		if resp.Meta != nil {
+			t.Errorf("expected Result.Meta to be nil, got %+v", resp.Meta)
+		}
+		if len(resp.Contents) != 1 {
+			t.Fatalf("expected 1 content item, got %d", len(resp.Contents))
+		}
+		if resp.Contents[0].Metadata == nil || resp.Contents[0].Metadata["ui"] == nil {
+			t.Errorf("expected Contents[0].Metadata to contain ui, got %+v", resp.Contents[0].Metadata)
+		}
+	})
 }
 
 func TestGetResourceOrTemplateByURI(t *testing.T) {

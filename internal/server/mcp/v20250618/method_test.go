@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -52,12 +53,13 @@ func TestInitializeHandler(t *testing.T) {
 	ctxVersion := util.WithToolboxVersionKey(ctx, fakeVersionString)
 
 	tests := []struct {
-		name        string
-		body        InitializeRequest
-		rawBody     []byte
-		context     context.Context
-		wantErr     bool
-		errContains string
+		name            string
+		body            InitializeRequest
+		rawBody         []byte
+		context         context.Context
+		wantErr         bool
+		wantUIExtension bool
+		errContains     string
 	}{
 		{
 			name: "missing version in context",
@@ -90,8 +92,30 @@ func TestInitializeHandler(t *testing.T) {
 					ProtocolVersion: PROTOCOL_VERSION,
 				},
 			},
-			context: ctxVersion,
-			wantErr: false,
+			context:         ctxVersion,
+			wantErr:         false,
+			wantUIExtension: false,
+		},
+		{
+			name: "success with UI client capabilities",
+			body: InitializeRequest{
+				Request: jsonrpc.Request{
+					Method: "initialize",
+				},
+				Params: InitializeParams{
+					ProtocolVersion: PROTOCOL_VERSION,
+					Capabilities: ClientCapabilities{
+						Extensions: map[string]any{
+							mcputil.UIExtensionURI: map[string]any{
+								"mimeTypes": []string{"text/html;profile=mcp-app"},
+							},
+						},
+					},
+				},
+			},
+			context:         ctxVersion,
+			wantErr:         false,
+			wantUIExtension: true,
 		},
 	}
 
@@ -140,6 +164,10 @@ func TestInitializeHandler(t *testing.T) {
 				}
 				if initResult.ServerInfo.Version != fakeVersionString {
 					t.Errorf("expected version %q, got %q", fakeVersionString, initResult.ServerInfo.Version)
+				}
+				hasUIExt := initResult.Capabilities.Extensions != nil && initResult.Capabilities.Extensions[mcputil.UIExtensionURI] != nil
+				if hasUIExt != tt.wantUIExtension {
+					t.Errorf("expected server capabilities UI extension presence = %v, got %v", tt.wantUIExtension, hasUIExt)
 				}
 			}
 		})
@@ -214,6 +242,33 @@ func TestToolsListHandler(t *testing.T) {
 				PaginatedRequest: PaginatedRequest{
 					Request: jsonrpc.Request{
 						Method: "tools/list",
+					},
+				},
+			},
+			g:       mustGroup(t, primitiveMgr),
+			wantErr: false,
+		},
+		{
+			name: "success - with UI capability advertised",
+			body: ListToolsRequest{
+				PaginatedRequest: PaginatedRequest{
+					Request: jsonrpc.Request{
+						Method: "tools/list",
+					},
+					Params: struct {
+						Cursor       Cursor              `json:"cursor,omitempty"`
+						Meta         *RequestMeta        `json:"_meta,omitempty"`
+						Capabilities *ClientCapabilities `json:"capabilities,omitempty"`
+					}{
+						Meta: &RequestMeta{
+							MetaClientCapabilities: &ClientCapabilities{
+								Extensions: map[string]any{
+									mcputil.UIExtensionURI: map[string]any{
+										"mimeTypes": []string{"text/html;profile=mcp-app"},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -914,6 +969,36 @@ func TestResourcesReadHandler(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("UI resource includes metadata in contents only", func(t *testing.T) {
+		uiRes := testutils.NewMockUIResource("ui_res", "ui://test", "UI Title", "UI Desc", "text/html;profile=mcp-app", nil, nil, nil, nil, "https://example.com", nil)
+		pm := primitives.NewPrimitiveManager(nil, nil, nil, nil, nil, map[string]resources.Resource{uiRes.GetName(): uiRes}, nil, groups)
+		reqBody, err := json.Marshal(ReadResourceRequest{
+			Request: jsonrpc.Request{Method: "resources/read"},
+			Params: struct {
+				Uri string `json:"uri"`
+			}{
+				Uri: "ui://test",
+			},
+		})
+		if err != nil {
+			t.Fatalf("failed to marshal request: %v", err)
+		}
+		got, err := resourcesReadHandler(ctx, dummyID, pm, mustGroup(t, pm), reqBody)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		resp := got.(jsonrpc.JSONRPCResponse).Result.(*ReadResourceResult)
+		if resp.Meta != nil {
+			t.Errorf("expected Result.Meta to be nil, got %+v", resp.Meta)
+		}
+		if len(resp.Contents) != 1 {
+			t.Fatalf("expected 1 content item, got %d", len(resp.Contents))
+		}
+		if resp.Contents[0].Metadata == nil || resp.Contents[0].Metadata["ui"] == nil {
+			t.Errorf("expected Contents[0].Metadata to contain ui, got %+v", resp.Contents[0].Metadata)
+		}
+	})
 }
 
 func TestGetResourceOrTemplateByURI(t *testing.T) {
