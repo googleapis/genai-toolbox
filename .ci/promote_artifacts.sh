@@ -79,6 +79,9 @@ if [[ "${ATTESTATION_FOUND}" != "true" ]]; then
   exit 1
 fi
 
+TAG_PARENT="projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${STAGING_REPO}/packages/${PACKAGE_NAME}"
+TARGET_VERSION_NAME="${TAG_PARENT}/versions/${IMAGE_DIGEST}"
+
 upsert_staging_tag() {
   local tag_id="$1"
   local existing_digest
@@ -93,29 +96,27 @@ upsert_staging_tag() {
     return 0
   fi
 
-  echo "Setting tag ${tag_id} on ${STAGING_IMAGE_URI}@${IMAGE_DIGEST}..."
-  local v2_base="https://${LOCATION}-docker.pkg.dev/v2/${PROJECT_ID}/${STAGING_REPO}/${PACKAGE_NAME}/manifests"
-  local manifest_file="/tmp/manifest-${tag_id}.json"
-  local headers_file="/tmp/headers-${tag_id}.txt"
-
-  curl -fsSL -D "${headers_file}" -o "${manifest_file}" \
-    -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-    -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json" \
-    "${v2_base}/${IMAGE_DIGEST}"
-
-  local content_type
-  content_type=$(grep -i '^content-type:' "${headers_file}" | tail -n 1 | awk '{print $2}' | tr -d '\r')
+  local tag_url method
+  if [[ -z "${existing_digest}" ]]; then
+    echo "Creating tag ${tag_id} on ${STAGING_IMAGE_URI}@${IMAGE_DIGEST}..."
+    tag_url="https://artifactregistry.googleapis.com/v1/${TAG_PARENT}/tags?tagId=${tag_id}"
+    method="POST"
+  else
+    echo "Updating tag ${tag_id} on ${STAGING_IMAGE_URI} from ${existing_digest} to ${IMAGE_DIGEST}..."
+    tag_url="https://artifactregistry.googleapis.com/v1/${TAG_PARENT}/tags/${tag_id}?updateMask=version"
+    method="PATCH"
+  fi
 
   local resp http_code body
-  resp=$(curl -sS -w "\n%{http_code}" -X PUT \
-    -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-    -H "Content-Type: ${content_type}" \
-    --data-binary @"${manifest_file}" \
-    "${v2_base}/${tag_id}")
+  resp=$(curl -sS -w "\n%{http_code}" -X "${method}" \
+    -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+    -H "Content-Type: application/json" \
+    "${tag_url}" \
+    -d "{\"name\": \"${TAG_PARENT}/tags/${tag_id}\", \"version\": \"${TARGET_VERSION_NAME}\"}")
   http_code=$(echo "${resp}" | tail -n 1)
   body=$(echo "${resp}" | sed '$d')
   if [[ "${http_code}" -lt 200 || "${http_code}" -ge 300 ]]; then
-    echo "ERROR: Failed to set tag ${tag_id} (HTTP ${http_code}): ${body}" >&2
+    echo "ERROR: Failed to ${method} tag ${tag_id} (HTTP ${http_code}): ${body}" >&2
     exit 1
   fi
 }
