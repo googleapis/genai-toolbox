@@ -34,7 +34,7 @@ STAGING_IMAGE_URI="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${STAGING_REPO}/${PA
 echo "Resolving image digest for ${STAGING_IMAGE_URI}:${VERSION}..."
 IMAGE_DIGEST=$(gcloud artifacts docker tags list "${STAGING_IMAGE_URI}" \
   --project="${PROJECT_ID}" \
-  --filter="tag ~ \"/tags/v?${VERSION#v}\$\"" \
+  --filter="tag ~ \"/tags/v${VERSION#v}\$\"" \
   --format="value(version)" | head -n 1)
 IMAGE_DIGEST="${IMAGE_DIGEST##*/}"
 
