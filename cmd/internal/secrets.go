@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"cloud.google.com/go/compute/metadata"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"github.com/googleapis/gax-go/v2"
@@ -61,14 +62,119 @@ var newSecretManagerClient = func(ctx context.Context, location string, opts ...
 // and returns a restore function.
 func SetSecretManagerClientFactoryForTest(fn func(ctx context.Context, location string, opts ...option.ClientOption) (SecretManagerClient, error)) func() {
 	orig := newSecretManagerClient
+	origDetect := detectRuntimeEnvironment
 	newSecretManagerClient = fn
+	detectRuntimeEnvironment = func(context.Context) (RuntimeEnvironment, error) {
+		return RuntimeEnvironment{}, nil
+	}
 	return func() {
 		newSecretManagerClient = orig
+		detectRuntimeEnvironment = origDetect
 	}
 }
 
 // findDefaultCredentials looks up Application Default Credentials (ADC).
 var findDefaultCredentials = google.FindDefaultCredentials
+
+// RuntimeEnvironment describes the detected GCP compute platform and region.
+type RuntimeEnvironment struct {
+	Platform string // "Cloud Run", "GKE", or "" for other/local environments
+	Region   string // e.g., "us-central1"
+}
+
+// detectRuntimeEnvironment detects if Toolbox is running on Cloud Run or GKE and resolves its region.
+var detectRuntimeEnvironment = defaultDetectRuntimeEnvironment
+
+func defaultDetectRuntimeEnvironment(ctx context.Context) (RuntimeEnvironment, error) {
+	// 1. Cloud Run (Service or Job)
+	if os.Getenv("K_SERVICE") != "" || os.Getenv("CLOUD_RUN_JOB") != "" {
+		rawRegion, err := metadata.GetWithContext(ctx, "instance/region")
+		if err != nil {
+			return RuntimeEnvironment{}, fmt.Errorf("running on Cloud Run but unable to determine runtime region from metadata server: %w", err)
+		}
+		region := regionFromLocation(rawRegion)
+		if region == "" {
+			return RuntimeEnvironment{}, fmt.Errorf("running on Cloud Run but metadata server returned unrecognized region %q", rawRegion)
+		}
+		return RuntimeEnvironment{Platform: "Cloud Run", Region: region}, nil
+	}
+
+	// 2. Google Kubernetes Engine (GKE)
+	if os.Getenv("KUBERNETES_SERVICE_HOST") != "" && metadata.OnGCE() {
+		if clusterLoc, err := metadata.InstanceAttributeValueWithContext(ctx, "cluster-location"); err == nil {
+			if region := regionFromLocation(clusterLoc); region != "" {
+				return RuntimeEnvironment{Platform: "GKE", Region: region}, nil
+			}
+		}
+		if zone, err := metadata.ZoneWithContext(ctx); err == nil {
+			if region := regionFromLocation(zone); region != "" {
+				return RuntimeEnvironment{Platform: "GKE", Region: region}, nil
+			}
+		}
+		if rawRegion, err := metadata.GetWithContext(ctx, "instance/region"); err == nil {
+			if region := regionFromLocation(rawRegion); region != "" {
+				return RuntimeEnvironment{Platform: "GKE", Region: region}, nil
+			}
+		}
+		return RuntimeEnvironment{}, fmt.Errorf("running on GKE but unable to determine cluster region from metadata server")
+	}
+
+	return RuntimeEnvironment{}, nil
+}
+
+// regionFromLocation normalizes a metadata location string (such as
+// "projects/123/regions/us-central1", "us-central1", or zone "us-central1-a")
+// into a GCP region name (e.g., "us-central1").
+func regionFromLocation(loc string) string {
+	loc = strings.TrimSpace(loc)
+	if loc == "" {
+		return ""
+	}
+	if idx := strings.LastIndex(loc, "/"); idx != -1 {
+		loc = strings.TrimSpace(loc[idx+1:])
+	}
+	parts := strings.Split(loc, "-")
+	if len(parts) >= 3 && parts[0] != "" && parts[1] != "" {
+		return strings.Join(parts[:2], "-")
+	}
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return loc
+	}
+	return ""
+}
+
+// validateRegionalSecretsForRuntime enforces that when running on Cloud Run or GKE,
+// global secrets are rejected and regional secrets must match the runtime region
+// (no cross-region hopping).
+func validateRegionalSecretsForRuntime(mappings []SecretMapping, runtimeEnv RuntimeEnvironment) error {
+	if runtimeEnv.Platform == "" {
+		return nil
+	}
+	for _, m := range mappings {
+		if m.Location == "" {
+			return fmt.Errorf(
+				"global secret %q for environment variable %q is not allowed when running on %s (region %q): only regional secrets in the same location ('projects/<project>/locations/%s/secrets/<secret>/versions/<version>') are allowed",
+				m.SecretRef,
+				m.EnvVar,
+				runtimeEnv.Platform,
+				runtimeEnv.Region,
+				runtimeEnv.Region,
+			)
+		}
+		if m.Location != runtimeEnv.Region {
+			return fmt.Errorf(
+				"cross-region secret %q (location %q) for environment variable %q is not allowed when running on %s in region %q: secret location must match runtime region %q",
+				m.SecretRef,
+				m.Location,
+				m.EnvVar,
+				runtimeEnv.Platform,
+				runtimeEnv.Region,
+				runtimeEnv.Region,
+			)
+		}
+	}
+	return nil
+}
 
 // SecretMapping represents a parsed --set-secrets entry (ENV_VAR=SECRET_REF).
 type SecretMapping struct {
@@ -214,6 +320,14 @@ func resolveDefaultProject(ctx context.Context, explicitProject string) (string,
 func FetchSecretMappings(ctx context.Context, mappings []SecretMapping, fallbackProject string) (map[string]string, error) {
 	if len(mappings) == 0 {
 		return nil, nil
+	}
+
+	runtimeEnv, err := detectRuntimeEnvironment(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := validateRegionalSecretsForRuntime(mappings, runtimeEnv); err != nil {
+		return nil, err
 	}
 
 	var defaultProject string

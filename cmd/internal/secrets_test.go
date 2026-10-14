@@ -226,10 +226,15 @@ func TestParseSecretMappings(t *testing.T) {
 func TestLoadSecretsIntoEnvAndConfigPrecedence(t *testing.T) {
 	origNewClient := newSecretManagerClient
 	origFindCreds := findDefaultCredentials
+	origDetectEnv := detectRuntimeEnvironment
 	t.Cleanup(func() {
 		newSecretManagerClient = origNewClient
 		findDefaultCredentials = origFindCreds
+		detectRuntimeEnvironment = origDetectEnv
 	})
+	detectRuntimeEnvironment = func(context.Context) (RuntimeEnvironment, error) {
+		return RuntimeEnvironment{}, nil
+	}
 
 	clientsByLocation := make(map[string]*fakeSecretManagerClient)
 	secretsData := map[string]*secretmanagerpb.SecretPayload{
@@ -304,10 +309,15 @@ baseUrl: https://example.com/${PG_PASSWORD}/${API_KEY}/${REG_SECRET}
 func TestLoadSecretsIntoEnv_Errors(t *testing.T) {
 	origNewClient := newSecretManagerClient
 	origFindCreds := findDefaultCredentials
+	origDetectEnv := detectRuntimeEnvironment
 	t.Cleanup(func() {
 		newSecretManagerClient = origNewClient
 		findDefaultCredentials = origFindCreds
+		detectRuntimeEnvironment = origDetectEnv
 	})
+	detectRuntimeEnvironment = func(context.Context) (RuntimeEnvironment, error) {
+		return RuntimeEnvironment{}, nil
+	}
 
 	t.Run("missing default project for short reference fails fast", func(t *testing.T) {
 		t.Setenv("GOOGLE_CLOUD_PROJECT", "")
@@ -376,11 +386,112 @@ func TestLoadSecretsIntoEnv_Errors(t *testing.T) {
 	})
 }
 
-func TestPollAliasSecrets(t *testing.T) {
+func TestCloudRunAndGKERegionalSecretEnforcement(t *testing.T) {
 	origNewClient := newSecretManagerClient
+	origDetectEnv := detectRuntimeEnvironment
 	t.Cleanup(func() {
 		newSecretManagerClient = origNewClient
+		detectRuntimeEnvironment = origDetectEnv
 	})
+
+	t.Setenv("GOOGLE_CLOUD_PROJECT", "test-proj")
+
+	newSecretManagerClient = func(_ context.Context, location string, _ ...option.ClientOption) (SecretManagerClient, error) {
+		return &fakeSecretManagerClient{
+			location: location,
+			secrets: map[string]*secretmanagerpb.SecretPayload{
+				"projects/test-proj/locations/us-central1/secrets/reg-secret/versions/latest": makePayload("same-region-secret-val"),
+			},
+		}, nil
+	}
+
+	for _, platform := range []string{"Cloud Run", "GKE"} {
+		t.Run(platform+" rejects short global secret", func(t *testing.T) {
+			detectRuntimeEnvironment = func(context.Context) (RuntimeEnvironment, error) {
+				return RuntimeEnvironment{Platform: platform, Region: "us-central1"}, nil
+			}
+			opts := &ToolboxOptions{
+				Secrets: []string{"DB_PASSWORD=my-global-secret:latest"},
+			}
+			err := opts.LoadSecretsIntoEnv(context.Background())
+			if err == nil || !strings.Contains(err.Error(), "global secret") || !strings.Contains(err.Error(), platform) {
+				t.Fatalf("expected global secret rejection on %s, got: %v", platform, err)
+			}
+		})
+
+		t.Run(platform+" rejects full global secret", func(t *testing.T) {
+			detectRuntimeEnvironment = func(context.Context) (RuntimeEnvironment, error) {
+				return RuntimeEnvironment{Platform: platform, Region: "us-central1"}, nil
+			}
+			opts := &ToolboxOptions{
+				Secrets: []string{"DB_PASSWORD=projects/test-proj/secrets/my-global-secret/versions/1"},
+			}
+			err := opts.LoadSecretsIntoEnv(context.Background())
+			if err == nil || !strings.Contains(err.Error(), "global secret") || !strings.Contains(err.Error(), platform) {
+				t.Fatalf("expected global secret rejection on %s, got: %v", platform, err)
+			}
+		})
+
+		t.Run(platform+" rejects cross-region secret", func(t *testing.T) {
+			detectRuntimeEnvironment = func(context.Context) (RuntimeEnvironment, error) {
+				return RuntimeEnvironment{Platform: platform, Region: "us-central1"}, nil
+			}
+			opts := &ToolboxOptions{
+				Secrets: []string{"DB_PASSWORD=projects/test-proj/locations/europe-west1/secrets/reg-secret/versions/latest"},
+			}
+			err := opts.LoadSecretsIntoEnv(context.Background())
+			if err == nil || !strings.Contains(err.Error(), "cross-region secret") || !strings.Contains(err.Error(), "europe-west1") {
+				t.Fatalf("expected cross-region secret rejection on %s, got: %v", platform, err)
+			}
+		})
+
+		t.Run(platform+" allows regional secret in the same location", func(t *testing.T) {
+			detectRuntimeEnvironment = func(context.Context) (RuntimeEnvironment, error) {
+				return RuntimeEnvironment{Platform: platform, Region: "us-central1"}, nil
+			}
+			opts := &ToolboxOptions{
+				Secrets: []string{"SAME_REGION_VAR=projects/test-proj/locations/us-central1/secrets/reg-secret/versions/latest"},
+			}
+			if err := opts.LoadSecretsIntoEnv(context.Background()); err != nil {
+				t.Fatalf("expected same-region secret to succeed on %s, got error: %v", platform, err)
+			}
+			if got := os.Getenv("SAME_REGION_VAR"); got != "same-region-secret-val" {
+				t.Errorf("got %q, want %q", got, "same-region-secret-val")
+			}
+		})
+	}
+}
+
+func TestRegionFromLocation(t *testing.T) {
+	tcs := []struct {
+		in   string
+		want string
+	}{
+		{in: "projects/123456/regions/us-central1", want: "us-central1"},
+		{in: "/projects/123456/regions/europe-west1", want: "europe-west1"},
+		{in: "us-central1", want: "us-central1"},
+		{in: "us-central1-a", want: "us-central1"},
+		{in: "projects/123456/zones/asia-east1-b", want: "asia-east1"},
+		{in: "", want: ""},
+		{in: "invalid", want: ""},
+	}
+	for _, tc := range tcs {
+		if got := regionFromLocation(tc.in); got != tc.want {
+			t.Errorf("regionFromLocation(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
+func TestPollAliasSecrets(t *testing.T) {
+	origNewClient := newSecretManagerClient
+	origDetectEnv := detectRuntimeEnvironment
+	t.Cleanup(func() {
+		newSecretManagerClient = origNewClient
+		detectRuntimeEnvironment = origDetectEnv
+	})
+	detectRuntimeEnvironment = func(context.Context) (RuntimeEnvironment, error) {
+		return RuntimeEnvironment{}, nil
+	}
 
 	t.Setenv("GOOGLE_CLOUD_PROJECT", "poll-proj")
 
