@@ -1010,6 +1010,7 @@ window.addEventListener('message', (event) => {
                         displayMode: 'inline',
                         availableDisplayModes: Array.from(SUPPORTED_DISPLAY_MODES),
                         platform: 'web',
+                        locale: navigator.language,
                         deviceCapabilities: {
                             touch: false,
                             hover: true

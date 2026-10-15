@@ -142,10 +142,14 @@ function renderToolDetails(toolName, toolDisplayArea) {
     let toolAuthParams = {};
     let toolUIMeta = null;
     if (toolObject._meta) {
-        if (toolObject._meta["toolbox/authInvoke"]) {
+        if (toolObject._meta["com.google.cloud/authInvoke"]) {
+            toolAuthRequired = toolObject._meta["com.google.cloud/authInvoke"];
+        } else if (toolObject._meta["toolbox/authInvoke"]) {
             toolAuthRequired = toolObject._meta["toolbox/authInvoke"];
         }
-        if (toolObject._meta["toolbox/authParam"]) {
+        if (toolObject._meta["com.google.cloud/authParam"]) {
+            toolAuthParams = toolObject._meta["com.google.cloud/authParam"];
+        } else if (toolObject._meta["toolbox/authParam"]) {
             toolAuthParams = toolObject._meta["toolbox/authParam"];
         }
         if (toolObject._meta.ui && toolObject._meta.ui.resourceUri) {
