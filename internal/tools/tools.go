@@ -133,7 +133,6 @@ type Tool interface {
 	EmbedParams(context.Context, parameters.ParamValues, PrimitiveManagerI) (parameters.ParamValues, error)
 	Manifest(sources.Source) (Manifest, error)
 	StaticManifest() Manifest
-	Authorized([]string) bool
 	RequiresClientAuthorization(sources.Source) (bool, error)
 	ToConfig() ToolConfig
 	GetAuthTokenHeaderName(sources.Source) (string, error)
@@ -281,10 +280,6 @@ func (b BaseTool[T]) StaticManifest() Manifest {
 
 func (b BaseTool[T]) GetParameters(_ sources.Source) (parameters.Parameters, error) {
 	return b.StaticParameters, nil
-}
-
-func (b BaseTool[T]) Authorized(verifiedAuthServices []string) bool {
-	return IsAuthorized(b.Cfg.GetAuthRequired(), verifiedAuthServices)
 }
 
 func (b BaseTool[T]) RequiresClientAuthorization(_ sources.Source) (bool, error) {

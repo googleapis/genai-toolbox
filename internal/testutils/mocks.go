@@ -97,19 +97,28 @@ var _ tools.ToolConfig = MockToolConfig{}
 // MockTool is used to mock tools in tests
 type MockTool struct {
 	tools.BaseTool[MockToolConfig]
-	unauthorized               bool
 	requireClientAuthorization bool
 	ReturnParamsInInvoke       bool
 }
 
 var _ tools.Tool = MockTool{}
 
+// mockAuthRequired returns the authRequired list for a mock tool. Unauthorized
+// mock tools require an auth service that test requests never provide.
+func mockAuthRequired(unauthorized bool) []string {
+	if unauthorized {
+		return []string{"mock-auth-service"}
+	}
+	return nil
+}
+
 // NewMockToolWithUI creates a new mock tool with UI metadata for testing.
 func NewMockToolWithUI(name, desc, source string, params []parameters.Parameter, unauthorized, reqClientAutho bool, uiResource string) MockTool {
 	mockConfig := MockToolConfig{
 		ConfigBase: tools.ConfigBase{
-			Name:        name,
-			Description: desc,
+			Name:         name,
+			Description:  desc,
+			AuthRequired: mockAuthRequired(unauthorized),
 			UI: &tools.ToolUIMetadata{
 				Resource: uiResource,
 			},
@@ -121,7 +130,6 @@ func NewMockToolWithUI(name, desc, source string, params []parameters.Parameter,
 	ctx := context.Background()
 	t, _ := mockConfig.Initialize(ctx)
 	mt := t.(MockTool)
-	mt.unauthorized = unauthorized
 	mt.requireClientAuthorization = reqClientAutho
 	return mt
 }
@@ -130,8 +138,9 @@ func NewMockToolWithUI(name, desc, source string, params []parameters.Parameter,
 func NewMockTool(name, desc, source string, params []parameters.Parameter, unauthorized, reqClientAutho bool) MockTool {
 	mockConfig := MockToolConfig{
 		ConfigBase: tools.ConfigBase{
-			Name:        name,
-			Description: desc,
+			Name:         name,
+			Description:  desc,
+			AuthRequired: mockAuthRequired(unauthorized),
 		},
 		Source:     source,
 		Type:       "mock-tool",
@@ -140,7 +149,6 @@ func NewMockTool(name, desc, source string, params []parameters.Parameter, unaut
 	ctx := context.Background()
 	t, _ := mockConfig.Initialize(ctx)
 	mt := t.(MockTool)
-	mt.unauthorized = unauthorized
 	mt.requireClientAuthorization = reqClientAutho
 	return mt
 }
@@ -166,11 +174,6 @@ func (t MockTool) Invoke(ctx context.Context, s sources.Source, params parameter
 		}
 	}
 	return mock, nil
-}
-
-func (t MockTool) Authorized(verifiedAuthServices []string) bool {
-	// default to true
-	return !t.unauthorized
 }
 
 func (t MockTool) ValidateSource(src sources.Source) error {
