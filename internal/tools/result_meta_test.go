@@ -33,7 +33,7 @@ func TestSplitResultMeta(t *testing.T) {
 		{name: "nil", in: nil, wantRes: nil},
 		{name: "value wrapper", in: tools.ResultWithMeta{Result: "r", Meta: meta}, wantRes: "r", wantMeta: meta},
 		{name: "pointer wrapper", in: &tools.ResultWithMeta{Result: "r", Meta: meta}, wantRes: "r", wantMeta: meta},
-		{name: "nil pointer wrapper", in: (*tools.ResultWithMeta)(nil), wantRes: (*tools.ResultWithMeta)(nil)},
+		{name: "nil pointer wrapper", in: (*tools.ResultWithMeta)(nil), wantRes: nil},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {

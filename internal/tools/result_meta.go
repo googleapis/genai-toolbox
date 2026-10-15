@@ -34,6 +34,7 @@ func SplitResultMeta(res any) (any, map[string]any) {
 		if r != nil {
 			return r.Result, r.Meta
 		}
+		return nil, nil
 	}
 	return res, nil
 }
