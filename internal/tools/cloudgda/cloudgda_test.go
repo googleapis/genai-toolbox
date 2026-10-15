@@ -273,9 +273,13 @@ func TestInvoke(t *testing.T) {
 		t.Fatalf("tool invocation failed: %v", err)
 	}
 
-	gotResp, ok := result.(*geminidataanalyticspb.QueryDataResponse)
+	res, meta := tools.SplitResultMeta(result)
+	if meta != nil {
+		t.Errorf("expected nil meta, got %v", meta)
+	}
+	gotResp, ok := res.(*geminidataanalyticspb.QueryDataResponse)
 	if !ok {
-		t.Fatalf("expected result type *geminidataanalyticspb.QueryDataResponse, got %T", result)
+		t.Fatalf("expected result type *geminidataanalyticspb.QueryDataResponse, got %T", res)
 	}
 
 	if diff := cmp.Diff(expectedResp, gotResp, cmpopts.IgnoreUnexported(geminidataanalyticspb.QueryDataResponse{})); diff != "" {

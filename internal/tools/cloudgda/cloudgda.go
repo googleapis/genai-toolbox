@@ -225,9 +225,9 @@ const (
 	MetaKeyPipelineDebugInfo = "com.google.cloud.geminidataanalytics/pipelineDebugInfo"
 )
 
-func splitResponseMeta(resp *geminidataanalyticspb.QueryDataResponse) any {
+func splitResponseMeta(resp *geminidataanalyticspb.QueryDataResponse) tools.ResultWithMeta {
 	if resp == nil || (resp.GetTokenUsage() == nil && resp.GetPipelineDebugInfo() == nil) {
-		return resp
+		return tools.ResultWithMeta{Result: resp}
 	}
 	meta := make(map[string]any)
 	if u := resp.GetTokenUsage(); u != nil {
