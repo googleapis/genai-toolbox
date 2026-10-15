@@ -11,7 +11,7 @@ The [**MCP Apps**](https://github.com/modelcontextprotocol/ext-apps) extension (
 {{< notice note >}}
 **Protocol Version Differences**:
 - **Modern Protocol (`2026-07-28`)**: Supports the official MCP extensions capability negotiation. The server advertises `io.modelcontextprotocol/ui` under `capabilities.extensions` during `server/discover`, and dynamically enables `_meta.ui` on tools when the client also advertises `io.modelcontextprotocol/ui` in its request capabilities.
-- **Legacy Protocols (`2024-11-05`, `2025-03-26`, `2025-06-18`, and `2025-11-25`)**: The core schema for earlier protocol versions does not define an `extensions` block on `ServerCapabilities`. Instead, Toolbox exposes UI metadata directly on tools in `tools/list` via `_meta.ui` and serves UI HTML templates via `resources/read`, allowing clients that negotiate earlier protocol versions to discover and render interactive MCP Apps.
+- **Legacy Protocols (`2024-11-05`, `2025-03-26`, `2025-06-18`, and `2025-11-25`)**: Toolbox backports `io.modelcontextprotocol/ui` extension capability negotiation to `initialize` and `tools/list` across earlier protocol versions, and provides a `--disable-extension-check` startup flag for legacy clients that do not advertise extension capabilities.
 {{< /notice >}}
 
 ## Defining a UI Resource
@@ -178,7 +178,12 @@ Unlike standard tools, prompts, or resources that are scoped to specific [Groups
        }
        ```
     3. **Graceful Degradation**: When UI capabilities are advertised, Toolbox includes `_meta.ui` on tools in `tools/list`. If the client does not advertise UI support, Toolbox gracefully degrades by omitting `_meta.ui` from tool definitions, ensuring full backward compatibility with standard text-only clients.
-    4. **Resource Retrieval**: UI documents and security policies remain available via `resources/read` for clients that support rendering MCP Apps.
+    4. **Bypassing Capability Checks (`--disable-extension-check`)**: For clients on older protocol versions that render MCP Apps without advertising `io.modelcontextprotocol/ui` capabilities during `initialize` or `tools/list`, start Toolbox with `--disable-extension-check`:
+       ```bash
+       ./toolbox --config tools.yaml --disable-extension-check
+       ```
+       When enabled, Toolbox bypasses the client extension capability check in older protocol versions (`2024-11-05` through `2025-11-25`) and always includes `io.modelcontextprotocol/ui` in `InitializeResult.capabilities.extensions` and `_meta.ui` on tools in `tools/list`.
+    5. **Resource Retrieval**: UI documents and security policies remain available via `resources/read` for clients that support rendering MCP Apps.
 
 ## Reading UI Resources
 
