@@ -347,7 +347,8 @@ func TestFileTemplate(t *testing.T) {
 				if tc.name == "non-existent file returns error" && !errors.Is(err, fs.ErrNotExist) {
 					t.Errorf("expected errors.Is(err, fs.ErrNotExist) to be true, got: %v", err)
 				}
-				if strings.Contains(tc.requestPath, tempDir) && !strings.Contains(errBuf.String(), tempDir) {
+				logOut := strings.ReplaceAll(strings.ReplaceAll(errBuf.String(), `\\`, `\`), `\\`, `\`)
+				if strings.Contains(tc.requestPath, tempDir) && !strings.Contains(logOut, tempDir) {
 					t.Errorf("expected server log to contain full path under %q, got: %q", tempDir, errBuf.String())
 				}
 			} else {

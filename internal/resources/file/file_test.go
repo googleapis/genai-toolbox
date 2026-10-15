@@ -998,7 +998,8 @@ func TestFileResource_ReadErrorSanitization(t *testing.T) {
 		if strings.Contains(err.Error(), tmpDir) || strings.Contains(err.Error(), filePath) {
 			t.Errorf("client error leaked server path: %v", err)
 		}
-		if !strings.Contains(errBuf.String(), filePath) {
+		logOut := strings.ReplaceAll(strings.ReplaceAll(errBuf.String(), `\\`, `\`), `\\`, `\`)
+		if !strings.Contains(logOut, filePath) {
 			t.Errorf("expected server log to contain full path %q, got: %q", filePath, errBuf.String())
 		}
 	})
@@ -1053,10 +1054,10 @@ func TestFileResource_ReadErrorSanitization(t *testing.T) {
 			if strings.Contains(err.Error(), tmpDir) || strings.Contains(err.Error(), filePath) {
 				t.Errorf("client error leaked server path: %v", err)
 			}
-			if !strings.Contains(errBuf.String(), filePath) {
+			logOut := strings.ReplaceAll(strings.ReplaceAll(errBuf.String(), `\\`, `\`), `\\`, `\`)
+			if !strings.Contains(logOut, filePath) {
 				t.Errorf("expected server log to contain full path %q, got: %q", filePath, errBuf.String())
 			}
 		})
 	}
 }
-
