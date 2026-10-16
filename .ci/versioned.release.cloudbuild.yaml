@@ -483,6 +483,7 @@ substitutions:
   _UNSIGNED_BUCKET_NAME: mcp-toolbox-for-databases-unsigned
   _ASSETS_BUCKET: toolbox-build-assets
   _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_STAGING_AR_REPO_NAME}/toolbox
+  _VERSION: '${TAG_NAME#v}'
 
 artifacts:
   testResults:
@@ -493,4 +494,4 @@ artifacts:
   oci:
     - file: '/workspace/image.tar'
       registryPath: '${_DOCKER_URI}'
-      tags: ['${TAG_NAME/#v/}']
+      tags: ['${_VERSION}']
