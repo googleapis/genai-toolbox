@@ -36,15 +36,15 @@ fi
 
 STAGING_IMAGE_URI="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${STAGING_REPO}/${PACKAGE_NAME}"
 
-echo "Resolving image digest for ${STAGING_IMAGE_URI}:${VERSION}..."
+echo "Resolving image digest for ${STAGING_IMAGE_URI}:${VERSION#v}..."
 IMAGE_DIGEST=$(gcloud artifacts docker tags list "${STAGING_IMAGE_URI}" \
   --project="${PROJECT_ID}" \
-  --filter="tag ~ \"/tags/v${VERSION#v}\$\"" \
-  --format="value(version)" | head -n 1)
+  --filter="tag ~ \"/tags/${VERSION#v}\$\"" \
+  --format="value(version)")
 IMAGE_DIGEST="${IMAGE_DIGEST##*/}"
 
 if [[ -z "${IMAGE_DIGEST}" ]]; then
-  echo "ERROR: Could not resolve image digest for ${STAGING_IMAGE_URI}:${VERSION}" >&2
+  echo "ERROR: Could not resolve image digest for ${STAGING_IMAGE_URI}:${VERSION#v}" >&2
   exit 1
 fi
 
@@ -121,9 +121,6 @@ upsert_staging_tag() {
   fi
 }
 
-echo "Ensuring version tag ${VERSION#v} is present on ${STAGING_IMAGE_URI}@${IMAGE_DIGEST}..."
-upsert_staging_tag "${VERSION#v}"
-
 if [[ "${PUSH_LATEST:-false}" == "true" ]]; then
   echo "Tagging ${STAGING_IMAGE_URI}@${IMAGE_DIGEST} as latest..."
   upsert_staging_tag "latest"
@@ -132,8 +129,8 @@ fi
 PROD_IMAGE_URI="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${PROD_REPO}/${PACKAGE_NAME}"
 EXISTING_PROD_DIGEST=$(gcloud artifacts docker tags list "${PROD_IMAGE_URI}" \
   --project="${PROJECT_ID}" \
-  --filter="tag ~ \"/tags/v?${VERSION#v}\$\"" \
-  --format="value(version)" | head -n 1)
+  --filter="tag ~ \"/tags/${VERSION#v}\$\"" \
+  --format="value(version)")
 EXISTING_PROD_DIGEST="${EXISTING_PROD_DIGEST##*/}"
 
 if [[ -n "${EXISTING_PROD_DIGEST}" && "${EXISTING_PROD_DIGEST}" != "${IMAGE_DIGEST}" ]]; then
