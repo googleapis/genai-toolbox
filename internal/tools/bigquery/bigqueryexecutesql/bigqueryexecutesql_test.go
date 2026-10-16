@@ -372,3 +372,68 @@ func TestGetAnnotations(t *testing.T) {
 		})
 	}
 }
+
+func TestGetParameters_AllowedDatasetsDeterministicOrder(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	cfg := bigqueryexecutesql.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "execute_sql_tool",
+			Description: "Execute SQL",
+		},
+		Type:   "bigquery-execute-sql",
+		Source: "my-bq-source",
+	}
+	tool, err := cfg.Initialize(ctx)
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	src := &bigqueryds.Source{
+		Config: bigqueryds.Config{
+			WriteMode: bigqueryds.WriteModeBlocked,
+		},
+		AllowedDatasets: map[string]struct{}{
+			"my-project.gamma": {},
+			"my-project.alpha": {},
+			"my-project.beta":  {},
+		},
+	}
+
+	wantSuffix := "The query must only access datasets from the following list: `my-project.alpha`, `my-project.beta`, `my-project.gamma`."
+
+	for i := 0; i < 20; i++ {
+		params, err := tool.GetParameters(src)
+		if err != nil {
+			t.Fatalf("iteration %d: GetParameters() unexpected error: %v", i, err)
+		}
+		var sqlParamDesc string
+		for _, p := range params {
+			if p.GetName() == "sql" {
+				sqlParamDesc = p.GetDesc()
+				break
+			}
+		}
+		if !strings.HasSuffix(sqlParamDesc, wantSuffix) {
+			t.Fatalf("iteration %d: GetParameters() sql description = %q, want suffix %q", i, sqlParamDesc, wantSuffix)
+		}
+
+		manifest, err := tool.Manifest(src)
+		if err != nil {
+			t.Fatalf("iteration %d: Manifest() unexpected error: %v", i, err)
+		}
+		var sqlManifestDesc string
+		for _, p := range manifest.Parameters {
+			if p.Name == "sql" {
+				sqlManifestDesc = p.Description
+				break
+			}
+		}
+		if !strings.HasSuffix(sqlManifestDesc, wantSuffix) {
+			t.Fatalf("iteration %d: Manifest() sql description = %q, want suffix %q", i, sqlManifestDesc, wantSuffix)
+		}
+	}
+}
