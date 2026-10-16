@@ -350,6 +350,7 @@ function attachToolInfoResizeHandles(toolInfoContainer, descBox, gridContainer) 
 
     const setupDrag = (handle, resizeWidth, resizeHeight, cursor) => {
         handle.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
             e.preventDefault();
             e.stopPropagation();
 
