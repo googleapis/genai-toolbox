@@ -177,3 +177,115 @@ func verifyLinkedResources(t *testing.T, ts *httptest.Server, pageURL *url.URL, 
 		t.Logf("No stylesheet or script resources found to check on page %s", pageURL.String())
 	}
 }
+
+// TestWebStaticAssetsContent verifies that the UI static assets contain the
+// expected collapsible navbar, scrollable pre-wrap description, and resizable
+// column rules and handlers.
+func TestWebStaticAssetsContent(t *testing.T) {
+	mainRouter := chi.NewRouter()
+	webR, err := webRouter()
+	if err != nil {
+		t.Fatalf("Failed to create webRouter: %v", err)
+	}
+	mainRouter.Mount("/ui", webR)
+
+	ts := httptest.NewServer(mainRouter)
+	defer ts.Close()
+
+	testCases := []struct {
+		name            string
+		path            string
+		wantSubstrings  []string
+		forbidSubstring []string
+	}{
+		{
+			name: "style.css contains collapsible nav, 50% tool-info column, pre-wrap scrollable description, and resize handles",
+			path: "/ui/css/style.css",
+			wantSubstrings: []string{
+				"&.collapsed",
+				".nav-toggle-btn",
+				"width: calc(50% - 10px);",
+				".tool-description",
+				"white-space: pre-wrap;",
+				"overflow-y: auto;",
+				".col-resize-right",
+				".col-resize-bottom",
+				".col-resize-corner",
+				"cursor: ew-resize;",
+				"cursor: ns-resize;",
+				"cursor: nwse-resize;",
+			},
+		},
+		{
+			name: "navbar.js contains collapsible sidebar toggle and safe DOM rendering",
+			path: "/ui/js/navbar.js",
+			wantSubstrings: []string{
+				"toolbox-left-nav-collapsed",
+				"nav-toggle-btn",
+				"classList.toggle('collapsed'",
+				"aria-expanded",
+				"replaceChildren",
+			},
+			forbidSubstring: []string{
+				"innerHTML",
+			},
+		},
+		{
+			name: "toolDisplay.js contains right, bottom, and corner resize handlers and safe textContent rendering",
+			path: "/ui/js/toolDisplay.js",
+			wantSubstrings: []string{
+				"attachToolInfoResizeHandles",
+				"col-resize-right",
+				"col-resize-bottom",
+				"col-resize-corner",
+				"ew-resize",
+				"ns-resize",
+				"nwse-resize",
+				"nameParagraph.textContent = tool.name;",
+				"descParagraph.textContent = tool.description;",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := ts.Client().Get(ts.URL + tc.path)
+			if err != nil {
+				t.Fatalf("Failed to GET %s: %v", tc.path, err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("Expected status 200 for %s, got %d", tc.path, resp.StatusCode)
+			}
+
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("Failed to read body for %s: %v", tc.path, err)
+			}
+			body := string(bodyBytes)
+
+			for _, want := range tc.wantSubstrings {
+				if !strings.Contains(body, want) {
+					t.Errorf("%s missing expected substring %q", tc.path, want)
+				}
+			}
+			for _, forbid := range tc.forbidSubstring {
+				if strings.Contains(body, forbid) {
+					t.Errorf("%s contains forbidden substring %q", tc.path, forbid)
+				}
+			}
+		})
+	}
+}
+
+func TestServeHTML_NotFound(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/ui/nonexistent", nil)
+	rec := httptest.NewRecorder()
+
+	serveHTML(rec, req, "static/does-not-exist.html")
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("Expected status %d, got %d", http.StatusNotFound, rec.Code)
+	}
+}
