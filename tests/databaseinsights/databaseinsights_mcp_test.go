@@ -34,6 +34,7 @@ func startDatabaseInsightsMCPServer(t *testing.T, ctx context.Context) {
 		t.Fatalf("command initialization returned an error: %v", err)
 	}
 	t.Cleanup(cleanup)
+	t.Cleanup(cmd.Close)
 
 	waitCtx, cancelWait := context.WithTimeout(ctx, 20*time.Second)
 	defer cancelWait()
