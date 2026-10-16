@@ -493,4 +493,4 @@ artifacts:
   oci:
     - file: '/workspace/image.tar'
       registryPath: '${_DOCKER_URI}'
-      tags: ['${TAG_NAME}']
+      tags: ['${TAG_NAME/#v/}']
