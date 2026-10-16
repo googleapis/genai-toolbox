@@ -160,6 +160,7 @@ steps:
       bash .ci/trigger_exit_gate.sh pypi
 
 options:
+  requestedVerifyOption: VERIFIED
   automapSubstitutions: true
   dynamicSubstitutions: true
   logging: CLOUD_LOGGING_ONLY
