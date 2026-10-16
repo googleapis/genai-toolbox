@@ -341,6 +341,19 @@ func runDatalineageSearchTests(t *testing.T, ctx context.Context, tr datalineage
 	runDatalineageSearchValidationErrorTest(t, ctx, tr, targetFQN)
 }
 
+// sleepCtx waits for d, returning early with the context's error if ctx is
+// done first.
+func sleepCtx(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+
 func pollSearchLineage(t *testing.T, ctx context.Context, tr datalineageTransport, toolName string, reqBody map[string]any, wantSourceFQN, wantTargetFQN string, timeout time.Duration) ([]map[string]any, error) {
 	startTime := time.Now()
 	delay := 2 * time.Second
@@ -380,7 +393,9 @@ func pollSearchLineage(t *testing.T, ctx context.Context, tr datalineageTranspor
 			}
 		}
 
-		time.Sleep(delay)
+		if err := sleepCtx(ctx, delay); err != nil {
+			return nil, err
+		}
 		// Exponential backoff
 		delay = delay * 2
 		if delay > maxDelay {
@@ -488,20 +503,29 @@ func runDatalineageSearchWithProcessDetailsTest(t *testing.T, ctx context.Contex
 		found := false
 
 		for time.Since(startTime) < timeout {
+			if err := ctx.Err(); err != nil {
+				t.Fatalf("context done while waiting for process details: %v", err)
+			}
 			res, err := tr.invoke(t, ctx, "my-datalineage-search-tool", reqBody)
 			if err != nil {
 				t.Logf("  request error: %v", err)
-				time.Sleep(delay)
+				if err := sleepCtx(ctx, delay); err != nil {
+					t.Fatalf("context done while waiting for process details: %v", err)
+				}
 				continue
 			}
 			if res.status != http.StatusOK || res.toolErr {
 				t.Logf("  Server returned HTTP %d (tool error: %v): %s", res.status, res.toolErr, res.result)
-				time.Sleep(delay)
+				if err := sleepCtx(ctx, delay); err != nil {
+					t.Fatalf("context done while waiting for process details: %v", err)
+				}
 				continue
 			}
 			if res.result == "" || res.result == "null" {
 				t.Log("  Empty result in process details query, retrying...")
-				time.Sleep(delay)
+				if err := sleepCtx(ctx, delay); err != nil {
+					t.Fatalf("context done while waiting for process details: %v", err)
+				}
 				continue
 			}
 
@@ -511,7 +535,9 @@ func runDatalineageSearchWithProcessDetailsTest(t *testing.T, ctx context.Contex
 			}
 			if err := json.Unmarshal([]byte(res.result), &searchResp); err != nil {
 				t.Logf("  failed to unmarshal search response %q: %v", res.result, err)
-				time.Sleep(delay)
+				if err := sleepCtx(ctx, delay); err != nil {
+					t.Fatalf("context done while waiting for process details: %v", err)
+				}
 				continue
 			}
 			links := searchResp.Links
@@ -549,7 +575,9 @@ func runDatalineageSearchWithProcessDetailsTest(t *testing.T, ctx context.Contex
 				break
 			}
 			t.Log("  Process details display_name not populated yet, retrying...")
-			time.Sleep(delay)
+			if err := sleepCtx(ctx, delay); err != nil {
+				t.Fatalf("context done while waiting for process details: %v", err)
+			}
 		}
 
 		if !found {
