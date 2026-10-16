@@ -270,13 +270,11 @@ Cloud project, `database-toolbox`.
    should automatically run when a new tag is pushed. You can view [triggered
    builds here to check the
    status](https://pantheon.corp.google.com/cloud-build/builds;region=us-central1?query=trigger_id%3D%2227bd0d21-264a-4446-b2d7-0df4e9915fb3%22&e=13802955&inv=1&invt=AbhU8A&mods=logs_tg_staging&project=database-toolbox)
-1. Once Stage 1 completes, run `sign_and_publish_binaries.sh vX.Y.Z` to sign the
-   binaries across all platforms, run the Stage 2 promotion
-   [trigger](https://pantheon.corp.google.com/cloud-build/triggers;region=us-central1/edit/d265a91c-3da9-4588-b352-7c35c92f19b3?project=database-toolbox)
-   ([promote.cloudbuild.yaml](.ci/promote.cloudbuild.yaml)) to verify the
-   staging image VSA, promote the container image to the production Artifact
-   Registry, and publish to npm and PyPI via the OSS Exit Gate, and trigger the
-   [Publish to MCP Registry](.github/workflows/publish-mcp.yml) workflow.
+1. Once Stage 1 completes and the signed binaries are available in the
+   `database-toolbox` GCS bucket, run the Stage 2 promotion trigger
+   ([promote.cloudbuild.yaml](.ci/promote.cloudbuild.yaml)) for the release tag
+   `vX.Y.Z` to verify the staging image VSA, promote the container image to the
+   production Artifact Registry, and publish to npm and PyPI via the OSS Exit Gate.
 1. Update the Github release notes to include the following table:
     1. Run the following command (from the root directory):
 
