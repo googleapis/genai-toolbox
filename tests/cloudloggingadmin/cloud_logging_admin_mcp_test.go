@@ -36,7 +36,7 @@ func TestLogAdminMCPListTools(t *testing.T) {
 	})
 }
 
-func TestLogAdminMCPToolEndpoints(t *testing.T) {
+func TestLogAdminMCPCallTool(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Minute)
 	defer cancel()
 
