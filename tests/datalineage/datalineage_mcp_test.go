@@ -36,7 +36,7 @@ func TestDatalineageMCPListTools(t *testing.T) {
 	})
 }
 
-func TestDatalineageMCPToolEndpoints(t *testing.T) {
+func TestDatalineageMCPCallTool(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
