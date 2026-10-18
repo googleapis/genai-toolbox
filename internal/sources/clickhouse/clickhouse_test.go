@@ -340,6 +340,9 @@ func TestUint8ArraysToNumbers(t *testing.T) {
 		{desc: "time is unchanged", in: time.Date(2024, 1, 2, 3, 4, 5, 0, time.UTC), want: `"2024-01-02T03:04:05Z"`},
 		{desc: "string is unchanged", in: "abc", want: `"abc"`},
 		{desc: "nil is unchanged", in: nil, want: `null`},
+		{desc: "nil array of uint8 is unchanged", in: []uint8(nil), want: `null`},
+		{desc: "nil slice is unchanged", in: [][]uint8(nil), want: `null`},
+		{desc: "nil map is unchanged", in: map[string][]uint8(nil), want: `null`},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

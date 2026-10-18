@@ -187,12 +187,16 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params parameters
 
 // uint8ArraysToNumbers returns v with every []uint8 in it, at any depth of
 // slices and maps, replaced by a list of numbers. Values that encode
-// themselves to JSON (such as UUID, IPv6 or time.Time) are left unchanged.
+// themselves to JSON (such as UUID, IPv6 or time.Time) are left unchanged, and
+// a nil slice or map stays nil so that it still encodes to null.
 func uint8ArraysToNumbers(v any) any {
 	switch val := v.(type) {
 	case nil, json.Marshaler, encoding.TextMarshaler:
 		return v
 	case []uint8:
+		if val == nil {
+			return v
+		}
 		nums := make([]int, len(val))
 		for i, n := range val {
 			nums[i] = int(n)
@@ -203,19 +207,25 @@ func uint8ArraysToNumbers(v any) any {
 	rv := reflect.ValueOf(v)
 	switch rv.Kind() {
 	case reflect.Slice, reflect.Array:
+		if rv.Kind() == reflect.Slice && rv.IsNil() {
+			return v
+		}
 		elems := make([]any, rv.Len())
 		for i := range elems {
 			elems[i] = uint8ArraysToNumbers(rv.Index(i).Interface())
 		}
 		return elems
 	case reflect.Map:
+		if rv.IsNil() {
+			return v
+		}
 		anyType := reflect.TypeFor[any]()
 		m := reflect.MakeMapWithSize(reflect.MapOf(rv.Type().Key(), anyType), rv.Len())
 		iter := rv.MapRange()
 		for iter.Next() {
-			elem := reflect.New(anyType).Elem()
+			elem := reflect.Zero(anyType)
 			if converted := uint8ArraysToNumbers(iter.Value().Interface()); converted != nil {
-				elem.Set(reflect.ValueOf(converted))
+				elem = reflect.ValueOf(converted)
 			}
 			m.SetMapIndex(iter.Key(), elem)
 		}
