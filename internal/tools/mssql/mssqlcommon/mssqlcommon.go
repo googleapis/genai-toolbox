@@ -28,13 +28,16 @@ import (
 // decimal text (as the MySQL source returns DECIMAL) and to the canonical GUID
 // string. All other values, including BINARY, VARBINARY and IMAGE, are returned
 // unchanged.
+//
+// go-mssqldb reports DECIMAL for NUMERIC columns as well, so NUMERIC is listed
+// only so that the set of type names is explicit.
 func ConvertToType(databaseTypeName string, v any) any {
 	b, ok := v.([]byte)
 	if !ok {
 		return v
 	}
 	switch databaseTypeName {
-	case "DECIMAL", "MONEY", "SMALLMONEY":
+	case "DECIMAL", "NUMERIC", "MONEY", "SMALLMONEY":
 		return string(b)
 	case "UNIQUEIDENTIFIER":
 		var id mssql.UniqueIdentifier

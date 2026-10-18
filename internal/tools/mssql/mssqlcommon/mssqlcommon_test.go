@@ -45,6 +45,12 @@ func TestConvertToType(t *testing.T) {
 			want:             `"-0.0000000001"`,
 		},
 		{
+			desc:             "numeric type name",
+			databaseTypeName: "NUMERIC",
+			in:               []byte("1.5"),
+			want:             `"1.5"`,
+		},
+		{
 			desc:             "money",
 			databaseTypeName: "MONEY",
 			in:               []byte("4400592.8004"),
