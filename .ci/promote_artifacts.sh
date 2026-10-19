@@ -121,11 +121,6 @@ upsert_staging_tag() {
   fi
 }
 
-if [[ "${PUSH_LATEST:-false}" == "true" ]]; then
-  echo "Tagging ${STAGING_IMAGE_URI}@${IMAGE_DIGEST} as latest..."
-  upsert_staging_tag "latest"
-fi
-
 PROD_IMAGE_URI="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${PROD_REPO}/${PACKAGE_NAME}"
 EXISTING_PROD_DIGEST=$(gcloud artifacts docker tags list "${PROD_IMAGE_URI}" \
   --project="${PROJECT_ID}" \
@@ -136,6 +131,11 @@ EXISTING_PROD_DIGEST="${EXISTING_PROD_DIGEST##*/}"
 if [[ -n "${EXISTING_PROD_DIGEST}" && "${EXISTING_PROD_DIGEST}" != "${IMAGE_DIGEST}" ]]; then
   echo "ERROR: Refusing to overwrite existing prod tag for ${VERSION} (existing digest ${EXISTING_PROD_DIGEST} != staged digest ${IMAGE_DIGEST})" >&2
   exit 1
+fi
+
+if [[ "${PUSH_LATEST:-false}" == "true" ]]; then
+  echo "Tagging ${STAGING_IMAGE_URI}@${IMAGE_DIGEST} as latest..."
+  upsert_staging_tag "latest"
 fi
 
 SKIP_PROMOTE=false
