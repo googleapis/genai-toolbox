@@ -82,3 +82,26 @@ func TestLookerRejectsInvalidMCPResults(t *testing.T) {
 		})
 	}
 }
+
+func TestLookerMCPStringResults(t *testing.T) {
+	for _, tc := range []struct{ name, body, want string }{
+		{"created", `{"result":{"content":[{"type":"text","text":"\"created\""}]}}`, `"created"`},
+		{"empty string", `{"result":{"content":[{"type":"text","text":"\"\""}]}}`, `""`},
+		{"conversation", `{"result":{"content":[{"type":"text","text":"\"Revenue grew by 10%.\""}]}}`, `"Revenue grew by 10%."`},
+		{"multiple strings", `{"result":{"content":[{"type":"text","text":"\"created\""},{"type":"text","text":"\"\""}]}}`, `["created",""]`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var response tests.MCPCallToolResponse
+			if err := json.Unmarshal([]byte(tc.body), &response); err != nil {
+				t.Fatal(err)
+			}
+			got, err := lookerMCPResult(&response)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(got) != tc.want {
+				t.Fatalf("result = %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
