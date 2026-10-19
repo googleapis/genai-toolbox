@@ -61,7 +61,7 @@ func init() {
 }
 func TestDataplexMCPLocal(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
-	defer cancel()
+	t.Cleanup(cancel)
 	config := getDataplexToolsConfig(map[string]any{"type": "dataplex-mcp-test"})
 	// A local audience is sufficient for missing/invalid-token rejection. No valid token is fabricated.
 	config["authServices"].(map[string]any)["my-google-auth"].(map[string]any)["clientId"] = "dataplex-local-test"
@@ -69,8 +69,8 @@ func TestDataplexMCPLocal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer cleanup()
-	defer func() {
+	t.Cleanup(cleanup)
+	t.Cleanup(func() {
 		cmd.Stop()
 		shutdown, stop := context.WithTimeout(context.Background(), 10*time.Second)
 		defer stop()
@@ -78,7 +78,7 @@ func TestDataplexMCPLocal(t *testing.T) {
 			t.Error(err)
 		}
 		cmd.Close()
-	}()
+	})
 	if out, err := testutils.WaitForString(ctx, regexp.MustCompile(`Server ready to serve`), cmd.Out); err != nil {
 		t.Fatalf("start: %v\n%s", err, out)
 	}

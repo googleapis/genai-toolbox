@@ -415,8 +415,8 @@ func initDataplexDataProductConnection(ctx context.Context) (*dataplex.DataProdu
 
 func runDataplexCallTools(t *testing.T, options ...dataplexTestOption) {
 	sourceConfig := getDataplexVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-	defer cancel()
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Minute)
+	t.Cleanup(cancel)
 
 	var args []string
 	if !dataplexMCPEnabled(options) {
@@ -518,7 +518,7 @@ func runDataplexCallTools(t *testing.T, options ...dataplexTestOption) {
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
-	defer cleanup()
+	t.Cleanup(cleanup)
 	t.Cleanup(func() {
 		cmd.Stop()
 		shutdown, stop := context.WithTimeout(context.Background(), 10*time.Second)

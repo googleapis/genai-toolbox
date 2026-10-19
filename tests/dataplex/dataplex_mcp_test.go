@@ -45,12 +45,12 @@ func TestDataplexMCPCallTools(t *testing.T) { runDataplexCallTools(t, withDatapl
 
 func TestDataplexMCPListTools(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Minute)
-	defer cancel()
+	t.Cleanup(cancel)
 	cmd, cleanup, err := tests.StartCmd(ctx, getDataplexToolsConfig(getDataplexVars(t)))
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer cleanup()
+	t.Cleanup(cleanup)
 	t.Cleanup(func() {
 		cmd.Stop()
 		shutdown, stop := context.WithTimeout(context.Background(), 10*time.Second)
@@ -99,6 +99,9 @@ func invokeDataplexTool(t *testing.T, api string, body io.Reader, headers map[st
 			}
 		}
 		return result.Result
+	}
+	if body == nil {
+		t.Fatal("MCP request body must contain a JSON object")
 	}
 	var args map[string]any
 	if err := json.NewDecoder(body).Decode(&args); err != nil {
