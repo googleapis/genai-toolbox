@@ -81,7 +81,6 @@ func initMariaDB(host, port, user, pass, dbname string) (*sql.DB, error) {
 }
 
 type mariaDBTestFixture struct {
-	ctx                                  context.Context
 	pool                                 *sql.DB
 	paramTable, authTable, templateTable string
 }
@@ -149,7 +148,7 @@ func setupMariaDBTest(t *testing.T) mariaDBTestFixture {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	return mariaDBTestFixture{ctx, pool, tableNameParam, tableNameAuth, tableNameTemplateParam}
+	return mariaDBTestFixture{pool, tableNameParam, tableNameAuth, tableNameTemplateParam}
 }
 
 // RunMariDBListTablesTest run tests against the mysql-list-tables tool

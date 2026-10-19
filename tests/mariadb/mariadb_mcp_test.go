@@ -47,10 +47,10 @@ func TestMariaDBMCPCallTools(t *testing.T) {
 		RunMariDBListTablesTest(t, MariaDBDatabase, fixture.paramTable, fixture.authTable, tests.WithMCPExec())
 	})
 	t.Run("list_active_queries", func(t *testing.T) {
-		tests.RunMySQLListActiveQueriesTest(t, fixture.ctx, fixture.pool, tests.WithMCPExec())
+		tests.RunMySQLListActiveQueriesTest(t, t.Context(), fixture.pool, tests.WithMCPExec())
 	})
 	t.Run("list_tables_missing_unique_indexes", func(t *testing.T) {
-		tests.RunMySQLListTablesMissingUniqueIndexes(t, fixture.ctx, fixture.pool, MariaDBDatabase, tests.WithMCPExec())
+		tests.RunMySQLListTablesMissingUniqueIndexes(t, t.Context(), fixture.pool, MariaDBDatabase, tests.WithMCPExec())
 	})
 	t.Run("list_table_fragmentation", func(t *testing.T) {
 		tests.RunMySQLListTableFragmentationTest(t, MariaDBDatabase, fixture.paramTable, fixture.authTable, tests.WithMCPExec())
