@@ -40,6 +40,5 @@ The following changes will **not** trigger a major version bump:
 
 Official container images are published to `us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox`:
 
-* **Version tags (`vX.Y.Z` and `X.Y.Z`, e.g., `v1.14.0` and `1.14.0`):** Immutable tags pinned to a specific release digest (`linux/amd64` and `linux/arm64`). Once published, version tags are never overwritten. Pinning to a specific version tag or image digest (`@sha256:...`) is recommended for production workloads.
+* **Version tags (`X.Y.Z`, e.g., `1.14.0`):** Immutable tags pinned to a specific release digest (`linux/amd64` and `linux/arm64`). Once published, version tags are never overwritten. Pinning to a specific version tag or image digest (`@sha256:...`) is recommended for production workloads.
 * **`latest` tag:** A floating tag that points to the most recent stable release digest and is updated automatically whenever a new versioned release is promoted.
-* **Development images (`us-central1-docker.pkg.dev/database-toolbox/toolbox-dev/toolbox`):** Continuous builds from the `main` branch are published with the floating `:main` tag and commit `:<SHORT_SHA>` tag for testing and development only.
