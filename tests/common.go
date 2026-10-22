@@ -781,10 +781,12 @@ func GetMySQLDataTypeToolInfo(tableName string) DataTypeToolInfo {
 		Wants: map[string][]any{
 			"my-datatype-tool": {
 				map[string]any{
-					"id":               json.Number("1"),
-					"json_val":         dataTypeJSONWant(),
-					"long_text_val":    dataTypeLongText,
-					"unicode_val":      dataTypeUnicode,
+					"id":            json.Number("1"),
+					"json_val":      dataTypeJSONWant(),
+					"long_text_val": dataTypeLongText,
+					"unicode_val":   dataTypeUnicode,
+					// TODO: DECIMAL comes back as a string here but as a number from
+					// Postgres NUMERIC; standardize decimal handling across sources.
 					"decimal_val":      "12.34",
 					"int_val":          json.Number("-42"),
 					"bigint_val":       json.Number("9007199254740993"),
@@ -792,8 +794,10 @@ func GetMySQLDataTypeToolInfo(tableName string) DataTypeToolInfo {
 					"tinyint_bool_val": json.Number("1"),
 					"date_val":         "2024-01-15T00:00:00Z",
 					"datetime_val":     "2024-01-15T10:30:45Z",
-					"bit_val":          "\u0005",
-					"null_val":         nil,
+					// TODO: BIT comes back as raw bytes, which shows up as control
+					// characters; return it as an integer instead.
+					"bit_val":  "\u0005",
+					"null_val": nil,
 				},
 			},
 			"my-group-concat-tool": {
