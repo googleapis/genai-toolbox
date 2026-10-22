@@ -1132,7 +1132,7 @@ The Public API includes the Toolbox Server (CLI, configuration manifests, and pr
 - **Minor versions** are incremented for new features, including modifications to pre-built toolsets or beta features.
 - **Patch versions** are incremented for backward-compatible bug fixes.
 
-For more details, see our [Full Versioning Policy](https://mcp-toolbox.dev/reference/versioning/).
+For more details, including our [Container Tagging Policy](https://mcp-toolbox.dev/reference/versioning/#container-tagging-policy), see our [Full Versioning Policy](https://mcp-toolbox.dev/reference/versioning/).
 
 ---
 
