@@ -297,7 +297,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	}
 
 	// Check if any of the specified auth services is verified
-	isAuthorized := tool.Authorized(verifiedAuthServices)
+	isAuthorized := tools.IsAuthorized(tool.GetAuthRequired(), verifiedAuthServices)
 	if !isAuthorized {
 		err = util.NewClientServerError(
 			"unauthorized Tool call: Please make sure you specify correct auth headers",
