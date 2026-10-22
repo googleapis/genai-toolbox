@@ -134,12 +134,9 @@ func checkDoc(ctx context.Context, skillURI string, doc resources.Resource, m Ma
 	return Skill{URI: skillURI, Frontmatter: frontmatter}, nil
 }
 
-// WarnOnDocNameMismatch reports the SKILL.md resources whose config key differs
-// from the frontmatter name. resources/list already publishes a SKILL.md under
-// its frontmatter name: the file and text resources read it at Initialize. A
-// group lists its resources by config key, so a key that differs from the skill
-// is hard to maintain. The warning asks the operator to rename the key; nothing
-// is renamed here. Call it one time, at startup.
+// WarnOnDocNameMismatch warns when a SKILL.md resource's config key differs
+// from its frontmatter name, because groups list resources by config key. Call
+// it once, at startup.
 func WarnOnDocNameMismatch(ctx context.Context, found []Skill, resourcesMap map[string]resources.Resource) error {
 	if len(found) == 0 {
 		return nil
