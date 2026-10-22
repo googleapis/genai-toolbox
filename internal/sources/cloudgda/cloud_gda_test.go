@@ -70,6 +70,24 @@ func TestParseFromYamlCloudGDA(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "read only example",
+			in: `
+			kind: source
+			name: my-gda-instance
+			type: cloud-gemini-data-analytics
+			projectId: test-project-id
+			readOnly: true
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-gda-instance": cloudgda.Config{
+					Name:      "my-gda-instance",
+					Type:      cloudgda.SourceType,
+					ProjectID: "test-project-id",
+					ReadOnly:  true,
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		tc := tc
@@ -119,6 +137,16 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 }
 
+func TestIsReadOnly(t *testing.T) {
+	t.Parallel()
+	for _, readOnly := range []bool{false, true} {
+		src := &cloudgda.Source{Config: cloudgda.Config{Name: "test-gda", Type: cloudgda.SourceType, ProjectID: "test-proj", ReadOnly: readOnly}}
+		if got := src.IsReadOnly(); got != readOnly {
+			t.Errorf("IsReadOnly() = %t, want %t", got, readOnly)
+		}
+	}
+}
+
 func TestInitialize(t *testing.T) {
 	// Create a dummy credentials file for testing ADC
 	credFile := filepath.Join(t.TempDir(), "application_default_credentials.json")
@@ -158,7 +186,7 @@ func TestInitialize(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			src, err := tc.cfg.Initialize(ctx, tracer, false)
+			src, err := tc.cfg.Initialize(ctx, tracer)
 			if err != nil {
 				t.Fatalf("failed to initialize source: %v", err)
 			}
@@ -168,17 +196,13 @@ func TestInitialize(t *testing.T) {
 				t.Fatalf("expected *cloudgda.Source, got %T", src)
 			}
 
-			// Under ADC the source serves a shared client; under client OAuth it has
-			// none of its own, which the empty-token case below asserts.
-			if !tc.wantClientOAuth {
-				client, cleanup, err := gdaSrc.GetClient(ctx, "")
-				if err != nil {
-					t.Fatalf("GetClient failed: %v", err)
-				}
-				defer cleanup()
-				if client == nil {
-					t.Fatal("expected non-nil DataChat client for ADC, got nil")
-				}
+			// Check that the client is non-nil
+			if gdaSrc.Client == nil && !tc.wantClientOAuth {
+				t.Fatal("expected non-nil HTTP client for ADC, got nil")
+			}
+			// When client OAuth is true, the source's client should be nil.
+			if gdaSrc.Client != nil && tc.wantClientOAuth {
+				t.Fatal("expected nil HTTP client for client OAuth config, got non-nil")
 			}
 
 			// Test UseClientAuthorization method
