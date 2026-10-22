@@ -609,51 +609,6 @@ func TestProcessQueryArgsWithDynamicFields(t *testing.T) {
 	}
 }
 
-func TestExtractLookerErrorMessage(t *testing.T) {
-	tcs := []struct {
-		desc    string
-		inErr   error
-		wantMsg string
-	}{
-		{
-			desc:    "extracts message from 400 Bad Request JSON error",
-			inErr:   lookerTestError(`response error. status=400 Bad Request. error={"message":"Missing values were not filled because too many fill rows would be generated. Try filtering to reduce the size of the result.","documentation_url":"https://docs.cloud.google.com/looker/docs/r/err/4.0/400/post/queries/run/:result_format"}`),
-			wantMsg: "Missing values were not filled because too many fill rows would be generated. Try filtering to reduce the size of the result.",
-		},
-		{
-			desc:    "extracts message from nested errors array",
-			inErr:   lookerTestError(`response error. status=422 Unprocessable Entity. error={"errors":[{"message":"Invalid filter expression for users.created_date"}]}`),
-			wantMsg: "Invalid filter expression for users.created_date",
-		},
-		{
-			desc:    "preserves 404 Sinatra::NotFound error unchanged",
-			inErr:   lookerTestError(`response error. status=404 Not Found. error={"message":"Sinatra::NotFound"}`),
-			wantMsg: `response error. status=404 Not Found. error={"message":"Sinatra::NotFound"}`,
-		},
-		{
-			desc:    "preserves plain non-JSON error unchanged",
-			inErr:   lookerTestError("connection refused"),
-			wantMsg: "connection refused",
-		},
-	}
-
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			got := lookercommon.ExtractLookerErrorMessage(tc.inErr)
-			if got == nil {
-				t.Fatalf("expected non-nil error")
-			}
-			if got.Error() != tc.wantMsg {
-				t.Errorf("ExtractLookerErrorMessage() = %q, want %q", got.Error(), tc.wantMsg)
-			}
-		})
-	}
-}
-
-type lookerTestError string
-
-func (e lookerTestError) Error() string { return string(e) }
-
 func TestStripDrillLinks(t *testing.T) {
 	detailResp := map[string]any{
 		"sql":             "SELECT * FROM orders",

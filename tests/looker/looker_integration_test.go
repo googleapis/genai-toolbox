@@ -591,13 +591,6 @@ func TestLooker(t *testing.T) {
 				"parameters": []any{
 					map[string]any{
 						"authServices": []any{},
-						"description":  "Optional unique identifier (numeric ID or slug) of a saved Looker query to run. If provided, model, explore, and fields are not required.",
-						"name":         "query_id",
-						"required":     false,
-						"type":         "string",
-					},
-					map[string]any{
-						"authServices": []any{},
 						"description":  "The model containing the explore (required if query_id is not provided).",
 						"name":         "model",
 						"required":     false,
@@ -700,6 +693,13 @@ func TestLooker(t *testing.T) {
 						"name":     "dynamic_fields",
 						"required": false,
 						"type":     "array",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional unique identifier (numeric ID or slug) of a saved Looker query to run. If provided, model, explore, and fields are not required.",
+						"name":         "query_id",
+						"required":     false,
+						"type":         "string",
 					},
 					map[string]any{
 						"authServices": []any{},
@@ -2463,6 +2463,7 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "{\"look.count\":"
 	tests.RunToolInvokeParametersTest(t, "query", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
+	testQueryById(t, wantResult)
 
 	wantResult = "SELECT"
 	tests.RunToolInvokeParametersTest(t, "query_sql", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
@@ -2745,6 +2746,24 @@ func newLookerTestSDK(t *testing.T) *v4.LookerSDK {
 		ClientSecret: LookerClientSecret,
 	}
 	return v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+}
+
+func testQueryById(t *testing.T, wantResult string) {
+	t.Helper()
+	sdk := newLookerTestSDK(t)
+	fields := []string{"look.count"}
+	savedQuery, err := sdk.CreateQuery(v4.WriteQuery{
+		Model:  "system__activity",
+		View:   "look",
+		Fields: &fields,
+	}, "", nil)
+	if err != nil {
+		t.Fatalf("failed to create saved query for query_id test: %v", err)
+	}
+	if savedQuery.Id == nil || *savedQuery.Id == "" {
+		t.Fatalf("expected non-empty saved query Id")
+	}
+	tests.RunToolInvokeParametersTest(t, "query", []byte(fmt.Sprintf(`{"query_id": "%s"}`, *savedQuery.Id)), wantResult)
 }
 
 func testMakeLook(t *testing.T, randstr string) func() {

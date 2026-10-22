@@ -176,40 +176,6 @@ func TestBuildWriteQueryWithOverrides(t *testing.T) {
 	}
 }
 
-func TestInitializeIncludesSavedQueryParameters(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	cfg := lkr.Config{
-		ConfigBase: tools.ConfigBase{
-			Name:        "query",
-			Description: "Execute an inline or saved query",
-		},
-		Type:   "looker-query",
-		Source: "looker-source",
-	}
-	tool, err := cfg.Initialize(ctx)
-	if err != nil {
-		t.Fatalf("Initialize failed: %v", err)
-	}
-	manifest := tool.StaticManifest()
-	paramByName := make(map[string]bool)
-	for _, p := range manifest.Parameters {
-		paramByName[p.Name] = true
-		if p.Name == "query_id" || p.Name == "model" || p.Name == "explore" || p.Name == "fields" || p.Name == "generate_drill_links" {
-			if p.Required {
-				t.Errorf("expected parameter %q to be optional (Required=false) at schema level", p.Name)
-			}
-		}
-	}
-	for _, expected := range []string{"query_id", "model", "explore", "fields", "result_format", "vis_config", "generate_drill_links"} {
-		if !paramByName[expected] {
-			t.Errorf("expected parameter %q in tool manifest, got %+v", expected, manifest.Parameters)
-		}
-	}
-}
-
 func TestInvokeValidationErrors(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {

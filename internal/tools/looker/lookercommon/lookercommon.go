@@ -563,31 +563,7 @@ func SearchLookmlDashboards(l *v4.LookerSDK, params map[string]any, options *rtl
 	return result, nil
 }
 
-func GetQuery(ctx context.Context, l *v4.LookerSDK, queryId string, options *rtl.ApiSettings) (*v4.Query, error) {
-	var result v4.Query
-	path := fmt.Sprintf("/queries/%s", url.PathEscape(queryId))
-	err := l.AuthSession.Do(&result, "GET", "/4.0", path, nil, nil, options)
-	if err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
-
-func GetQueryBySlug(ctx context.Context, l *v4.LookerSDK, slug string, options *rtl.ApiSettings) (*v4.Query, error) {
-	var result v4.Query
-	path := fmt.Sprintf("/queries/slug/%s", url.PathEscape(slug))
-	err := l.AuthSession.Do(&result, "GET", "/4.0", path, nil, nil, options)
-	if err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
-
-func RunSavedQuery(ctx context.Context, l *v4.LookerSDK, queryId string, format string, options *rtl.ApiSettings) (string, error) {
-	return RunSavedQueryWithDrillLinks(ctx, l, queryId, format, nil, options)
-}
-
-func RunSavedQueryWithDrillLinks(ctx context.Context, l *v4.LookerSDK, queryId string, format string, generateDrillLinks *bool, options *rtl.ApiSettings) (string, error) {
+func RunSavedQuery(ctx context.Context, l *v4.LookerSDK, queryId string, format string, generateDrillLinks *bool, options *rtl.ApiSettings) (string, error) {
 	var result string
 	path := fmt.Sprintf("/queries/%s/run/%s", url.PathEscape(queryId), url.PathEscape(format))
 	var queryParams map[string]any
@@ -732,46 +708,4 @@ func StripDrillLinks(detailResp map[string]any) {
 			}
 		}
 	}
-}
-
-// ExtractLookerErrorMessage extracts a human-readable error message from a
-// Looker Go SDK HTTP error containing an embedded JSON error object
-// (e.g., `response error. status=400 Bad Request. error={"message":"..."}`).
-// If no human-readable message can be extracted (or if the message is an internal
-// marker like "Sinatra::NotFound"), the original error is returned unchanged.
-func ExtractLookerErrorMessage(err error) error {
-	if err == nil {
-		return nil
-	}
-	raw := err.Error()
-	startIdx := strings.Index(raw, "{")
-	endIdx := strings.LastIndex(raw, "}")
-	if startIdx == -1 || endIdx <= startIdx {
-		return err
-	}
-
-	var parsed struct {
-		Message string `json:"message"`
-		Errors  []struct {
-			Message        string `json:"message"`
-			MessageDetails string `json:"message_details"`
-		} `json:"errors"`
-	}
-	if jsonErr := json.Unmarshal([]byte(raw[startIdx:endIdx+1]), &parsed); jsonErr != nil {
-		return err
-	}
-
-	msg := strings.TrimSpace(parsed.Message)
-	if msg == "" && len(parsed.Errors) > 0 {
-		msg = strings.TrimSpace(parsed.Errors[0].Message)
-		if msg == "" {
-			msg = strings.TrimSpace(parsed.Errors[0].MessageDetails)
-		}
-	}
-
-	if msg == "" || strings.EqualFold(msg, "Sinatra::NotFound") {
-		return err
-	}
-
-	return fmt.Errorf("%s", msg)
 }

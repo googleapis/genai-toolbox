@@ -67,31 +67,41 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func getLookerQueryParameters() parameters.Parameters {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
+	allParameters := lookercommon.GetQueryParameters()
+	for i, p := range allParameters {
+		switch p.GetName() {
+		case "model":
+			allParameters[i] = parameters.NewStringParameter(
+				"model",
+				"The model containing the explore (required if query_id is not provided).",
+				parameters.WithStringRequired(false),
+			)
+		case "explore":
+			allParameters[i] = parameters.NewStringParameter(
+				"explore",
+				"The explore to be queried (required if query_id is not provided).",
+				parameters.WithStringRequired(false),
+			)
+		case "fields":
+			allParameters[i] = parameters.NewArrayParameter(
+				"fields",
+				"The fields to be retrieved (required if query_id is not provided).",
+				parameters.NewStringParameter("field", "A field to be returned in the query"),
+				parameters.WithArrayRequired(false),
+			)
+		}
+	}
+
 	queryIdParameter := parameters.NewStringParameter(
 		"query_id",
 		"Optional unique identifier (numeric ID or slug) of a saved Looker query to run. If provided, model, explore, and fields are not required.",
 		parameters.WithStringRequired(false),
 	)
-	modelParameter := parameters.NewStringParameter(
-		"model",
-		"The model containing the explore (required if query_id is not provided).",
-		parameters.WithStringRequired(false),
-	)
-	exploreParameter := parameters.NewStringParameter(
-		"explore",
-		"The explore to be queried (required if query_id is not provided).",
-		parameters.WithStringRequired(false),
-	)
-	fieldsParameter := parameters.NewArrayParameter(
-		"fields",
-		"The fields to be retrieved (required if query_id is not provided).",
-		parameters.NewStringParameter("field", "A field to be returned in the query"),
-		parameters.WithArrayRequired(false),
-	)
-
-	commonParams := lookercommon.GetQueryParameters()
-
 	resultFormatParameter := parameters.NewStringParameter(
 		"result_format",
 		"The output format: 'json' (raw row array) or 'json_detail' (includes fields, pivots, and data). Default is 'json'.",
@@ -107,32 +117,13 @@ func getLookerQueryParameters() parameters.Parameters {
 		"Optional flag indicating whether to generate drill links in the query result.",
 		parameters.WithBooleanRequired(false),
 	)
-
-	allParams := parameters.Parameters{
+	allParameters = append(
+		allParameters,
 		queryIdParameter,
-		modelParameter,
-		exploreParameter,
-		fieldsParameter,
-	}
-	// Append filters, pivots, sorts, limit, tz, filter_expression, dynamic_fields from commonParams
-	if len(commonParams) > 3 {
-		allParams = append(allParams, commonParams[3:]...)
-	}
-	allParams = append(
-		allParams,
 		resultFormatParameter,
 		visConfigParameter,
 		generateDrillLinksParameter,
 	)
-	return allParams
-}
-
-func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
-	if cfg.Description == "" {
-		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
-	}
-
-	allParameters := getLookerQueryParameters()
 
 	// finish tool setup
 	return Tool{
@@ -307,11 +298,11 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 				if strings.Contains(qErr.Error(), "status=401") {
 					return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, qErr)
 				}
-				return nil, util.ProcessGeneralError(lookercommon.ExtractLookerErrorMessage(qErr))
+				return nil, util.ProcessGeneralError(qErr)
 			}
 
 			if len(filterOverrides) == 0 && sortsMatchBaseQuery(sortOverrides, baseQuery.Sorts) {
-				resp, rErr = lookercommon.RunSavedQueryWithDrillLinks(ctx, sdk, queryId, resultFormat, generateDrillLinks, source.LookerApiSettings())
+				resp, rErr = lookercommon.RunSavedQuery(ctx, sdk, queryId, resultFormat, generateDrillLinks, source.LookerApiSettings())
 				if rErr != nil {
 					wq := BuildWriteQueryWithOverrides(baseQuery, nil, nil)
 					resp, rErr = lookercommon.RunInlineQueryWithDrillLinks(ctx, sdk, &wq, resultFormat, generateDrillLinks, source.LookerApiSettings())
@@ -324,7 +315,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 				resp, rErr = lookercommon.RunInlineQueryWithDrillLinks(ctx, sdk, &wq, resultFormat, generateDrillLinks, source.LookerApiSettings())
 			}
 		} else {
-			resp, rErr = lookercommon.RunSavedQueryWithDrillLinks(ctx, sdk, queryId, resultFormat, generateDrillLinks, source.LookerApiSettings())
+			resp, rErr = lookercommon.RunSavedQuery(ctx, sdk, queryId, resultFormat, generateDrillLinks, source.LookerApiSettings())
 			if rErr != nil {
 				logger.WarnContext(ctx, "RunSavedQuery failed, attempting slug lookup", "query_id", queryId, "error", rErr)
 
@@ -340,7 +331,7 @@ func (t Tool) Invoke(ctx context.Context, s sources.Source, params parameters.Pa
 			if strings.Contains(rErr.Error(), "status=401") {
 				return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, rErr)
 			}
-			return nil, util.ProcessGeneralError(lookercommon.ExtractLookerErrorMessage(rErr))
+			return nil, util.ProcessGeneralError(rErr)
 		}
 
 		if resultFormat == "json_detail" {
