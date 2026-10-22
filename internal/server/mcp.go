@@ -370,12 +370,14 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Use(mcpAuthMiddleware(s))
 
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
+	r.Post("/sse", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { methodNotAllowed(s, w, r) })
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 	r.Delete("/", func(w http.ResponseWriter, r *http.Request) {})
 
 	r.Route("/{toolsetName}", func(r chi.Router) {
 		r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
+		r.Post("/sse", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) { methodNotAllowed(s, w, r) })
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 		r.Delete("/", func(w http.ResponseWriter, r *http.Request) {})
@@ -394,6 +396,9 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	sessionId := uuid.New().String()
 	groupName := chi.URLParam(r, "toolsetName")
+	if groupName == "sse" {
+		groupName = ""
+	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", groupName))
 	span.SetAttributes(attribute.String("mcp.session.id", sessionId))
 	span.SetAttributes(attribute.String("toolset.name", groupName))
@@ -580,6 +585,9 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	groupName := chi.URLParam(r, "toolsetName")
+	if groupName == "sse" {
+		groupName = ""
+	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", groupName))
 	span.SetAttributes(attribute.String("toolset.name", groupName))
 
@@ -823,6 +831,9 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	ctx = util.WithToolboxVersionKey(ctx, s.version)
 	ctx = util.WithEnableDraftSpecs(ctx, s.enableDraftSpecs)
 	ctx = util.WithDisableExtensionCheck(ctx, s.disableExtensionCheck)
+	if header != nil {
+		ctx = util.WithRequestHeader(ctx, header)
+	}
 	// Process the method
 	switch baseMessage.Method {
 	// This is only used for <v2026

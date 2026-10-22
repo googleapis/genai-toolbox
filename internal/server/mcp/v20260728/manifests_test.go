@@ -384,7 +384,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 			t.Fatalf("expected metadata to have ui map, got %v", res.Tools[0].Metadata["ui"])
 		}
 		if uiMeta["resourceUri"] != "" {
-			t.Errorf("expected resourceUri=\"\", got %v", uiMeta["resourceUri"])
+			t.Errorf("expected empty resourceUri, got %v", uiMeta["resourceUri"])
 		}
 	})
 

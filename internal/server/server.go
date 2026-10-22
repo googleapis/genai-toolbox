@@ -287,6 +287,19 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d resource templates: %s", len(resourceTemplatesMap), strings.Join(resourceTemplateNames, ", ")))
 
+	// Register dynamic UI resources from tools implementing ResourceProvider
+	for _, t := range toolsMap {
+		if rp, ok := t.(resources.ResourceProvider); ok {
+			for _, res := range rp.GetResources() {
+				if res != nil {
+					if _, exists := resourcesMap[res.GetName()]; !exists {
+						resourcesMap[res.GetName()] = res
+					}
+				}
+			}
+		}
+	}
+
 	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, instrumentation, l)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, err
@@ -346,6 +359,19 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 			return nil, nil, fmt.Errorf("unable to initialize resource template %q: %w", name, err)
 		}
 		resourceTemplatesMap[name] = rt
+	}
+
+	// Register dynamic UI resources from tools implementing ResourceProvider
+	for _, t := range toolsMap {
+		if rp, ok := t.(resources.ResourceProvider); ok {
+			for _, res := range rp.GetResources() {
+				if res != nil {
+					if _, exists := resourcesMap[res.GetName()]; !exists {
+						resourcesMap[res.GetName()] = res
+					}
+				}
+			}
+		}
 	}
 
 	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, instrumentation, l)

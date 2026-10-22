@@ -357,6 +357,10 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if structuredRes, ok := res.(tools.StructuredToolResult); ok && structuredRes.StructuredContent != nil {
+		res = structuredRes.StructuredContent
+	}
+
 	resMarshal, err := json.Marshal(res)
 	if err != nil {
 		err = fmt.Errorf("unable to marshal result: %w", err)

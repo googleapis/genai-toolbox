@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP App</title>
+  <style>
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --text-primary: #202124;
+      --text-secondary: #5f6368;
+      --border-color: #dadce0;
+      --accent-color: #1a73e8;
+      --error-color: #d93025;
+      --border-radius: 8px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #202124;
+        --bg-secondary: #292a2d;
+        --text-primary: #e8eaed;
+        --text-secondary: #9aa0a6;
+        --border-color: #3c4043;
+        --accent-color: #8ab4f8;
+        --error-color: #f28b82;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      padding: 16px;
+      margin: 0;
+      overflow: auto;
+    }
+    .mcp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .mcp-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .mcp-badge {
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .mcp-content {
+      width: 100%;
+      min-height: 120px;
+      overflow-x: auto;
+    }
+    .mcp-loading, .mcp-empty, .mcp-error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .mcp-error { color: var(--error-color); }
+    table.mcp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    table.mcp-table th {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    table.mcp-table td {
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+    }
+    table.mcp-table tr:nth-child(even) {
+      background-color: rgba(0, 0, 0, 0.02);
+    }
+  </style>
+</head>
+<body>
+  <div class="mcp-header">
+    <span class="mcp-title" id="mcp-title">MCP Application</span>
+    <span class="mcp-badge" id="mcp-badge">Ready</span>
+  </div>
+  <div id="mcp-app-root" class="mcp-content">
+    <div class="mcp-loading" id="mcp-loading">Waiting for data...</div>
+  </div>
+
+  <script>
+    (function() {
+      const root = document.getElementById('mcp-app-root');
+      const titleEl = document.getElementById('mcp-title');
+      const badgeEl = document.getElementById('mcp-badge');
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function renderToolData(data, config) {
+        if (typeof window.onToolResult === 'function') {
+          try {
+            window.onToolResult(data, config);
+            return;
+          } catch (e) {
+            console.error('Error in onToolResult hook:', e);
+          }
+        }
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          root.innerHTML = '<div class="mcp-empty">No results to display.</div>';
+          return;
+        }
+
+        let rows = Array.isArray(data) ? data : (data.rows || [data]);
+        if (rows.length === 0) {
+          root.innerHTML = '<div class="mcp-empty">No results to display.</div>';
+          return;
+        }
+
+        const keys = typeof rows[0] === 'object' && rows[0] !== null ? Object.keys(rows[0]) : ['Value'];
+        let html = '<table class="mcp-table"><thead><tr>';
+        keys.forEach(k => { html += '<th>' + escapeHtml(k) + '</th>'; });
+        html += '</tr></thead><tbody>';
+
+        rows.forEach(r => {
+          html += '<tr>';
+          if (typeof r === 'object' && r !== null) {
+            keys.forEach(k => {
+              const val = r[k] !== undefined && r[k] !== null ? r[k] : '';
+              html += '<td>' + escapeHtml(typeof val === 'object' ? JSON.stringify(val) : String(val)) + '</td>';
+            });
+          } else {
+            html += '<td>' + escapeHtml(String(r)) + '</td>';
+          }
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        root.innerHTML = html;
+
+        if (config) {
+          if (config.type || config.vis_type) badgeEl.textContent = config.type || config.vis_type;
+          if (config.title) titleEl.textContent = config.title;
+        }
+      }
+
+      let isInitialized = false;
+
+      function extractPayload(msg) {
+        if (!msg) return null;
+        if (msg.params && Array.isArray(msg.params.content)) {
+          const textItem = msg.params.content.find(c => c.type === 'text');
+          if (textItem && textItem.text) {
+            try {
+              return JSON.parse(textItem.text);
+            } catch (e) {
+              return textItem.text;
+            }
+          }
+        }
+        if (msg.params && msg.params.structuredContent) {
+          return msg.params.structuredContent;
+        }
+        if (msg.params) {
+          return msg.params.toolResult || msg.params.result || msg.params.data || msg.params;
+        }
+        return msg.result || msg.data || msg;
+      }
+
+      function handleToolResult(result) {
+        if (!result) return;
+        let parsed = result;
+        if (typeof result === 'string') {
+          try {
+            parsed = JSON.parse(result);
+          } catch (e) {
+            root.innerHTML = '<pre>' + escapeHtml(result) + '</pre>';
+            return;
+          }
+        }
+        const data = parsed.visualizationData || parsed.data || parsed.rows || parsed.result || parsed;
+        const config = parsed.visConfig || parsed.vis_config || parsed.config || null;
+        if (parsed.title) titleEl.textContent = parsed.title;
+        renderToolData(data, config);
+
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            jsonrpc: '2.0',
+            method: 'ui/notifications/size-changed',
+            params: { height: document.documentElement.scrollHeight || document.body.scrollHeight }
+          }, '*');
+        }
+      }
+
+      window.addEventListener('message', function(event) {
+        const msg = event.data;
+        if (!msg || typeof msg !== 'object') return;
+
+        // A. Handle response to guest's ui/initialize request (id: 1)
+        if (msg.id === 1 && msg.result) {
+          if (!isInitialized && window.parent && window.parent !== window) {
+            isInitialized = true;
+            window.parent.postMessage({
+              jsonrpc: '2.0',
+              method: 'ui/notifications/initialized',
+              params: {}
+            }, '*');
+          }
+          return;
+        }
+
+        // B. Handle Host-initiated ui/initialize or notifications
+        if (msg.type === 'ui/initialize' || msg.method === 'ui/initialize') {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({
+              jsonrpc: '2.0',
+              method: 'ui/notifications/initialized',
+              params: {}
+            }, '*');
+          }
+          if (msg.params) {
+            const payload = extractPayload(msg);
+            if (payload) handleToolResult(payload);
+          }
+        } else if (
+          msg.method === 'ui/notifications/tool-result' ||
+          msg.method === 'ui/notifications/tool-input' ||
+          msg.type === 'tool_result' ||
+          msg.method === 'tool_result' ||
+          msg.type === 'ui/toolResult' ||
+          msg.type === 'ui/update'
+        ) {
+          const payload = extractPayload(msg);
+          if (payload) handleToolResult(payload);
+        }
+      });
+
+      // Announce readiness and initiate standard MCP Apps handshake
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'ui/initialize',
+          params: {
+            appInfo: { name: 'MCP Application', version: '1.0.0' },
+            appCapabilities: {},
+            protocolVersion: '2026-01-26'
+          }
+        }, '*');
+      }
+    })();
+  </script>
+</body>
+</html>
