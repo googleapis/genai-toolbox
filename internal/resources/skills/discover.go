@@ -304,7 +304,7 @@ func cutAtDelimiter(rest string) (string, bool) {
 func warnOnDuplicateNames(ctx context.Context, found []Skill) error {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return fmt.Errorf("checking for duplicate skill names: %w", err)
+		return fmt.Errorf("failed to get logger from context: %w", err)
 	}
 	byName := map[string][]string{}
 	for _, s := range found {

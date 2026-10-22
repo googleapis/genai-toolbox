@@ -182,7 +182,7 @@ func TestValidateErrors(t *testing.T) {
 			desc:      "no logger in the context",
 			ctx:       context.Background(),
 			resources: func(t *testing.T) map[string]resources.Resource { return guide(t, skillMD("guide", "A guide")) },
-			wantErr:   []string{"duplicate skill names"},
+			wantErr:   []string{"failed to get logger from context"},
 		},
 	}
 	for _, tc := range tcs {
@@ -550,7 +550,7 @@ func TestNoDocNameMismatchWarning(t *testing.T) {
 	if err := skills.WarnOnDocNameMismatch(ctx, found, resourcesMap); err != nil {
 		t.Fatalf("WarnOnDocNameMismatch() = %v, want nil", err)
 	}
-	if got := stderr.String(); strings.Contains(got, "Rename the resource") {
+	if got := stderr.String(); strings.Contains(got, "Rename the config key") {
 		t.Errorf("unexpected name-mismatch warning: %q", got)
 	}
 }

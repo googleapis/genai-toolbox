@@ -49,7 +49,7 @@ func Validate(ctx context.Context, resourcesMap map[string]resources.Resource) (
 	if len(orphans) > 0 {
 		logger, err := util.LoggerFromContext(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("checking for orphaned skill files: %w", err)
+			return nil, fmt.Errorf("failed to get logger from context: %w", err)
 		}
 		logger.WarnContext(ctx, fmt.Sprintf("resources %s use the %s:// scheme but no %s is above them, so they belong to no skill; check the URI for a typo", strings.Join(orphans, ", "), resources.SkillScheme, resources.SkillFile))
 	}
@@ -135,16 +135,18 @@ func checkDoc(ctx context.Context, skillURI string, doc resources.Resource, m Ma
 }
 
 // WarnOnDocNameMismatch reports the SKILL.md resources whose config key differs
-// from the frontmatter name. Validate already publishes the SKILL.md under the
-// frontmatter name. A group lists its resources by config key, so a key that
-// differs from the skill is hard to maintain. Call it one time, at startup.
+// from the frontmatter name. resources/list already publishes a SKILL.md under
+// its frontmatter name: the file and text resources read it at Initialize. A
+// group lists its resources by config key, so a key that differs from the skill
+// is hard to maintain. The warning asks the operator to rename the key; nothing
+// is renamed here. Call it one time, at startup.
 func WarnOnDocNameMismatch(ctx context.Context, found []Skill, resourcesMap map[string]resources.Resource) error {
 	if len(found) == 0 {
 		return nil
 	}
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return fmt.Errorf("checking the names of the skill documents: %w", err)
+		return fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
 	keys := make(map[string]string, len(found))
@@ -169,7 +171,7 @@ func WarnOnDocNameMismatch(ctx context.Context, found []Skill, resourcesMap map[
 		if !ok || name == key {
 			continue
 		}
-		logger.WarnContext(ctx, fmt.Sprintf("resource %q is the %s of skill %q. Rename the resource to %q, so that a group lists it under the skill's name", key, resources.SkillFile, name, name))
+		logger.WarnContext(ctx, fmt.Sprintf("resource %q is the %s of skill %q. Rename the config key to %q, so that a group lists it under the skill's name", key, resources.SkillFile, name, name))
 	}
 	return nil
 }
