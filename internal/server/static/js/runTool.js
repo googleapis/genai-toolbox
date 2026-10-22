@@ -60,7 +60,7 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
             // process remaining types
             if (VALUE_TYPE && (VALUE_TYPE.startsWith('array<') || VALUE_TYPE === 'array')) {
                 typedParams[NAME] = parseArrayParameter(RAW_VALUE, VALUE_TYPE, NAME);
-            } else if (VALUE_TYPE === 'object') {
+            } else if (VALUE_TYPE === 'object' || (VALUE_TYPE && VALUE_TYPE.startsWith('map'))) {
                 if (!RAW_VALUE || RAW_VALUE.trim() === '') {
                     typedParams[NAME] = {};
                 } else {

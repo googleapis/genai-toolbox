@@ -183,6 +183,10 @@ function renderToolDetails(toolName, toolDisplayArea) {
                 const itemType = param.items && param.items.type ? param.items.type.toLowerCase() : 'string';
                 valueType = `array<${itemType}>`;
                 label += ' (Array)';
+            } else if (apiType === 'object') {
+                inputType = 'textarea';
+                valueType = 'object';
+                label += ' (JSON Object)';
             }
 
             return {
