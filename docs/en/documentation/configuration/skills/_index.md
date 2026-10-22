@@ -8,12 +8,6 @@ description: >
 
 An [Agent Skill](https://agentskills.io/specification) is a directory of files. A
 `SKILL.md` file at the root of that directory holds the skill's name and
-description in YAML frontmatter. Toolbox works with skills in two directions:
-
-- **[Generating Skills](./generating.md):** Convert a toolset or a
-  [group](../groups/) into a skill package. The package contains a `SKILL.md` and
-  one Node.js script for each tool.
-- **[Serving Skills over MCP](./serving.md):** Publish a skill you already have
-  through `skills/list` and `skills/get`, on the connection that serves your tools.
-
-The two directions are independent. Use either one alone, or use both.
+description in YAML frontmatter. Toolbox can generate a skill from your tools, and
+can serve a skill you already have over MCP. The two are independent. Use either
+one alone, or use both.

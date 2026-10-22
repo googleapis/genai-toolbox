@@ -3,7 +3,8 @@ title: "Generating Skills"
 type: docs
 weight: 1
 description: >
-  How to generate agent skills from a toolset.
+  Convert a toolset or a group into a skill package: a SKILL.md and one Node.js
+  script for each tool.
 ---
 
 The `skills-generate` command allows you to convert a **toolset** or a **[group](../groups/)** into an **Agent Skill**. The generated skill contains metadata and execution scripts for all tools in the collection, complying with the [Agent Skill specification](https://agentskills.io/specification).

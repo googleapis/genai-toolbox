@@ -3,8 +3,8 @@ title: "Serving Skills over MCP"
 type: docs
 weight: 2
 description: >
-  Publish an Agent Skill through the io.modelcontextprotocol/skills extension, so a
-  connected client discovers the skill and reads its files.
+  Publish an Agent Skill you already have through skills/list and skills/get, on
+  the same connection that serves your tools.
 ---
 
 ## Overview
@@ -21,15 +21,30 @@ and the URI, `sha256:` digest, and byte size of every file in the skill. The cli
 reads the content of a file with `resources/read`, and compares the bytes against
 the digest.
 
+{{< notice note >}}
+Toolbox computes the digests for each request. After you edit a file, the next
+`skills/list` or `skills/get` request publishes the new digest. If you add or
+remove a file of the skill, you change the configuration, so reload the server.
+{{< /notice >}}
+
+Toolbox enables the extension by default. To turn it off, see [Disabling the
+extension](#disabling-the-extension).
+
 Toolbox advertises extensions only for MCP protocol version `2026-07-28`. A client
 on any other version reads the files as ordinary resources.
+
+The skill files are always ordinary resources. `resources/list` and
+`resources/read` return them on every protocol version, whether the extension is
+enabled or disabled.
 
 A client must declare `io.modelcontextprotocol/skills` in
 `_meta.clientCapabilities.extensions` on each `skills/list` and `skills/get`
 request. Without it, both methods return error code `-32021`
 (`MISSING_REQUIRED_CLIENT_CAPABILITY`).
 
-## The skill:// convention
+## Defining a skill
+
+### The skill:// convention
 
 A resource joins a skill through its URI. Give the resource a URI of the form
 `skill://<skill-path>/<file>`:
@@ -49,7 +64,7 @@ Only concrete resources (`kind: resource`) become files of a skill. A
 [resource template](../resources/template/) accepts a `skill://` URI template, but
 Toolbox does not count the files it matches as members of a skill.
 
-## Example
+### Example
 
 Declare one `kind: resource` entry for each file of the skill:
 
@@ -109,7 +124,7 @@ Read `reference/rollback.md` before you start a rollback.
 }
 ```
 
-## Configuration
+### Configuration
 
 A skill uses two fields of the [resource schema](../resources/#resource-schema-kind-resource).
 The **required** column below applies to a skill, not to resources in general.
@@ -121,37 +136,17 @@ The **required** column below applies to a skill, not to resources in general.
 
 A `type: file` resource is the usual choice, because it serves a file from disk.
 
-## Requirements
-
-Toolbox validates every skill at startup. A skill that breaks a rule fails the
-load, and the error names the skill and the file.
-
-The `SKILL.md` must follow the [Agent Skills
-specification](https://agentskills.io/specification), and the skill must follow
-the [`io.modelcontextprotocol/skills`
-extension](https://modelcontextprotocol.io/extensions/skills/overview), which
-defines how a server serves a skill. Toolbox adds one rule of its own: no two
-resources declare the same `skill://` URI.
-
-
-## Freshness
-
-Toolbox computes the digests for each request. Editing a file requires a new
-`skills/list` request to publish the new digest.
-
-If you add or remove a file of the skill, you change the configuration. Reload
-the server.
-
-
-## Nested skills
+### Nested skills
 
 A skill path can contain another skill. `skill://guide/SKILL.md` and
 `skill://guide/api/SKILL.md` declare two skills, and Toolbox lists both.
 
-The specification requires a complete file list, so a file of the inner skill also
-belongs to the outer skill. Both entries list that file.
+The specification requires each entry to list every file under its skill path.
+A file of the inner skill is also under the outer skill's path, so it appears in
+both entries. For example, `skill://guide/api/reference.md` appears in the entry
+for `guide` and in the entry for `api`.
 
-## Dynamic skills
+### Dynamic skills
 
 Set `dynamic: true` on a `SKILL.md` resource when the content of the skill changes
 faster than a host's load cycle. The entry then publishes the string `"dynamic"`
@@ -163,7 +158,10 @@ fetched against the catalogue. Use `dynamic: true` only when a stable digest is
 impossible.
 {{< /notice >}}
 
-Three rules apply to the marker:
+The [`io.modelcontextprotocol/skills`
+extension](https://modelcontextprotocol.io/extensions/skills/overview#implementation-requirements)
+defines the `"dynamic"` marker and the per-skill limits. Toolbox adds three rules
+for the marker:
 
 - `dynamic` must be mentioned only on the `SKILL.md` resource of a skill. Validation fails here for any other resource.
 - The 512-file limit does not apply, because a dynamic skill publishes no file
@@ -171,14 +169,28 @@ Three rules apply to the marker:
 - A nested dynamic skill makes every enclosing skill dynamic. The outer skill
   contains the inner files, so its own digests cannot be stable either.
 
-## Resource names
+## Validation
+
+Toolbox validates every skill at startup. A skill that breaks a rule fails to
+load. The error message starts with the URI of the skill's `SKILL.md`, followed
+by the rule that the skill breaks.
+
+The `SKILL.md` must follow the [Agent Skills
+specification](https://agentskills.io/specification), and the skill must follow
+the [`io.modelcontextprotocol/skills`
+extension](https://modelcontextprotocol.io/extensions/skills/overview), which
+defines how a server serves a skill. Toolbox adds one rule of its own: no two
+resources declare the same `skill://` URI.
+
+## Skills in other MCP methods
+
+### Skills in resources/list
 
 `resources/list` publishes the frontmatter `name` and `description` of a
-`SKILL.md`, not the config `name` and `description`. Toolbox also reports the
+`SKILL.md`, not the Toolbox config's `name` and `description`. Toolbox also reports the
 `mimeType` of a `SKILL.md` as `text/markdown`.
 
-
-## Groups
+### Skills and groups
 
 The skills catalogue is server-wide. [Groups](../groups/) do not scope
 `skills/list` or `skills/get`, and the endpoint of the request does not change the
@@ -196,9 +208,10 @@ Pass the extension URI to `--disable-ext`:
 ```
 
 The server then returns error code `-32021` for `skills/list` and `skills/get`
-on any endpoint, and removes the extension from its advertised capabilities. The
-files stay readable as ordinary resources. See
+on any endpoint, and removes the extension from its advertised capabilities.
+`resources/list` and `resources/read` still return the skill files as ordinary
+resources. See
 [Disabling MCP Extensions](../../../reference/cli.md#disabling-mcp-extensions).
 
 Toolbox still validates every skill at startup. A skill that breaks one of the
-[requirements](#requirements) fails the load, with or without the extension.
+[validation rules](#validation) fails the load, with or without the extension.
