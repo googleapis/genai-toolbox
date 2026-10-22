@@ -50,7 +50,7 @@ func TestLookerSource_ImplementsOAuthProxySource(t *testing.T) {
 	if got, want := proxySrc.OAuthAuthorizationEndpoint(), "https://looker.example.com/auth"; got != want {
 		t.Errorf("OAuthAuthorizationEndpoint() = %q, want %q", got, want)
 	}
-	if got, want := proxySrc.OAuthTokenEndpoint(), "https://looker.example.com/oauth/token"; got != want {
+	if got, want := proxySrc.OAuthTokenEndpoint(), "https://looker.example.com/api/token"; got != want {
 		t.Errorf("OAuthTokenEndpoint() = %q, want %q", got, want)
 	}
 }
@@ -72,7 +72,7 @@ func TestLookerSource_OAuthEndpoints_TrimsTrailingSlash(t *testing.T) {
 	if got, want := proxySrc.OAuthAuthorizationEndpoint(), "https://looker.example.com/auth"; got != want {
 		t.Errorf("OAuthAuthorizationEndpoint() = %q, want %q (no double slash)", got, want)
 	}
-	if got, want := proxySrc.OAuthTokenEndpoint(), "https://looker.example.com/oauth/token"; got != want {
+	if got, want := proxySrc.OAuthTokenEndpoint(), "https://looker.example.com/api/token"; got != want {
 		t.Errorf("OAuthTokenEndpoint() = %q, want %q (no double slash)", got, want)
 	}
 }

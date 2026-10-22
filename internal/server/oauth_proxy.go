@@ -20,12 +20,12 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -39,7 +39,7 @@ import (
 // not also implement sources.OAuthProxyCapabilities.
 var (
 	defaultOAuthResponseTypesSupported        = []string{"code"}
-	defaultOAuthGrantTypesSupported           = []string{"authorization_code"}
+	defaultOAuthGrantTypesSupported           = []string{"authorization_code", "refresh_token"}
 	defaultOAuthCodeChallengeMethodsSupported = []string{"S256"}
 )
 
@@ -75,8 +75,13 @@ func collectOAuthProxySources(sourcesMap map[string]sources.Source) map[string]s
 // needs them, namespaced by source name so any number of such sources can
 // coexist on the same toolbox instance:
 //
-//	GET  /oauth-proxy/{sourceName}/.well-known/oauth-authorization-server
+//	GET  /.well-known/oauth-authorization-server/oauth-proxy/{sourceName}
 //	POST /oauth-proxy/{sourceName}/token
+//
+// The discovery route follows RFC 8414 section 3.1: because the issuer
+// identifier ("<toolbox>/oauth-proxy/{sourceName}") contains a path
+// component, the well-known segment is inserted between the host and that
+// path, not appended after it.
 //
 // It is a no-op — zero added routes, zero behavior change — when no
 // configured source needs it.
@@ -115,7 +120,7 @@ func mountOAuthProxyRoutes(ctx context.Context, r chi.Router, sourcesMap map[str
 				"and token endpoint %s so browser-based MCP clients can complete OAuth without hitting CORS.",
 			name, base, authEndpoint, tokenEndpoint))
 
-		r.Get(base+"/.well-known/oauth-authorization-server", func(w http.ResponseWriter, req *http.Request) {
+		r.Get("/.well-known/oauth-authorization-server"+base, func(w http.ResponseWriter, req *http.Request) {
 			oauthDiscoveryHandler(w, req, base, authEndpoint, capabilities)
 		})
 
@@ -192,47 +197,64 @@ func oauthDiscoveryHandler(w http.ResponseWriter, req *http.Request, routeBase s
 	_ = json.NewEncoder(w).Encode(metadata)
 }
 
-// oauthTokenProxyHandler forwards a token exchange request to
-// tokenEndpoint (the authorization server's real token endpoint) server-side,
-// where CORS does not apply, and relays the response back to the caller. It
-// accepts both application/x-www-form-urlencoded (the RFC 6749 standard
-// content type for token requests) and application/json, re-encoding form
-// bodies as JSON since some authorization servers (e.g. Looker) only accept
-// JSON on this endpoint.
-func oauthTokenProxyHandler(w http.ResponseWriter, req *http.Request, tokenEndpoint string, httpClient *http.Client, logger log.Logger) {
+const (
+	// maxTokenRequestBodySize bounds the token request body read from the
+	// (unauthenticated) caller. Token requests are a few hundred bytes.
+	maxTokenRequestBodySize = 64 << 10
+	// maxTokenResponseBodySize bounds the response relayed back from the
+	// authorization server.
+	maxTokenResponseBodySize = 1 << 20
+)
+
+// setTokenResponseHeaders sets the headers RFC 6749 section 5.1 requires on
+// every token endpoint response so no intermediary caches tokens.
+func setTokenResponseHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Pragma", "no-cache")
+}
 
+// writeOAuthError writes an RFC 6749 section 5.2 style JSON error. It does
+// not use http.Error, which would overwrite Content-Type with text/plain.
+func writeOAuthError(w http.ResponseWriter, status int, code, description string) {
+	setTokenResponseHeaders(w)
+	w.WriteHeader(status)
+	body := map[string]string{"error": code}
+	if description != "" {
+		body["error_description"] = description
+	}
+	_ = json.NewEncoder(w).Encode(body)
+}
+
+// oauthTokenProxyHandler relays a token request to tokenEndpoint (the
+// authorization server's real token endpoint) server-side, where CORS does
+// not apply, and relays the response back to the caller.
+//
+// The request body and Content-Type are forwarded unchanged, so every
+// parameter the client sent (including resource, scope, and any extension
+// parameters) reaches the authorization server, and standard
+// application/x-www-form-urlencoded token requests (RFC 6749 section 4.1.3)
+// stay form-encoded. The upstream status code and body are returned as-is.
+// Request and response sizes are bounded, and redirects from the upstream
+// are not followed.
+func oauthTokenProxyHandler(w http.ResponseWriter, req *http.Request, tokenEndpoint string, httpClient *http.Client, logger log.Logger) {
 	contentType := req.Header.Get("Content-Type")
-	var bodyBytes []byte
+	if contentType == "" {
+		writeOAuthError(w, http.StatusBadRequest, "invalid_request", "missing Content-Type header")
+		return
+	}
 
-	if strings.Contains(contentType, "application/x-www-form-urlencoded") {
-		if err := req.ParseForm(); err != nil {
-			logger.ErrorContext(req.Context(), fmt.Sprintf("oauth proxy: failed to parse form body: %v", err))
-			http.Error(w, `{"error":"invalid_request","error_description":"failed to parse form body"}`, http.StatusBadRequest)
+	req.Body = http.MaxBytesReader(w, req.Body, maxTokenRequestBodySize)
+	bodyBytes, err := io.ReadAll(req.Body)
+	if err != nil {
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			writeOAuthError(w, http.StatusRequestEntityTooLarge, "invalid_request", "request body too large")
 			return
 		}
-		payload := map[string]string{}
-		for _, key := range []string{"grant_type", "code", "code_verifier", "client_id", "client_secret", "redirect_uri", "refresh_token"} {
-			if val := req.FormValue(key); val != "" {
-				payload[key] = val
-			}
-		}
-		var err error
-		bodyBytes, err = json.Marshal(payload)
-		if err != nil {
-			logger.ErrorContext(req.Context(), fmt.Sprintf("oauth proxy: failed to marshal token payload as JSON: %v", err))
-			http.Error(w, `{"error":"server_error"}`, http.StatusInternalServerError)
-			return
-		}
-		contentType = "application/json"
-	} else {
-		var err error
-		bodyBytes, err = io.ReadAll(req.Body)
-		if err != nil {
-			logger.ErrorContext(req.Context(), fmt.Sprintf("oauth proxy: failed to read token request body: %v", err))
-			http.Error(w, `{"error":"server_error"}`, http.StatusInternalServerError)
-			return
-		}
+		logger.ErrorContext(req.Context(), fmt.Sprintf("oauth proxy: failed to read token request body: %v", err))
+		writeOAuthError(w, http.StatusBadRequest, "invalid_request", "failed to read request body")
+		return
 	}
 
 	logger.DebugContext(req.Context(), fmt.Sprintf(
@@ -242,21 +264,26 @@ func oauthTokenProxyHandler(w http.ResponseWriter, req *http.Request, tokenEndpo
 	proxyReq, err := http.NewRequestWithContext(req.Context(), http.MethodPost, tokenEndpoint, bytes.NewReader(bodyBytes))
 	if err != nil {
 		logger.ErrorContext(req.Context(), fmt.Sprintf("oauth proxy: failed to build proxy request: %v", err))
-		http.Error(w, `{"error":"server_error"}`, http.StatusInternalServerError)
+		writeOAuthError(w, http.StatusInternalServerError, "server_error", "")
 		return
 	}
 	proxyReq.Header.Set("Content-Type", contentType)
+	proxyReq.Header.Set("Accept", "application/json")
 
 	resp, err := httpClient.Do(proxyReq)
 	if err != nil {
 		logger.ErrorContext(req.Context(), fmt.Sprintf("oauth proxy: token request to authorization server failed: %v", err))
-		http.Error(w, `{"error":"server_error","error_description":"failed to contact authorization server token endpoint"}`, http.StatusBadGateway)
+		writeOAuthError(w, http.StatusBadGateway, "server_error", "failed to contact authorization server token endpoint")
 		return
 	}
 	defer resp.Body.Close()
 
+	setTokenResponseHeaders(w)
+	if ct := resp.Header.Get("Content-Type"); ct != "" {
+		w.Header().Set("Content-Type", ct)
+	}
 	w.WriteHeader(resp.StatusCode)
-	if _, err := io.Copy(w, resp.Body); err != nil {
+	if _, err := io.Copy(w, io.LimitReader(resp.Body, maxTokenResponseBodySize)); err != nil {
 		logger.ErrorContext(req.Context(), fmt.Sprintf("oauth proxy: failed to copy token response: %v", err))
 	}
 }
@@ -272,7 +299,7 @@ func oauthTokenProxyHandler(w http.ResponseWriter, req *http.Request, tokenEndpo
 // pool (never used to skip verification), for deployments where the
 // authorization server's certificate is signed by a private/internal CA.
 func newOAuthProxyHTTPClient(caCertFile string) (*http.Client, error) {
-	transport := &http.Transport{}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
 
 	if caCertFile != "" {
 		caCert, err := os.ReadFile(caCertFile)
@@ -296,5 +323,12 @@ func newOAuthProxyHTTPClient(caCertFile string) (*http.Client, error) {
 	return &http.Client{
 		Timeout:   30 * time.Second,
 		Transport: transport,
+		// Never follow redirects: the token endpoint is a fixed, operator
+		// configured URL, and following a redirect would forward the
+		// request body (including the authorization code and client
+		// secret) to a location the operator did not configure.
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}, nil
 }

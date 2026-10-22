@@ -197,9 +197,9 @@ func (s *Source) OAuthAuthorizationEndpoint() string {
 }
 
 // OAuthTokenEndpoint implements sources.OAuthProxySource. Looker's token
-// endpoint lives at /oauth/token under the instance's base URL.
+// endpoint lives at /api/token under the instance's base URL.
 func (s *Source) OAuthTokenEndpoint() string {
-	return strings.TrimSuffix(s.BaseURL, "/") + "/oauth/token"
+	return strings.TrimSuffix(s.BaseURL, "/") + "/api/token"
 }
 
 func (s *Source) GetAuthTokenHeaderName() string {

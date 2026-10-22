@@ -23,6 +23,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
+	"io"
 	"math/big"
 	"net"
 	"net/http"
@@ -154,7 +155,7 @@ func TestMountOAuthProxyRoutes_NoOpWhenNoSourceNeedsIt(t *testing.T) {
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp, err := http.Get(ts.URL + "/oauth-proxy/db/.well-known/oauth-authorization-server")
+	resp, err := http.Get(ts.URL + "/.well-known/oauth-authorization-server/oauth-proxy/db")
 	if err != nil {
 		t.Fatalf("GET failed: %v", err)
 	}
@@ -167,7 +168,7 @@ func TestMountOAuthProxyRoutes_NoOpWhenNoSourceNeedsIt(t *testing.T) {
 func TestMountOAuthProxyRoutes_ErrorsOnEmptyEndpoint(t *testing.T) {
 	r := chi.NewRouter()
 	err := mountOAuthProxyRoutes(context.Background(), r, map[string]sources.Source{
-		"looker": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: "", tokenEndpoint: "https://looker.example.com/oauth/token"},
+		"looker": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: "", tokenEndpoint: "https://looker.example.com/api/token"},
 	}, "", testLogger(t))
 	if err == nil {
 		t.Fatal("expected an error when the matched source returns an empty authorization endpoint")
@@ -177,8 +178,8 @@ func TestMountOAuthProxyRoutes_ErrorsOnEmptyEndpoint(t *testing.T) {
 func TestMountOAuthProxyRoutes_NamespacesMultipleSources(t *testing.T) {
 	r := chi.NewRouter()
 	err := mountOAuthProxyRoutes(context.Background(), r, map[string]sources.Source{
-		"looker-a": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: "https://a.example.com/auth", tokenEndpoint: "https://a.example.com/oauth/token"},
-		"looker-b": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: "https://b.example.com/auth", tokenEndpoint: "https://b.example.com/oauth/token"},
+		"looker-a": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: "https://a.example.com/auth", tokenEndpoint: "https://a.example.com/api/token"},
+		"looker-b": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: "https://b.example.com/auth", tokenEndpoint: "https://b.example.com/api/token"},
 	}, "", testLogger(t))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -191,7 +192,7 @@ func TestMountOAuthProxyRoutes_NamespacesMultipleSources(t *testing.T) {
 		"looker-a": "https://a.example.com/auth",
 		"looker-b": "https://b.example.com/auth",
 	} {
-		resp, err := http.Get(ts.URL + "/oauth-proxy/" + name + "/.well-known/oauth-authorization-server")
+		resp, err := http.Get(ts.URL + "/.well-known/oauth-authorization-server/oauth-proxy/" + name)
 		if err != nil {
 			t.Fatalf("GET failed for %s: %v", name, err)
 		}
@@ -213,7 +214,7 @@ func TestMountOAuthProxyRoutes_NamespacesMultipleSources(t *testing.T) {
 func TestOAuthDiscoveryHandler_PointsTokenEndpointBackAtProxy(t *testing.T) {
 	r := chi.NewRouter()
 	err := mountOAuthProxyRoutes(context.Background(), r, map[string]sources.Source{
-		"looker": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: "https://looker.example.com/auth", tokenEndpoint: "https://looker.example.com/oauth/token"},
+		"looker": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: "https://looker.example.com/auth", tokenEndpoint: "https://looker.example.com/api/token"},
 	}, "", testLogger(t))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -222,7 +223,7 @@ func TestOAuthDiscoveryHandler_PointsTokenEndpointBackAtProxy(t *testing.T) {
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp, err := http.Get(ts.URL + "/oauth-proxy/looker/.well-known/oauth-authorization-server")
+	resp, err := http.Get(ts.URL + "/.well-known/oauth-authorization-server/oauth-proxy/looker")
 	if err != nil {
 		t.Fatalf("GET failed: %v", err)
 	}
@@ -261,10 +262,10 @@ func TestOAuthDiscoveryHandler_CustomCapabilitiesOverrideDefaults(t *testing.T) 
 		fakeOAuthProxySource: fakeOAuthProxySource{
 			clientOAuthEnabled: true,
 			authEndpoint:       "https://looker.example.com/auth",
-			tokenEndpoint:      "https://looker.example.com/oauth/token",
+			tokenEndpoint:      "https://looker.example.com/api/token",
 		},
 		responseTypes:    []string{"code", "token"},
-		grantTypes:       []string{"authorization_code", "refresh_token"},
+		grantTypes:       []string{"authorization_code"},
 		challengeMethods: []string{"plain", "S256"},
 	}
 	err := mountOAuthProxyRoutes(context.Background(), r, map[string]sources.Source{
@@ -277,7 +278,7 @@ func TestOAuthDiscoveryHandler_CustomCapabilitiesOverrideDefaults(t *testing.T) 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp, err := http.Get(ts.URL + "/oauth-proxy/looker/.well-known/oauth-authorization-server")
+	resp, err := http.Get(ts.URL + "/.well-known/oauth-authorization-server/oauth-proxy/looker")
 	if err != nil {
 		t.Fatalf("GET failed: %v", err)
 	}
@@ -291,7 +292,7 @@ func TestOAuthDiscoveryHandler_CustomCapabilitiesOverrideDefaults(t *testing.T) 
 	if strings.Join(metadata.ResponseTypesSupported, ",") != "code,token" {
 		t.Errorf("got response_types_supported %v, want overridden [\"code\",\"token\"]", metadata.ResponseTypesSupported)
 	}
-	if strings.Join(metadata.GrantTypesSupported, ",") != "authorization_code,refresh_token" {
+	if strings.Join(metadata.GrantTypesSupported, ",") != "authorization_code" {
 		t.Errorf("got grant_types_supported %v, want overridden set", metadata.GrantTypesSupported)
 	}
 	if strings.Join(metadata.CodeChallengeMethodsSupported, ",") != "plain,S256" {
@@ -308,10 +309,11 @@ func newFakeAuthServer(t *testing.T, statusCode int, respBody string) (*httptest
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		captured.method = r.Method
 		captured.path = r.URL.Path
+		captured.rawQuery = r.URL.RawQuery
 		captured.contentType = r.Header.Get("Content-Type")
-		body := map[string]string{}
-		_ = json.NewDecoder(r.Body).Decode(&body)
-		captured.jsonBody = body
+		b, _ := io.ReadAll(r.Body)
+		captured.body = string(b)
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		_, _ = w.Write([]byte(respBody))
 	}))
@@ -321,22 +323,30 @@ func newFakeAuthServer(t *testing.T, statusCode int, respBody string) (*httptest
 type capturedRequest struct {
 	method      string
 	path        string
+	rawQuery    string
 	contentType string
-	jsonBody    map[string]string
+	body        string
 }
 
-func TestOAuthTokenProxyHandler_FormEncodedIsReEncodedAsJSON(t *testing.T) {
-	authTS, captured := newFakeAuthServer(t, http.StatusOK, `{"access_token":"abc"}`)
-	defer authTS.Close()
-
+// mountTestProxy mounts a single fake source named "looker" whose token
+// endpoint is tokenEndpoint, and returns the running proxy server.
+func mountTestProxy(t *testing.T, authURL, tokenEndpoint string) *httptest.Server {
+	t.Helper()
 	r := chi.NewRouter()
 	if err := mountOAuthProxyRoutes(context.Background(), r, map[string]sources.Source{
-		"looker": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: authTS.URL + "/auth", tokenEndpoint: authTS.URL + "/oauth/token"},
+		"looker": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: authURL, tokenEndpoint: tokenEndpoint},
 	}, "", testLogger(t)); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	proxyTS := httptest.NewServer(r)
-	defer proxyTS.Close()
+	ts := httptest.NewServer(r)
+	t.Cleanup(ts.Close)
+	return ts
+}
+
+func TestOAuthTokenProxyHandler_FormEncodedIsForwardedUnchanged(t *testing.T) {
+	authTS, captured := newFakeAuthServer(t, http.StatusOK, `{"access_token":"abc"}`)
+	defer authTS.Close()
+	proxyTS := mountTestProxy(t, authTS.URL+"/auth", authTS.URL+"/api/token")
 
 	form := url.Values{}
 	form.Set("grant_type", "authorization_code")
@@ -344,6 +354,9 @@ func TestOAuthTokenProxyHandler_FormEncodedIsReEncodedAsJSON(t *testing.T) {
 	form.Set("code_verifier", "the-verifier")
 	form.Set("client_id", "the-client-id")
 	form.Set("redirect_uri", "https://client.example.com/callback")
+	// Parameters outside the original fixed allowlist must also arrive.
+	form.Set("resource", "https://toolbox.example.com/mcp")
+	form.Set("scope", "cors_api")
 
 	resp, err := http.Post(proxyTS.URL+"/oauth-proxy/looker/token", "application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
 	if err != nil {
@@ -357,31 +370,49 @@ func TestOAuthTokenProxyHandler_FormEncodedIsReEncodedAsJSON(t *testing.T) {
 	if captured.method != http.MethodPost {
 		t.Errorf("upstream received method %q, want POST", captured.method)
 	}
-	if captured.path != "/oauth/token" {
-		t.Errorf("upstream received path %q, want /oauth/token", captured.path)
+	if captured.path != "/api/token" {
+		t.Errorf("upstream received path %q, want /api/token", captured.path)
 	}
-	if captured.contentType != "application/json" {
-		t.Errorf("upstream received Content-Type %q, want application/json (form body should be re-encoded)", captured.contentType)
+	if captured.contentType != "application/x-www-form-urlencoded" {
+		t.Errorf("upstream received Content-Type %q, want application/x-www-form-urlencoded (RFC 6749 4.1.3)", captured.contentType)
 	}
-	if captured.jsonBody["grant_type"] != "authorization_code" || captured.jsonBody["code"] != "the-code" || captured.jsonBody["code_verifier"] != "the-verifier" {
-		t.Errorf("upstream did not receive the expected re-encoded fields: %+v", captured.jsonBody)
+	got, err := url.ParseQuery(captured.body)
+	if err != nil {
+		t.Fatalf("upstream body is not form-encoded: %v (%q)", err, captured.body)
+	}
+	for k := range form {
+		if got.Get(k) != form.Get(k) {
+			t.Errorf("upstream field %q = %q, want %q", k, got.Get(k), form.Get(k))
+		}
+	}
+}
+
+func TestOAuthTokenProxyHandler_QueryParamsAreNotForwarded(t *testing.T) {
+	authTS, captured := newFakeAuthServer(t, http.StatusOK, `{}`)
+	defer authTS.Close()
+	proxyTS := mountTestProxy(t, authTS.URL+"/auth", authTS.URL+"/api/token")
+
+	resp, err := http.Post(proxyTS.URL+"/oauth-proxy/looker/token?client_id=attacker", "application/x-www-form-urlencoded", strings.NewReader("grant_type=authorization_code&client_id=real"))
+	if err != nil {
+		t.Fatalf("POST failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if captured.rawQuery != "" {
+		t.Errorf("upstream received query %q, want none", captured.rawQuery)
+	}
+	if !strings.Contains(captured.body, "client_id=real") || strings.Contains(captured.body, "attacker") {
+		t.Errorf("upstream body %q should carry only the POST body fields", captured.body)
 	}
 }
 
 func TestOAuthTokenProxyHandler_JSONPassthrough(t *testing.T) {
 	authTS, captured := newFakeAuthServer(t, http.StatusOK, `{"access_token":"abc"}`)
 	defer authTS.Close()
+	proxyTS := mountTestProxy(t, authTS.URL+"/auth", authTS.URL+"/api/token")
 
-	r := chi.NewRouter()
-	if err := mountOAuthProxyRoutes(context.Background(), r, map[string]sources.Source{
-		"looker": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: authTS.URL + "/auth", tokenEndpoint: authTS.URL + "/oauth/token"},
-	}, "", testLogger(t)); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	proxyTS := httptest.NewServer(r)
-	defer proxyTS.Close()
-
-	resp, err := http.Post(proxyTS.URL+"/oauth-proxy/looker/token", "application/json", strings.NewReader(`{"grant_type":"refresh_token","refresh_token":"rt-123"}`))
+	const body = `{"grant_type":"refresh_token","refresh_token":"rt-123"}`
+	resp, err := http.Post(proxyTS.URL+"/oauth-proxy/looker/token", "application/json", strings.NewReader(body))
 	if err != nil {
 		t.Fatalf("POST failed: %v", err)
 	}
@@ -393,8 +424,127 @@ func TestOAuthTokenProxyHandler_JSONPassthrough(t *testing.T) {
 	if captured.contentType != "application/json" {
 		t.Errorf("upstream received Content-Type %q, want application/json", captured.contentType)
 	}
-	if captured.jsonBody["refresh_token"] != "rt-123" {
-		t.Errorf("upstream did not receive the expected JSON body passed through as-is: %+v", captured.jsonBody)
+	if captured.body != body {
+		t.Errorf("upstream body = %q, want %q passed through as-is", captured.body, body)
+	}
+}
+
+func TestOAuthTokenProxyHandler_RelaysUpstreamStatusBodyAndSetsNoStore(t *testing.T) {
+	const upstreamBody = `{"error":"invalid_grant"}`
+	authTS, _ := newFakeAuthServer(t, http.StatusBadRequest, upstreamBody)
+	defer authTS.Close()
+	proxyTS := mountTestProxy(t, authTS.URL+"/auth", authTS.URL+"/api/token")
+
+	resp, err := http.Post(proxyTS.URL+"/oauth-proxy/looker/token", "application/x-www-form-urlencoded", strings.NewReader("grant_type=authorization_code"))
+	if err != nil {
+		t.Fatalf("POST failed: %v", err)
+	}
+	defer resp.Body.Close()
+	b, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusBadRequest || string(b) != upstreamBody {
+		t.Errorf("got %d %q, want upstream 400 %q relayed verbatim", resp.StatusCode, b, upstreamBody)
+	}
+	if got := resp.Header.Get("Cache-Control"); got != "no-store" {
+		t.Errorf("Cache-Control = %q, want no-store", got)
+	}
+	if got := resp.Header.Get("Pragma"); got != "no-cache" {
+		t.Errorf("Pragma = %q, want no-cache", got)
+	}
+}
+
+func TestOAuthTokenProxyHandler_OversizedRequestRejected(t *testing.T) {
+	authTS, captured := newFakeAuthServer(t, http.StatusOK, `{}`)
+	defer authTS.Close()
+	proxyTS := mountTestProxy(t, authTS.URL+"/auth", authTS.URL+"/api/token")
+
+	big := "grant_type=authorization_code&code=" + strings.Repeat("a", maxTokenRequestBodySize+1)
+	resp, err := http.Post(proxyTS.URL+"/oauth-proxy/looker/token", "application/x-www-form-urlencoded", strings.NewReader(big))
+	if err != nil {
+		t.Fatalf("POST failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusRequestEntityTooLarge {
+		t.Errorf("got status %d, want 413", resp.StatusCode)
+	}
+	if got := resp.Header.Get("Content-Type"); got != "application/json" {
+		t.Errorf("error Content-Type = %q, want application/json", got)
+	}
+	if captured.method != "" {
+		t.Errorf("oversized request must not reach the authorization server")
+	}
+}
+
+func TestOAuthTokenProxyHandler_OversizedResponseIsTruncated(t *testing.T) {
+	big := strings.Repeat("a", maxTokenResponseBodySize+1024)
+	authTS, _ := newFakeAuthServer(t, http.StatusOK, big)
+	defer authTS.Close()
+	proxyTS := mountTestProxy(t, authTS.URL+"/auth", authTS.URL+"/api/token")
+
+	resp, err := http.Post(proxyTS.URL+"/oauth-proxy/looker/token", "application/json", strings.NewReader(`{}`))
+	if err != nil {
+		t.Fatalf("POST failed: %v", err)
+	}
+	defer resp.Body.Close()
+	b, _ := io.ReadAll(resp.Body)
+
+	if len(b) != maxTokenResponseBodySize {
+		t.Errorf("relayed %d bytes, want exactly the %d byte cap", len(b), maxTokenResponseBodySize)
+	}
+}
+
+func TestOAuthTokenProxyHandler_MissingContentTypeIsJSONError(t *testing.T) {
+	authTS, _ := newFakeAuthServer(t, http.StatusOK, `{}`)
+	defer authTS.Close()
+	proxyTS := mountTestProxy(t, authTS.URL+"/auth", authTS.URL+"/api/token")
+
+	req, _ := http.NewRequest(http.MethodPost, proxyTS.URL+"/oauth-proxy/looker/token", strings.NewReader("grant_type=x"))
+	req.Header.Del("Content-Type")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("POST failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("got status %d, want 400", resp.StatusCode)
+	}
+	if got := resp.Header.Get("Content-Type"); got != "application/json" {
+		t.Errorf("error Content-Type = %q, want application/json (not text/plain)", got)
+	}
+}
+
+func TestOAuthTokenProxyHandler_DoesNotFollowRedirects(t *testing.T) {
+	var hitTarget bool
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hitTarget = true
+	}))
+	defer target.Close()
+	redirector := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, target.URL, http.StatusTemporaryRedirect)
+	}))
+	defer redirector.Close()
+	proxyTS := mountTestProxy(t, redirector.URL+"/auth", redirector.URL+"/api/token")
+
+	resp, err := http.Post(proxyTS.URL+"/oauth-proxy/looker/token", "application/x-www-form-urlencoded", strings.NewReader("grant_type=authorization_code&code=secret"))
+	if err != nil {
+		t.Fatalf("POST failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if hitTarget {
+		t.Errorf("proxy followed a redirect and forwarded the token request to an unconfigured host")
+	}
+	if resp.StatusCode != http.StatusTemporaryRedirect {
+		t.Errorf("got status %d, want the upstream 307 relayed", resp.StatusCode)
+	}
+}
+
+func TestOAuthDiscoveryHandler_DefaultsAdvertiseRefreshToken(t *testing.T) {
+	caps := oauthCapabilitiesFor(fakeOAuthProxySource{})
+	if strings.Join(caps.grantTypesSupported, ",") != "authorization_code,refresh_token" {
+		t.Errorf("default grant_types_supported = %v, want authorization_code and refresh_token", caps.grantTypesSupported)
 	}
 }
 
@@ -405,7 +555,7 @@ func TestOAuthTokenProxyHandler_UpstreamUnreachableReturnsBadGateway(t *testing.
 
 	r := chi.NewRouter()
 	if err := mountOAuthProxyRoutes(context.Background(), r, map[string]sources.Source{
-		"looker": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: authTS.URL + "/auth", tokenEndpoint: authTS.URL + "/oauth/token"},
+		"looker": fakeOAuthProxySource{clientOAuthEnabled: true, authEndpoint: authTS.URL + "/auth", tokenEndpoint: authTS.URL + "/api/token"},
 	}, "", testLogger(t)); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

@@ -78,18 +78,21 @@ type Source interface {
 //
 // A Source that implements this interface, and reports
 // ClientOAuthEnabled() == true, has its OAuth discovery document and token
-// endpoint proxied by the toolbox itself, at namespaced paths under
-// /oauth-proxy/{sourceName}/ (see internal/server/oauth_proxy.go). The
-// browser then only ever talks to the toolbox's own origin, which already
-// sends the CORS headers configured via --allowed-origins, and the toolbox
-// forwards the token exchange to the authorization server server-side,
-// where CORS does not apply.
+// endpoint proxied by the toolbox itself (see
+// internal/server/oauth_proxy.go), at:
 //
-// Unlike an earlier, narrower version of this mechanism, a source
-// implementing this interface supplies its own full endpoint URLs rather
-// than a bare base URL plus an assumed path suffix — different
-// authorization servers use different conventions, so the toolbox itself
-// should not need to guess any source's URL layout.
+//	GET  /.well-known/oauth-authorization-server/oauth-proxy/{sourceName}
+//	POST /oauth-proxy/{sourceName}/token
+//
+// The browser then only ever talks to the toolbox's own origin, which
+// already sends the CORS headers configured via --allowed-origins, and the
+// toolbox forwards the token exchange to the authorization server
+// server-side, where CORS does not apply.
+//
+// A source supplies its own full endpoint URLs rather than a bare base URL
+// plus an assumed path suffix, because different authorization servers use
+// different conventions and the toolbox should not need to guess any
+// source's URL layout.
 type OAuthProxySource interface {
 	Source
 	// ClientOAuthEnabled reports whether this source instance expects the
@@ -112,7 +115,7 @@ type OAuthProxySource interface {
 // OAuthProxyCapabilities can optionally be implemented by an
 // OAuthProxySource to override the default OAuth capabilities advertised in
 // its proxied discovery document (response_types_supported: ["code"],
-// grant_types_supported: ["authorization_code"],
+// grant_types_supported: ["authorization_code", "refresh_token"],
 // code_challenge_methods_supported: ["S256"]). Most authorization servers
 // matching OAuthProxySource use these defaults and don't need to implement
 // this.
