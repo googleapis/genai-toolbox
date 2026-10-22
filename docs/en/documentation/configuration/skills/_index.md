@@ -3,7 +3,7 @@ title: "Agent Skills"
 type: docs
 weight: 12
 description: >
-  Generate an Agent Skill from a toolset.
+  Use Agent Skills with Toolbox.
 ---
 
 An [Agent Skill](https://agentskills.io/specification) is a directory of files. A
