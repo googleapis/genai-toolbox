@@ -79,12 +79,15 @@ if [[ "${ATTESTATION_FOUND}" != "true" ]]; then
   exit 1
 fi
 
+readonly ACCESS_TOKEN=$(gcloud auth print-access-token)
+
 upsert_tag() {
   local tag_id="$1"
   local repo="${2:-${STAGING_REPO}}"
   local digest="${3:-${IMAGE_DIGEST}}"
+  local encoded_package="${PACKAGE_NAME//\//%2F}"
   local image_uri="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${repo}/${PACKAGE_NAME}"
-  local tag_parent="projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${repo}/packages/${PACKAGE_NAME}"
+  local tag_parent="projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${repo}/packages/${encoded_package}"
   local target_version_name="${tag_parent}/versions/${digest}"
   local existing_digest
 
@@ -112,7 +115,7 @@ upsert_tag() {
 
   local resp http_code body
   resp=$(curl -sS --retry 3 -w "\n%{http_code}" -X "${method}" \
-    -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+    -H "Authorization: Bearer ${ACCESS_TOKEN}" \
     -H "Content-Type: application/json" \
     "${tag_url}" \
     -d "{\"name\": \"${tag_parent}/tags/${tag_id}\", \"version\": \"${target_version_name}\"}")
@@ -126,12 +129,14 @@ upsert_tag() {
 
 tag_with_children() {
   local prefix="$1" repo="$2" digest="$3" suffix="$4" child
+  local encoded_package="${PACKAGE_NAME//\//%2F}"
   upsert_tag "${prefix}-${suffix}" "${repo}" "${digest}"
   for child in $(curl -fsSL --retry 3 \
-    -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-    "https://artifactregistry.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${repo}/dockerImages/${PACKAGE_NAME}@${digest}" \
+    -H "Authorization: Bearer ${ACCESS_TOKEN}" \
+    "https://artifactregistry.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/repositories/${repo}/dockerImages/${encoded_package}@${digest}" \
     | jq -r '.imageManifests[]?.digest // empty | select(startswith("sha256:"))'); do
-    upsert_tag "${prefix}-${child:7:12}" "${repo}" "${child}"
+    local child_sha="${child#sha256:}"
+    upsert_tag "${prefix}-${child_sha:0:12}" "${repo}" "${child}"
   done
 }
 
@@ -239,6 +244,7 @@ if [[ "${PUSH_LATEST:-false}" == "true" ]]; then
   upsert_tag "latest" "${PROD_REPO}" "${IMAGE_DIGEST}"
   if [[ -n "${EXISTING_LATEST_DIGEST}" && "${EXISTING_LATEST_DIGEST}" != "${IMAGE_DIGEST}" ]]; then
     echo "Marking previous latest image (${EXISTING_LATEST_DIGEST}) as deprecated..."
-    tag_with_children "deprecated-public-image" "${PROD_REPO}" "${EXISTING_LATEST_DIGEST}" "${EXISTING_LATEST_DIGEST:7:12}"
+    SHORT_LATEST="${EXISTING_LATEST_DIGEST#sha256:}"
+    tag_with_children "deprecated-public-image" "${PROD_REPO}" "${EXISTING_LATEST_DIGEST}" "${SHORT_LATEST:0:12}"
   fi
 fi
