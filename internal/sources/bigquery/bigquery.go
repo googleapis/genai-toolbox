@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -527,6 +528,7 @@ func (s *Source) BigQueryAllowedDatasets() []string {
 	for d := range s.AllowedDatasets {
 		datasets = append(datasets, d)
 	}
+	sort.Strings(datasets)
 	return datasets
 }
 
