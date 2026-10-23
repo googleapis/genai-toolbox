@@ -103,6 +103,11 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"get_explore": map[string]any{
+				"type":        "looker-get-explore",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 			"get_dimensions": map[string]any{
 				"type":        "looker-get-dimensions",
 				"source":      "my-instance",
@@ -411,6 +416,30 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "get_explore",
+		map[string]any{
+			"get_explore": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The explore to get metadata for.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
 	tests.RunToolGetTestByName(t, "get_dimensions",
 		map[string]any{
 			"get_dimensions": map[string]any{
@@ -562,30 +591,30 @@ func TestLooker(t *testing.T) {
 				"parameters": []any{
 					map[string]any{
 						"authServices": []any{},
-						"description":  "The model containing the explore.",
+						"description":  "The model containing the explore (required if query_id is not provided).",
 						"name":         "model",
-						"required":     true,
+						"required":     false,
 						"type":         "string",
 					},
 					map[string]any{
 						"authServices": []any{},
-						"description":  "The explore to be queried.",
+						"description":  "The explore to be queried (required if query_id is not provided).",
 						"name":         "explore",
-						"required":     true,
+						"required":     false,
 						"type":         "string",
 					},
 					map[string]any{
 						"authServices": []any{},
-						"description":  "The fields to be retrieved.",
+						"description":  "The fields to be retrieved (required if query_id is not provided).",
 						"items": map[string]any{
 							"authServices": []any{},
 							"description":  "A field to be returned in the query",
 							"name":         "field",
-							"required":     true,
+							"required":     false,
 							"type":         "string",
 						},
 						"name":     "fields",
-						"required": true,
+						"required": false,
 						"type":     "array",
 					},
 					map[string]any{
@@ -664,6 +693,36 @@ func TestLooker(t *testing.T) {
 						"name":     "dynamic_fields",
 						"required": false,
 						"type":     "array",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional unique identifier (numeric ID or slug) of a saved Looker query to run. If provided, model, explore, and fields are not required.",
+						"name":         "query_id",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      "json",
+						"description":  "The output format: 'json' (raw row array) or 'json_detail' (includes fields, pivots, and data). Default is 'json'.",
+						"name":         "result_format",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      "",
+						"description":  "Optional visualization configuration JSON string to associate with the query response.",
+						"name":         "vis_config",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional flag indicating whether to generate drill links in the query result.",
+						"name":         "generate_drill_links",
+						"required":     false,
+						"type":         "boolean",
 					},
 				},
 			},
@@ -2369,8 +2428,11 @@ func TestLooker(t *testing.T) {
 	wantResult := "{\"connections\":[],\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
 
-	wantResult = "{\"description\":\"Data about Look and dashboard usage, including frequency of views, favoriting, scheduling, embedding, and access via the API. Also includes details about individual Looks and dashboards.\",\"group_label\":\"System Activity\",\"label\":\"Content Usage\",\"name\":\"content_usage\"}"
+	wantResult = "{\"description\":\"Data about Look and dashboard usage, including frequency of views, favoriting, scheduling, embedding, and access via the API. Also includes details about individual Looks and dashboards.\",\"group_label\":\"System Activity\",\"hidden\":false,\"label\":\"Content Usage\",\"name\":\"content_usage\"}"
 	tests.RunToolInvokeParametersTest(t, "get_explores", []byte(`{"model": "system__activity"}`), wantResult)
+
+	wantResult = "\"group_label\":\"System Activity\",\"hidden\":false,\"label\":\"Content Usage\",\"name\":\"content_usage\""
+	tests.RunToolInvokeParametersTest(t, "get_explore", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
 
 	wantResult = "{\"description\":\"\",\"label\":\" Dashboard Linked Looks  ID\",\"label_short\":\" ID\",\"name\":\"_dashboard_linked_looks._id\",\"suggest_dimension\":\"_dashboard_linked_looks._id\",\"suggest_explore\":\"content_usage\",\"suggestable\":true,\"type\":\"string\"}"
 	tests.RunToolInvokeParametersTest(t, "get_dimensions", []byte(`{"model": "system__activity", "explore": "content_usage"}`), wantResult)
@@ -2401,6 +2463,7 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "{\"look.count\":"
 	tests.RunToolInvokeParametersTest(t, "query", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
+	testQueryById(t, wantResult)
 
 	wantResult = "SELECT"
 	tests.RunToolInvokeParametersTest(t, "query_sql", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
@@ -2534,7 +2597,9 @@ func TestLooker(t *testing.T) {
 	wantResult = "[]"
 	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_schedule_failures"}`), wantResult)
 
-	wantResult = "[{\"Feature\":\"Unsupported in Looker (Google Cloud core)\"}]"
+	// Newer Looker (Google Cloud core) instances no longer throw an "Unsupported" API error for
+	// legacy features, but instead return an empty list.
+	wantResult = "[]"
 	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_legacy_features"}`), wantResult)
 
 	wantResult = "\"Project\":\"the_look\""
@@ -2681,6 +2746,24 @@ func newLookerTestSDK(t *testing.T) *v4.LookerSDK {
 		ClientSecret: LookerClientSecret,
 	}
 	return v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+}
+
+func testQueryById(t *testing.T, wantResult string) {
+	t.Helper()
+	sdk := newLookerTestSDK(t)
+	fields := []string{"look.count"}
+	savedQuery, err := sdk.CreateQuery(v4.WriteQuery{
+		Model:  "system__activity",
+		View:   "look",
+		Fields: &fields,
+	}, "", nil)
+	if err != nil {
+		t.Fatalf("failed to create saved query for query_id test: %v", err)
+	}
+	if savedQuery.Id == nil || *savedQuery.Id == "" {
+		t.Fatalf("expected non-empty saved query Id")
+	}
+	tests.RunToolInvokeParametersTest(t, "query", []byte(fmt.Sprintf(`{"query_id": "%s"}`, *savedQuery.Id)), wantResult)
 }
 
 func testMakeLook(t *testing.T, randstr string) func() {
