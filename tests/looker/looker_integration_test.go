@@ -591,30 +591,30 @@ func TestLooker(t *testing.T) {
 				"parameters": []any{
 					map[string]any{
 						"authServices": []any{},
-						"description":  "The model containing the explore.",
+						"description":  "The model containing the explore (required if query_id is not provided).",
 						"name":         "model",
-						"required":     true,
+						"required":     false,
 						"type":         "string",
 					},
 					map[string]any{
 						"authServices": []any{},
-						"description":  "The explore to be queried.",
+						"description":  "The explore to be queried (required if query_id is not provided).",
 						"name":         "explore",
-						"required":     true,
+						"required":     false,
 						"type":         "string",
 					},
 					map[string]any{
 						"authServices": []any{},
-						"description":  "The fields to be retrieved.",
+						"description":  "The fields to be retrieved (required if query_id is not provided).",
 						"items": map[string]any{
 							"authServices": []any{},
 							"description":  "A field to be returned in the query",
 							"name":         "field",
-							"required":     true,
+							"required":     false,
 							"type":         "string",
 						},
 						"name":     "fields",
-						"required": true,
+						"required": false,
 						"type":     "array",
 					},
 					map[string]any{
@@ -693,6 +693,36 @@ func TestLooker(t *testing.T) {
 						"name":     "dynamic_fields",
 						"required": false,
 						"type":     "array",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional unique identifier (numeric ID or slug) of a saved Looker query to run. If provided, model, explore, and fields are not required.",
+						"name":         "query_id",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      "json",
+						"description":  "The output format: 'json' (raw row array) or 'json_detail' (includes fields, pivots, and data). Default is 'json'.",
+						"name":         "result_format",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      "",
+						"description":  "Optional visualization configuration JSON string to associate with the query response.",
+						"name":         "vis_config",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional flag indicating whether to generate drill links in the query result.",
+						"name":         "generate_drill_links",
+						"required":     false,
+						"type":         "boolean",
 					},
 				},
 			},
@@ -2433,6 +2463,7 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "{\"look.count\":"
 	tests.RunToolInvokeParametersTest(t, "query", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
+	testQueryById(t, wantResult)
 
 	wantResult = "SELECT"
 	tests.RunToolInvokeParametersTest(t, "query_sql", []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"]}`), wantResult)
@@ -2715,6 +2746,24 @@ func newLookerTestSDK(t *testing.T) *v4.LookerSDK {
 		ClientSecret: LookerClientSecret,
 	}
 	return v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+}
+
+func testQueryById(t *testing.T, wantResult string) {
+	t.Helper()
+	sdk := newLookerTestSDK(t)
+	fields := []string{"look.count"}
+	savedQuery, err := sdk.CreateQuery(v4.WriteQuery{
+		Model:  "system__activity",
+		View:   "look",
+		Fields: &fields,
+	}, "", nil)
+	if err != nil {
+		t.Fatalf("failed to create saved query for query_id test: %v", err)
+	}
+	if savedQuery.Id == nil || *savedQuery.Id == "" {
+		t.Fatalf("expected non-empty saved query Id")
+	}
+	tests.RunToolInvokeParametersTest(t, "query", []byte(fmt.Sprintf(`{"query_id": "%s"}`, *savedQuery.Id)), wantResult)
 }
 
 func testMakeLook(t *testing.T, randstr string) func() {
