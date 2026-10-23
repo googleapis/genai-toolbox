@@ -544,6 +544,7 @@ func BuildWriteDashboardElement(ctx context.Context, sdk *v4.LookerSDK, dashboar
 	}
 
 	var filterables []v4.ResultMakerFilterables
+	var listeners []v4.ResultMakerFilterablesListen
 	for _, m := range dashFilters {
 		f, ok := m.(map[string]any)
 		if !ok {
@@ -557,16 +558,19 @@ func BuildWriteDashboardElement(ctx context.Context, sdk *v4.LookerSDK, dashboar
 		if !ok {
 			return v4.WriteDashboardElement{}, util.NewAgentError("error processing dashboard filter: missing field", nil)
 		}
-		listeners := []v4.ResultMakerFilterablesListen{{
+		listener := v4.ResultMakerFilterablesListen{
 			DashboardFilterName: &name,
 			Field:               &field,
-		}}
-		filterables = append(filterables, v4.ResultMakerFilterables{
-			Listen: &listeners,
-		})
+		}
+		listeners = append(listeners, listener)
 	}
-	if len(filterables) == 0 {
-		filterables = nil
+
+	if len(listeners) > 0 {
+		filterables = []v4.ResultMakerFilterables{
+			{
+				Listen: &listeners,
+			},
+		}
 	}
 
 	wrm := v4.WriteResultMakerWithIdVisConfigAndDynamicFields{
