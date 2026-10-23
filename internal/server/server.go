@@ -71,6 +71,7 @@ type Server struct {
 	openAIAppsChallengeFile string
 	httpMaxRequestBytes     int64
 	enableDraftSpecs        bool
+	disableExtensionCheck   bool
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -633,6 +634,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		openAIAppsChallengeFile: cfg.OpenAIAppsChallengeFile,
 		httpMaxRequestBytes:     limit,
 		enableDraftSpecs:        cfg.EnableDraftSpecs,
+		disableExtensionCheck:   cfg.DisableExtensionCheck,
 	}
 
 	if s.enableDraftSpecs {
