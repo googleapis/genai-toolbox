@@ -17,7 +17,9 @@ package sources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,43 +35,53 @@ import (
 func TestNormalizeValue(t *testing.T) {
 	// Test case 1: UUID OID (2950) with [16]byte
 	uuidBytes := [16]byte{1, 158, 103, 138, 45, 22, 120, 229, 146, 32, 191, 118, 245, 114, 247, 50}
-	expectedUUID := "019e678a-2d16-78e5-9220-bf76f572f732"
+	expectedUUIDStr := "019e678a-2d16-78e5-9220-bf76f572f732"
 
-	res := NormalizeValue(uuidBytes, PostgresTypeUUID)
-	if res != expectedUUID {
-		t.Errorf("Expected %s, got %v", expectedUUID, res)
+	result := NormalizeValue(uuidBytes, 2950)
+	if str, ok := result.(string); !ok || str != expectedUUIDStr {
+		t.Errorf("Expected UUID string %s, got %v", expectedUUIDStr, result)
 	}
 
-	// Test case 2: UUID OID with []byte
-	resSlice := NormalizeValue(uuidBytes[:], PostgresTypeUUID)
-	if resSlice != expectedUUID {
-		t.Errorf("Expected %s, got %v", expectedUUID, resSlice)
+	// Test case 2: UUID OID (2950) with other type
+	result = NormalizeValue("not-bytes", 2950)
+	if str, ok := result.(string); !ok || str != "not-bytes" {
+		t.Errorf("Expected original string 'not-bytes', got %v", result)
 	}
 
-	// Test case 3: Non-UUID OID with [16]byte (should remain [16]byte)
-	resOther := NormalizeValue(uuidBytes, 1234)
-	if resOther != uuidBytes {
-		t.Errorf("Expected [16]byte to remain unchanged for non-UUID OID, got %T", resOther)
+	// Test case 3: Other OID
+	result = NormalizeValue(uuidBytes, 1000)
+	if bytes, ok := result.([16]byte); !ok || bytes != uuidBytes {
+		t.Errorf("Expected original [16]byte array, got %v", result)
 	}
 
-	// Test case 4: Nil value
-	if NormalizeValue(nil, PostgresTypeUUID) != nil {
-		t.Errorf("Expected nil for nil input")
+	// Test case 4: UUID Array OID (2951) with [][16]byte
+	uuidArray := [][16]byte{uuidBytes}
+	result = NormalizeValue(uuidArray, 2951)
+	if arr, ok := result.([]string); !ok || len(arr) != 1 || arr[0] != expectedUUIDStr {
+		t.Errorf("Expected []string with %s, got %v", expectedUUIDStr, result)
+	}
+
+	// Test case 5: UUID Array OID (2951) with []any
+	uuidAnyArray := []any{uuidBytes, "not-a-uuid"}
+	result = NormalizeValue(uuidAnyArray, 2951)
+	if arr, ok := result.([]any); !ok || len(arr) != 2 || arr[0] != expectedUUIDStr || arr[1] != "not-a-uuid" {
+		t.Errorf("Expected []any with normalized UUID, got %v", result)
 	}
 }
 
-// stubTokenSource is a test oauth2.TokenSource returning a fixed token/error.
 type stubTokenSource struct {
-	tok *oauth2.Token
-	err error
+	tok   *oauth2.Token
+	err   error
+	onTok func()
 }
 
-func (s stubTokenSource) Token() (*oauth2.Token, error) { return s.tok, s.err }
+func (s stubTokenSource) Token() (*oauth2.Token, error) {
+	if s.onTok != nil {
+		s.onTok()
+	}
+	return s.tok, s.err
+}
 
-// revokedGrantError mimics the error the ADC token source returns after
-// `gcloud auth application-default login` rotates the on-disk refresh token
-// and the old one is revoked: an OAuth token-endpoint rejection with RFC 6749
-// error code "invalid_grant".
 func revokedGrantError() error {
 	return &oauth2.RetrieveError{
 		Response:  &http.Response{StatusCode: http.StatusBadRequest},
@@ -78,16 +90,10 @@ func revokedGrantError() error {
 }
 
 const (
-	// adcOldJSON stands in for the ADC file the source was built from;
-	// adcRotatedJSON is the same identity and quota project after a routine
-	// re-auth (only the refresh token changed).
 	adcOldJSON     = `{"type":"authorized_user","client_id":"id","refresh_token":"old","quota_project_id":"proj-a"}`
 	adcRotatedJSON = `{"type":"authorized_user","client_id":"id","refresh_token":"new","quota_project_id":"proj-a"}`
 )
 
-// newTestReloader builds a reloadingTokenSource around a failing current
-// source and a stubbed discovery, mirroring what newReloader wires up in
-// production.
 func newTestReloader(cur oauth2.TokenSource, curJSON string, discover func() (*google.Credentials, error)) *reloadingTokenSource {
 	var j []byte
 	if curJSON != "" {
@@ -102,8 +108,6 @@ func newTestReloader(cur oauth2.TokenSource, curJSON string, discover func() (*g
 	}
 }
 
-// TestReloadingTokenSource_HappyPathNoReload verifies that when the current
-// source can mint a token, its token is returned and discovery never runs.
 func TestReloadingTokenSource_HappyPathNoReload(t *testing.T) {
 	r := newTestReloader(
 		stubTokenSource{tok: &oauth2.Token{AccessToken: "cached"}},
@@ -122,12 +126,6 @@ func TestReloadingTokenSource_HappyPathNoReload(t *testing.T) {
 	}
 }
 
-// TestReloadingTokenSource_ReloadsWhenDiskChanged verifies that when the
-// current source fails and the ADC on disk changed, the source reloads,
-// swaps in the rediscovered credentials, and serves their token: a live
-// session recovers from a re-auth without a process restart. The reload is
-// keyed on the on-disk change, not the error's shape, so recovery works for
-// every ADC credential type regardless of how its token source wraps errors.
 func TestReloadingTokenSource_ReloadsWhenDiskChanged(t *testing.T) {
 	tcs := []struct {
 		desc    string
@@ -153,7 +151,7 @@ func TestReloadingTokenSource_ReloadsWhenDiskChanged(t *testing.T) {
 				t.Fatalf("Token() returned error, want successful reload: %v", err)
 			}
 			if tok.AccessToken != "fresh" {
-				t.Errorf("AccessToken = %q, want %q (the reloaded source's token)", tok.AccessToken, "fresh")
+				t.Errorf("AccessToken = %q, want %q", tok.AccessToken, "fresh")
 			}
 			if discoveries != 1 {
 				t.Errorf("discover called %d times, want 1", discoveries)
@@ -168,12 +166,6 @@ func TestReloadingTokenSource_ReloadsWhenDiskChanged(t *testing.T) {
 	}
 }
 
-// TestReloadingTokenSource_NoReloadWhenDiskUnchanged verifies that when the
-// ADC on disk still matches what the current source was built from, the mint
-// failure is returned untouched, whatever its shape: rate limits, server
-// errors, network drops, and even a revoked grant (nothing new on disk means
-// nothing to reload). The JSON-less case covers metadata-server credentials,
-// which have nothing on disk to compare or reload.
 func TestReloadingTokenSource_NoReloadWhenDiskUnchanged(t *testing.T) {
 	tcs := []struct {
 		desc    string
@@ -207,12 +199,6 @@ func TestReloadingTokenSource_NoReloadWhenDiskUnchanged(t *testing.T) {
 	}
 }
 
-// TestReloadingTokenSource_DiscoverFailurePropagates verifies that if
-// rediscovering ADC fails, the discovery error surfaces (inspectable via
-// errors.Is) with the original mint failure preserved as text. The mint
-// error is deliberately not wrapped: a wrapped *oauth2.RetrieveError would
-// be re-rendered by the client libraries' auth adapters, hiding the reload
-// context from the caller.
 func TestReloadingTokenSource_DiscoverFailurePropagates(t *testing.T) {
 	mintErr := revokedGrantError()
 	discoverErr := errors.New("ADC gone from disk")
@@ -231,9 +217,6 @@ func TestReloadingTokenSource_DiscoverFailurePropagates(t *testing.T) {
 	}
 }
 
-// TestReloadingTokenSource_ReloadedSourceAlsoFails covers the branch where
-// the reloaded credentials are adopted but still cannot mint, and verifies
-// the error names the reload so an operator knows one already happened.
 func TestReloadingTokenSource_ReloadedSourceAlsoFails(t *testing.T) {
 	stillBroken := errors.New("still broken after reload")
 	r := newTestReloader(stubTokenSource{err: revokedGrantError()}, adcOldJSON, func() (*google.Credentials, error) {
@@ -248,37 +231,68 @@ func TestReloadingTokenSource_ReloadedSourceAlsoFails(t *testing.T) {
 	}
 }
 
-// TestReloadingTokenSource_ConcurrentReload exercises the mutex under
-// concurrent callers (run with -race). All callers must observe a successful
-// token, and the generation check must keep the reload single-flight.
 func TestReloadingTokenSource_ConcurrentReload(t *testing.T) {
-	fresh := stubTokenSource{tok: &oauth2.Token{AccessToken: "fresh"}}
-	var discoveries atomic.Int32
-	r := newTestReloader(stubTokenSource{err: revokedGrantError()}, adcOldJSON, func() (*google.Credentials, error) {
-		discoveries.Add(1)
-		return &google.Credentials{TokenSource: fresh, JSON: []byte(adcRotatedJSON)}, nil
-	})
-	const n = 32
-	var wg sync.WaitGroup
-	wg.Add(n)
-	for range n {
-		go func() {
-			defer wg.Done()
-			tok, err := r.Token()
-			if err != nil || tok.AccessToken != "fresh" {
-				t.Errorf("concurrent Token() = (%v, %v), want (fresh, nil)", tok, err)
-			}
-		}()
+	stillBroken := errors.New("still broken after reload")
+	tcs := []struct {
+		desc     string
+		reloaded oauth2.TokenSource
+		wantErr  error
+	}{
+		{
+			desc:     "reloaded source succeeds",
+			reloaded: stubTokenSource{tok: &oauth2.Token{AccessToken: "fresh"}},
+		},
+		{
+			desc:     "reloaded source fails",
+			reloaded: stubTokenSource{err: stillBroken},
+			wantErr:  stillBroken,
+		},
 	}
-	wg.Wait()
-	if got := discoveries.Load(); got != 1 {
-		t.Errorf("discover ran %d times, want exactly 1 (the generation check should serialize concurrent reloads)", got)
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			const n = 32
+			var entered sync.WaitGroup
+			entered.Add(n)
+			release := make(chan struct{})
+			var discoveries atomic.Int32
+			initial := stubTokenSource{
+				err: revokedGrantError(),
+				onTok: func() {
+					entered.Done()
+					<-release
+				},
+			}
+			r := newTestReloader(initial, adcOldJSON, func() (*google.Credentials, error) {
+				discoveries.Add(1)
+				return &google.Credentials{TokenSource: tc.reloaded, JSON: []byte(adcRotatedJSON)}, nil
+			})
+			var wg sync.WaitGroup
+			wg.Add(n)
+			for range n {
+				go func() {
+					defer wg.Done()
+					tok, err := r.Token()
+					if tc.wantErr != nil {
+						if !errors.Is(err, tc.wantErr) {
+							t.Errorf("concurrent Token() error = %v, want %v", err, tc.wantErr)
+						}
+						return
+					}
+					if err != nil || tok.AccessToken != "fresh" {
+						t.Errorf("concurrent Token() = (%v, %v), want (fresh, nil)", tok, err)
+					}
+				}()
+			}
+			entered.Wait()
+			close(release)
+			wg.Wait()
+			if got := discoveries.Load(); got != 1 {
+				t.Errorf("discover ran %d times, want 1", got)
+			}
+		})
 	}
 }
 
-// TestCheckADCDrift exercises the guards that refuse reloaded credentials
-// that differ from what the server started with in ways a routine rotation
-// would not produce.
 func TestCheckADCDrift(t *testing.T) {
 	tcs := []struct {
 		desc      string
@@ -297,6 +311,28 @@ func TestCheckADCDrift(t *testing.T) {
 			desc:     "service account key rotation keeps the principal",
 			baseJSON: `{"type":"service_account","client_email":"sa@p.iam.gserviceaccount.com","private_key_id":"k1","private_key":"pem1"}`,
 			newJSON:  `{"type":"service_account","client_email":"sa@p.iam.gserviceaccount.com","private_key_id":"k2","private_key":"pem2"}`,
+		},
+		{
+			desc:     "impersonated_service_account routine re-auth rotates nested source_credentials.refresh_token",
+			baseJSON: `{"type":"impersonated_service_account","service_account_impersonation_url":"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/sa@p.iam.gserviceaccount.com:generateAccessToken","source_credentials":{"type":"authorized_user","client_id":"id","client_secret":"s","refresh_token":"old"}}`,
+			newJSON:  `{"type":"impersonated_service_account","service_account_impersonation_url":"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/sa@p.iam.gserviceaccount.com:generateAccessToken","source_credentials":{"type":"authorized_user","client_id":"id","client_secret":"s","refresh_token":"new"}}`,
+		},
+		{
+			desc:     "impersonated_service_account nested source_credentials.client_id drift is refused",
+			baseJSON: `{"type":"impersonated_service_account","service_account_impersonation_url":"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/sa@p.iam.gserviceaccount.com:generateAccessToken","source_credentials":{"type":"authorized_user","client_id":"id","client_secret":"s","refresh_token":"old"}}`,
+			newJSON:  `{"type":"impersonated_service_account","service_account_impersonation_url":"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/sa@p.iam.gserviceaccount.com:generateAccessToken","source_credentials":{"type":"authorized_user","client_id":"other-id","client_secret":"s","refresh_token":"new"}}`,
+			wantErr:  "the source_credentials.client_id field on disk changed",
+		},
+		{
+			desc:     "impersonated_service_account malformed source_credentials is refused",
+			baseJSON: `{"type":"impersonated_service_account","source_credentials":{"type":"authorized_user","client_id":"id","refresh_token":"old"}}`,
+			newJSON:  `{"type":"impersonated_service_account","source_credentials":null}`,
+			wantErr:  "the source_credentials field on disk changed",
+		},
+		{
+			desc:     "reformatted whitespace and key order in nested object is not drift",
+			baseJSON: `{"type":"external_account","audience":"//iam.googleapis.com/x","credential_source":{"file":"/var/run/token","format":{"type":"text"}}}`,
+			newJSON:  "{\n  \"type\": \"external_account\",\n  \"audience\": \"//iam.googleapis.com/x\",\n  \"credential_source\": {\n    \"format\": { \"type\": \"text\" },\n    \"file\": \"/var/run/token\"\n  }\n}",
 		},
 		{
 			desc:     "universe_domain spelled out as the default is not drift",
@@ -382,10 +418,15 @@ func TestCheckADCDrift(t *testing.T) {
 	}
 }
 
-// TestReloadingTokenSource_RefusalIsTerminal verifies the promise in the
-// refusal messages: after a refused drift, subsequent calls keep returning
-// the refusal without adopting anything (nothing is swapped, the generation
-// never moves) until the process restarts.
+func TestReloadingTokenSource_NilSafety(t *testing.T) {
+	r := newTestReloader(nil, adcOldJSON, func() (*google.Credentials, error) {
+		return &google.Credentials{TokenSource: nil, JSON: []byte(adcRotatedJSON)}, nil
+	})
+	if _, err := r.Token(); err == nil || !strings.Contains(err.Error(), "no token source") {
+		t.Errorf("Token() = %v, want error about missing token source", err)
+	}
+}
+
 func TestReloadingTokenSource_RefusalIsTerminal(t *testing.T) {
 	drifted := `{"type":"authorized_user","client_id":"other-client","refresh_token":"new","quota_project_id":"proj-a"}`
 	r := newTestReloader(stubTokenSource{err: revokedGrantError()}, adcOldJSON, func() (*google.Credentials, error) {
@@ -402,7 +443,6 @@ func TestReloadingTokenSource_RefusalIsTerminal(t *testing.T) {
 	}
 }
 
-// countingTokenSource records how many times Token() is called.
 type countingTokenSource struct {
 	tok   *oauth2.Token
 	calls atomic.Int32
@@ -413,9 +453,6 @@ func (c *countingTokenSource) Token() (*oauth2.Token, error) {
 	return c.tok, nil
 }
 
-// TestNewReloadingTokenSource_CachesValidToken verifies that the
-// oauth2.ReuseTokenSource wrapper caches a valid token, so the reload/inner
-// path runs only on an actual mint failure and not on every request.
 func TestNewReloadingTokenSource_CachesValidToken(t *testing.T) {
 	initial := &countingTokenSource{tok: &oauth2.Token{AccessToken: "cached", Expiry: time.Now().Add(time.Hour)}}
 	ts := newReloadingTokenSource(context.Background(), &google.Credentials{TokenSource: initial}, ADCReloadParams{})
@@ -426,14 +463,10 @@ func TestNewReloadingTokenSource_CachesValidToken(t *testing.T) {
 		}
 	}
 	if got := initial.calls.Load(); got != 1 {
-		t.Errorf("initial source called %d times, want 1 (ReuseTokenSource should cache the valid token)", got)
+		t.Errorf("initial source called %d times, want 1", got)
 	}
 }
 
-// TestNewReloader_QuotaProjectPinning verifies the pin resolution:
-// GOOGLE_CLOUD_QUOTA_PROJECT counts as a pin (the client libraries give it
-// precedence over the ADC file), and an explicit pin wins over the
-// environment.
 func TestNewReloader_QuotaProjectPinning(t *testing.T) {
 	t.Setenv(quotaProjectEnvVar, "env-proj")
 	tcs := []struct {
@@ -457,8 +490,6 @@ func TestNewReloader_QuotaProjectPinning(t *testing.T) {
 	}
 }
 
-// TestNewReloader_ParamsWiring pins the ADCReloadParams-to-field hops the
-// call sites rely on.
 func TestNewReloader_ParamsWiring(t *testing.T) {
 	r := newReloader(context.Background(), &google.Credentials{
 		TokenSource: stubTokenSource{},
@@ -468,13 +499,10 @@ func TestNewReloader_ParamsWiring(t *testing.T) {
 		t.Errorf("name = %q, want %q", r.name, "my-source")
 	}
 	if !r.skipQuotaGuard {
-		t.Error("skipQuotaGuard = false, want true (SkipQuotaProjectGuard must reach the guard)")
+		t.Error("skipQuotaGuard = false, want true")
 	}
 }
 
-// TestNewReloader_EnvQuotaProjectPinAllowsDrift verifies end to end that a
-// quota-project drift is adopted when GOOGLE_CLOUD_QUOTA_PROJECT pins the
-// value the clients actually send.
 func TestNewReloader_EnvQuotaProjectPinAllowsDrift(t *testing.T) {
 	t.Setenv(quotaProjectEnvVar, "env-proj")
 	fresh := stubTokenSource{tok: &oauth2.Token{AccessToken: "fresh"}}
@@ -487,15 +515,13 @@ func TestNewReloader_EnvQuotaProjectPinAllowsDrift(t *testing.T) {
 	}
 	tok, err := r.Token()
 	if err != nil {
-		t.Fatalf("Token() = %v, want reload to proceed because GOOGLE_CLOUD_QUOTA_PROJECT pins the quota project", err)
+		t.Fatalf("Token() = %v, want reload to proceed", err)
 	}
 	if tok.AccessToken != "fresh" {
 		t.Errorf("AccessToken = %q, want %q", tok.AccessToken, "fresh")
 	}
 }
 
-// TestNewReloadingDefaultCredentials_DiscoveryError verifies the exported
-// constructor's error path when no ADC can be found at all.
 func TestNewReloadingDefaultCredentials_DiscoveryError(t *testing.T) {
 	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", filepath.Join(t.TempDir(), "missing.json"))
 	_, err := NewReloadingDefaultCredentials(context.Background(), ADCReloadParams{Name: "test"})
@@ -504,12 +530,6 @@ func TestNewReloadingDefaultCredentials_DiscoveryError(t *testing.T) {
 	}
 }
 
-// TestNewReloadingTokenSource_DiskIntegration exercises the real discovery
-// path end to end via GOOGLE_APPLICATION_CREDENTIALS: the current source
-// fails, discovery re-reads the (test-controlled) ADC file from disk, and
-// the changed-on-disk predicate plus the drift guards decide the outcome. No
-// network is involved: every case resolves before a reloaded source would
-// mint.
 func TestNewReloadingTokenSource_DiskIntegration(t *testing.T) {
 	tcs := []struct {
 		desc     string
@@ -539,10 +559,6 @@ func TestNewReloadingTokenSource_DiskIntegration(t *testing.T) {
 				t.Fatal(err)
 			}
 			t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", adcPath)
-			// Neutralize any ambient pin so the quota guard is exercised
-			// (a developer machine may export GOOGLE_CLOUD_QUOTA_PROJECT,
-			// which would otherwise let the drift case reload and reach the
-			// network).
 			t.Setenv(quotaProjectEnvVar, "")
 			ts := newReloadingTokenSource(context.Background(), &google.Credentials{
 				TokenSource: stubTokenSource{err: revokedGrantError()},
@@ -554,4 +570,52 @@ func TestNewReloadingTokenSource_DiskIntegration(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("rotated refresh token on disk reloads and mints a fresh token", func(t *testing.T) {
+		var tokenCalls atomic.Int32
+		tokenSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			tokenCalls.Add(1)
+			if err := r.ParseForm(); err != nil || r.FormValue("refresh_token") != "new" {
+				http.Error(w, `{"error":"invalid_grant"}`, http.StatusBadRequest)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"access_token":"fresh-from-disk","token_type":"Bearer","expires_in":3600}`))
+		}))
+		defer tokenSrv.Close()
+
+		baseJSON := fmt.Sprintf(
+			`{"type":"authorized_user","client_id":"id","client_secret":"s","refresh_token":"old","quota_project_id":"proj-a","token_uri":%q}`,
+			tokenSrv.URL,
+		)
+		diskJSON := fmt.Sprintf(
+			`{"type":"authorized_user","client_id":"id","client_secret":"s","refresh_token":"new","quota_project_id":"proj-a","token_uri":%q}`,
+			tokenSrv.URL,
+		)
+
+		adcPath := filepath.Join(t.TempDir(), "adc.json")
+		if err := os.WriteFile(adcPath, []byte(diskJSON), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", adcPath)
+		t.Setenv(quotaProjectEnvVar, "")
+
+		ts := newReloadingTokenSource(context.Background(), &google.Credentials{
+			TokenSource: stubTokenSource{err: revokedGrantError()},
+			JSON:        []byte(baseJSON),
+		}, ADCReloadParams{Name: "disk-integration"})
+
+		for range 2 {
+			tok, err := ts.Token()
+			if err != nil {
+				t.Fatalf("Token() returned error, want success: %v", err)
+			}
+			if tok.AccessToken != "fresh-from-disk" {
+				t.Errorf("AccessToken = %q, want %q", tok.AccessToken, "fresh-from-disk")
+			}
+		}
+		if got := tokenCalls.Load(); got != 1 {
+			t.Errorf("token endpoint called %d times, want 1 (cached by ReuseTokenSource)", got)
+		}
+	})
 }

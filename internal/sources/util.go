@@ -18,11 +18,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"reflect"
 	"sort"
 	"strings"
 	"sync"
@@ -35,32 +37,35 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-// PostgresTypeUUID is the Postgres OID for UUID columns.
-const PostgresTypeUUID uint32 = 2950
-
-// NormalizeValue converts driver-returned values to standard forms based on database column OIDs.
-// Specifically, it handles converting [16]byte UUID representations into hyphenated string UUIDs.
+// NormalizeValue converts specific database types to friendly representations (e.g. UUID to string).
 func NormalizeValue(val any, oid uint32) any {
-	if val == nil {
-		return nil
-	}
-
-	switch oid {
-	case PostgresTypeUUID:
-		switch v := val.(type) {
-		case [16]byte:
-			u, err := uuid.FromBytes(v[:])
-			if err == nil {
-				return u.String()
-			}
-		case []byte:
-			u, err := uuid.FromBytes(v)
-			if err == nil {
-				return u.String()
-			}
+	// 2950 is the standard OID for UUID in PostgreSQL
+	if oid == 2950 {
+		if b, ok := val.([16]byte); ok {
+			return uuid.UUID(b).String()
 		}
 	}
-
+	// 2951 is the standard OID for _uuid (UUID array) in PostgreSQL
+	if oid == 2951 {
+		if arr, ok := val.([][16]byte); ok {
+			strs := make([]string, len(arr))
+			for i, b := range arr {
+				strs[i] = uuid.UUID(b).String()
+			}
+			return strs
+		}
+		if arr, ok := val.([]any); ok {
+			strs := make([]any, len(arr))
+			for i, item := range arr {
+				if b, ok := item.([16]byte); ok {
+					strs[i] = uuid.UUID(b).String()
+				} else {
+					strs[i] = item
+				}
+			}
+			return strs
+		}
+	}
 	return val
 }
 
@@ -165,102 +170,58 @@ func GetIAMAccessToken(ctx context.Context) (string, error) {
 	return token.AccessToken, nil
 }
 
-// reloadingTokenSource wraps an Application Default Credentials token source
-// so that, when the cached source can no longer mint a token and the ADC on
-// disk has changed since the source was built (for example after a user
-// re-runs `gcloud auth application-default login`, which writes a new refresh
-// token and revokes the old one), it reloads ADC from disk and recovers,
-// instead of failing until the process is restarted. It is safe for
-// concurrent use.
+// reloadingTokenSource wraps an ADC token source and reloads credentials from
+// disk when a token mint fails and the on-disk ADC JSON has changed.
 type reloadingTokenSource struct {
-	mu sync.Mutex
-	// gen is incremented on every swap of cur, so a caller can tell that a
-	// concurrent caller already reloaded while it waited for the lock. (The
-	// exported constructor wraps this type in oauth2.ReuseTokenSource, whose
-	// own mutex already serializes Token calls; the generation check is
-	// defense in depth for any caller that uses the type directly.)
-	gen uint64
-	cur oauth2.TokenSource
-	// curJSON is the ADC JSON cur was built from (nil for JSON-less
-	// credentials, such as ones served by a metadata server). A reload
-	// happens only when the JSON on disk no longer matches it.
-	curJSON []byte
-	// baseJSON is the ADC JSON at construction. Reloaded credentials may
-	// differ from it only in fields a routine re-auth or key rotation is
-	// expected to touch; see checkADCDrift. It is never updated, so repeated
-	// reloads cannot walk the credentials away from what the server started
-	// with in small steps.
-	baseJSON []byte
-	// discover re-reads ADC from disk. It is a field so tests can stub it;
-	// production code sets google.FindDefaultCredentials (see
-	// newReloadingTokenSource).
-	discover func() (*google.Credentials, error)
-	// name identifies the owning source in logs. logger is the server's
-	// configured logger captured at construction (Token has no context); nil
-	// falls back to the process-default slog logger.
-	name   string
-	logger log.Logger
-	// pinnedQuotaProject and skipQuotaGuard configure the quota-project half
-	// of checkADCDrift; baseQuotaProject is the ADC file's value at
-	// construction. See ADCReloadParams.
+	mu                 sync.Mutex
+	gen                uint64
+	cur                oauth2.TokenSource
+	curJSON            []byte
+	baseJSON           []byte
+	discover           func() (*google.Credentials, error)
+	name               string
+	logger             log.Logger
 	pinnedQuotaProject string
 	skipQuotaGuard     bool
 	baseQuotaProject   string
 }
 
-// Token returns a token from the current source. When the source can no
-// longer mint one, it checks whether the ADC on disk changed since the
-// current source was built: if unchanged, the failure is returned as-is
-// (rate limits, server errors, timeouts and network drops all land here, and
-// reloading cannot fix any of them); if changed, the credentials are
-// reloaded from disk and the token is minted from the reloaded source. The
-// changed-on-disk check costs one small local file read and runs only on
-// requests that already failed to mint, so transient failures never trigger
-// a reload no matter what error shape they surface as.
 func (r *reloadingTokenSource) Token() (*oauth2.Token, error) {
 	r.mu.Lock()
 	cur, gen := r.cur, r.gen
 	r.mu.Unlock()
-	tok, mintErr := cur.Token()
-	if mintErr == nil {
-		return tok, nil
+	var tok *oauth2.Token
+	var mintErr error
+	if cur != nil {
+		tok, mintErr = cur.Token()
+		if mintErr == nil {
+			return tok, nil
+		}
+	} else {
+		mintErr = errors.New("current token source is nil")
 	}
 
-	// Serialize the reload under the lock so concurrent callers that all saw
-	// the same failing source don't each hit disk (a thundering herd).
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if r.gen != gen {
-		// A concurrent caller already reloaded while we waited for the lock;
-		// serve from the reloaded source instead of rediscovering.
+	if r.gen != gen && r.cur != nil {
 		tok, err := r.cur.Token()
 		if err == nil {
 			return tok, nil
 		}
-		mintErr = err
+		return nil, err
 	}
 	newCred, err := r.discover()
 	if err != nil {
-		// The mint failure is attached as text rather than wrapped: a
-		// wrapped *oauth2.RetrieveError would be re-rendered by the client
-		// libraries' auth adapters, replacing this message with the raw
-		// token-endpoint error and hiding what actually needs fixing.
 		return nil, fmt.Errorf("failed to reload default credentials after a mint failure (%v): %w", mintErr, err)
 	}
+	if newCred == nil || newCred.TokenSource == nil {
+		return nil, fmt.Errorf("failed to reload default credentials after a mint failure (%v): discovered credentials have no token source", mintErr)
+	}
 	if bytes.Equal(newCred.JSON, r.curJSON) {
-		// The credentials on disk are the same ones that just failed, so a
-		// reload cannot help; report the mint failure untouched.
 		return nil, mintErr
 	}
 	if err := r.checkADCDrift(newCred.JSON); err != nil {
-		// A refusal is the "the credentials were swapped under a running
-		// server" signal, so log it server-side too: the error itself only
-		// reaches whichever caller happened to trigger this mint.
 		r.warn("refused to adopt reloaded application default credentials", "source", r.name, "error", err.Error())
-		// Keep the mint failure that triggered the reload visible alongside
-		// the refusal, as text: wrapping it would let the auth adapters
-		// re-render the inner token-endpoint error and hide the actionable
-		// refusal from the caller.
 		return nil, fmt.Errorf("%w (after mint failure: %v)", err, mintErr)
 	}
 	r.cur, r.curJSON = newCred.TokenSource, newCred.JSON
@@ -273,9 +234,6 @@ func (r *reloadingTokenSource) Token() (*oauth2.Token, error) {
 	return tok, nil
 }
 
-// warn logs through the server's configured logger when one was captured at
-// construction, falling back to the process-default slog logger otherwise
-// (Token has no context to resolve a logger from).
 func (r *reloadingTokenSource) warn(msg string, keysAndValues ...any) {
 	if r.logger != nil {
 		r.logger.WarnContext(context.Background(), msg, keysAndValues...)
@@ -284,14 +242,7 @@ func (r *reloadingTokenSource) warn(msg string, keysAndValues ...any) {
 	slog.Warn(msg, keysAndValues...)
 }
 
-// adcRotationFields are the top-level ADC JSON fields a routine re-auth or
-// service-account key rotation is expected to change. quota_project_id is
-// here because it has its own guard with pin-awareness (see checkADCDrift);
-// everything else in the file either identifies the principal or controls
-// where credential material is sent (token_uri, credential_source, ...), so
-// a change to any field outside this set is refused rather than adopted.
-// Failing closed on unenumerated fields is deliberate: it also covers fields
-// future credential formats add.
+// adcRotationFields lists top-level ADC JSON fields allowed to change across routine re-auth or key rotation.
 var adcRotationFields = map[string]bool{
 	"refresh_token":    true,
 	"private_key":      true,
@@ -300,27 +251,7 @@ var adcRotationFields = map[string]bool{
 	"quota_project_id": true,
 }
 
-// checkADCDrift refuses reloaded ADC that diverges from what the server
-// started with in any way a routine re-auth would not. Two guards:
-//
-// Field drift: every top-level JSON field outside adcRotationFields must be
-// byte-identical to its value at construction. This pins the principal
-// (type, client_email, client_id, audience) and, just as importantly, where
-// credential material travels (token_uri, credential_source, universe
-// domain): a reload is acceptance of a credential configuration from the
-// filesystem mid-flight, so anything unexpected fails closed with an error
-// naming the field. For authorized_user credentials a re-auth that switches
-// Google accounts under the same OAuth client remains indistinguishable on
-// disk from the routine re-auth this type exists to survive; it is adopted,
-// which is why every adoption is also logged.
-//
-// Quota project: X-Goog-User-Project is resolved once at client
-// construction, so clients that derive it from the ADC file would keep
-// sending the original value after a reload. When neither the source config
-// nor GOOGLE_CLOUD_QUOTA_PROJECT pins it, a change to a non-empty baked
-// value is refused with an actionable error; a value appearing where none
-// was baked in is adopted (nothing stale is sent, and refusing would trade
-// an availability outage for nothing).
+// checkADCDrift rejects reloaded credentials whose identity/endpoint fields or effective quota project changed.
 func (r *reloadingTokenSource) checkADCDrift(newJSON []byte) error {
 	if field := adcFieldDrift(r.baseJSON, newJSON); field != "" {
 		return fmt.Errorf("failed to reload default credentials: the %s field on disk changed from what this server started with, which a routine re-auth would not do; restart the server to adopt the new credentials", field)
@@ -333,12 +264,7 @@ func (r *reloadingTokenSource) checkADCDrift(newJSON []byte) error {
 	return nil
 }
 
-// adcFieldDrift returns the name of the first top-level field that differs
-// between two ADC JSON files and is not expected to change on a routine
-// rotation (see adcRotationFields), or "" if there is none. An absent
-// universe_domain is normalized to its default before comparing, since the
-// client libraries treat them identically and newer tooling spells the
-// default out.
+// adcFieldDrift returns the first non-rotation field that differs between baseJSON and newJSON, or "".
 func adcFieldDrift(baseJSON, newJSON []byte) string {
 	base, ok := adcFields(baseJSON)
 	if !ok {
@@ -362,22 +288,51 @@ func adcFieldDrift(baseJSON, newJSON []byte) string {
 		if adcRotationFields[f] {
 			continue
 		}
-		if !bytes.Equal(base[f], next[f]) {
+		if f == "source_credentials" {
+			if len(base[f]) == 0 || len(next[f]) == 0 {
+				return f
+			}
+			if _, ok := adcFields(base[f]); !ok {
+				return f
+			}
+			if _, ok := adcFields(next[f]); !ok {
+				return f
+			}
+			if sub := adcFieldDrift(base[f], next[f]); sub != "" {
+				return f + "." + sub
+			}
+			continue
+		}
+		if !jsonRawEqual(base[f], next[f]) {
 			return f
 		}
 	}
 	return ""
 }
 
-// adcFields parses the top level of an ADC JSON file, normalizing an absent
-// universe_domain to the libraries' default. A nil file (JSON-less
-// credentials, e.g. from a metadata server) is an empty field set.
+func jsonRawEqual(a, b json.RawMessage) bool {
+	if bytes.Equal(a, b) {
+		return true
+	}
+	if len(a) == 0 || len(b) == 0 {
+		return false
+	}
+	var va, vb any
+	if err := json.Unmarshal(a, &va); err != nil {
+		return false
+	}
+	if err := json.Unmarshal(b, &vb); err != nil {
+		return false
+	}
+	return reflect.DeepEqual(va, vb)
+}
+
 func adcFields(credJSON []byte) (map[string]json.RawMessage, bool) {
 	fields := map[string]json.RawMessage{}
 	if len(credJSON) == 0 {
 		return fields, true
 	}
-	if err := json.Unmarshal(credJSON, &fields); err != nil {
+	if err := json.Unmarshal(credJSON, &fields); err != nil || fields == nil {
 		return nil, false
 	}
 	if _, ok := fields["universe_domain"]; !ok {
@@ -386,8 +341,6 @@ func adcFields(credJSON []byte) (map[string]json.RawMessage, bool) {
 	return fields, true
 }
 
-// adcFieldString extracts one top-level string field from an ADC JSON file,
-// returning "" when absent or unparseable.
 func adcFieldString(credJSON []byte, field string) string {
 	fields, ok := adcFields(credJSON)
 	if !ok {
@@ -400,52 +353,18 @@ func adcFieldString(credJSON []byte, field string) string {
 	return v
 }
 
-// quotaProjectEnvVar is the environment variable the client libraries give
-// precedence over the ADC file's quota_project_id (see
-// google.golang.org/api/internal.GetQuotaProject).
 const quotaProjectEnvVar = "GOOGLE_CLOUD_QUOTA_PROJECT"
 
 // ADCReloadParams configures NewReloadingDefaultCredentials.
 type ADCReloadParams struct {
-	// Name identifies the owning source in reload log lines.
-	Name string
-	// Scopes are requested at discovery and at every rediscovery.
-	Scopes []string
-	// QuotaProjectPin, when non-empty, declares that quota attribution for
-	// the clients built from these credentials is managed explicitly (the
-	// same value is passed to option.WithQuotaProject), so a change to the
-	// ADC file's quota_project_id never reaches request headers and must not
-	// block a reload. Leave empty when the clients derive their quota
-	// project from the ADC file. The GOOGLE_CLOUD_QUOTA_PROJECT environment
-	// variable, to which the client libraries give the same precedence, is
-	// honored automatically.
-	QuotaProjectPin string
-	// SkipQuotaProjectGuard declares that no user-visible client reads the
-	// quota project from these credentials' JSON, so quota-project drift
-	// must never refuse a reload regardless of pinning. Set it for
-	// impersonation base credentials: their JSON-derived quota project only
-	// labels the internal IAM generateAccessToken call, and refusing a
-	// reload over it would trade a full outage of the source for the quota
-	// attribution of that internal call. The field-drift guard still
-	// applies.
+	Name                  string
+	Scopes                []string
+	QuotaProjectPin       string
 	SkipQuotaProjectGuard bool
 }
 
-// NewReloadingDefaultCredentials finds Application Default Credentials with
-// the given scopes and wraps their token source so a live server survives
-// the on-disk credentials being rotated (for example by a user re-running
-// `gcloud auth application-default login`) without a restart: when the
-// wrapped source can no longer mint a token and the ADC file changed, the
-// credentials are transparently reloaded from disk. Reloaded credentials may
-// differ from the originals only in fields a routine rotation touches, and
-// must preserve the effective quota project; anything else is refused with
-// an error saying a restart is required (see checkADCDrift). Adoptions and
-// refusals are logged through the logger carried by ctx, when present.
-//
-// The returned credentials are the discovered ones with only TokenSource
-// replaced, so client options that read credential metadata (such as the
-// quota project in the JSON, applied via option.WithCredentials) behave
-// exactly as they do with unwrapped ADC.
+// NewReloadingDefaultCredentials finds Application Default Credentials and wraps
+// their TokenSource so rotated on-disk credentials are reloaded automatically on mint failure.
 func NewReloadingDefaultCredentials(ctx context.Context, p ADCReloadParams) (*google.Credentials, error) {
 	cred, err := google.FindDefaultCredentials(ctx, p.Scopes...)
 	if err != nil {
@@ -455,32 +374,15 @@ func NewReloadingDefaultCredentials(ctx context.Context, p ADCReloadParams) (*go
 	return cred, nil
 }
 
-// newReloadingTokenSource wraps cred's token source per
-// NewReloadingDefaultCredentials. The result is wrapped in
-// oauth2.ReuseTokenSource so a valid access token is cached and the reload
-// path runs only on an actual mint failure, not on every request. cred must
-// come from google.FindDefaultCredentials (in particular, TokenSource must
-// be non-nil).
 func newReloadingTokenSource(ctx context.Context, cred *google.Credentials, p ADCReloadParams) oauth2.TokenSource {
 	return oauth2.ReuseTokenSource(nil, newReloader(ctx, cred, p))
 }
 
-// newReloader builds the inner reloading source for newReloadingTokenSource;
-// it is separate so tests can exercise it without the oauth2.ReuseTokenSource
-// wrapper in the way.
 func newReloader(ctx context.Context, cred *google.Credentials, p ADCReloadParams) *reloadingTokenSource {
 	pinned := p.QuotaProjectPin
 	if pinned == "" {
-		// The client libraries resolve the effective quota project as
-		// option.WithQuotaProject first, then GOOGLE_CLOUD_QUOTA_PROJECT,
-		// then the ADC file; when the environment variable is set, the
-		// file's value never reaches request headers, so drift in it is
-		// harmless. Read once at construction, matching when the libraries
-		// read it (at dial).
 		pinned = os.Getenv(quotaProjectEnvVar)
 	}
-	// Token() has no context, so capture the server's configured logger now;
-	// a missing logger (some tests) falls back to the process default.
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		logger = nil
@@ -491,9 +393,6 @@ func newReloader(ctx context.Context, cred *google.Credentials, p ADCReloadParam
 		curJSON:  cred.JSON,
 		baseJSON: cred.JSON,
 		discover: func() (*google.Credentials, error) {
-			// A token source outlives any single request, so rediscover with
-			// a background context rather than capturing a request or
-			// initialization context that may later be cancelled.
 			return google.FindDefaultCredentials(context.Background(), scopes...)
 		},
 		name:               p.Name,
@@ -504,9 +403,6 @@ func newReloader(ctx context.Context, cred *google.Credentials, p ADCReloadParam
 	}
 }
 
-// adcQuotaProjectFromJSON extracts the quota_project_id field from an ADC
-// JSON credential file, returning "" if absent (for example metadata-server
-// credentials, which carry no JSON).
 func adcQuotaProjectFromJSON(credJSON []byte) string {
 	if len(credJSON) == 0 {
 		return ""
