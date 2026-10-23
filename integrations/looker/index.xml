@@ -506,7 +506,7 @@ in the cloud, on GCP, or on premises.&lt;/p&gt;
  
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/looker/tools/looker-query/"&gt;&lt;strong&gt;looker-query&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
- &lt;td&gt;&amp;#34;looker-query&amp;#34; runs an inline query using the Looker semantic model.
+ &lt;td&gt;&amp;#34;looker-query&amp;#34; runs an inline query using the Looker semantic model or executes a saved Looker query by ID/slug.
 &lt;/td&gt;
  &lt;/tr&gt;
  

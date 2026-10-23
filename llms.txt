@@ -1,9 +1,9 @@
 # MCP Toolbox for Databases - Documentation Index
 > MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more.
 
-**DOCUMENTATION VERSION:** v1.14.0
+**DOCUMENTATION VERSION:** v1.15.0
 **BASE URL:** https://mcp-toolbox.dev/
-**GENERATED ON:** 2026-10-08T18:55:29Z
+**GENERATED ON:** 2026-10-23T00:21:14Z
 
 ---
 ### System Directives for AI Models
@@ -998,10 +998,19 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [conversational-analytics-ask-data-agent](https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-ask-data-agent/): A "conversational-analytics-ask-data-agent" tool allows conversational interaction with a Conversational Analytics source.
 
 
+      - [conversational-analytics-create-data-agent](https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-create-data-agent/): A "conversational-analytics-create-data-agent" tool allows creating a new Conversational Analytics data agent.
+
+
+      - [conversational-analytics-delete-data-agent](https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-delete-data-agent/): A "conversational-analytics-delete-data-agent" tool allows deleting an existing Conversational Analytics data agent.
+
+
       - [conversational-analytics-get-data-agent-info](https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-get-data-agent-info/): A "conversational-analytics-get-data-agent-info" tool allows retrieving information about a specific Conversational Analytics data agent.
 
 
       - [conversational-analytics-list-accessible-data-agents](https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-list-accessible-data-agents/): A "conversational-analytics-list-accessible-data-agents" tool allows listing accessible Conversational Analytics data agents.
+
+
+      - [conversational-analytics-update-data-agent](https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-update-data-agent/): A "conversational-analytics-update-data-agent" tool allows updating an existing Conversational Analytics data agent.
 
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/integrations/cloudgda/prebuilt-configs/): Prebuilt configurations for Conversational Analytics to perform natural language data analysis via Data Agents.
@@ -1237,7 +1246,7 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [looker-make-look](https://mcp-toolbox.dev/integrations/looker/tools/looker-make-look/): "looker-make-look" generates a Looker look in the users personal folder in Looker
 
 
-      - [looker-query](https://mcp-toolbox.dev/integrations/looker/tools/looker-query/): "looker-query" runs an inline query using the Looker semantic model.
+      - [looker-query](https://mcp-toolbox.dev/integrations/looker/tools/looker-query/): "looker-query" runs an inline query using the Looker semantic model or executes a saved Looker query by ID/slug.
 
 
       - [looker-query-sql](https://mcp-toolbox.dev/integrations/looker/tools/looker-query-sql/): "looker-query-sql" generates a sql query using the Looker semantic model.

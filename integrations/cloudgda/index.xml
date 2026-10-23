@@ -31,6 +31,18 @@
  
  
  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
 
 
@@ -62,6 +74,18 @@
  &lt;/tr&gt;
  
  &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-create-data-agent/"&gt;&lt;strong&gt;conversational-analytics-create-data-agent&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;conversational-analytics-create-data-agent&amp;#34; tool allows creating a new Conversational Analytics data agent.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-delete-data-agent/"&gt;&lt;strong&gt;conversational-analytics-delete-data-agent&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;conversational-analytics-delete-data-agent&amp;#34; tool allows deleting an existing Conversational Analytics data agent.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-get-data-agent-info/"&gt;&lt;strong&gt;conversational-analytics-get-data-agent-info&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;conversational-analytics-get-data-agent-info&amp;#34; tool allows retrieving information about a specific Conversational Analytics data agent.
 &lt;/td&gt;
@@ -70,6 +94,12 @@
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-list-accessible-data-agents/"&gt;&lt;strong&gt;conversational-analytics-list-accessible-data-agents&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;conversational-analytics-list-accessible-data-agents&amp;#34; tool allows listing accessible Conversational Analytics data agents.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-update-data-agent/"&gt;&lt;strong&gt;conversational-analytics-update-data-agent&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;conversational-analytics-update-data-agent&amp;#34; tool allows updating an existing Conversational Analytics data agent.
 &lt;/td&gt;
  &lt;/tr&gt;
  
@@ -123,6 +153,12 @@
 					&lt;td style="text-align: center"&gt;boolean&lt;/td&gt;
 					&lt;td style="text-align: center"&gt;false&lt;/td&gt;
 					&lt;td&gt;If true, the source uses the token provided by the caller (forwarded to the API). Otherwise, it uses server-side Application Default Credentials (ADC). Defaults to &lt;code&gt;false&lt;/code&gt;.&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+					&lt;td&gt;readOnly&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;boolean&lt;/td&gt;
+					&lt;td style="text-align: center"&gt;false&lt;/td&gt;
+					&lt;td&gt;When set to &lt;code&gt;true&lt;/code&gt;, suppresses write-capable tools (such as those that create, update, or delete data agents). Default: &lt;code&gt;false&lt;/code&gt;.&lt;/td&gt;
 			&lt;/tr&gt;
 	&lt;/tbody&gt;
 &lt;/table&gt;</description></item></channel></rss>

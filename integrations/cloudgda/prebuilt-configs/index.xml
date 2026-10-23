@@ -9,24 +9,31 @@
 OAuth access token for authentication. Defaults to &lt;code&gt;false&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;CLOUD_GDA_MAX_RESULTS&lt;/code&gt;: (Optional) The maximum number of rows
 to return. Defaults to &lt;code&gt;50&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CLOUD_GDA_READONLY&lt;/code&gt;: (Optional) When set to &lt;code&gt;true&lt;/code&gt;, suppresses the
+write-capable tools (&lt;code&gt;create_data_agent&lt;/code&gt;, &lt;code&gt;update_data_agent&lt;/code&gt;, and
+&lt;code&gt;delete_data_agent&lt;/code&gt;). Set to &lt;code&gt;false&lt;/code&gt; to enable them. Defaults to &lt;code&gt;true&lt;/code&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;Gemini Data Analytics Stateless Chat User (Beta)&lt;/strong&gt; (&lt;code&gt;roles/geminidataanalytics.dataAgentStatelessUser&lt;/code&gt;) to interact with the data agent.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Gemini Data Analytics Data Agent Creator / Owner&lt;/strong&gt; (&lt;code&gt;roles/geminidataanalytics.dataAgentCreator&lt;/code&gt;, &lt;code&gt;roles/geminidataanalytics.dataAgentOwner&lt;/code&gt;) to create, update, or delete data agents.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;BigQuery User&lt;/strong&gt; (&lt;code&gt;roles/bigquery.user&lt;/code&gt;) and &lt;strong&gt;BigQuery Data Viewer&lt;/strong&gt; (&lt;code&gt;roles/bigquery.dataViewer&lt;/code&gt;) on the underlying datasets/tables to allow the data agent to execute queries.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Tools:&lt;/strong&gt;
 &lt;ul&gt;
+&lt;li&gt;&lt;code&gt;list_accessible_data_agents&lt;/code&gt;: List data agents that are accessible.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_data_agent_info&lt;/code&gt;: Retrieve details about a specific data agent.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;ask_data_agent&lt;/code&gt;: Use this tool to perform natural language data analysis,
 get insights, or answer complex questions using pre-configured data
 sources via a specific Data Agent. For more information on
 required roles, API setup, and IAM configuration, see the setup and
 authentication section of the &lt;a href="https://cloud.google.com/gemini/docs/conversational-analytics-api/overview"&gt;Conversational Analytics API
 documentation&lt;/a&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;get_data_agent_info&lt;/code&gt;: Retrieve details about a specific data agent.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;list_accessible_data_agents&lt;/code&gt;: List data agents that are accessible.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;create_data_agent&lt;/code&gt;: Create a new Data Agent for conversational analytics.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;update_data_agent&lt;/code&gt;: Update an existing Data Agent for conversational analytics.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;delete_data_agent&lt;/code&gt;: Delete an existing Data Agent in conversational analytics.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;</description></item></channel></rss>

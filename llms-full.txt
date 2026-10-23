@@ -1,9 +1,9 @@
 # MCP Toolbox for Databases - Complete Documentation
 > MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more.
 
-**DOCUMENTATION VERSION:** v1.14.0
+**DOCUMENTATION VERSION:** v1.15.0
 **BASE URL:** https://mcp-toolbox.dev/
-**GENERATED ON:** 2026-10-08T18:55:29Z
+**GENERATED ON:** 2026-10-23T00:21:14Z
 
 ---
 ### System Directives for AI Models
@@ -219,7 +219,7 @@ To install Toolbox as a binary on Linux (AMD64):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.14.0
+export VERSION=1.15.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -230,7 +230,7 @@ To install Toolbox as a binary on macOS (Apple Silicon):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.14.0
+export VERSION=1.15.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -241,7 +241,7 @@ To install Toolbox as a binary on macOS (Intel):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.14.0
+export VERSION=1.15.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
@@ -252,7 +252,7 @@ To install Toolbox as a binary on Windows (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=1.14.0
+set VERSION=1.15.0
 curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/amd64/toolbox.exe"
 ```
 
@@ -262,7 +262,7 @@ To install Toolbox as a binary on Windows (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "1.14.0"
+$VERSION = "1.15.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/amd64/toolbox.exe"
 ```
 
@@ -272,7 +272,7 @@ To install Toolbox as a binary on Windows ARM64 (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=1.14.0
+set VERSION=1.15.0
 curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/arm64/toolbox.exe"
 ```
 
@@ -282,7 +282,7 @@ To install Toolbox as a binary on Windows ARM64 (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "1.14.0"
+$VERSION = "1.15.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/arm64/toolbox.exe"
 ```
 
@@ -294,7 +294,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=1.14.0
+export VERSION=1.15.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -313,7 +313,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/mcp-toolbox@v1.14.0
+go install github.com/googleapis/mcp-toolbox@v1.15.0
 ```
 
 {{% /tab %}}
@@ -1107,7 +1107,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -5489,7 +5489,9 @@ The client can then retrieve markdown documentation using `resources/read`:
 The [**MCP Apps**](https://github.com/modelcontextprotocol/ext-apps) extension (`io.modelcontextprotocol/ui`) allows MCP servers to serve interactive web applications (HTML/CSS/JS) directly as resources and bind them to tools. When supported by an MCP client, the client can render an interactive user interface alongside or in place of standard tool outputs. For the official protocol specification, schemas, and client SDKs, refer to the [modelcontextprotocol/ext-apps](https://github.com/modelcontextprotocol/ext-apps) repository.
 
 {{< notice note >}}
-Support for the MCP Apps extension is advertised via `io.modelcontextprotocol/ui` in server capabilities exclusively for MCP protocol version `2026-07-28`. Older protocol versions (`2024-11-05`, `2025-03-26`, `2025-06-18`, and `2025-11-25`) do not support extensions and will not advertise UI capabilities or tool UI metadata.
+**Protocol Version Differences**:
+- **Modern Protocol (`2026-07-28`)**: Supports the official MCP extensions capability negotiation. The server advertises `io.modelcontextprotocol/ui` under `capabilities.extensions` during `server/discover`, and dynamically enables `_meta.ui` on tools when the client also advertises `io.modelcontextprotocol/ui` in its request capabilities.
+- **Legacy Protocols (`2024-11-05`, `2025-03-26`, `2025-06-18`, and `2025-11-25`)**: Toolbox backports `io.modelcontextprotocol/ui` extension capability negotiation to `initialize` and `tools/list` across earlier protocol versions, and provides a `--disable-extension-check` startup flag for legacy clients that do not advertise extension capabilities.
 {{< /notice >}}
 
 ## Defining a UI Resource
@@ -5606,36 +5608,62 @@ Unlike standard tools, prompts, or resources that are scoped to specific [Groups
 
 ## Capability Negotiation & Graceful Degradation
 
-MCP Apps employs client capability negotiation to ensure backwards compatibility with standard text-only MCP clients:
-
-1. **Client Advertising**: During initialization, clients that support interactive apps advertise the extension in their initialization parameters:
-   ```json
-   {
-     "capabilities": {
-       "extensions": {
-         "io.modelcontextprotocol/ui": {
-           "mimeTypes": ["text/html;profile=mcp-app"]
-         }
-       }
-     }
-   }
-   ```
-2. **Graceful Degradation**:
-   - When a client **supports** the UI extension, Toolbox advertises UI metadata on tools in `tools/list` under `_meta.ui`:
+- **Modern Protocol (`2026-07-28`)**: Employs dynamic client capability negotiation to ensure backwards compatibility with standard text-only MCP clients:
+  1. **Client Advertising**: Clients that support interactive apps advertise the extension in their request metadata (`_meta`):
      ```json
      {
-       "name": "view_customer_dashboard",
-       "description": "Retrieves customer records and displays an interactive dashboard.",
        "_meta": {
-         "ui": {
-           "resourceUri": "ui://customer_dashboard",
-           "visibility": ["model", "app"]
+         "io.modelcontextprotocol/clientCapabilities": {
+           "extensions": {
+             "io.modelcontextprotocol/ui": {
+               "mimeTypes": ["text/html;profile=mcp-app"]
+             }
+           }
          }
        }
      }
      ```
-   - When a client **does not support** the UI extension (or omits `io.modelcontextprotocol/ui`), Toolbox automatically strips `_meta.ui` from tool definitions, serving the tool as a standard text-based tool.
-   - All tools continue to return standard structured text output in their `content` array regardless of UI mode.
+  2. **Graceful Degradation**:
+     - When a client **supports** the UI extension, Toolbox includes UI metadata on tools in `tools/list` under `_meta.ui`:
+       ```json
+       {
+         "name": "view_customer_dashboard",
+         "description": "Retrieves customer records and displays an interactive dashboard.",
+         "_meta": {
+           "ui": {
+             "resourceUri": "ui://customer_dashboard",
+             "visibility": ["model", "app"]
+           }
+         }
+       }
+       ```
+     - When a client **does not support** the UI extension (or omits `io.modelcontextprotocol/ui`), Toolbox automatically strips `_meta.ui` from tool definitions, serving the tool as a standard text-based tool.
+     - All tools continue to return standard structured text output in their `content` array regardless of UI mode.
+
+- **Legacy Protocols (`2024-11-05`, `2025-03-26`, `2025-06-18`, and `2025-11-25`)**:
+  - Toolbox backports client capability advertisement and negotiation to all legacy protocols to support modern clients running on older endpoints:
+    1. **Initialization**: Clients advertise UI capabilities during `initialize` via `capabilities.extensions["io.modelcontextprotocol/ui"]` (with `mimeTypes: ["text/html;profile=mcp-app"]`). When present, Toolbox advertises server UI capability in `InitializeResult.capabilities.extensions["io.modelcontextprotocol/ui"]: {}`. If omitted by the client, server `extensions` is omitted.
+    2. **Per-Request Negotiation**: Clients **should** also advertise UI support in request metadata (`_meta` or `params.capabilities`) on `tools/list`:
+       ```json
+       {
+         "_meta": {
+           "io.modelcontextprotocol/clientCapabilities": {
+             "extensions": {
+               "io.modelcontextprotocol/ui": {
+                 "mimeTypes": ["text/html;profile=mcp-app"]
+               }
+             }
+           }
+         }
+       }
+       ```
+    3. **Graceful Degradation**: When UI capabilities are advertised, Toolbox includes `_meta.ui` on tools in `tools/list`. If the client does not advertise UI support, Toolbox gracefully degrades by omitting `_meta.ui` from tool definitions, ensuring full backward compatibility with standard text-only clients.
+    4. **Bypassing Capability Checks (`--disable-extension-check`)**: For clients on older protocol versions that render MCP Apps without advertising `io.modelcontextprotocol/ui` capabilities during `initialize` or `tools/list`, start Toolbox with `--disable-extension-check`:
+       ```bash
+       ./toolbox --config tools.yaml --disable-extension-check
+       ```
+       When enabled, Toolbox bypasses the client extension capability check in older protocol versions (`2024-11-05` through `2025-11-25`) and always includes `io.modelcontextprotocol/ui` in `InitializeResult.capabilities.extensions` and `_meta.ui` on tools in `tools/list`.
+    5. **Resource Retrieval**: UI documents and security policies remain available via `resources/read` for clients that support rendering MCP Apps.
 
 ## Reading UI Resources
 
@@ -5787,6 +5815,50 @@ of your AuthService as defined in your tool configuration file, suffixed with
 
 ![Using Authenticated Parameter GIF](./edit-headers.gif)
 
+## Interactive Tools (MCP Apps)
+
+Toolbox UI supports rendering interactive visual interfaces for tools configured
+with [MCP Apps](../mcp-apps/) resources.
+
+### Identifying App Tools
+
+Tools configured with an associated UI resource (`ui.resource`) display an **APP** badge next to their name in the tool list. Clicking on an app tool loads both the standard tool invocation form and the embedded interactive UI.
+
+### Sandboxed UI Rendering
+
+When an app tool is selected:
+
+1. Toolbox UI retrieves the configured HTML UI resource via `resources/read`.
+2. The UI is mounted inside a sandboxed `<iframe>` with strict isolation policies.
+3. The playground acts as an MCP Apps (SEP-1865) host, completing the initialization handshake (`ui/initialize` and `ui/notifications/initialized`).
+
+### Executing App Tools and Live Updates
+
+When you click **"Run Tool"**:
+
+1. The tool executes on the server and displays the raw JSON output in the response area.
+2. The structured result is simultaneously delivered to the interactive app via the `ui/notifications/tool-result` postMessage notification.
+3. The embedded web application updates in real time to visualize the tool result.
+
+Interactive apps can also invoke tools directly on the server by sending `tools/call` JSON-RPC requests to the host bridge, or adjust container height dynamically via `ui/notifications/size-changed`.
+
+### App Controls
+
+The app container provides interactive controls located in the app header:
+
+- **Fullscreen**: Expands the application container to fill the browser window for in-depth data inspection.
+- **Reload**: Reloads the iframe and re-establishes the host communication bridge.
+
+### Quickstart Example
+
+You can test MCP Apps directly in Toolbox UI using the included generic example:
+
+```bash
+./toolbox --config examples/mcp-apps/tools.yaml --ui
+```
+
+Open `http://localhost:5000/ui`, select the `get_sales_report` tool (marked with the **APP** badge), and click **"Run Tool"** to see the interactive dashboard update with live SQLite data.
+
 ## Navigating the Toolsets Page
 
 Through the toolsets page, users can search for a specific toolset to retrieve
@@ -5797,6 +5869,7 @@ If the toolset name is not defined within the tools configuration file, an error
 message will be displayed.
 
 ![Toolsets Page](./toolsets.png)
+
 
 
 
@@ -12901,23 +12974,23 @@ After you install Looker in the MCP Store, resources and tools from the server a
 
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -13409,23 +13482,23 @@ expose your developer assistant tools to a MySQL instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -13739,23 +13812,23 @@ expose your developer assistant tools to a Neo4j instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -14066,23 +14139,23 @@ to expose your developer assistant tools to an Oracle instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -14415,23 +14488,23 @@ Omni](https://cloud.google.com/alloydb/omni/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -14772,23 +14845,23 @@ instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -15102,23 +15175,23 @@ to expose your developer assistant tools to a SQLite instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -35139,6 +35212,7 @@ useClientOAuth: true
 | type           |  string  |     true     | Must be "cloud-gemini-data-analytics".                                                                                                                                       |
 | projectId      |  string  |     true     | The Google Cloud Project ID where the API is enabled.                                                                                                                        |
 | useClientOAuth | boolean  |    false     | If true, the source uses the token provided by the caller (forwarded to the API). Otherwise, it uses server-side Application Default Credentials (ADC). Defaults to `false`. |
+| readOnly       | boolean  |    false     | When set to `true`, suppresses write-capable tools (such as those that create, update, or delete data agents). Default: `false`.                                             |
 
 
 
@@ -35413,6 +35487,137 @@ description: |
 
 
 ========================================================================
+## conversational-analytics-create-data-agent
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Gemini Data Analytics > Tools > conversational-analytics-create-data-agent
+**URL:** https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-create-data-agent/
+**Description:** A "conversational-analytics-create-data-agent" tool allows creating a new Conversational Analytics data agent.
+
+
+
+## About
+
+A `conversational-analytics-create-data-agent` tool allows you to create
+a new data agent in Conversational Analytics.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`conversational-analytics-create-data-agent` accepts the following parameters:
+
+- **`data_agent_id`:** The ID to use for the new data agent. Must start with a lowercase letter, contain only lowercase letters, digits, and hyphens, end with a lowercase letter or digit, and be at most 63 characters long (e.g. `sales-agent`).
+- **`agent_config`:** The JSON representation of the DataAgent resource to create. For the full schema, see the [DataAgent REST resource documentation](https://docs.cloud.google.com/gemini/data-agents/reference/rest/v1/projects.locations.dataAgents#resource:-dataagent).
+
+  Example `agent_config`:
+  ```json
+  {
+    "displayName": "My Support Agent",
+    "description": "An agent that analyzes support tickets.",
+    "dataAnalyticsAgent": {
+      "publishedContext": {
+        "datasourceReferences": {
+          "bq": {
+            "tableReferences": [
+              {
+                "projectId": "my-project",
+                "datasetId": "support_data",
+                "tableId": "tickets"
+              }
+            ]
+          }
+        },
+        "systemInstruction": "You are a helpful assistant."
+      }
+    }
+  }
+  ```
+
+## Example
+
+```yaml
+kind: tool
+name: create_agent
+type: conversational-analytics-create-data-agent
+source: my-conversational-analytics-source
+location: global
+description: |
+  Use this tool to create a new data agent with the specified configuration.
+```
+
+## Output Format
+
+The tool returns the newly created DataAgent object after waiting for the operation to complete successfully. Note that the tool will block and poll for up to 60 seconds. A timeout error does not necessarily mean the creation failed; the operation may still be processing in the background.
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "conversational-analytics-create-data-agent". |
+| source      |  string  |     true     | Name of the source.                                |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+| location    |  string  |    false     | The Google Cloud location (default: "global").     |
+| authRequired| []string |    false     | List of auth services required to use the tool.    |
+
+
+
+
+========================================================================
+## conversational-analytics-delete-data-agent
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Gemini Data Analytics > Tools > conversational-analytics-delete-data-agent
+**URL:** https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-delete-data-agent/
+**Description:** A "conversational-analytics-delete-data-agent" tool allows deleting an existing Conversational Analytics data agent.
+
+
+
+## About
+
+A `conversational-analytics-delete-data-agent` tool allows you to delete
+an existing data agent in Conversational Analytics.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`conversational-analytics-delete-data-agent` accepts the following parameter:
+
+- **`data_agent_id`:** The ID of the data agent to delete.
+
+## Example
+
+```yaml
+kind: tool
+name: delete_agent
+type: conversational-analytics-delete-data-agent
+source: my-conversational-analytics-source
+location: global
+description: |
+  Use this tool to delete an existing data agent using its ID.
+```
+
+## Output Format
+
+The tool returns the operation response after waiting for the deletion operation to complete successfully. Note that the tool will block and poll for up to 60 seconds.
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "conversational-analytics-delete-data-agent". |
+| source      |  string  |     true     | Name of the source.                                |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+| location    |  string  |    false     | The Google Cloud location (default: "global").     |
+| authRequired| []string |    false     | List of auth services required to use the tool.    |
+
+
+
+
+========================================================================
 ## conversational-analytics-get-data-agent-info
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Gemini Data Analytics > Tools > conversational-analytics-get-data-agent-info
@@ -35537,6 +35742,74 @@ description: |
 
 
 ========================================================================
+## conversational-analytics-update-data-agent
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Gemini Data Analytics > Tools > conversational-analytics-update-data-agent
+**URL:** https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-update-data-agent/
+**Description:** A "conversational-analytics-update-data-agent" tool allows updating an existing Conversational Analytics data agent.
+
+
+
+## About
+
+A `conversational-analytics-update-data-agent` tool allows you to update
+an existing data agent in Conversational Analytics.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+`conversational-analytics-update-data-agent` accepts the following parameters:
+
+- **`data_agent_id`:** The ID of the data agent to update.
+- **`agent_config`:** The JSON representation of the DataAgent resource fields to update. For the full schema, see the [DataAgent REST resource documentation](https://docs.cloud.google.com/gemini/data-agents/reference/rest/v1/projects.locations.dataAgents#resource:-dataagent).
+- **`update_mask`:** Comma-separated list of fields to update, using the API's camelCase JSON field names (e.g. `"displayName,description"` or `"dataAnalyticsAgent.publishedContext.systemInstruction"`). Every field listed here must also be present in `agent_config`.
+
+  Example `agent_config`:
+  ```json
+  {
+    "displayName": "Updated Support Agent",
+    "description": "Updated description",
+    "dataAnalyticsAgent": {
+      "publishedContext": {
+        "systemInstruction": "You are a helpful support data analyst."
+      }
+    }
+  }
+  ```
+
+## Example
+
+```yaml
+kind: tool
+name: update_agent
+type: conversational-analytics-update-data-agent
+source: my-conversational-analytics-source
+location: global
+description: |
+  Use this tool to update an existing data agent with the specified configuration and update mask.
+```
+
+## Output Format
+
+The tool returns the updated DataAgent object after waiting for the operation to complete successfully. Note that the tool will block and poll for up to 60 seconds.
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "conversational-analytics-update-data-agent". |
+| source      |  string  |     true     | Name of the source.                                |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+| location    |  string  |    false     | The Google Cloud location (default: "global").     |
+| authRequired| []string |    false     | List of auth services required to use the tool.    |
+
+
+
+
+========================================================================
 ## Prebuilt Configs
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Gemini Data Analytics > Prebuilt Configs
@@ -35565,18 +35838,25 @@ description: |
         OAuth access token for authentication. Defaults to `false`.
     *   `CLOUD_GDA_MAX_RESULTS`: (Optional) The maximum number of rows
         to return. Defaults to `50`.
+    *   `CLOUD_GDA_READONLY`: (Optional) When set to `true`, suppresses the
+        write-capable tools (`create_data_agent`, `update_data_agent`, and
+        `delete_data_agent`). Set to `false` to enable them. Defaults to `true`.
 *   **Permissions:**
     *   **Gemini Data Analytics Stateless Chat User (Beta)** (`roles/geminidataanalytics.dataAgentStatelessUser`) to interact with the data agent.
+    *   **Gemini Data Analytics Data Agent Creator / Owner** (`roles/geminidataanalytics.dataAgentCreator`, `roles/geminidataanalytics.dataAgentOwner`) to create, update, or delete data agents.
     *   **BigQuery User** (`roles/bigquery.user`) and **BigQuery Data Viewer** (`roles/bigquery.dataViewer`) on the underlying datasets/tables to allow the data agent to execute queries.
 *   **Tools:**
+    *   `list_accessible_data_agents`: List data agents that are accessible.
+    *   `get_data_agent_info`: Retrieve details about a specific data agent.
     *   `ask_data_agent`: Use this tool to perform natural language data analysis,
         get insights, or answer complex questions using pre-configured data
         sources via a specific Data Agent. For more information on
         required roles, API setup, and IAM configuration, see the setup and
         authentication section of the [Conversational Analytics API
         documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
-    *   `get_data_agent_info`: Retrieve details about a specific data agent.
-    *   `list_accessible_data_agents`: List data agents that are accessible.
+    *   `create_data_agent`: Create a new Data Agent for conversational analytics.
+    *   `update_data_agent`: Update an existing Data Agent for conversational analytics.
+    *   `delete_data_agent`: Delete an existing Data Agent in conversational analytics.
 
 
 
@@ -41046,27 +41326,31 @@ description: |
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Looker > Tools > looker-query
 **URL:** https://mcp-toolbox.dev/integrations/looker/tools/looker-query/
-**Description:** "looker-query" runs an inline query using the Looker semantic model.
+**Description:** "looker-query" runs an inline query using the Looker semantic model or executes a saved Looker query by ID/slug.
 
 
 
 ## About
 
-The `looker-query` tool runs a query using the Looker
-semantic model.
+The `looker-query` tool runs an inline query using the Looker
+semantic model or executes a saved Looker query by ID/slug.
 
-`looker-query` takes ten parameters:
+`looker-query` takes the following parameters (provide either `query_id` OR `model` + `explore` + `fields`):
 
-1. the `model`
-2. the `explore`
-3. the `fields` list
-4. an optional set of `filters`
-5. an optional `filter_expression`
-6. an optional `dynamic_fields`
-7. an optional set of `pivots`
-8. an optional set of `sorts`
-9. an optional `limit`
-10. an optional `tz`
+1. an optional `query_id` (numeric ID or slug of a saved query)
+2. the `model` (required if `query_id` is not provided)
+3. the `explore` (required if `query_id` is not provided)
+4. the `fields` list (required if `query_id` is not provided)
+5. an optional set of `filters`
+6. an optional `filter_expression`
+7. an optional `dynamic_fields`
+8. an optional set of `pivots`
+9. an optional set of `sorts`
+10. an optional `limit`
+11. an optional `tz`
+12. an optional `result_format` (`json` or `json_detail`, default `json`)
+13. an optional `vis_config`
+14. an optional `generate_drill_links`
 
 Starting in Looker v25.18, these queries can be identified in Looker's
 System Activity. In the History explore, use the field API Client Name
@@ -41084,12 +41368,13 @@ name: query
 type: looker-query
 source: looker-source
 description: |
-  This tool runs a query against a LookML model and returns the results in JSON format.
+  This tool runs a query against a LookML model or executes a saved query by ID/slug and returns the results in JSON format.
 
-  Required Parameters:
-  - model_name: The name of the LookML model (from `get_models`).
-  - explore_name: The name of the explore (from `get_explores`).
-  - fields: A list of field names (dimensions, measures, filters, or parameters) to include in the query.
+  Parameters (provide either `query_id` OR `model` + `explore` + `fields`):
+  - query_id (optional): The unique identifier (numeric ID or slug) of a saved Looker query to execute. If provided, `model`, `explore`, and `fields` are not required.
+  - model: The name of the LookML model (from `get_models`). Required if `query_id` is not provided.
+  - explore: The name of the explore (from `get_explores`). Required if `query_id` is not provided.
+  - fields: A list of field names (dimensions, measures, filters, or parameters) to include in the query. Required if `query_id` is not provided.
 
   Optional Parameters:
   - pivots: A list of fields to pivot the results by. These fields must also be included in the `fields` list.
@@ -41102,6 +41387,7 @@ description: |
       (e.g. `first_touch`, not `"first_touch"`).
     - Use `not null` instead of `-NULL`.
     - If a value contains a comma, enclose it in single quotes (e.g., `'New York, NY'`).
+    - To retrieve valid filter values for a suggestible field, use the 'get_field_value_suggestions' tool.
   - filter_expression: A Looker expression filter string (custom filter). This allows complex logic and comparing fields.
     - Reference fields using `${view.field_name}` syntax.
     - Supports logical operators (`AND`, `OR`, `NOT`) and comparison operators.
@@ -41119,7 +41405,10 @@ description: |
       - Custom Measure: `[{"measure": "sum_of_revenue", "label": "Sum of Revenue", "based_on": "training.revenue", "type": "sum", "_type_hint": "number"}]`
   - sorts: A list of fields to sort by, optionally including direction (e.g., `["view.field desc"]`).
   - limit: Row limit (default 500). Use "-1" for unlimited.
-  - query_timezone: specific timezone for the query (e.g. `America/Los_Angeles`).
+  - tz: Specific timezone for the query (e.g. `America/Los_Angeles`).
+  - result_format: Output format (`'json'` or `'json_detail'`, default `'json'`).
+  - vis_config: Optional visualization configuration JSON string to associate with the query response.
+  - generate_drill_links: Optional flag indicating whether to generate drill links in the query result.
 
   Note: Use `get_dimensions`, `get_measures`, `get_filters`, and `get_parameters` to find valid fields.
 
@@ -42423,7 +42712,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -42584,7 +42873,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -42707,7 +42996,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.15.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -42822,7 +43111,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     *   `get_filters`: Retrieves the list of filters in an explore.
     *   `get_parameters`: Retrieves the list of parameters in an explore.
     *   `get_field_value_suggestions`: Retrieves distinct value suggestions for a field.
-    *   `query`: Runs a query against the LookML model.
+    *   `query`: Runs an inline query against the LookML model or executes a saved query by ID/slug.
     *   `query_sql`: Generates the SQL for a query.
     *   `query_url`: Generates a URL for a query in Looker.
     *   `get_looks`: Searches for saved looks.
@@ -53443,6 +53732,7 @@ Configure the Gemini CLI to talk to your local Toolbox MCP server.
 |--------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
 | `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                       | `127.0.0.1` |
 |              | `--disable-ext`            | Specifies MCP extension URIs disabled on this server.                                                                                                                     |             |
+|              | `--disable-extension-check` | Disable client extension capability checks in older MCP protocol versions.                                                                                                | `false`     |
 |              | `--disable-reload`         | Disables dynamic reloading config.                                                                                                                                        |             |
 | `-h`         | `--help`                   | help for toolbox                                                                                                                                                          |             |
 |              | `--http-max-request-bytes` | Maximum MCP HTTP request body size in bytes.                                                                                                                              | `10485760`  |
@@ -53989,4 +54279,11 @@ The following changes will **not** trigger a major version bump:
 * **Server**  
   * **Pre-built Config Modifications:** Adding, removing, or renaming individual tools within a pre-built toolset, as well as modifying server description, prompts, resources, tool descriptions or inputs, are treated as non-breaking changes.  
 * **Experimental Features:** Features or wrapper packages explicitly documented as "Preview" or "Beta" may introduce breaking changes without a major version bump to the core project.
+
+## Container Tagging Policy
+
+Official container images are published to `us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox`:
+
+* **Version tags (`X.Y.Z`, e.g., `1.14.0`):** Immutable tags pinned to a specific release digest (`linux/amd64` and `linux/arm64`). Once published, version tags are never overwritten. Pinning to a specific version tag or image digest (`@sha256:...`) is recommended for production workloads.
+* **`latest` tag:** A floating tag that points to the most recent stable release digest and is updated automatically whenever a new versioned release is promoted.
 

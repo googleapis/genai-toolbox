@@ -68,7 +68,93 @@ stateless conversational API.&lt;/p&gt;
 &lt;p&gt;The API uses a GenAI agent to understand the question, generate and execute SQL
 queries and Python code, and formulate an answer. This function returns a
 detailed, sequential log of this entire process, which includes any generated
-SQL or Python code, the data retrieved, and the final text answer.&lt;/p&gt;</description></item><item><title>conversational-analytics-get-data-agent-info</title><link>https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-get-data-agent-info/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-get-data-agent-info/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+SQL or Python code, the data retrieved, and the final text answer.&lt;/p&gt;</description></item><item><title>conversational-analytics-create-data-agent</title><link>https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-create-data-agent/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-create-data-agent/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;conversational-analytics-create-data-agent&lt;/code&gt; tool allows you to create
+a new data agent in Conversational Analytics.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloudgda/source/"&gt;Gemini Data Analytics Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;conversational-analytics-create-data-agent&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;data_agent_id&lt;/code&gt;:&lt;/strong&gt; The ID to use for the new data agent. Must start with a lowercase letter, contain only lowercase letters, digits, and hyphens, end with a lowercase letter or digit, and be at most 63 characters long (e.g. &lt;code&gt;sales-agent&lt;/code&gt;).&lt;/p&gt;</description></item><item><title>conversational-analytics-delete-data-agent</title><link>https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-delete-data-agent/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-delete-data-agent/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;conversational-analytics-delete-data-agent&lt;/code&gt; tool allows you to delete
+an existing data agent in Conversational Analytics.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloudgda/source/"&gt;Gemini Data Analytics Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;conversational-analytics-delete-data-agent&lt;/code&gt; accepts the following parameter:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;data_agent_id&lt;/code&gt;:&lt;/strong&gt; The ID of the data agent to delete.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;delete_agent&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;conversational-analytics-delete-data-agent&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-conversational-analytics-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;location&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;global&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="sd"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Use this tool to delete an existing data agent using its ID.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="output-format"&gt;Output Format&lt;/h2&gt;
+&lt;p&gt;The tool returns the operation response after waiting for the deletion operation to complete successfully. Note that the tool will block and poll for up to 60 seconds.&lt;/p&gt;</description></item><item><title>conversational-analytics-get-data-agent-info</title><link>https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-get-data-agent-info/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-get-data-agent-info/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;conversational-analytics-get-data-agent-info&lt;/code&gt; tool allows you to retrieve
 details about a specific data agent.&lt;/p&gt;
 &lt;p&gt;It&amp;rsquo;s compatible with the following sources:&lt;/p&gt;
@@ -134,4 +220,48 @@ to take over pagination and receive one page at a time instead.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;cloud-gemini-data-analytics&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;code&gt;conversational-analytics-list-accessible-data-agents&lt;/code&gt; accepts the following parameters:&lt;/p&gt;</description></item></channel></rss>
+&lt;p&gt;&lt;code&gt;conversational-analytics-list-accessible-data-agents&lt;/code&gt; accepts the following parameters:&lt;/p&gt;</description></item><item><title>conversational-analytics-update-data-agent</title><link>https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-update-data-agent/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/cloudgda/tools/conversational-analytics-update-data-agent/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;conversational-analytics-update-data-agent&lt;/code&gt; tool allows you to update
+an existing data agent in Conversational Analytics.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloudgda/source/"&gt;Gemini Data Analytics Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;conversational-analytics-update-data-agent&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;data_agent_id&lt;/code&gt;:&lt;/strong&gt; The ID of the data agent to update.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;agent_config&lt;/code&gt;:&lt;/strong&gt; The JSON representation of the DataAgent resource fields to update. For the full schema, see the &lt;a href="https://docs.cloud.google.com/gemini/data-agents/reference/rest/v1/projects.locations.dataAgents#resource:-dataagent"&gt;DataAgent REST resource documentation&lt;/a&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;update_mask&lt;/code&gt;:&lt;/strong&gt; Comma-separated list of fields to update, using the API&amp;rsquo;s camelCase JSON field names (e.g. &lt;code&gt;&amp;quot;displayName,description&amp;quot;&lt;/code&gt; or &lt;code&gt;&amp;quot;dataAnalyticsAgent.publishedContext.systemInstruction&amp;quot;&lt;/code&gt;). Every field listed here must also be present in &lt;code&gt;agent_config&lt;/code&gt;.&lt;/p&gt;</description></item></channel></rss>
