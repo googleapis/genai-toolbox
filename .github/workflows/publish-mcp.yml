@@ -13,6 +13,7 @@
 # limitations under the License.
 
 name: Publish to MCP Registry
+run-name: Publish ${{ inputs.version_tag }} to MCP Registry
 
 on:
   # Triggered after Stage 2 promotes the container image to Artifact Registry
