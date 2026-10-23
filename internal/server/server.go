@@ -302,12 +302,29 @@ func registerDynamicResources(ctx context.Context, toolsMap map[string]tools.Too
 	for _, t := range toolsMap {
 		if rp, ok := t.(resources.ResourceProvider); ok {
 			for _, res := range rp.GetResources() {
-				if res != nil {
-					if _, exists := resourcesMap[res.GetName()]; !exists {
-						resourcesMap[res.GetName()] = res
-					} else {
-						l.WarnContext(ctx, fmt.Sprintf("Dynamic UI resource %q from tool %q conflicts with an existing resource and was skipped", res.GetName(), t.GetName()))
-					}
+				name := res.GetName()
+				if name == "" {
+					l.WarnContext(ctx, fmt.Sprintf("Dynamic UI resource from tool %q has an empty name and was skipped", t.GetName()))
+					continue
+				}
+				uri := res.GetURI()
+				if uri == "" {
+					l.WarnContext(ctx, fmt.Sprintf("Dynamic UI resource %q from tool %q has an empty URI and was skipped", name, t.GetName()))
+					continue
+				}
+				parsed, err := url.Parse(uri)
+				if err != nil || parsed.Scheme == "" {
+					l.WarnContext(ctx, fmt.Sprintf("Dynamic UI resource %q from tool %q has an invalid URI %q and was skipped", name, t.GetName(), uri))
+					continue
+				}
+				if res.IsUI() && parsed.Scheme != "ui" {
+					l.WarnContext(ctx, fmt.Sprintf("Dynamic UI resource %q from tool %q has invalid scheme %q (expected 'ui') and was skipped", name, t.GetName(), parsed.Scheme))
+					continue
+				}
+				if _, exists := resourcesMap[name]; !exists {
+					resourcesMap[name] = res
+				} else {
+					l.WarnContext(ctx, fmt.Sprintf("Dynamic UI resource %q from tool %q conflicts with an existing resource and was skipped", name, t.GetName()))
 				}
 			}
 		}

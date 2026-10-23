@@ -50,9 +50,6 @@ func NewDynamicUIResource(name, uri, description string, csp *CSPConfig, prefers
 
 // SetCSP atomically replaces the resource's CSP configuration with a deep copy.
 func (r *DynamicUIResource) SetCSP(csp *CSPConfig) {
-	if r == nil {
-		return
-	}
 	r.cspMu.Lock()
 	r.CSP = csp.Clone()
 	r.cspMu.Unlock()
@@ -60,9 +57,6 @@ func (r *DynamicUIResource) SetCSP(csp *CSPConfig) {
 
 // GetCSP returns a thread-safe deep copy of the resource's CSP configuration.
 func (r *DynamicUIResource) GetCSP() *CSPConfig {
-	if r == nil {
-		return nil
-	}
 	r.cspMu.RLock()
 	defer r.cspMu.RUnlock()
 	return r.CSP.Clone()
@@ -71,7 +65,7 @@ func (r *DynamicUIResource) GetCSP() *CSPConfig {
 // GetResourceUIMetadata returns the UI metadata conforming to the MCP Ext-Apps
 // specification using a thread-safe snapshot of the dynamic CSP configuration.
 func (r *DynamicUIResource) GetResourceUIMetadata() any {
-	if r == nil || !r.UI {
+	if !r.UI {
 		return nil
 	}
 	var permMeta map[string]any
@@ -93,8 +87,8 @@ func (r *DynamicUIResource) GetSize() *int64 {
 
 // Read executes the dynamic content generation function.
 func (r *DynamicUIResource) Read(ctx context.Context, _ map[string]any) (any, error) {
-	if r == nil || r.ReadFunc == nil {
-		return "", fmt.Errorf("dynamic UI resource has no ReadFunc configured")
+	if r.ReadFunc == nil {
+		return "", fmt.Errorf("dynamic UI resource %q has no ReadFunc configured", r.Name)
 	}
 	return r.ReadFunc(ctx)
 }

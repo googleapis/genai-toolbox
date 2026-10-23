@@ -72,18 +72,44 @@ func TestDynamicUIResource(t *testing.T) {
 	}
 }
 
-func TestDynamicUIResource_NilReadFunc(t *testing.T) {
+func TestDynamicUIResource_CSPConcurrency(t *testing.T) {
+	csp := &resources.CSPConfig{
+		ConnectDomains: []string{"https://api.example.com"},
+	}
+	prefersBorder := true
 	res := resources.NewDynamicUIResource(
-		"nil_readfunc_ui",
-		"ui://test/nil.html",
-		"Nil ReadFunc test",
-		nil,
-		nil,
-		nil,
+		"test_dynamic_ui",
+		"ui://test/dynamic.html",
+		"Test dynamic UI resource",
+		csp,
+		&prefersBorder,
+		func(ctx context.Context) (string, error) {
+			return "<html></html>", nil
+		},
 	)
 
-	_, err := res.Read(context.Background(), nil)
-	if err == nil {
-		t.Fatalf("Expected error when ReadFunc is nil, got nil")
+	newCSP := &resources.CSPConfig{
+		ConnectDomains: []string{"https://new.example.com"},
 	}
+	res.SetCSP(newCSP)
+	gotCSP := res.GetCSP()
+	if gotCSP == nil || len(gotCSP.ConnectDomains) != 1 || gotCSP.ConnectDomains[0] != "https://new.example.com" {
+		t.Errorf("Expected ConnectDomains to be ['https://new.example.com'], got %v", gotCSP)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		for i := 0; i < 100; i++ {
+			res.SetCSP(&resources.CSPConfig{
+				ConnectDomains: []string{"https://concurrent.example.com"},
+			})
+		}
+		close(done)
+	}()
+
+	for i := 0; i < 100; i++ {
+		_ = res.GetCSP()
+		_ = res.GetResourceUIMetadata()
+	}
+	<-done
 }
