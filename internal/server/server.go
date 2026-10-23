@@ -287,7 +287,18 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d resource templates: %s", len(resourceTemplatesMap), strings.Join(resourceTemplateNames, ", ")))
 
-	// Register dynamic UI resources from tools implementing ResourceProvider
+	registerDynamicResources(ctx, toolsMap, resourcesMap, l)
+
+	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, instrumentation, l)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, nil, err
+	}
+
+	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groupsMap, nil
+}
+
+// registerDynamicResources registers dynamic UI resources exposed by tools implementing resources.ResourceProvider.
+func registerDynamicResources(ctx context.Context, toolsMap map[string]tools.Tool, resourcesMap map[string]resources.Resource, l log.Logger) {
 	for _, t := range toolsMap {
 		if rp, ok := t.(resources.ResourceProvider); ok {
 			for _, res := range rp.GetResources() {
@@ -301,13 +312,6 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			}
 		}
 	}
-
-	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, instrumentation, l)
-	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, err
-	}
-
-	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, groupsMap, nil
 }
 
 // InitializeOfflineConfigs initializes only tools, prompts, and groups from the
@@ -363,20 +367,7 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 		resourceTemplatesMap[name] = rt
 	}
 
-	// Register dynamic UI resources from tools implementing ResourceProvider
-	for _, t := range toolsMap {
-		if rp, ok := t.(resources.ResourceProvider); ok {
-			for _, res := range rp.GetResources() {
-				if res != nil {
-					if _, exists := resourcesMap[res.GetName()]; !exists {
-						resourcesMap[res.GetName()] = res
-					} else {
-						l.WarnContext(ctx, fmt.Sprintf("Dynamic UI resource %q from tool %q conflicts with an existing resource and was skipped", res.GetName(), t.GetName()))
-					}
-				}
-			}
-		}
-	}
+	registerDynamicResources(ctx, toolsMap, resourcesMap, l)
 
 	groupsMap, err := initializeGroups(ctx, cfg, toolsMap, promptsMap, resourcesMap, resourceTemplatesMap, instrumentation, l)
 	if err != nil {

@@ -256,9 +256,6 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	if err != nil {
 		return validateErr, err
 	}
-	if header != nil {
-		ctx = util.WithRequestHeader(ctx, header)
-	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
 	var clientExts map[string]any
@@ -287,12 +284,6 @@ func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 
 // toolsCallHandler generate a response for tools call.
 func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
-	if header != nil {
-		if clientIP := util.ExtractClientIP(header); clientIP != "" {
-			ctx = util.WithClientIP(ctx, clientIP)
-		}
-	}
-
 	authServices := primitiveMgr.AuthServices()
 
 	// retrieve logger from context
@@ -317,9 +308,6 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 	validateErr, err := validateMetadata(id, req.Params.RequestParams, header == nil)
 	if err != nil {
 		return validateErr, err
-	}
-	if header != nil {
-		ctx = util.WithRequestHeader(ctx, header)
 	}
 
 	toolName := req.Params.Name
@@ -708,9 +696,6 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr 
 	if err != nil {
 		return validateErr, err
 	}
-	if header != nil {
-		ctx = util.WithRequestHeader(ctx, header)
-	}
 
 	listPromptsResult, err := GenerateListPromptsResult(primitiveMgr, g)
 	if err != nil {
@@ -751,9 +736,6 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group,
 	validateErr, err := validateMetadata(id, req.Params.RequestParams, header == nil)
 	if err != nil {
 		return validateErr, err
-	}
-	if header != nil {
-		ctx = util.WithRequestHeader(ctx, header)
 	}
 
 	promptName := req.Params.Name
@@ -913,9 +895,6 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *p
 	if err != nil {
 		return validateErr, err
 	}
-	if header != nil {
-		ctx = util.WithRequestHeader(ctx, header)
-	}
 	extErr, err := validateToolboxExtension(id, req.Params.RequestParams, GROUPS_GET)
 	if err != nil {
 		return extErr, err
@@ -989,9 +968,6 @@ func resourcesListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 	if err != nil {
 		return validateErr, err
 	}
-	if header != nil {
-		ctx = util.WithRequestHeader(ctx, header)
-	}
 
 	result, err := GenerateListResourcesResult(primitiveMgr, g)
 	if err != nil {
@@ -1033,9 +1009,6 @@ func resourceTemplatesListHandler(ctx context.Context, id jsonrpc.RequestId, pri
 	validateErr, err := validateMetadata(id, req.Params.RequestParams, header == nil)
 	if err != nil {
 		return validateErr, err
-	}
-	if header != nil {
-		ctx = util.WithRequestHeader(ctx, header)
 	}
 
 	result, err := GenerateListResourceTemplatesResult(primitiveMgr, g)
@@ -1176,10 +1149,6 @@ func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMg
 	}
 	if uiMeta != nil {
 		contentMeta = map[string]any{"ui": uiMeta}
-		if meta == nil {
-			meta = make(map[string]any)
-		}
-		meta["ui"] = uiMeta
 	}
 
 	result := &ReadResourceResult{

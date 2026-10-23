@@ -370,14 +370,12 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Use(mcpAuthMiddleware(s))
 
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
-	r.Post("/sse", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { methodNotAllowed(s, w, r) })
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 	r.Delete("/", func(w http.ResponseWriter, r *http.Request) {})
 
 	r.Route("/{toolsetName}", func(r chi.Router) {
 		r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
-		r.Post("/sse", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) { methodNotAllowed(s, w, r) })
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 		r.Delete("/", func(w http.ResponseWriter, r *http.Request) {})

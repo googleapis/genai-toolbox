@@ -72,23 +72,18 @@ func TestDynamicUIResource(t *testing.T) {
 	}
 }
 
-func TestDynamicUIResource_Fallback(t *testing.T) {
+func TestDynamicUIResource_NilReadFunc(t *testing.T) {
 	res := resources.NewDynamicUIResource(
-		"fallback_ui",
-		"ui://test/fallback.html",
-		"Fallback test",
+		"nil_readfunc_ui",
+		"ui://test/nil.html",
+		"Nil ReadFunc test",
 		nil,
 		nil,
-		func(ctx context.Context) (string, error) {
-			return "", nil
-		},
+		nil,
 	)
 
-	content, err := res.Read(context.Background(), nil)
-	if err != nil {
-		t.Fatalf("Read failed: %v", err)
-	}
-	if content != resources.DefaultBaseUIHTML {
-		t.Errorf("Expected fallback DefaultBaseUIHTML, got %v", content)
+	_, err := res.Read(context.Background(), nil)
+	if err == nil {
+		t.Fatalf("Expected error when ReadFunc is nil, got nil")
 	}
 }

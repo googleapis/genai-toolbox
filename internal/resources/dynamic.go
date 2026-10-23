@@ -16,6 +16,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"sync"
 )
 
@@ -92,17 +93,10 @@ func (r *DynamicUIResource) GetSize() *int64 {
 
 // Read executes the dynamic content generation function.
 func (r *DynamicUIResource) Read(ctx context.Context, _ map[string]any) (any, error) {
-	if r.ReadFunc != nil {
-		text, err := r.ReadFunc(ctx)
-		if err != nil {
-			return "", err
-		}
-		if text == "" {
-			text = DefaultBaseUIHTML
-		}
-		return text, nil
+	if r == nil || r.ReadFunc == nil {
+		return "", fmt.Errorf("dynamic UI resource has no ReadFunc configured")
 	}
-	return DefaultBaseUIHTML, nil
+	return r.ReadFunc(ctx)
 }
 
 // ToConfig returns nil for dynamic resources.
