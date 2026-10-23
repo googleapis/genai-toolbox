@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.16.0](https://github.com/googleapis/mcp-toolbox/compare/v1.15.0...v1.16.0) (2026-10-23)
+
+
+### Features
+
+* Add skills over MCP extension ([#4104](https://github.com/googleapis/mcp-toolbox/issues/4104)) ([cb998b0](https://github.com/googleapis/mcp-toolbox/commit/cb998b096505bf8f35346dea80ed64c28cdd127d))
+* **prebuilt/dataplex:** Remove search_aspect_types tool from prebuilt config ([08a42a2](https://github.com/googleapis/mcp-toolbox/commit/08a42a25d77fbeddda427a38e326060a282fe61b))
+
+
+### Bug Fixes
+
+* **looker:** Bind all dashboard_filters in add_dashboard_element and update_dashboard_element ([#4326](https://github.com/googleapis/mcp-toolbox/issues/4326)) ([6f47f4e](https://github.com/googleapis/mcp-toolbox/commit/6f47f4e88518744177ed2e504407194d72806061))
+
 ## [1.15.0](https://github.com/googleapis/mcp-toolbox/compare/v1.14.0...v1.15.0) (2026-10-22)
 
 
