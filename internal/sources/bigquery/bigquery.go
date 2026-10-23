@@ -19,9 +19,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
-	"net/url"
 	"reflect"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -31,7 +29,6 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex/searchcatalog"
-	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
@@ -75,15 +72,9 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name, MaxQueryResultRows: 50}
+	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
-	}
-	if actual.WriteMode == "" {
-		actual.WriteMode = WriteModeAllowed
-		if actual.ReadOnly != nil && *actual.ReadOnly {
-			actual.WriteMode = WriteModeBlocked
-		}
 	}
 	return actual, nil
 }
@@ -94,8 +85,7 @@ type Config struct {
 	Type                      string              `yaml:"type" validate:"required"`
 	Project                   string              `yaml:"project" validate:"required"`
 	Location                  string              `yaml:"location"`
-	ReadOnly                  *bool               `yaml:"readOnly,omitempty"`
-	WriteMode                 string              `yaml:"writeMode" validate:"omitempty,oneof=blocked protected allowed"`
+	WriteMode                 string              `yaml:"writeMode"`
 	AllowedDatasets           StringOrStringSlice `yaml:"allowedDatasets"`
 	UseClientOAuth            string              `yaml:"useClientOAuth"`
 	QuotaProject              string              `yaml:"quotaProject"`
@@ -103,8 +93,6 @@ type Config struct {
 	Scopes                    StringOrStringSlice `yaml:"scopes"`
 	MaxQueryResultRows        int                 `yaml:"maxQueryResultRows"`
 	MaximumBytesBilled        int64               `yaml:"maximumBytesBilled" validate:"gte=0"`
-	APIEndpoint               string              `yaml:"apiEndpoint"`
-	SQLCommenter              *bool               `yaml:"sqlCommenter"`
 }
 
 // StringOrStringSlice is a custom type that can unmarshal both a single string
@@ -142,23 +130,6 @@ func (r Config) SourceConfigType() string {
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	if r.WriteMode == "" {
 		r.WriteMode = WriteModeAllowed
-		if r.ReadOnly != nil && *r.ReadOnly {
-			r.WriteMode = WriteModeBlocked
-		}
-	}
-
-	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
-		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
-	}
-
-	if r.ReadOnly != nil {
-		// A writeMode is considered a read-only mode if it is Blocked or Protected.
-		isReadOnlyMode := (r.WriteMode == WriteModeBlocked || r.WriteMode == WriteModeProtected)
-
-		// The declared readOnly boolean must match the writeMode's behavior.
-		if *r.ReadOnly != isReadOnlyMode {
-			return nil, fmt.Errorf("conflicting source configuration: readOnly is %v, but writeMode is %q", *r.ReadOnly, r.WriteMode)
-		}
 	}
 
 	if r.MaxQueryResultRows == 0 {
@@ -177,8 +148,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("useClientOAuth cannot be used with impersonateServiceAccount")
 	}
 
-	endpoint := NormalizeEndpoint(r.APIEndpoint)
-
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
 	var tokenSource oauth2.TokenSource
@@ -190,13 +159,15 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:              client,
 		RestService:         restService,
 		TokenSource:         tokenSource,
+		MaxQueryResultRows:  r.MaxQueryResultRows,
+		MaximumBytesBilled:  r.MaximumBytesBilled,
 		ClientCreator:       clientCreator,
 		AuthTokenHeaderName: "Authorization",
 	}
 
 	if strings.ToLower(r.UseClientOAuth) == "false" || r.UseClientOAuth == "" {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.QuotaProject, r.ImpersonateServiceAccount, r.Scopes, endpoint)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.QuotaProject, r.ImpersonateServiceAccount, r.Scopes)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -213,7 +184,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			s.AuthTokenHeaderName = r.UseClientOAuth
 		}
 		// use client OAuth
-		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.QuotaProject, r.Name, endpoint)
+		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.QuotaProject, r.Name)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
@@ -243,7 +214,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 				dataset := s.Client.DatasetInProject(projectID, datasetID)
 				_, err := dataset.Metadata(ctx)
 				if err != nil {
-					s.Client.Close()
 					if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
 						return nil, fmt.Errorf("allowedDataset '%s' not found in project '%s'", datasetID, projectID)
 					}
@@ -256,6 +226,10 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s.AllowedDatasets = allowedDatasets
 	s.SessionProvider = s.newBigQuerySessionProvider()
+
+	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
+		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
+	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
 }
@@ -320,6 +294,8 @@ type Source struct {
 	RestService               *bigqueryrestapi.Service
 	TokenSource               oauth2.TokenSource
 	AuthTokenHeaderName       string
+	MaxQueryResultRows        int
+	MaximumBytesBilled        int64
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
 	sessionMutex              sync.Mutex
@@ -341,20 +317,13 @@ type Session struct {
 	LastUsed     time.Time
 }
 
-func (s *Source) IsReadOnly() bool {
-	return s.WriteMode == WriteModeBlocked || s.WriteMode == WriteModeProtected
-}
-
 func (s *Source) SourceType() string {
 	// Returns BigQuery Google SQL source type
 	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
-	cfg := s.Config
-	readOnly := s.IsReadOnly()
-	cfg.ReadOnly = &readOnly
-	return cfg
+	return s.Config
 }
 
 func (s *Source) BigQueryClient() *bigqueryapi.Client {
@@ -528,7 +497,6 @@ func (s *Source) BigQueryAllowedDatasets() []string {
 	for d := range s.AllowedDatasets {
 		datasets = append(datasets, d)
 	}
-	sort.Strings(datasets)
 	return datasets
 }
 
@@ -617,10 +585,6 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 	if connProps != nil {
 		query.ConnectionProperties = connProps
 	}
-	// BigQuery attaches SQLCommenter attributes as native job labels rather
-	// than SQL-text comments, so they surface in INFORMATION_SCHEMA.JOBS and
-	// billing exports without query text parsing.
-	labels = sqlcommenter.AppendLabels(ctx, labels, SourceType, s.SQLCommenter)
 	if labels != nil {
 		query.Labels = labels
 	}
@@ -725,35 +689,6 @@ func NormalizeValue(v any) any {
 	return v
 }
 
-// NormalizeEndpoint canonicalizes a raw endpoint string for use with option.WithEndpoint.
-// Empty or whitespace-only input returns "" (no override). If no scheme is present,
-// "https://" is assumed. A default port (:443, or :80 for http) is appended when the
-// host carries none. Trailing slashes are stripped.
-func NormalizeEndpoint(raw string) string {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return ""
-	}
-	if !strings.Contains(raw, "://") {
-		raw = "https://" + raw
-	}
-	u, err := url.Parse(raw)
-	if err != nil || u.Host == "" {
-		return raw
-	}
-	if u.Port() == "" {
-		if u.Scheme == "http" {
-			u.Host = u.Hostname() + ":80"
-		} else {
-			u.Host = u.Hostname() + ":443"
-		}
-	}
-	if u.Path == "/" {
-		u.Path = ""
-	}
-	return u.String()
-}
-
 func initBigQueryConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
@@ -763,7 +698,6 @@ func initBigQueryConnection(
 	quotaProject string,
 	impersonateServiceAccount string,
 	scopes []string,
-	endpoint string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -786,12 +720,30 @@ func initBigQueryConnection(
 	}
 
 	if impersonateServiceAccount != "" {
+		// The impersonated token source mints tokens by calling the IAM
+		// Credentials API, authenticating those calls with base credentials
+		// discovered from ADC, so it goes stale after an on-disk re-auth the
+		// same way direct ADC usage does. Discover the base credentials
+		// explicitly, wrapped in the self-reloading source (see
+		// sources.NewReloadingDefaultCredentials), so the impersonation flow
+		// also recovers when ADC is rotated on disk. The quota-project guard
+		// is skipped: only the internal IAM mint call reads the base
+		// credentials' quota project, and refusing recovery over its
+		// attribution would trade a full outage of the source for it.
+		baseCred, err := sources.NewReloadingDefaultCredentials(ctx, sources.ADCReloadParams{
+			Name:                  name,
+			Scopes:                []string{CloudPlatformScope},
+			SkipQuotaProjectGuard: true,
+		})
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to prepare base credentials to impersonate %q: %w", impersonateServiceAccount, err)
+		}
 		// Create impersonated credentials token source
 		// This broader scope is needed for tools like conversational analytics
 		cloudPlatformTokenSource, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 			TargetPrincipal: impersonateServiceAccount,
 			Scopes:          credScopes,
-		})
+		}, option.WithCredentials(baseCred))
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
 		}
@@ -801,10 +753,21 @@ func initBigQueryConnection(
 			option.WithTokenSource(cloudPlatformTokenSource),
 		}
 	} else {
-		// Use default credentials
-		cred, err := google.FindDefaultCredentials(ctx, credScopes...)
+		// Use default credentials (Application Default Credentials), wrapped
+		// so that a mid-session `gcloud auth application-default login` is
+		// recovered by reloading ADC from disk instead of failing on every
+		// call until the process is restarted. Only the token source is
+		// replaced: the rest of the credential rides along via
+		// WithCredentials, so ADC metadata such as the quota project
+		// (X-Goog-User-Project, read from cred.JSON) is still applied to
+		// requests.
+		cred, err := sources.NewReloadingDefaultCredentials(ctx, sources.ADCReloadParams{
+			Name:            name,
+			Scopes:          credScopes,
+			QuotaProjectPin: quotaProject,
+		})
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scopes %v: %w", credScopes, err)
+			return nil, nil, nil, fmt.Errorf("failed to prepare default credentials for BigQuery source %q: %w", name, err)
 		}
 		tokenSource = cred.TokenSource
 		opts = []option.ClientOption{
@@ -813,9 +776,6 @@ func initBigQueryConnection(
 		}
 	}
 
-	if endpoint != "" {
-		opts = append(opts, option.WithEndpoint(endpoint))
-	}
 	if quotaProject != "" {
 		opts = append(opts, option.WithQuotaProject(quotaProject))
 	}
@@ -848,7 +808,6 @@ func initBigQueryConnectionWithOAuthToken(
 	userAgent string,
 	tokenString string,
 	wantRestService bool,
-	endpoint string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -861,9 +820,6 @@ func initBigQueryConnectionWithOAuthToken(
 	opts := []option.ClientOption{
 		option.WithUserAgent(userAgent),
 		option.WithTokenSource(ts),
-	}
-	if endpoint != "" {
-		opts = append(opts, option.WithEndpoint(endpoint))
 	}
 	if quotaProject != "" {
 		opts = append(opts, option.WithQuotaProject(quotaProject))
@@ -898,7 +854,6 @@ func newBigQueryClientCreator(
 	location string,
 	quotaProject string,
 	name string,
-	endpoint string,
 ) (func(string, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
@@ -906,7 +861,7 @@ func newBigQueryClientCreator(
 	}
 
 	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, quotaProject, name, userAgent, tokenString, wantRestService, endpoint)
+		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, quotaProject, name, userAgent, tokenString, wantRestService)
 	}, nil
 }
 
@@ -942,11 +897,23 @@ func initDataplexConnection(
 		}
 
 		if impersonateServiceAccount != "" {
+			// As in initBigQueryConnection, give the impersonated token source
+			// self-reloading base credentials so it also recovers when ADC is
+			// rotated on disk, with the quota-project guard skipped for the
+			// same reason.
+			baseCred, err := sources.NewReloadingDefaultCredentials(ctx, sources.ADCReloadParams{
+				Name:                  name,
+				Scopes:                []string{CloudPlatformScope},
+				SkipQuotaProjectGuard: true,
+			})
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to prepare base credentials to impersonate %q: %w", impersonateServiceAccount, err)
+			}
 			// Create impersonated credentials token source
 			ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 				TargetPrincipal: impersonateServiceAccount,
 				Scopes:          credScopes,
-			})
+			}, option.WithCredentials(baseCred))
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
 			}
@@ -955,10 +922,21 @@ func initDataplexConnection(
 				option.WithTokenSource(ts),
 			}
 		} else {
-			// Use default credentials
-			cred, err := google.FindDefaultCredentials(ctx, credScopes...)
+			// Use default credentials, wrapped so a mid-session `gcloud auth
+			// application-default login` is recovered by reloading ADC from
+			// disk (see sources.NewReloadingDefaultCredentials), and keep
+			// WithCredentials so ADC metadata such as the quota project is
+			// preserved. No QuotaProjectPin: unlike the BigQuery clients,
+			// this client does not receive option.WithQuotaProject
+			// (pre-existing behavior, unchanged here), so it genuinely
+			// derives its quota project from the ADC file and the drift
+			// guard must stay active for it.
+			cred, err := sources.NewReloadingDefaultCredentials(ctx, sources.ADCReloadParams{
+				Name:   name,
+				Scopes: credScopes,
+			})
 			if err != nil {
-				return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
+				return nil, nil, fmt.Errorf("failed to prepare default credentials for the Dataplex client of source %q: %w", name, err)
 			}
 			opts = []option.ClientOption{
 				option.WithUserAgent(userAgent),
