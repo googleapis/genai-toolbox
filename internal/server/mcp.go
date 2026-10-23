@@ -396,9 +396,6 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	sessionId := uuid.New().String()
 	groupName := chi.URLParam(r, "toolsetName")
-	if groupName == "sse" {
-		groupName = ""
-	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", groupName))
 	span.SetAttributes(attribute.String("mcp.session.id", sessionId))
 	span.SetAttributes(attribute.String("toolset.name", groupName))
@@ -585,9 +582,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	groupName := chi.URLParam(r, "toolsetName")
-	if groupName == "sse" {
-		groupName = ""
-	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", groupName))
 	span.SetAttributes(attribute.String("toolset.name", groupName))
 

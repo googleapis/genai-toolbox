@@ -294,6 +294,8 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 				if res != nil {
 					if _, exists := resourcesMap[res.GetName()]; !exists {
 						resourcesMap[res.GetName()] = res
+					} else {
+						l.WarnContext(ctx, fmt.Sprintf("Dynamic UI resource %q from tool %q conflicts with an existing resource and was skipped", res.GetName(), t.GetName()))
 					}
 				}
 			}
@@ -368,6 +370,8 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 				if res != nil {
 					if _, exists := resourcesMap[res.GetName()]; !exists {
 						resourcesMap[res.GetName()] = res
+					} else {
+						l.WarnContext(ctx, fmt.Sprintf("Dynamic UI resource %q from tool %q conflicts with an existing resource and was skipped", res.GetName(), t.GetName()))
 					}
 				}
 			}
