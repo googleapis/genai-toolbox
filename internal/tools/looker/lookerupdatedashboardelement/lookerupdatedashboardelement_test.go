@@ -16,15 +16,38 @@ package lookerupdatedashboardelement_test
 
 import (
 	"context"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	lkr "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookerupdatedashboardelement"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"github.com/looker-open-source/sdk-codegen/go/rtl"
+	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
+
+type fakeLookerSource struct {
+	settings *rtl.ApiSettings
+	sdk      *v4.LookerSDK
+}
+
+func (f fakeLookerSource) SourceType() string                  { return "looker" }
+func (f fakeLookerSource) ToConfig() sources.SourceConfig      { return nil }
+func (f fakeLookerSource) IsReadOnly() bool                    { return false }
+func (f fakeLookerSource) UseClientAuthorization() bool        { return false }
+func (f fakeLookerSource) GetAuthTokenHeaderName() string      { return "Authorization" }
+func (f fakeLookerSource) LookerApiSettings() *rtl.ApiSettings { return f.settings }
+func (f fakeLookerSource) GetLookerSDK(context.Context, string) (*v4.LookerSDK, error) {
+	return f.sdk, nil
+}
 
 func TestParseFromYaml(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
@@ -202,5 +225,133 @@ func TestAnnotations(t *testing.T) {
 	}
 	if *annotations.OpenWorldHint != false {
 		t.Errorf("OpenWorldHint should be false, got %v", *annotations.OpenWorldHint)
+	}
+}
+
+func TestInvokeDashboardFilters(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	tcs := []struct {
+		desc          string
+		dashFilters   any
+		wantListen    []map[string]any
+		wantNilFilter bool
+	}{
+		{
+			desc: "groups multiple dashboard filters into a single filterable listen array",
+			dashFilters: []any{
+				map[string]any{"dashboard_filter_name": "Status Filter", "field": "orders.status"},
+				map[string]any{"dashboard_filter_name": "State Filter", "field": "users.state"},
+			},
+			wantListen: []map[string]any{
+				{"dashboard_filter_name": "Status Filter", "field": "orders.status"},
+				{"dashboard_filter_name": "State Filter", "field": "users.state"},
+			},
+		},
+		{
+			desc:          "omits filterables entries when no dashboard filters are specified",
+			dashFilters:   []any{},
+			wantNilFilter: true,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			var capturedBody map[string]any
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				switch {
+				case r.Method == http.MethodPost && r.URL.Path == "/api/4.0/queries":
+					_, _ = w.Write([]byte(`{"id":"77"}`))
+				case r.Method == http.MethodPatch && r.URL.Path == "/api/4.0/dashboard_elements/12":
+					bodyBytes, readErr := io.ReadAll(r.Body)
+					if readErr != nil {
+						t.Errorf("failed reading body: %v", readErr)
+					}
+					if uErr := json.Unmarshal(bodyBytes, &capturedBody); uErr != nil {
+						t.Errorf("failed unmarshaling body: %v", uErr)
+					}
+					_, _ = w.Write([]byte(`{"id":"12","title":"Updated Tile"}`))
+				default:
+					w.WriteHeader(http.StatusNotFound)
+				}
+			}))
+			defer ts.Close()
+
+			settings := &rtl.ApiSettings{BaseUrl: ts.URL}
+			session := rtl.NewAuthSession(*settings)
+			session.Client = *ts.Client()
+			sdk := v4.NewLookerSDK(session)
+
+			cfg := lkr.Config{
+				ConfigBase: tools.ConfigBase{
+					Name:        "update_dashboard_element",
+					Description: "Update dashboard element",
+				},
+				Type:   "looker-update-dashboard-element",
+				Source: "my-instance",
+			}
+			tool, err := cfg.Initialize(ctx)
+			if err != nil {
+				t.Fatalf("Initialize failed: %v", err)
+			}
+
+			toolParams, err := tool.GetParameters(nil)
+			if err != nil {
+				t.Fatalf("GetParameters failed: %v", err)
+			}
+			params, pErr := parameters.ParseParams(toolParams, map[string]any{
+				"dashboard_id":         "5",
+				"dashboard_element_id": "12",
+				"title":                "Updated Tile",
+				"model":                "thelook",
+				"explore":              "orders",
+				"fields":               []any{"orders.status", "users.state", "orders.count"},
+				"dashboard_filters":    tc.dashFilters,
+			}, nil)
+			if pErr != nil {
+				t.Fatalf("ParseParams failed: %v", pErr)
+			}
+
+			_, tbErr := tool.Invoke(ctx, fakeLookerSource{settings: settings, sdk: sdk}, params, "")
+			if tbErr != nil {
+				t.Fatalf("Invoke failed: %v", tbErr)
+			}
+
+			rm, ok := capturedBody["result_maker"].(map[string]any)
+			if !ok {
+				t.Fatalf("expected result_maker in patch body, got %v", capturedBody)
+			}
+			if tc.wantNilFilter {
+				if rm["filterables"] != nil {
+					t.Fatalf("expected nil filterables when no dashboard_filters are provided, got %v", rm["filterables"])
+				}
+				return
+			}
+
+			filterables, ok := rm["filterables"].([]any)
+			if !ok || len(filterables) != 1 {
+				t.Fatalf("expected exactly 1 ResultMakerFilterables entry, got %v", rm["filterables"])
+			}
+			fb0, ok := filterables[0].(map[string]any)
+			if !ok {
+				t.Fatalf("expected filterables[0] to be map, got %T", filterables[0])
+			}
+			listenRaw, ok := fb0["listen"].([]any)
+			if !ok {
+				t.Fatalf("expected filterables[0].listen to be slice, got %v", fb0["listen"])
+			}
+			gotListen := make([]map[string]any, 0, len(listenRaw))
+			for _, item := range listenRaw {
+				m, _ := item.(map[string]any)
+				gotListen = append(gotListen, m)
+			}
+			if diff := cmp.Diff(tc.wantListen, gotListen); diff != "" {
+				t.Errorf("filterables[0].listen mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
