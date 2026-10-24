@@ -59,7 +59,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v6 v6.1.0
 	github.com/redis/go-redis/v9 v9.20.1
 	github.com/sijms/go-ora/v2 v2.9.0
-	github.com/snowflakedb/gosnowflake/v2 v2.1.0
+	github.com/snowflakedb/gosnowflake/v2 v2.2.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/testcontainers/testcontainers-go v0.43.0
