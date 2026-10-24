@@ -27,14 +27,15 @@ description: "Details of the Cloud SQL for SQL Server prebuilt configuration."
         tools, depending on the tool. See the Cloud SQL for SQL Server Admin
         prebuilt config for the per-tool breakdown.
     *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the
-        project for `get_system_metrics` and `get_query_metrics`.
+        project for `get_system_metrics`.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
     *   `get_system_metrics`: Fetches system level cloud monitoring data
         (timeseries metrics) for a SQL Server instance using a PromQL query.
     *   `restore_backup`: Restores a backup of a Cloud SQL instance.
-    *   `clone_instance`: Creates a clone for an existing Cloud SQL for SQL Server instance.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for SQL
+        Server instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
     *   `list_instances`: Lists Cloud SQL instances in a project.
     *   `create_database`: Creates a new database in a Cloud SQL instance.

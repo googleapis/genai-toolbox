@@ -64,7 +64,8 @@ description: "Details of the AlloyDB Postgres prebuilt configuration."
         each database in the AlloyDB instance.
     *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
     *   `list_stored_procedure`: Lists stored procedures.
-    *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for an AlloyDB instance using a PromQL query.
+    *   `get_system_metrics`: Fetches system level cloud monitoring data
+        (timeseries metrics) for an AlloyDB instance using a PromQL query.
     *   `list_clusters`: Lists all AlloyDB clusters in a project.
     *   `create_cluster`: Creates a new AlloyDB cluster.
     *   `list_users`: Lists all database users within an AlloyDB cluster.
@@ -73,7 +74,9 @@ description: "Details of the AlloyDB Postgres prebuilt configuration."
         AlloyDB cluster.
     *   `wait_for_operation`: Polls the operations API to track the status of
         long-running operations.
-    *   `get_query_metrics`: Fetches query level cloud monitoring data (timeseries metrics) for queries running in an AlloyDB instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data
+        (timeseries metrics) for queries running in an AlloyDB instance using a
+        PromQL query.
     *   `get_instance`: Gets information about a specified AlloyDB instance.
     *   `get_cluster`: Gets information about a specified AlloyDB cluster.
     *   `create_instance`: Creates a new AlloyDB instance within a cluster.

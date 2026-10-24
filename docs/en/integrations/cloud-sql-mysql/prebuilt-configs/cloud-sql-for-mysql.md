@@ -42,7 +42,8 @@ description: "Details of the Cloud SQL for MySQL prebuilt configuration."
     *   `list_table_stats`: Displays table statistics in MySQL.
     *   `create_backup`: Creates a backup on a Cloud SQL instance.
     *   `restore_backup`: Restores a backup of a Cloud SQL instance.
-    *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL instance.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL
+        instance.
     *   `list_instances`: Lists Cloud SQL instances in a project.
     *   `create_instance`: Creates a new Cloud SQL for MySQL instance.
     *   `create_database`: Creates a new database in a Cloud SQL instance.
