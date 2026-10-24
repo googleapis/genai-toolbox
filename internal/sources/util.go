@@ -201,33 +201,35 @@ func (r *reloadingTokenSource) Token() (*oauth2.Token, error) {
 		mintErr = errors.New("current token source is nil")
 	}
 
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if r.gen != gen && r.cur != nil {
-		tok, err := r.cur.Token()
-		if err == nil {
-			return tok, nil
+	nextTS, err := func() (oauth2.TokenSource, error) {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		if r.gen != gen && r.cur != nil {
+			return r.cur, nil
 		}
+		newCred, err := r.discover()
+		if err != nil {
+			return nil, fmt.Errorf("failed to reload default credentials after a mint failure (%v): %w", mintErr, err)
+		}
+		if newCred == nil || newCred.TokenSource == nil {
+			return nil, fmt.Errorf("failed to reload default credentials after a mint failure (%v): discovered credentials have no token source", mintErr)
+		}
+		if bytes.Equal(newCred.JSON, r.curJSON) {
+			return nil, mintErr
+		}
+		if err := r.checkADCDrift(newCred.JSON); err != nil {
+			r.warn("refused to adopt reloaded application default credentials", "source", r.name, "error", err.Error())
+			return nil, fmt.Errorf("%w (after mint failure: %v)", err, mintErr)
+		}
+		r.cur, r.curJSON = newCred.TokenSource, newCred.JSON
+		r.gen++
+		r.warn("adopted reloaded application default credentials from disk after a token mint failure", "source", r.name, "credentialType", adcFieldString(newCred.JSON, "type"))
+		return r.cur, nil
+	}()
+	if err != nil {
 		return nil, err
 	}
-	newCred, err := r.discover()
-	if err != nil {
-		return nil, fmt.Errorf("failed to reload default credentials after a mint failure (%v): %w", mintErr, err)
-	}
-	if newCred == nil || newCred.TokenSource == nil {
-		return nil, fmt.Errorf("failed to reload default credentials after a mint failure (%v): discovered credentials have no token source", mintErr)
-	}
-	if bytes.Equal(newCred.JSON, r.curJSON) {
-		return nil, mintErr
-	}
-	if err := r.checkADCDrift(newCred.JSON); err != nil {
-		r.warn("refused to adopt reloaded application default credentials", "source", r.name, "error", err.Error())
-		return nil, fmt.Errorf("%w (after mint failure: %v)", err, mintErr)
-	}
-	r.cur, r.curJSON = newCred.TokenSource, newCred.JSON
-	r.gen++
-	r.warn("adopted reloaded application default credentials from disk after a token mint failure", "source", r.name, "credentialType", adcFieldString(newCred.JSON, "type"))
-	tok, err = r.cur.Token()
+	tok, err = nextTS.Token()
 	if err != nil {
 		return nil, fmt.Errorf("failed to mint a token from the reloaded default credentials: %w", err)
 	}

@@ -234,18 +234,17 @@ func TestReloadingTokenSource_ReloadedSourceAlsoFails(t *testing.T) {
 func TestReloadingTokenSource_ConcurrentReload(t *testing.T) {
 	stillBroken := errors.New("still broken after reload")
 	tcs := []struct {
-		desc     string
-		reloaded oauth2.TokenSource
-		wantErr  error
+		desc    string
+		tok     *oauth2.Token
+		wantErr error
 	}{
 		{
-			desc:     "reloaded source succeeds",
-			reloaded: stubTokenSource{tok: &oauth2.Token{AccessToken: "fresh"}},
+			desc: "reloaded source succeeds",
+			tok:  &oauth2.Token{AccessToken: "fresh"},
 		},
 		{
-			desc:     "reloaded source fails",
-			reloaded: stubTokenSource{err: stillBroken},
-			wantErr:  stillBroken,
+			desc:    "reloaded source fails",
+			wantErr: stillBroken,
 		},
 	}
 	for _, tc := range tcs {
@@ -262,9 +261,22 @@ func TestReloadingTokenSource_ConcurrentReload(t *testing.T) {
 					<-release
 				},
 			}
-			r := newTestReloader(initial, adcOldJSON, func() (*google.Credentials, error) {
+			var r *reloadingTokenSource
+			reloaded := stubTokenSource{
+				tok: tc.tok,
+				err: tc.wantErr,
+				onTok: func() {
+					r.mu.Lock()
+					gen := r.gen
+					r.mu.Unlock()
+					if gen != 1 {
+						t.Errorf("reloaded Token() saw gen = %d, want 1", gen)
+					}
+				},
+			}
+			r = newTestReloader(initial, adcOldJSON, func() (*google.Credentials, error) {
 				discoveries.Add(1)
-				return &google.Credentials{TokenSource: tc.reloaded, JSON: []byte(adcRotatedJSON)}, nil
+				return &google.Credentials{TokenSource: reloaded, JSON: []byte(adcRotatedJSON)}, nil
 			})
 			var wg sync.WaitGroup
 			wg.Add(n)
